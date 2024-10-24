@@ -1,0 +1,48 @@
+services:
+  recsis:
+    container_name: recsis-webapp
+    build:
+      dockerfile: Dockerfile
+      context: ./
+      target: dev-stage
+    # volumes:
+    #   - ./:/app
+    ports:
+      - 8000:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+  postgres:
+    container_name: recsis-postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+  adminer:
+    container_name: recsis-adminer
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - postgres
+  
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+    postgres:
