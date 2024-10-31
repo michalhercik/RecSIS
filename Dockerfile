@@ -11,24 +11,24 @@ RUN go install github.com/a-h/templ/cmd/templ@latest
 COPY *.templ ./
 RUN templ generate
 COPY *.go ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-stack-demo
+RUN CGO_ENABLED=0 GOOS=linux go build -o /recsis
 
 #############################################################################################
 # Dev stage
 #############################################################################################
 FROM alpine AS dev-stage
 WORKDIR /app
-COPY --from=build-stage /docker-stack-demo /docker-stack-demo
+COPY --from=build-stage /recsis /recsis
 COPY --from=build-stage /app/*templ.go /app
 EXPOSE 8000
-ENTRYPOINT ["/docker-stack-demo"]
+ENTRYPOINT ["/recsis"]
 
 #############################################################################################
 # Deploy stage
 #############################################################################################
 FROM gcr.io/distroless/base-debian11 AS deploy-stage
 WORKDIR /app
-COPY --from=build-stage /docker-stack-demo /docker-stack-demo
+COPY --from=build-stage /recsis /recsis
 EXPOSE 8000
 USER nonroot:nonroot
-ENTRYPOINT ["/docker-stack-demo"]
+ENTRYPOINT ["/recsis"]

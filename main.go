@@ -5,11 +5,16 @@ import (
 	"net/http"
 )
 
-func Logging(next http.Handler) http.Handler {
+func logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
 		log.Println(r.Method, r.URL.Path)
 	})
+}
+
+func comingSoon(w http.ResponseWriter, r *http.Request) {
+	component := comingSoonPage()
+	component.Render(r.Context(), w)
 }
 
 func main() {
@@ -19,14 +24,15 @@ func main() {
 	//////////////////////////////////////////
 	// Handlers
 	//////////////////////////////////////////
-	// eg.: router.HandleFunc("GET /", handleGetHello)
+
+	router.HandleFunc("GET /", comingSoon)
 
 	//////////////////////////////////////////
 	// Server setup
 	//////////////////////////////////////////
 	server := http.Server{
 		Addr:    ":8000",
-		Handler: Logging(router),
+		Handler: logging(router),
 	}
 
 	log.Println("Server starting ...")
