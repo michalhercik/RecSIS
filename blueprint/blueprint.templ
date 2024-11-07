@@ -1,0 +1,13 @@
+package blueprint
+
+import "github.com/michalhercik/RecSIS/utils"
+
+templ Page() {
+    @utils.Page("Blueprint") {
+        @Content()
+    }
+}
+
+templ Content() {
+    <p>This is a Blueprint page</p>
+}

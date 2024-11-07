@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/michalhercik/RecSIS/blueprint"
 	"github.com/michalhercik/RecSIS/courses"
 	"github.com/michalhercik/RecSIS/home"
 
@@ -38,7 +39,9 @@ func main() {
 	//////////////////////////////////////////
 
 	router.HandleFunc("GET /", htmxRouter(home.Page, home.Content))
+	router.HandleFunc("GET /home", htmxRouter(home.Page, home.Content))
 	router.HandleFunc("GET /courses", htmxRouter(courses.Page, courses.Content))
+	router.HandleFunc("GET /blueprint", htmxRouter(blueprint.Page, blueprint.Content))
 
 	//////////////////////////////////////////
 	// Server setup
