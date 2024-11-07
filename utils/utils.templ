@@ -10,9 +10,11 @@ templ Page(title string) {
         </head>
         <body>
             @Header()
+            <hr/>
             <main>
                 { children... }
             </main>
+            <hr/>
             @Footer()
         </body>
     </html>
@@ -32,13 +34,13 @@ templ Header() {
                 @navItem("/", "Home")
                 @navItem("/courses", "Courses")
                 @navItem("/blueprint", "Blueprint")
-                <li><a>Degree plan</a></li>
+                @navItem("/degree_plan", "Degree plan")
             </ul>
             <div>
                 <button>Login</button>
                 <select>
                     <option value="en">English</option>
-                    <option value="es">Czech</option>
+                    <option value="cz">Czech</option>
                 </select>
             </div>
         </nav>
