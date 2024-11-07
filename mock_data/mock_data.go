@@ -98,3 +98,65 @@ func GetListOfCourses() []Course {
 
 	return result
 }
+
+var BlueprintIndices = []int{1, 2, 3, 4, 5}
+
+func AddToBlueprint(index int) {
+	BlueprintIndices = append(BlueprintIndices, index)
+}
+
+func RemoveFromBlueprint(index int) {
+	for i, idx := range BlueprintIndices {
+		if idx == index {
+			BlueprintIndices = append(BlueprintIndices[:i], BlueprintIndices[i+1:]...)
+			return
+		}
+	}
+}
+
+func GetBlueprintCourses() []Course {
+	courses := GetListOfCourses()
+	result := make([]Course, len(BlueprintIndices))
+	for i, idx := range BlueprintIndices {
+		result[i] = courses[idx]
+	}
+	return result
+}
+
+var CoursesIndicesByYear = map[int][]int{
+	0: {13, 42, 43},
+	1: {15, 34},
+}
+
+func AddYear() {
+	CoursesIndicesByYear[len(CoursesIndicesByYear)] = []int{}
+}
+
+func RemoveLastYear() {
+	delete(CoursesIndicesByYear, len(CoursesIndicesByYear)-1)
+}
+
+func AddCourseToYear(year, index int) {
+	indices, ok := CoursesIndicesByYear[year]
+	if !ok {
+		return
+	}
+	for _, idx := range indices {
+		if idx == index {
+			return
+		}
+	}
+	CoursesIndicesByYear[year] = append(indices, index)
+}
+
+func GetCoursesByYears() map[int][]Course {
+	result := make(map[int][]Course, len(CoursesIndicesByYear)) 
+	for i := 0; i < len(CoursesIndicesByYear); i++ {
+		courses := make([]Course, len(CoursesIndicesByYear[i]))
+		for j, idx := range CoursesIndicesByYear[i] {
+			courses[j] = GetListOfCourses()[idx]
+		}
+		result[i] = courses
+	} 
+	return result
+}

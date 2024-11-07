@@ -6,11 +6,13 @@ import (
 )
 
 func HandleContent() templ.Component {
-	data := mock_data.GetListOfCourses()
-	return Content(&data)
+	blueprintCourses := mock_data.GetBlueprintCourses()
+	years := mock_data.GetCoursesByYears()
+	return Content(&blueprintCourses, &years)
 }
 
 func HandlePage() templ.Component {
-	data := mock_data.GetListOfCourses()
-	return Page(&data)
+	blueprintCourses := mock_data.GetBlueprintCourses()
+	years := mock_data.GetCoursesByYears()
+	return Page(&blueprintCourses, &years)
 }

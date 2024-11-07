@@ -3,43 +3,84 @@ package blueprint
 import (
     "github.com/michalhercik/RecSIS/utils"
     "github.com/michalhercik/RecSIS/mock_data"
+    "strconv"
 )
 
-templ Page(data *[]mock_data.Course) {
+templ Page(unassigned *[]mock_data.Course, years *map[int][]mock_data.Course) {
     @utils.Page("Blueprint") {
-        @Content(data)
+        @Content(unassigned, years)
     }
 }
 
-templ Content(unassigned *[]mock_data.Course/*, years [][]Course*/) {
+templ renderUnassigned(unassigned *[]mock_data.Course) {
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Teacher</th>
+                <th>Credits</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            for _, course := range *unassigned {
+                <tr>
+                    <td>{ strconv.Itoa(course.Id) }</td>
+                    <td>{ course.NameEng }</td>
+                    <td>{ course.Teacher1 }</td>
+                    <td>{ strconv.Itoa(course.Credits) }</td>
+                    <td>
+                        <button>Remove</button>
+                        <button>Assign</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+templ renderYears(years *map[int][]mock_data.Course) {
+    for i, year := range *years {
+        <h2>Year { strconv.Itoa(i + 1) }</h2>
+        if i - 1 == len(*years) {
+            <button>Remove year</button>
+        }
+        <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Teacher</th>
+                <th>Credits</th>
+                <th>Edit palce</th>
+            </tr>
+        </thead>
+        <tbody>
+            for _, course := range year {
+                <tr>
+                    <td>{ strconv.Itoa(course.Id) }</td>
+                    <td>{ course.NameEng }</td>
+                    <td>{ course.Teacher1 }</td>
+                    <td>{ strconv.Itoa(course.Credits) }</td>
+                    <td>
+                        <button>Edit</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    }
+}
+
+templ Content(unassigned *[]mock_data.Course, years *map[int][]mock_data.Course) {
     <h1>Unassigned courses</h1>
 
-    // <ul>
-    //     for _, course := range unassigned {
-    //         <li>{ course.id }</li>
-    //         <li>{ course.name }</li>
-    //         <li>{ course.description }</li>
-    //         <li>{ course.credits }</li>
-    //         <li> <button>Remove</button> </li>
-    //         <li> <button>Assign</button> </li>
-    //     }
-    // </ul>
+    @renderUnassigned(unassigned)
 
     <h1>Blueprint</h1>
 
-    // for i, year := range years {
-    //     <h2>Year { i + 1 }</h2>
-    //     <button>Remove year</button>
-    //     <ul>
-    //         for _, course := range year {
-    //             <li>{ course.id }</li>
-    //             <li>{ course.name }</li>
-    //             <li>{ course.description }</li>
-    //             <li>{ course.credits }</li>
-    //             <li> <button>Edit</button> </li>
-    //         }
-    //     </ul>
-    // }
+    @renderYears(years)
 
     <button hx-post="/blueprint" hx-target="main">Add year</button>
 
