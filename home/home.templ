@@ -1,12 +1,14 @@
-package main
+package home
 
-templ homePage() {
-    @page("Home") {
-        @homeContent()
+import "github.com/michalhercik/RecSIS/utils"
+
+templ Page() {
+    @utils.Page("Home") {
+        @Content()
     }
 }
 
-templ homeContent() {
+templ Content() {
     <div id="introduction">
         <h1>About RecSIS</h1>
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac purus sit amet.</p>   

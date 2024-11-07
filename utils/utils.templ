@@ -1,6 +1,6 @@
-package main
+package utils
 
-templ page(title string) {
+templ Page(title string) {
     <!DOCTYPE html>
     <html>
         <head>
@@ -9,11 +9,11 @@ templ page(title string) {
             <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
         </head>
         <body>
-            @nav()
+            @Nav()
             <main>
                 { children... }
             </main>
-            @footer()
+            @Footer()
         </body>
     </html>
 }
@@ -22,7 +22,7 @@ templ navItem(url string, text string) {
     <li><a hx-get={ url } hx-target="main" hx-push-url="true">{ text }</a></li>
 }
 
-templ nav() {
+templ Nav() {
     <nav id="page-nav">
         <ul>
             <li><a>RecSIS</a></li>
@@ -35,7 +35,7 @@ templ nav() {
     </nav>
 }
 
-templ footer() {
+templ Footer() {
     <footer>
         In case of any issues, please contact the RecSIS team.
         <a href="mailto:recsis@gmail.com">recsis@gmail.com</a>

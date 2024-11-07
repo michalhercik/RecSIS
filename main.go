@@ -4,6 +4,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/michalhercik/RecSIS/courses"
+	"github.com/michalhercik/RecSIS/home"
+
 	"github.com/a-h/templ"
 )
 
@@ -34,8 +37,8 @@ func main() {
 	// Handlers
 	//////////////////////////////////////////
 
-	router.HandleFunc("GET /", htmxRouter(homePage, homeContent))
-	router.HandleFunc("GET /courses", htmxRouter(coursesPage, coursesContent))
+	router.HandleFunc("GET /", htmxRouter(home.Page, home.Content))
+	router.HandleFunc("GET /courses", htmxRouter(courses.Page, courses.Content))
 
 	//////////////////////////////////////////
 	// Server setup

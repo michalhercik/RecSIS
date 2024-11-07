@@ -1,0 +1,15 @@
+package courses
+
+import "github.com/michalhercik/RecSIS/utils"
+
+templ Content() {
+    <form>
+        <input type="text"/>
+    </form>
+}
+
+templ Page() {
+    @utils.Page("Courses") {
+        @Content()
+    }
+}
