@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/a-h/templ"
 )
 
 func logging(next http.Handler) http.Handler {
@@ -12,9 +14,16 @@ func logging(next http.Handler) http.Handler {
 	})
 }
 
-func comingSoon(w http.ResponseWriter, r *http.Request) {
-	component := comingSoonPage()
-	component.Render(r.Context(), w)
+type generator func() templ.Component
+
+func htmxRouter(page generator, content generator) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		component := page()
+		if r.Header.Get("hx-request") == "true" {
+			component = content()
+		}
+		component.Render(r.Context(), w)
+	}
 }
 
 func main() {
@@ -25,13 +34,14 @@ func main() {
 	// Handlers
 	//////////////////////////////////////////
 
-	router.HandleFunc("GET /", comingSoon)
+	router.HandleFunc("GET /", htmxRouter(homePage, homeContent))
+	router.HandleFunc("GET /courses", htmxRouter(coursesPage, coursesContent))
 
 	//////////////////////////////////////////
 	// Server setup
 	//////////////////////////////////////////
 	server := http.Server{
-		Addr:    ":8000",
+		Addr:    "localhost:8000", // when run as docker container remove localhost
 		Handler: logging(router),
 	}
 
