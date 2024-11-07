@@ -1,6 +1,34 @@
-package courses
+package mock_data
 
 import "fmt"
+
+// TODO:
+//	- check validity of field types (consider enum types)
+//  - consider removing additional or adding missing fields
+type Course struct {
+	Id                   int
+	Code                 string
+	NameCze              string
+	NameEng              string
+	ValidFrom            int
+	ValidTo              int
+	Faculty              int
+	Guarantor            string
+	State                CourseState
+	StartingSemester     int
+	SemesterCount        int
+	Language             string
+	LectureHoursPerWeek1 int
+	SeminarHoursPerWeek1 int
+	LectureHoursPerWeek2 int
+	SeminarHoursPerWeek2 int
+	Exam                 ExamType
+	Credits              int
+	Teacher1             string
+	Teacher2             string
+	MinEnrollment        int
+	Capacity             int
+}
 
 func GetListOfCourses() []Course {
 	result := make([]Course, 50)

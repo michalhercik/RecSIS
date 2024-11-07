@@ -2,6 +2,7 @@ package courses
 
 import (
 	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/mock_data"
 )
 
 func HandleContent() templ.Component {

@@ -2,13 +2,13 @@ package blueprint
 
 import "github.com/michalhercik/RecSIS/utils"
 
-templ Page() {
+templ Page(data *[]Course) {
     @utils.Page("Blueprint") {
-        @Content()
+        @Content(data)
     }
 }
 
-templ Content(/*unassigned []Course, years [][]Course*/) {
+templ Content(data *[]Course/*unassigned []Course, years [][]Course*/) {
     <h1>Unassigned courses</h1>
 
     // <ul>
@@ -41,5 +41,5 @@ templ Content(/*unassigned []Course, years [][]Course*/) {
     <button hx-post="/blueprint" hx-target="main">Add year</button>
 
     <h1>Credits</h1>
-    
+
 }
