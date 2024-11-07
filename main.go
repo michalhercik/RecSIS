@@ -15,7 +15,9 @@ import (
 func logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
-		log.Println(r.Method, r.URL.Path)
+		if r.Method != "HEAD" {
+			log.Println(r.Method, r.URL.Path)
+		}
 	})
 }
 
