@@ -2,14 +2,14 @@ package courses
 
 import "github.com/michalhercik/RecSIS/utils"
 
-templ Content() {
+templ Content(data *[]Course) {
     <form>
         <input type="text"/>
     </form>
 }
 
-templ Page() {
+templ Page(data *[]Course) {
     @utils.Page("Courses") {
-        @Content()
+        @Content(data)
     }
 }

@@ -38,7 +38,7 @@ func main() {
 	//////////////////////////////////////////
 
 	router.HandleFunc("GET /", htmxRouter(home.Page, home.Content))
-	router.HandleFunc("GET /courses", htmxRouter(courses.Page, courses.Content))
+	router.HandleFunc("GET /courses", htmxRouter(courses.HandlePage, courses.HandleContent))
 
 	//////////////////////////////////////////
 	// Server setup
