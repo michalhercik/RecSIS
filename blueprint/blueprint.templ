@@ -8,6 +8,38 @@ templ Page() {
     }
 }
 
-templ Content() {
-    <p>This is a Blueprint page</p>
+templ Content(/*unassigned []Course, years [][]Course*/) {
+    <h1>Unassigned courses</h1>
+
+    // <ul>
+    //     for _, course := range unassigned {
+    //         <li>{ course.id }</li>
+    //         <li>{ course.name }</li>
+    //         <li>{ course.description }</li>
+    //         <li>{ course.credits }</li>
+    //         <li> <button>Remove</button> </li>
+    //         <li> <button>Assign</button> </li>
+    //     }
+    // </ul>
+
+    <h1>Blueprint</h1>
+
+    // for i, year := range years {
+    //     <h2>Year { i + 1 }</h2>
+    //     <button>Remove year</button>
+    //     <ul>
+    //         for _, course := range year {
+    //             <li>{ course.id }</li>
+    //             <li>{ course.name }</li>
+    //             <li>{ course.description }</li>
+    //             <li>{ course.credits }</li>
+    //             <li> <button>Edit</button> </li>
+    //         }
+    //     </ul>
+    // }
+
+    <button hx-post="/blueprint" hx-target="main">Add year</button>
+
+    <h1>Credits</h1>
+    
 }

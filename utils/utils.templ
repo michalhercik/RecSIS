@@ -9,7 +9,7 @@ templ Page(title string) {
             <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
         </head>
         <body>
-            @Nav()
+            @Header()
             <main>
                 { children... }
             </main>
@@ -22,17 +22,27 @@ templ navItem(url string, text string) {
     <li><a hx-get={ url } hx-target="main" hx-push-url="true">{ text }</a></li>
 }
 
-templ Nav() {
-    <nav id="page-nav">
-        <ul>
-            <li><a>RecSIS</a></li>
-            @navItem("/", "Home")
-            @navItem("/courses", "Courses")
-            @navItem("/blueprint", "Blueprint")
-            <li><a>Login</a></li>
-            <li><a>English</a></li>
-        </ul>
-    </nav>
+templ Header() {
+    <header>
+        <nav>
+            <div>
+                <h1>RecSIS</h1>
+            </div>
+            <ul>
+                @navItem("/", "Home")
+                @navItem("/courses", "Courses")
+                @navItem("/blueprint", "Blueprint")
+                <li><a>Degree plan</a></li>
+            </ul>
+            <div>
+                <button>Login</button>
+                <select>
+                    <option value="en">English</option>
+                    <option value="es">Czech</option>
+                </select>
+            </div>
+        </nav>
+    </header>
 }
 
 templ Footer() {
