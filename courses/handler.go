@@ -6,11 +6,11 @@ import (
 )
 
 func HandleContent() templ.Component {
-	data := GetListOfCourses()
+	data := mock_data.GetListOfCourses()
 	return Content(&data)
 }
 
 func HandlePage() templ.Component {
-	data := GetListOfCourses()
+	data := mock_data.GetListOfCourses()
 	return Page(&data)
 }

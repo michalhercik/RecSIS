@@ -1,14 +1,17 @@
 package blueprint
 
-import "github.com/michalhercik/RecSIS/utils"
+import (
+    "github.com/michalhercik/RecSIS/utils"
+    "github.com/michalhercik/RecSIS/mock_data"
+)
 
-templ Page(data *[]Course) {
+templ Page(data *[]mock_data.Course) {
     @utils.Page("Blueprint") {
         @Content(data)
     }
 }
 
-templ Content(data *[]Course/*unassigned []Course, years [][]Course*/) {
+templ Content(unassigned *[]mock_data.Course/*, years [][]Course*/) {
     <h1>Unassigned courses</h1>
 
     // <ul>
