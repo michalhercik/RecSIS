@@ -13,6 +13,7 @@ templ Page(unassigned *[]mock_data.Course, years *map[int][]mock_data.Course) {
 }
 
 // TODO only if there is at least one
+// TODO should render in predefined order
 templ renderUnassigned(unassigned *[]mock_data.Course) {
     <table>
         <thead>
@@ -57,9 +58,10 @@ templ renderUnassigned(unassigned *[]mock_data.Course) {
 // TODO by semesters
 // TODO add credits by semesters and years
 // TODO only if there is at least one
+// TODO should render in predefined order
 templ renderYears(years *map[int][]mock_data.Course) {
     for i, year := range *years {
-        <div id={"Year" + strconv.Itoa(i)}>
+        <div id={"BlueprintYear" + strconv.Itoa(i)}>
             <h2>Year { strconv.Itoa(i) }</h2>
             <table>
             <thead>
@@ -95,18 +97,19 @@ templ renderYears(years *map[int][]mock_data.Course) {
             </table>
        </div>
     }
-    // TODO this must also change after clicking on the button
+    // TODO only if there is at least one
+    // TODO move years to unassigned
     <button
-        id="RemoveYearButton"
         hx-swap="outerHTML"
         hx-post={"/blueprint/remove-year/" + strconv.Itoa(len(*years))}
-        hx-target={"#Year" + strconv.Itoa(len(*years))}>
+        hx-target="this">
         Remove last year
-    </button> // TODO only if there is at least one
+    </button>
     <button hx-post="/blueprint/add-year">Add year</button>
 }
 
 // TODO only if there is at least one
+// TODO should render in predefined order
 templ renderCreditTable(years *map[int][]mock_data.Course) {
     <table id="CreditsSum">
         <thead>
@@ -127,17 +130,18 @@ templ renderCreditTable(years *map[int][]mock_data.Course) {
                 }
                 yearStr := strconv.Itoa(year)
                 }}
-                <tr id={"Year" + yearStr}>
+                <tr id={"SumWinterYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Winter </td>
                     <td>{ strconv.Itoa(creditsBySemester[1]) }</td>
                 </tr>
-                <tr id={"Year" + yearStr}>
+                <tr id={"SumSummerYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Summer </td>
                     <td>{ strconv.Itoa(creditsBySemester[2]) }</td>
                 </tr>
             }
+            // TODO this must be updated after every change
             <tr>
                 <td colspan="2"> Total </td>
                 <td>{ strconv.Itoa(totalSum) }</td>

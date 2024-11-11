@@ -4,8 +4,8 @@ import (
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/mock_data"
 	"net/http"
-	"strings"
 	"strconv"
+	"fmt"
 )
 
 func HandleContent() templ.Component {
@@ -21,34 +21,28 @@ func HandlePage() templ.Component {
 }
 
 func HandleLastYearRemoval(w http.ResponseWriter, r *http.Request) {
-	year := r.PathValue("year")
+    year := r.PathValue("year")
 
-	//remove data from DB
-	yearInt, _ := strconv.Atoi(year)
-	mock_data.RemoveYear(yearInt)
+    // Remove data from DB
+    yearInt, _ := strconv.Atoi(year)
+    mock_data.RemoveYear(yearInt)
 
-	// remove data from UI
-	var sb strings.Builder
-	sb.WriteString(`<tr id="`)
-	sb.WriteString("Year")
-	sb.WriteString(year)
-	sb.WriteString(`" hx-swap-oob="delete"></tr>`)
+    // Generate updated button HTML
+    buttonHTML := fmt.Sprintf(`<button
+        hx-swap="outerHTML"
+        hx-post="/blueprint/remove-year/%d"
+        hx-target="this">
+        Remove last year
+    </button>`, yearInt - 1)
 
-	sb.WriteString(`<div id="`)
-	sb.WriteString("Year")
-	sb.WriteString(year)
-	sb.WriteString(`" hx-swap-oob="delete"></div>`)
+    // Generate removal HTML for the div and tr elements
+    divRemovalHTML := fmt.Sprintf(`<div id="BlueprintYear%d" hx-swap-oob="delete"></div>`, yearInt)
+    trWinterRemovalHTML := fmt.Sprintf(`<template><tr id="SumWinterYear%d" hx-swap-oob="delete"></tr></template>`, yearInt)
+    trSummerRemovalHTML := fmt.Sprintf(`<template><tr id="SumSummerYear%d" hx-swap-oob="delete"></tr></template>`, yearInt)
 
-	sb.WriteString(`<button id="RemoveYearButton" hw-swap-oob="true" hx-post="/blueprint/remove-year/`)
-	sb.WriteString(strconv.Itoa(yearInt - 1))
-	sb.WriteString(`" hx-target="#Year`)
-	sb.WriteString(strconv.Itoa(yearInt - 1))
-	sb.WriteString(`"> Remove last year </button>`)
-
-
-	// Set the content type to HTML
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(sb.String()))
+    // Write updated button HTML and removal HTML to response
+    w.Header().Set("Content-Type", "text/html")
+    w.Write([]byte(buttonHTML + divRemovalHTML + trWinterRemovalHTML + trSummerRemovalHTML))
 }
 
 func HandleBLueprintUnassignedRemoval(w http.ResponseWriter, r *http.Request) {
