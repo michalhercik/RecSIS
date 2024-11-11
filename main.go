@@ -44,8 +44,11 @@ func main() {
 	router.HandleFunc("GET /", htmxRouter(home.Page, home.Content))
 	router.HandleFunc("GET /home", htmxRouter(home.Page, home.Content))
 	router.HandleFunc("GET /courses", htmxRouter(courses.HandlePage, courses.HandleContent))
-	router.HandleFunc("GET /blueprint", htmxRouter(blueprint.HandlePage, blueprint.HandleContent))
 	router.HandleFunc("GET /degree_plan", htmxRouter(degree_plan.Page, degree_plan.Content))
+
+	// Blueprint
+	router.HandleFunc("GET /blueprint", htmxRouter(blueprint.HandlePage, blueprint.HandleContent))
+	router.HandleFunc("POST /blueprint/remove-year/{year}", blueprint.HandleLastYearRemoval)
 
 	//////////////////////////////////////////
 	// Server setup

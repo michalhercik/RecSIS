@@ -1,6 +1,8 @@
 package mock_data
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // TODO:
 //	- check validity of field types (consider enum types)
@@ -124,16 +126,16 @@ func GetBlueprintCourses() []Course {
 }
 
 var CoursesIndicesByYear = map[int][]int{
-	0: {13, 42, 43},
-	1: {15, 34},
+	1: {13, 42, 43},
+	2: {15, 34},
 }
 
 func AddYear() {
-	CoursesIndicesByYear[len(CoursesIndicesByYear)] = []int{}
+	CoursesIndicesByYear[len(CoursesIndicesByYear) + 1] = []int{}
 }
 
-func RemoveLastYear() {
-	delete(CoursesIndicesByYear, len(CoursesIndicesByYear)-1)
+func RemoveYear(year int) {
+	delete(CoursesIndicesByYear, year)
 }
 
 func AddCourseToYear(year, index int) {
@@ -149,9 +151,22 @@ func AddCourseToYear(year, index int) {
 	CoursesIndicesByYear[year] = append(indices, index)
 }
 
+func RemoveCourseFromYear(year, index int) {
+	indices, ok := CoursesIndicesByYear[year]
+	if !ok {
+		return
+	}
+	for i, idx := range indices {
+		if idx == index {
+			CoursesIndicesByYear[year] = append(indices[:i], indices[i+1:]...)
+			return
+		}
+	}
+}
+
 func GetCoursesByYears() map[int][]Course {
 	result := make(map[int][]Course, len(CoursesIndicesByYear)) 
-	for i := 0; i < len(CoursesIndicesByYear); i++ {
+	for i := 1; i <= len(CoursesIndicesByYear); i++ {
 		courses := make([]Course, len(CoursesIndicesByYear[i]))
 		for j, idx := range CoursesIndicesByYear[i] {
 			courses[j] = GetListOfCourses()[idx]

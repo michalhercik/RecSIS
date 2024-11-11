@@ -19,16 +19,24 @@ templ renderUnassigned(unassigned *[]mock_data.Course) {
                 <th>ID</th>
                 <th>Name</th>
                 <th>Teacher</th>
+                <th>Semester</th>
                 <th>Credits</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             for _, course := range *unassigned {
+                {{
+                semester := "Winter" 
+                if course.StartingSemester == 2 {
+                    semester = "Summer"
+                }
+                }}
                 <tr>
                     <td>{ strconv.Itoa(course.Id) }</td>
                     <td>{ course.NameEng }</td>
                     <td>{ course.Teacher1 }</td>
+                    <td>{ semester }</td>
                     <td>{ strconv.Itoa(course.Credits) }</td>
                     <td>
                         <button>Remove</button>
@@ -42,35 +50,84 @@ templ renderUnassigned(unassigned *[]mock_data.Course) {
 
 templ renderYears(years *map[int][]mock_data.Course) {
     for i, year := range *years {
-        <h2>Year { strconv.Itoa(i + 1) }</h2>
-        if i - 1 == len(*years) {
-            <button>Remove year</button>
-        }
-        <table>
+        <div id={"Year" + strconv.Itoa(i)} hx-swap-oob="delete">
+            <h2>Year { strconv.Itoa(i) }</h2>
+            <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Teacher</th>
+                    <th>Semester</th>
+                    <th>Credits</th>
+                    <th>Edit palce</th>
+                </tr>
+            </thead>
+            <tbody>
+                for _, course := range year {
+                    {{
+                    semester := "Winter" 
+                    if course.StartingSemester == 2 {
+                        semester = "Summer"
+                    }
+                    }}
+                    <tr>
+                        <td>{ strconv.Itoa(course.Id) }</td>
+                        <td>{ course.NameEng }</td>
+                        <td>{ course.Teacher1 }</td>
+                        <td>{ semester }</td>
+                        <td>{ strconv.Itoa(course.Credits) }</td>
+                        <td>
+                            <button>Edit</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            </table>
+       </div>
+    }
+    <button
+        id="RemoveYearButton"
+        hx-swap="outerHTML"
+        hx-post={"/blueprint/remove-year/" + strconv.Itoa(len(*years))}
+        hx-target={"#Year" + strconv.Itoa(len(*years))}
+        hx-trigger="click">
+        Remove last year
+    </button> // only if there is at least one
+    <button hx-post="/blueprint/add-year">Add year</button>
+}
+
+templ renderCreditTable(years *map[int][]mock_data.Course) {
+    <table id="CreditsSum">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Teacher</th>
-                <th>Credits</th>
-                <th>Edit palce</th>
+                <th>Year</th>
+                <th>Starting Semester</th>
+                <th>Total Credits</th>
             </tr>
         </thead>
         <tbody>
-            for _, course := range year {
-                <tr>
-                    <td>{ strconv.Itoa(course.Id) }</td>
-                    <td>{ course.NameEng }</td>
-                    <td>{ course.Teacher1 }</td>
-                    <td>{ strconv.Itoa(course.Credits) }</td>
-                    <td>
-                        <button>Edit</button>
-                    </td>
+            for year, courses := range *years {
+                {{
+                creditsBySemester := make(map[int]int)
+                for _, course := range courses {
+                    creditsBySemester[course.StartingSemester] += course.Credits
+                }
+                yearStr := strconv.Itoa(year)
+                }}
+                <tr id={"Year" + yearStr} hx-swap-oob="delete">
+                    <td>{ yearStr }</td>
+                    <td>{ "Winter" }</td>
+                    <td>{ strconv.Itoa(creditsBySemester[1]) }</td>
+                </tr>
+                <tr id={"Year" + yearStr} hx-swap-oob="delete">
+                    <td>{ yearStr }</td>
+                    <td>{ "Summer" }</td>
+                    <td>{ strconv.Itoa(creditsBySemester[2]) }</td>
                 </tr>
             }
         </tbody>
     </table>
-    }
 }
 
 templ Content(unassigned *[]mock_data.Course, years *map[int][]mock_data.Course) {
@@ -82,8 +139,7 @@ templ Content(unassigned *[]mock_data.Course, years *map[int][]mock_data.Course)
 
     @renderYears(years)
 
-    <button hx-post="/blueprint" hx-target="main">Add year</button>
-
     <h1>Credits</h1>
 
+    @renderCreditTable(years)
 }
