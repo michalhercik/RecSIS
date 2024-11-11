@@ -39,7 +39,21 @@ func HandleLastYearRemoval(w http.ResponseWriter, r *http.Request) {
 	sb.WriteString(year)
 	sb.WriteString(`" hx-swap-oob="delete"></div>`)
 
+	sb.WriteString(`<button id="RemoveYearButton" hw-swap-oob="true" hx-post="/blueprint/remove-year/`)
+	sb.WriteString(strconv.Itoa(yearInt - 1))
+	sb.WriteString(`" hx-target="#Year`)
+	sb.WriteString(strconv.Itoa(yearInt - 1))
+	sb.WriteString(`"> Remove last year </button>`)
+
+
 	// Set the content type to HTML
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(sb.String()))
+}
+
+func HandleBLueprintUnassignedRemoval(w http.ResponseWriter, r *http.Request) {
+	//remove data from DB
+	idInt, _ := strconv.Atoi(r.PathValue("id"))
+	mock_data.RemoveFromBlueprint(idInt)
+	w.WriteHeader(http.StatusOK)
 }

@@ -49,6 +49,7 @@ func main() {
 	// Blueprint
 	router.HandleFunc("GET /blueprint", htmxRouter(blueprint.HandlePage, blueprint.HandleContent))
 	router.HandleFunc("POST /blueprint/remove-year/{year}", blueprint.HandleLastYearRemoval)
+	router.HandleFunc("DELETE /blueprint/remove-unassigned/{id}", blueprint.HandleBLueprintUnassignedRemoval)
 
 	//////////////////////////////////////////
 	// Server setup

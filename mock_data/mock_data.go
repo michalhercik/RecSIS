@@ -101,16 +101,16 @@ func GetListOfCourses() []Course {
 	return result
 }
 
-var BlueprintIndices = []int{1, 2, 3, 4, 5}
+var BlueprintCourses = []int{4950171, 4950172, 4950173, 4950174, 4950175}
 
 func AddToBlueprint(index int) {
-	BlueprintIndices = append(BlueprintIndices, index)
+	BlueprintCourses = append(BlueprintCourses, index)
 }
 
 func RemoveFromBlueprint(index int) {
-	for i, idx := range BlueprintIndices {
+	for i, idx := range BlueprintCourses {
 		if idx == index {
-			BlueprintIndices = append(BlueprintIndices[:i], BlueprintIndices[i+1:]...)
+			BlueprintCourses = append(BlueprintCourses[:i], BlueprintCourses[i+1:]...)
 			return
 		}
 	}
@@ -118,60 +118,72 @@ func RemoveFromBlueprint(index int) {
 
 func GetBlueprintCourses() []Course {
 	courses := GetListOfCourses()
-	result := make([]Course, len(BlueprintIndices))
-	for i, idx := range BlueprintIndices {
-		result[i] = courses[idx]
+	result := make([]Course, len(BlueprintCourses))
+	for i, idx := range BlueprintCourses {
+		for _, course := range courses {
+			if course.Id == idx {
+				result[i] = course
+				break
+			}
+		}
 	}
 	return result
 }
 
-var CoursesIndicesByYear = map[int][]int{
-	1: {13, 42, 43},
-	2: {15, 34},
+var CoursesByYear = map[int][]int{
+	1: {4950182, 4950213, 4950214},
+	2: {4950186, 4950205},
 }
 
 func AddYear() {
-	CoursesIndicesByYear[len(CoursesIndicesByYear) + 1] = []int{}
+	CoursesByYear[len(CoursesByYear) + 1] = []int{}
 }
 
 func RemoveYear(year int) {
-	delete(CoursesIndicesByYear, year)
+	delete(CoursesByYear, year)
 }
 
-func AddCourseToYear(year, index int) {
-	indices, ok := CoursesIndicesByYear[year]
+func AddCourseToYear(year, course int) {
+	courses, ok := CoursesByYear[year]
 	if !ok {
 		return
 	}
-	for _, idx := range indices {
-		if idx == index {
+	// remove duplicates
+	for _, idx := range courses {
+		if idx == course {
 			return
 		}
 	}
-	CoursesIndicesByYear[year] = append(indices, index)
+	CoursesByYear[year] = append(courses, course)
 }
 
-func RemoveCourseFromYear(year, index int) {
-	indices, ok := CoursesIndicesByYear[year]
+func RemoveCourseFromYear(year, course int) {
+	courses, ok := CoursesByYear[year]
 	if !ok {
 		return
 	}
-	for i, idx := range indices {
-		if idx == index {
-			CoursesIndicesByYear[year] = append(indices[:i], indices[i+1:]...)
+	for i, idx := range courses {
+		if idx == course {
+			CoursesByYear[year] = append(courses[:i], courses[i+1:]...)
 			return
 		}
 	}
 }
 
 func GetCoursesByYears() map[int][]Course {
-	result := make(map[int][]Course, len(CoursesIndicesByYear)) 
-	for i := 1; i <= len(CoursesIndicesByYear); i++ {
-		courses := make([]Course, len(CoursesIndicesByYear[i]))
-		for j, idx := range CoursesIndicesByYear[i] {
-			courses[j] = GetListOfCourses()[idx]
+	courses := GetListOfCourses()
+	result := make(map[int][]Course, len(CoursesByYear)) 
+	for i := 1; i <= len(CoursesByYear); i++ {
+		year_courses := make([]Course, len(CoursesByYear[i]))
+		for j, idx := range CoursesByYear[i] {
+			for _, course := range courses {
+				if course.Id == idx {
+					year_courses[j] = course
+					break
+				}
+			}
 		}
-		result[i] = courses
+		result[i] = year_courses
 	} 
 	return result
 }
