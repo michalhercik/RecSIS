@@ -2,16 +2,16 @@ package courses
 
 import (
     "github.com/michalhercik/RecSIS/utils"
-    "github.com/michalhercik/RecSIS/mock_data"
+    "github.com/michalhercik/RecSIS/database"
 )
 
-templ Content(data *[]mock_data.Course) {
+templ Content(data *database.CoursesData) {
     <form>
         <input type="text"/>
     </form>
 }
 
-templ Page(data *[]mock_data.Course) {
+templ Page(data *database.CoursesData) {
     @utils.Page("Courses") {
         @Content(data)
     }

@@ -4,11 +4,18 @@ import (
 	"log"
 	"net/http"
 
+	// pages
 	"github.com/michalhercik/RecSIS/blueprint"
 	"github.com/michalhercik/RecSIS/courses"
 	"github.com/michalhercik/RecSIS/degree_plan"
 	"github.com/michalhercik/RecSIS/home"
 
+	// database
+	"github.com/michalhercik/RecSIS/database"
+	"github.com/michalhercik/RecSIS/database/mock"
+	//"github.com/michalhercik/RecSIS/database/real"
+
+	// template
 	"github.com/a-h/templ"
 )
 
@@ -38,6 +45,13 @@ func main() {
 	router := http.NewServeMux()
 
 	//////////////////////////////////////////
+	// Database setup
+	//////////////////////////////////////////
+
+	database.SetDatabase(mock.NewMockDB())
+	//database.SetDatabase(real.NewRealDB())
+
+	//////////////////////////////////////////
 	// Handlers
 	//////////////////////////////////////////
 
@@ -48,7 +62,7 @@ func main() {
 
 	// Blueprint
 	router.HandleFunc("GET /blueprint", htmxRouter(blueprint.HandlePage, blueprint.HandleContent))
-	router.HandleFunc("POST /blueprint/remove-year/{year}", blueprint.HandleLastYearRemoval)
+	//router.HandleFunc("POST /blueprint/remove-year/{year}", blueprint.HandleLastYearRemoval)
 	router.HandleFunc("DELETE /blueprint/remove-unassigned/{id}", blueprint.HandleBLueprintUnassignedRemoval)
 
 	//////////////////////////////////////////

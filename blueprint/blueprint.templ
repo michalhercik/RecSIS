@@ -2,19 +2,13 @@ package blueprint
 
 import (
     "github.com/michalhercik/RecSIS/utils"
-    "github.com/michalhercik/RecSIS/mock_data"
+    "github.com/michalhercik/RecSIS/database"
     "strconv"
 )
 
-templ Page(unassigned *[]mock_data.Course, years *map[int][]mock_data.Course) {
-    @utils.Page("Blueprint") {
-        @Content(unassigned, years)
-    }
-}
-
 // TODO only if there is at least one
 // TODO should render in predefined order
-templ renderUnassigned(unassigned *[]mock_data.Course) {
+templ renderUnassigned(unassigned *[]database.Course) {
     <table>
         <thead>
             <tr>
@@ -59,7 +53,7 @@ templ renderUnassigned(unassigned *[]mock_data.Course) {
 // TODO add credits by semesters and years
 // TODO only if there is at least one
 // TODO should render in predefined order
-templ renderYears(years *map[int][]mock_data.Course) {
+templ renderYears(years *map[int][]database.Course) {
     for i, year := range *years {
         <div id={"BlueprintYear" + strconv.Itoa(i)}>
             <h2>Year { strconv.Itoa(i) }</h2>
@@ -110,7 +104,7 @@ templ renderYears(years *map[int][]mock_data.Course) {
 
 // TODO only if there is at least one
 // TODO should render in predefined order
-templ renderCreditTable(years *map[int][]mock_data.Course) {
+templ renderCreditTable(years *map[int][]database.Course) {
     <table id="CreditsSum">
         <thead>
             <tr>
@@ -141,7 +135,6 @@ templ renderCreditTable(years *map[int][]mock_data.Course) {
                     <td>{ strconv.Itoa(creditsBySemester[2]) }</td>
                 </tr>
             }
-            // TODO this must be updated after every change
             <tr>
                 <td colspan="2"> Total </td>
                 <td>{ strconv.Itoa(totalSum) }</td>
@@ -150,16 +143,22 @@ templ renderCreditTable(years *map[int][]mock_data.Course) {
     </table>
 }
 
-templ Content(unassigned *[]mock_data.Course, years *map[int][]mock_data.Course) {
+templ Content(data *database.BlueprintData) {
     <h1>Unassigned courses</h1>
 
-    @renderUnassigned(unassigned)
+    @renderUnassigned(&data.Unassigned)
 
     <h1>Blueprint</h1>
 
-    @renderYears(years)
+    @renderYears(&data.Years)
 
     <h1>Credits</h1>
 
-    @renderCreditTable(years)
+    @renderCreditTable(&data.Years)
+}
+
+templ Page(data *database.BlueprintData) {
+    @utils.Page("Blueprint") {
+        @Content(data)
+    }
 }

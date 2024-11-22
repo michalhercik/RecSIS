@@ -2,15 +2,15 @@ package courses
 
 import (
 	"github.com/a-h/templ"
-	"github.com/michalhercik/RecSIS/mock_data"
+    "github.com/michalhercik/RecSIS/database"
 )
 
 func HandleContent() templ.Component {
-	data := mock_data.GetListOfCourses()
+	data := database.GetCoursesData()
 	return Content(&data)
 }
 
 func HandlePage() templ.Component {
-	data := mock_data.GetListOfCourses()
+	data := database.GetCoursesData()
 	return Page(&data)
 }
