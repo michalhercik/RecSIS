@@ -35,7 +35,7 @@ templ Header() {
                 @navItem("/", "Home")
                 @navItem("/courses", "Courses")
                 @navItem("/blueprint", "Blueprint")
-                @navItem("/degree_plan", "Degree plan")
+                @navItem("/degreeplan", "Degree plan")
             </ul>
             <div>
                 <button>Login</button>
@@ -53,4 +53,16 @@ templ Footer() {
         In case of any issues, please contact the RecSIS team.
         <a href="mailto:recsis@gmail.com">recsis@gmail.com</a>
     </footer>
+}
+
+func SemesterStr(semester int) string {
+    if semester == 1 {
+        return "Winter"
+    } else {
+        return "Summer"
+    }
+}
+
+templ CourseLink(Id string, Code string) {
+    <a href={ templ.SafeURL("/course/" + Id) }>{ Code }</a>
 }

@@ -1,0 +1,20 @@
+package coursedetail
+
+import (
+    "github.com/michalhercik/RecSIS/utils"
+    "github.com/michalhercik/RecSIS/database"
+    "strconv"
+)
+
+templ Content(data *database.CourseData) {
+    <h1>{ data.Course.NameEng }</h1>
+    <p><strong>Teacher:</strong> { data.Course.Teacher1 }</p>
+    <p><strong>Credits:</strong> { strconv.Itoa(data.Course.Credits) }</p>
+    <p><strong>Semester:</strong> { utils.SemesterStr(data.Course.StartingSemester) }</p>
+}
+
+templ Page(data *database.CourseData) {
+    @utils.Page("Blueprint") {
+        @Content(data)
+    }
+}

@@ -1,17 +1,14 @@
-package courses
+package degreeplan
 
 import (
 	"github.com/a-h/templ"
-    "github.com/michalhercik/RecSIS/database"
 	"net/http"
 )
 
 func HandleContent(w http.ResponseWriter, r *http.Request) templ.Component {
-	data := database.GetCoursesData()
-	return Content(&data)
+	return Content()
 }
 
 func HandlePage(w http.ResponseWriter, r *http.Request) templ.Component {
-	data := database.GetCoursesData()
-	return Page(&data)
+	return Page()
 }

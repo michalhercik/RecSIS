@@ -7,7 +7,8 @@ import (
 	// pages
 	"github.com/michalhercik/RecSIS/blueprint"
 	"github.com/michalhercik/RecSIS/courses"
-	"github.com/michalhercik/RecSIS/degree_plan"
+	"github.com/michalhercik/RecSIS/coursedetail"
+	"github.com/michalhercik/RecSIS/degreeplan"
 	"github.com/michalhercik/RecSIS/home"
 
 	// database
@@ -28,13 +29,13 @@ func logging(next http.Handler) http.Handler {
 	})
 }
 
-type generator func() templ.Component
+type generator func(http.ResponseWriter, *http.Request) templ.Component
 
 func htmxRouter(page generator, content generator) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		component := page()
+		component := page(w, r)
 		if r.Header.Get("hx-request") == "true" {
-			component = content()
+			component = content(w, r)
 		}
 		component.Render(r.Context(), w)
 	}
@@ -55,15 +56,25 @@ func main() {
 	// Handlers
 	//////////////////////////////////////////
 
-	router.HandleFunc("GET /", htmxRouter(home.Page, home.Content))
-	router.HandleFunc("GET /home", htmxRouter(home.Page, home.Content))
+	// Home
+	router.HandleFunc("GET /", htmxRouter(home.HandlePage, home.HandleContent))
+	router.HandleFunc("GET /home", htmxRouter(home.HandlePage, home.HandleContent))
+
+	// Courses
 	router.HandleFunc("GET /courses", htmxRouter(courses.HandlePage, courses.HandleContent))
-	router.HandleFunc("GET /degree_plan", htmxRouter(degree_plan.Page, degree_plan.Content))
+
+	// Degree plan
+	router.HandleFunc("GET /degreeplan", htmxRouter(degreeplan.HandlePage, degreeplan.HandleContent))
 
 	// Blueprint
 	router.HandleFunc("GET /blueprint", htmxRouter(blueprint.HandlePage, blueprint.HandleContent))
-	//router.HandleFunc("POST /blueprint/remove-year/{year}", blueprint.HandleLastYearRemoval)
-	router.HandleFunc("DELETE /blueprint/remove-unassigned/{id}", blueprint.HandleBLueprintUnassignedRemoval)
+	router.HandleFunc("POST /blueprint/add-year", blueprint.HandleYearAddition)
+	router.HandleFunc("POST /blueprint/remove-year/{year}", blueprint.HandleLastYearRemoval)
+	router.HandleFunc("DELETE /blueprint/remove-unassigned/{id}", blueprint.HandleUnassignedRemoval)
+
+	// Course detail
+	// TODO solve problem with /course/style.css
+	router.HandleFunc("GET /course/{id}", htmxRouter(coursedetail.HandlePage, coursedetail.HandleContent))
 
 	//////////////////////////////////////////
 	// Server setup

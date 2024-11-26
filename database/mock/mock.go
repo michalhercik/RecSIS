@@ -31,7 +31,16 @@ func (db *MockDB) GetAllCourses() []database.Course {
 	return db.courses
 }
 
-func (db *MockDB) GetUnassignedBlueprint(user int) []database.Course {
+func (db *MockDB) GetCourse(id int) (database.Course, error) {
+	for _, course := range db.courses {
+		if course.Id == id {
+			return course, nil
+		}
+	}
+	return database.Course{}, fmt.Errorf("Course with id %d not found", id)
+}
+
+func (db *MockDB) BlueprintGetUnassigned(user int) []database.Course {
 	blueprintCourses := db.blueprintCourses[user]
 	result := make([]database.Course, len(blueprintCourses))
 	for i, idx := range blueprintCourses {
@@ -45,25 +54,29 @@ func (db *MockDB) GetUnassignedBlueprint(user int) []database.Course {
 	return result
 }
 
-func (db *MockDB) GetAssignedBlueprint(user int) map[int][]database.Course {
+func (db *MockDB) BlueprintGetAssigned(user int) map[int][]database.Course {
 	coursesByYear := db.coursesByYear[user]
 	result := make(map[int][]database.Course, len(coursesByYear)) 
 	for i := 1; i <= len(coursesByYear); i++ {
-		year_courses := make([]database.Course, len(coursesByYear[i]))
+		yearCourses := make([]database.Course, len(coursesByYear[i]))
 		for j, idx := range coursesByYear[i] {
 			for _, course := range db.courses {
 				if course.Id == idx {
-					year_courses[j] = course
+					yearCourses[j] = course
 					break
 				}
 			}
 		}
-		result[i] = year_courses
+		result[i] = yearCourses
 	} 
 	return result
 }
 
-func (db *MockDB) RemoveBlueprintCourse(user int, course int) {
+func (db *MockDB) BlueprintAddUnassigned(user int, course int) {
+	db.blueprintCourses[user] = append(db.blueprintCourses[user], course)
+}
+
+func (db *MockDB) BlueprintRemoveUnassigned(user int, course int) {
 	blueprintCourses := db.blueprintCourses[user]
 	for i, idx := range blueprintCourses {
 		if idx == course {
@@ -71,6 +84,28 @@ func (db *MockDB) RemoveBlueprintCourse(user int, course int) {
 			return
 		}
 	}
+}
+
+func (db *MockDB) BlueprintRemoveYear(user int, year int) []database.Course {
+	courses, ok := db.coursesByYear[user][year]
+	delete(db.coursesByYear[user], year)
+	if !ok {
+		return []database.Course{}
+	}
+	result := make([]database.Course, len(courses))
+	for i, idx := range courses {
+		for _, course := range db.courses {
+			if course.Id == idx {
+				result[i] = course
+				break
+			}
+		}
+	}
+	return result
+}
+
+func (db *MockDB) BlueprintAddYear(user int) {
+	db.coursesByYear[user][len(db.coursesByYear[user]) + 1] = []int{}
 }
 
 // database logic
@@ -117,22 +152,18 @@ func getListOfCourses() []database.Course {
 
 func getBlueprintCourses() map[int][]int {
 	return map[int][]int{
-		42: {4950171, 4950172, 4950173, 4950174, 4950175},
+		database.User: {4950171, 4950172, 4950173, 4950174, 4950175},
 	}
 }
 
 func getCoursesByYears() map[int]map[int][]int {
 	return map[int]map[int][]int{
-		42: {
+		database.User: {
 			1: {4950182, 4950213, 4950214},
 			2: {4950186, 4950205},
 		},
 	}
 }
-
-// func AddToBlueprint(index int) {
-// 	BlueprintCourses = append(BlueprintCourses, index)
-// }
 
 // func RemoveFromBlueprint(index int) {
 // 	for i, idx := range BlueprintCourses {
@@ -141,14 +172,6 @@ func getCoursesByYears() map[int]map[int][]int {
 // 			return
 // 		}
 // 	}
-// }
-
-// func AddYear() {
-// 	CoursesByYear[len(CoursesByYear) + 1] = []int{}
-// }
-
-// func RemoveYear(year int) {
-// 	delete(CoursesByYear, year)
 // }
 
 // func AddCourseToYear(year, course int) {

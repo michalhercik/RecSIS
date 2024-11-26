@@ -1,25 +1,42 @@
 package database
 
+const User = 42
+
 // DB defines the methods for interacting with the database
 type DB interface {
 	// courses
 	GetAllCourses() []Course
+	GetCourse(id int) (Course, error)
 	// blueprint
-	GetUnassignedBlueprint(user int) []Course
-	GetAssignedBlueprint(user int) map[int][]Course
-	//AddBlueprintCourse(user int, course int)
-	RemoveBlueprintCourse(user int, course int)
-	//AddBlueprintYear(user int)
-	//RemoveBlueprintYear(user int, year int)
-	//AddCourseToYear(user int, year int, course int)
-	//RemoveCourseFromYear(user int, year int, course int)
+	BlueprintGetUnassigned(user int) []Course
+	BlueprintGetAssigned(user int) map[int][]Course
+	BlueprintAddUnassigned(user int, course int)
+	BlueprintRemoveUnassigned(user int, course int)
+	BlueprintAddYear(user int)
+	BlueprintRemoveYear(user int, year int) []Course
+	//BlueprintAddCourseToYear(user int, year int, course int)
+	//BlueprintRemoveCourseFromYear(user int, year int, course int)
 	// TODO add more
+}
+
+type BlueprintData struct {
+	Unassigned []Course
+	Years map[int][]Course
+}
+
+type CoursesData struct {
+	Courses []Course
+}
+
+type CourseData struct {
+	Course Course
+	// TODO add comments and ratings
 }
 
 // Course representation in system
 // TODO:
 //	- check validity of field types (consider enum types)
-//  - consider removing additional or adding missing fields
+//  - consider removing irrelevant or adding missing fields
 type Course struct {
 	Id                   int
 	Code                 string
@@ -71,13 +88,4 @@ var examTypeName = map[ExamType]string{
 
 func (et ExamType) String() string {
 	return examTypeName[et]
-}
-
-type BlueprintData struct {
-	Unassigned []Course
-	Years map[int][]Course
-}
-
-type CoursesData struct {
-	Courses []Course
 }
