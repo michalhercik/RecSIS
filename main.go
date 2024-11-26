@@ -73,7 +73,6 @@ func main() {
 	router.HandleFunc("DELETE /blueprint/remove-unassigned/{id}", blueprint.HandleUnassignedRemoval)
 
 	// Course detail
-	// TODO solve problem with /course/style.css
 	router.HandleFunc("GET /course/{id}", htmxRouter(coursedetail.HandlePage, coursedetail.HandleContent))
 
 	//////////////////////////////////////////
