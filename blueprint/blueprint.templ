@@ -4,11 +4,23 @@ import (
     "github.com/michalhercik/RecSIS/utils"
     "github.com/michalhercik/RecSIS/database"
     "strconv"
+	"sort"
 )
 
+func ItoS(i int) string {
+    return strconv.Itoa(i)
+}
+
 // TODO only if there is at least one
-// TODO should render in predefined order
 templ renderUnassigned(unassigned *[]database.Course) {
+    // sort courses by name to ensure consistent order
+    {{
+        sort.Slice(*unassigned, func(i, j int) bool {
+            return (*unassigned)[i].NameEng < (*unassigned)[j].NameEng
+        })
+    }}
+    <h1>Unassigned courses</h1>
+
     <table>
         <thead>
             <tr>
@@ -22,16 +34,16 @@ templ renderUnassigned(unassigned *[]database.Course) {
         </thead>
         <tbody>
             for _, course := range *unassigned {
-                <tr id={ "id" + strconv.Itoa(course.Id) }>
-                    <td> @utils.CourseLink(strconv.Itoa(course.Id), course.Code) </td>
+                <tr id={ "id" + ItoS(course.Id) }>
+                    <td> @utils.CourseLink(ItoS(course.Id), course.Code) </td>
                     <td>{ course.NameEng }</td>
                     <td>{ course.Teacher1 }</td>
                     <td>{ utils.SemesterStr(course.StartingSemester) }</td>
-                    <td>{ strconv.Itoa(course.Credits) }</td>
+                    <td>{ ItoS(course.Credits) }</td>
                     <td>
                         <button
-                            hx-delete={"/blueprint/remove-unassigned/" + strconv.Itoa(course.Id)}
-                            hx-target={"#id" + strconv.Itoa(course.Id)}
+                            hx-delete={"/blueprint/remove-unassigned/" + ItoS(course.Id)}
+                            hx-target={"#id" + ItoS(course.Id)}
                             hx-swap="delete">
                             Remove
                         </button>
@@ -43,47 +55,87 @@ templ renderUnassigned(unassigned *[]database.Course) {
     </table>
 }
 
-// TODO by semesters
-// TODO add credits by semesters and years
-// TODO only if there is at least one
-// TODO should render in predefined order
-templ renderYears(years *map[int][]database.Course) {
-    for i, year := range *years {
-        <div id={"BlueprintYear" + strconv.Itoa(i)}>
-            <h2>Year { strconv.Itoa(i) }</h2>
-            <table>
-            <thead>
+templ renderCourseTable(courses *[]database.Course) {
+    // sort courses by name to ensure consistent order
+    {{
+        sort.Slice(*courses, func(i, j int) bool {
+            return (*courses)[i].NameEng < (*courses)[j].NameEng
+        })
+    }}
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Teacher</th>
+                <th>Semester</th>
+                <th>Credits</th>
+                <th>Edit palce</th>
+            </tr>
+        </thead>
+        <tbody>
+            for _, course := range *courses {
                 <tr>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Teacher</th>
-                    <th>Semester</th>
-                    <th>Credits</th>
-                    <th>Edit palce</th>
+                    <td> @utils.CourseLink(ItoS(course.Id), course.Code) </td>
+                    <td>{ course.NameEng }</td>
+                    <td>{ course.Teacher1 }</td>
+                    <td>{ utils.SemesterStr(course.StartingSemester) }</td>
+                    <td>{ ItoS(course.Credits) }</td>
+                    <td>
+                        <button>Edit</button>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                for _, course := range year {
-                    <tr>
-                        <td> @utils.CourseLink(strconv.Itoa(course.Id), course.Code) </td>
-                        <td>{ course.NameEng }</td>
-                        <td>{ course.Teacher1 }</td>
-                        <td>{ utils.SemesterStr(course.StartingSemester) }</td>
-                        <td>{ strconv.Itoa(course.Credits) }</td>
-                        <td>
-                            <button>Edit</button>
-                        </td>
-                    </tr>
+            }
+        </tbody>
+    </table>
+}
+
+// TODO only if there is at least one
+templ renderYears(years *map[int][]database.Course) {
+    <h1>Blueprint</h1>
+    {{ 
+        totalCredits := 0
+        for _, courses := range *years {
+            for _, course := range courses {
+                totalCredits += course.Credits
+            }
+        }
+    }}
+    <div>Total credits: { ItoS(totalCredits) }</div>
+
+    for year := 1; year <= len(*years); year++ {
+        {{ courses := (*years)[year] }}
+        <div id={"BlueprintYear" + ItoS(year)}>
+            <h2>Year { ItoS(year) }</h2>
+            {{
+                winterCourses := make([]database.Course, 0)
+                winterCredits := 0
+                summerCourses := make([]database.Course, 0)
+                summerCredits := 0
+                for _, course := range courses {
+                    totalCredits += course.Credits
+                    if course.StartingSemester == 1 {
+                        winterCourses = append(winterCourses, course)
+                        winterCredits += course.Credits
+                    } else {
+                        summerCourses = append(summerCourses, course)
+                        summerCredits += course.Credits
+                    }
                 }
-            </tbody>
-            </table>
+            }}
+            <div>Credits: { ItoS(winterCredits + summerCredits) }</div>
+            <h3>Winter Semester</h3>
+            <div>Credits: { ItoS(winterCredits) }</div>
+            @renderCourseTable(&winterCourses)
+            <h3>Summer Semester</h3>
+            <div>Credits: { ItoS(summerCredits) }</div>
+            @renderCourseTable(&summerCourses)
        </div>
     }
-    // TODO only if there is at least one
     if len(*years) > 0 {
     <button
         hx-swap="outerHTML"
-        hx-post={"/blueprint/remove-year/" + strconv.Itoa(len(*years))}
+        hx-post={"/blueprint/remove-year/" + ItoS(len(*years))}
         hx-target="this">
         Remove last year
     </button>
@@ -91,9 +143,10 @@ templ renderYears(years *map[int][]database.Course) {
     <button hx-post="/blueprint/add-year">Add year</button>
 }
 
-// TODO only if there is at least one
-// TODO should render in predefined order
 templ renderCreditTable(years *map[int][]database.Course) {
+    if len(*years) > 0 {
+    <h1>Credits</h1>
+
     <table id="CreditsSum">
         <thead>
             <tr>
@@ -104,45 +157,39 @@ templ renderCreditTable(years *map[int][]database.Course) {
         </thead>
         <tbody>
             {{ totalSum := 0 }}
-            for year, courses := range *years {
+            for year := 1; year <= len(*years); year++ {
                 {{
-                creditsBySemester := make(map[int]int)
-                for _, course := range courses {
-                    creditsBySemester[course.StartingSemester] += course.Credits
-                    totalSum += course.Credits
-                }
-                yearStr := strconv.Itoa(year)
+                    courses := (*years)[year]
+                    creditsBySemester := make(map[int]int)
+                    for _, course := range courses {
+                        creditsBySemester[course.StartingSemester] += course.Credits
+                        totalSum += course.Credits
+                    }
+                    yearStr := ItoS(year)
                 }}
                 <tr id={"SumWinterYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Winter </td>
-                    <td>{ strconv.Itoa(creditsBySemester[1]) }</td>
+                    <td>{ ItoS(creditsBySemester[1]) }</td>
                 </tr>
                 <tr id={"SumSummerYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Summer </td>
-                    <td>{ strconv.Itoa(creditsBySemester[2]) }</td>
+                    <td>{ ItoS(creditsBySemester[2]) }</td>
                 </tr>
             }
             <tr>
                 <td colspan="2"> Total </td>
-                <td>{ strconv.Itoa(totalSum) }</td>
+                <td>{ ItoS(totalSum) }</td>
             </tr>
         </tbody>
     </table>
+    }
 }
 
 templ Content(data *database.BlueprintData) {
-    <h1>Unassigned courses</h1>
-
     @renderUnassigned(&data.Unassigned)
-
-    <h1>Blueprint</h1>
-
     @renderYears(&data.Years)
-
-    <h1>Credits</h1>
-
     @renderCreditTable(&data.Years)
 }
 
