@@ -55,14 +55,6 @@ templ Footer() {
     </footer>
 }
 
-func SemesterStr(semester int) string {
-    if semester == 1 {
-        return "Winter"
-    } else {
-        return "Summer"
-    }
-}
-
 templ CourseLink(Id string, Code string) {
     <a href={ templ.SafeURL("/course/" + Id) }>{ Code }</a>
 }

@@ -17,10 +17,25 @@ func capacityStr(capacity int) string {
     return ItoS(capacity)
 }
 
-func hoursExamStr(course database.Course) string {
-    lectureHours := course.LectureHoursPerWeek1 + course.LectureHoursPerWeek2
-    seminarHours := course.SeminarHoursPerWeek1 + course.SeminarHoursPerWeek2
-    return ItoS(lectureHours) + "/" + ItoS(seminarHours) + ", " + course.Exam.String()
+templ hoursExams(course database.Course) {
+    {{ sem := course.Semester }}
+    {{ semCount := course.SemesterCount }}
+    if sem == "Winter" || semCount == 2 {
+    <tr>
+        <td>Hours per week, examination:</td>
+        <td>{ ItoS(course.LectureHoursWinter) + "/" + ItoS(course.SeminarHoursWinter) + ", " + course.ExamWinter }</td>
+    </tr>
+    }
+    if sem == "Summer" || semCount == 2 {
+    <tr>
+        if semCount == 1 {
+        <td>Hours per week, examination:</td>
+        } else {
+        <td></td>
+        }
+        <td>{ ItoS(course.LectureHoursSummer) + "/" + ItoS(course.SeminarHoursSummer) + ", " + course.ExamSummer }</td>
+    </tr>
+    }
 }
 
 func courseSISLink(code string) string {
@@ -39,19 +54,17 @@ templ Content(data *database.CourseData) {
             <td>Faculty:</td><td>{ course.Faculty }</td>
         </tr>
         <tr>
-            <td>Semester:</td><td>{ utils.SemesterStr(course.StartingSemester) }</td>
+            <td>Semester:</td><td>{ course.Semester }</td>
         </tr>
         <tr>
             <td>E-Credits:</td><td>{ ItoS(course.Credits) }</td>
         </tr>
-        <tr>
-            <td>Hours per week, examination:</td><td>{ hoursExamStr(course) }</td>
-        </tr>
+        @hoursExams(course)
         <tr>
             <td>Capacity:</td><td>{ capacityStr(course.Capacity) }</td>
         </tr>
         <tr>
-            <td>State of the course:</td><td>{ course.State.String() }</td>
+            <td>State of the course:</td><td>{ course.State }</td>
         </tr>
         <tr>
             <td>Language:</td><td>{ course.Language }</td>
@@ -60,16 +73,11 @@ templ Content(data *database.CourseData) {
             <td>Additional information:</td><td><a>TODO link</a></td>
         </tr>
         <tr>
-            <td>Teacher(s):</td><td>{ course.Teacher1 }</td>
+            <td>Teacher(s):</td><td>{ course.Teachers[0] }</td>
         </tr>
-        if course.Teacher2 != "" {
+        for i := 1; i < len(course.Teachers); i++ {
         <tr>
-            <td></td><td>{ course.Teacher2 }</td>
-        </tr>
-        }
-        if course.Teacher3 != "" {
-        <tr>
-            <td></td><td>{ course.Teacher3 }</td>
+            <td></td><td>{ course.Teachers[i] }</td>
         </tr>
         }
         <tr>

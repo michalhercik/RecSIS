@@ -112,15 +112,156 @@ func (db *MockDB) BlueprintAddYear(user int) {
 
 func getListOfCourses() []database.Course {
 	result := make([]database.Course, 50)
-	result[0] = database.Course{Id: 4950171, Code: "NAIL025", NameCze: "Evoluční algoritmy 1", NameEng: "Evolutionary Algorithms 1", ValidFrom: 2020, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 1, SemesterCount: 1, Language: "CZE", LectureHoursPerWeek1: 2, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 0, SeminarHoursPerWeek2: 0, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Mgr. Roman Neruda, CSc.", Teacher2: "doc. Mgr. Martin Pilát, Ph.D.", Teacher3: "", MinEnrollment: -1, Capacity: -1}
-	result[1] = database.Course{Id: 4950172, Code: "NAIL026", NameCze: "Evoluční algoritmy 2", NameEng: "Evolutionary Algorithms 2", ValidFrom: 2021, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 2, SemesterCount: 2, Language: "CZE", LectureHoursPerWeek1: 3, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 0, SeminarHoursPerWeek2: 0, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Mgr. Roman Neruda, CSc.", Teacher2: "doc. Mgr. Martin Pilát, Ph.D.", Teacher3: "", MinEnrollment: -1, Capacity: -1}
-	result[2] = database.Course{Id: 4950173, Code: "NAIL027", NameCze: "Strojové učení", NameEng: "Machine Learning", ValidFrom: 2020, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 1, SemesterCount: 1, Language: "ENG", LectureHoursPerWeek1: 4, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 1, SeminarHoursPerWeek2: 1, Exam: database.ExamTypeAll, Credits: 6, Teacher1: "Dr. John Doe", Teacher2: "Prof. Jane Roe", Teacher3: "", MinEnrollment: -1, Capacity: -1}
-	result[3] = database.Course{Id: 4950174, Code: "NAIL028", NameCze: "Zpracování obrazu", NameEng: "Image Processing", ValidFrom: 2021, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 2, SemesterCount: 2, Language: "ENG", LectureHoursPerWeek1: 3, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 1, SeminarHoursPerWeek2: 1, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Dr. Richard Roe", Teacher2: "", Teacher3: "", MinEnrollment: -1, Capacity: -1}
-	result[4] = database.Course{Id: 4950175, Code: "NAIL029", NameCze: "Návrh algoritmů", NameEng: "Algorithm Design", ValidFrom: 2020, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 1, SemesterCount: 1, Language: "CZE", LectureHoursPerWeek1: 2, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 0, SeminarHoursPerWeek2: 1, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Dr. Jan Novak", Teacher2: "Prof. Eva Brown", Teacher3: "prof. RNDr. Michal Hercik PhD.", MinEnrollment: -1, Capacity: -1}
+	result[0] = database.Course{
+		Id:                   4950171,
+		Code:                 "NAIL025",
+		NameCze:              "Evoluční algoritmy 1",
+		NameEng:              "Evolutionary Algorithms 1",
+		ValidFrom:            2020,
+		ValidTo:              9999,
+		Faculty:              "MFF",
+		Guarantor:            "32-KTIML",
+		State:                "taught",
+		Semester:   		  "Winter",
+		SemesterCount:        1,
+		Language:             "CZE",
+		LectureHoursWinter:   2,
+		SeminarHoursWinter:   2,
+		LectureHoursSummer:   0,
+		SeminarHoursSummer:   0,
+		ExamWinter:           "C+Ex",
+		ExamSummer:           "",
+		Credits:              5,
+		Teachers:             []string{ "Mgr. Roman Neruda, CSc.", "doc. Mgr. Martin Pilát, Ph.D." },
+		MinEnrollment:        -1,
+		Capacity:             50,
+	}
+	result[1] = database.Course{
+		Id:                   4950172,
+		Code:                 "NAIL026",
+		NameCze:              "Evoluční algoritmy 2",
+		NameEng:              "Evolutionary Algorithms 2",
+		ValidFrom:            2021,
+		ValidTo:              9999,
+		Faculty:              "MFF",
+		Guarantor:            "32-KTIML",
+		State:                "taught",
+		Semester:     		  "Summer",
+		SemesterCount:        1,
+		Language:             "CZE",
+		LectureHoursWinter:   0,
+		SeminarHoursWinter:   0,
+		LectureHoursSummer:   3,
+		SeminarHoursSummer:   2,
+		ExamWinter:           "",
+		ExamSummer:           "C+Ex",
+		Credits:              5,
+		Teachers:             []string{ "Mgr. Roman Neruda, CSc.", "doc. Mgr. Martin Pilát, Ph.D." },
+		MinEnrollment:        -1,
+		Capacity:             -1,
+	}
+	result[2] = database.Course{
+		Id:                   4950173,
+		Code:                 "NAIL027",
+		NameCze:              "Strojové učení",
+		NameEng:              "Machine Learning",
+		ValidFrom:            2020,
+		ValidTo:              9999,
+		Faculty:              "MFF",
+		Guarantor:            "32-KTIML",
+		State:                "taught",
+		Semester:     		  "Winter",
+		SemesterCount:        1,
+		Language:             "ENG",
+		LectureHoursWinter:   4,
+		SeminarHoursWinter:   2,
+		LectureHoursSummer:   0,
+		SeminarHoursSummer:   0,
+		ExamWinter:           "C+Ex",
+		ExamSummer:           "",
+		Credits:              6,
+		Teachers:             []string{ "Dr. John Doe",  "Prof. Jane Roe" },
+		MinEnrollment:        -1,
+		Capacity:             100,
+	}
+	result[3] = database.Course{
+		Id:                   4950174,
+		Code:                 "NAIL028",
+		NameCze:              "Zpracování obrazu",
+		NameEng:              "Image Processing",
+		ValidFrom:            2021,
+		ValidTo:              9999,
+		Faculty:              "MFF",
+		Guarantor:            "32-KTIML",
+		State:                "taught",
+		Semester:    		  "Summer",
+		SemesterCount:        2,
+		Language:             "ENG",
+		LectureHoursWinter:   3,
+		SeminarHoursWinter:   2,
+		LectureHoursSummer:   1,
+		SeminarHoursSummer:   1,
+		ExamWinter:           "C+Ex",
+		ExamSummer:           "C+Ex",
+		Credits:              5,
+		Teachers:             []string{ "Dr. Richard Roe" },
+		MinEnrollment:        -1,
+		Capacity:             10,
+	}
+	result[4] = database.Course{
+		Id:                   4950175,
+		Code:                 "NAIL029",
+		NameCze:              "Návrh algoritmů",
+		NameEng:              "Algorithm Design",
+		ValidFrom:            2020,
+		ValidTo:              9999,
+		Faculty:              "MFF",
+		Guarantor:            "32-KTIML",
+		State:                "taught",
+		Semester:             "Winter",
+		SemesterCount:        2,
+		Language:             "CZE",
+		LectureHoursWinter:	  2,
+		SeminarHoursWinter:   2,
+		LectureHoursSummer:   1,
+		SeminarHoursSummer:   1,
+		ExamWinter:           "C+Ex",
+		ExamSummer:           "C+Ex",
+		Credits:              5,
+		Teachers:             []string{ "Dr. Jan Novak", "Prof. Eva Brown", "prof. RNDr. Michal Hercik PhD." },
+		MinEnrollment:        -1,
+		Capacity:             -1,
+	}
 
 	// Continue filling up to 50 records with similar structure
 	// Placeholder data is used here for illustrative purposes
 	for i := 5; i < 50; i++ {
+		semester := 1 + (i % 2)
+		semesterStr := "Winter"
+		if semester == 2 {
+			semesterStr = "Summer"
+		}
+		semesterCount := 1 + (i % 2)
+		lectureHoursWinter := 0
+		seminarHoursWinter := 0
+		lectureHoursSummer := 0
+		seminarHoursSummer := 0
+
+		if semesterCount == 1 {
+			if semester == 1 {
+				lectureHoursWinter = 1 + (i % 3)
+				seminarHoursWinter = 1 + (i % 3)
+			} else {
+				lectureHoursSummer = 1 + (i % 3)
+				seminarHoursSummer = 1 + (i % 3)
+			}
+		} else {
+			lectureHoursWinter = 1 + (i % 3)
+			seminarHoursWinter = 1 + (i % 3)
+			lectureHoursSummer = 1 + (i % 3)
+			seminarHoursSummer = 1 + (i % 3)
+		}
+
 		result[i] = database.Course{
 			Id:                   4950171 + i,
 			Code:                 fmt.Sprintf("NAIL%03d", 25+i),
@@ -130,19 +271,18 @@ func getListOfCourses() []database.Course {
 			ValidTo:              9999,
 			Faculty:              "MFF",
 			Guarantor:            "32-KTIML",
-			State:                database.Taught,
-			StartingSemester:     1 + (i % 2),
-			SemesterCount:        1 + (i % 2),
+			State:                "taught",
+			Semester:             semesterStr,
+			SemesterCount:        semesterCount,
 			Language:             "ENG",
-			LectureHoursPerWeek1: 3 + (i % 3),
-			SeminarHoursPerWeek1: 2,
-			LectureHoursPerWeek2: 1 + (i % 2),
-			SeminarHoursPerWeek2: 1,
-			Exam:                 database.ExamTypeAll,
-			Credits:              5 + (i % 2),
-			Teacher1:             fmt.Sprintf("Dr. Lecturer %d", i),
-			Teacher2:             fmt.Sprintf("Prof. Assistant %d", i),
-			Teacher3:             "",
+			LectureHoursWinter:   lectureHoursWinter,
+			SeminarHoursWinter:   seminarHoursWinter,
+			LectureHoursSummer:   lectureHoursSummer,
+			SeminarHoursSummer:   seminarHoursSummer,
+			ExamWinter:           "C+Ex",
+			ExamSummer:           "C+Ex",
+			Credits:              4 + (i % 2),
+			Teachers:             []string{ fmt.Sprintf("Dr. Lecturer %d", i), fmt.Sprintf("Prof. Assistant %d", i) },
 			MinEnrollment:        -1,
 			Capacity:             -1,
 		}

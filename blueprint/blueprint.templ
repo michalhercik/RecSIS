@@ -4,6 +4,7 @@ import (
     "github.com/michalhercik/RecSIS/utils"
     "github.com/michalhercik/RecSIS/database"
     "strconv"
+	"strings"
 	"sort"
 )
 
@@ -26,7 +27,7 @@ templ renderUnassigned(unassigned *[]database.Course) {
             <tr>
                 <th>Code</th>
                 <th>Name</th>
-                <th>Teacher</th>
+                <th>Teacher(s)</th>
                 <th>Semester</th>
                 <th>Credits</th>
                 <th>Actions</th>
@@ -37,8 +38,8 @@ templ renderUnassigned(unassigned *[]database.Course) {
                 <tr id={ "id" + ItoS(course.Id) }>
                     <td> @utils.CourseLink(ItoS(course.Id), course.Code) </td>
                     <td>{ course.NameEng }</td>
-                    <td>{ course.Teacher1 }</td>
-                    <td>{ utils.SemesterStr(course.StartingSemester) }</td>
+                    <td>{ strings.Join(course.Teachers, ", ") }</td>
+                    <td>{ course.Semester }</td>
                     <td>{ ItoS(course.Credits) }</td>
                     <td>
                         <button
@@ -67,7 +68,7 @@ templ renderCourseTable(courses *[]database.Course) {
             <tr>
                 <th>Code</th>
                 <th>Name</th>
-                <th>Teacher</th>
+                <th>Teacher(s)</th>
                 <th>Semester</th>
                 <th>Credits</th>
                 <th>Edit palce</th>
@@ -78,8 +79,8 @@ templ renderCourseTable(courses *[]database.Course) {
                 <tr>
                     <td> @utils.CourseLink(ItoS(course.Id), course.Code) </td>
                     <td>{ course.NameEng }</td>
-                    <td>{ course.Teacher1 }</td>
-                    <td>{ utils.SemesterStr(course.StartingSemester) }</td>
+                    <td>{ strings.Join(course.Teachers, ", ") }</td>
+                    <td>{ course.Semester }</td>
                     <td>{ ItoS(course.Credits) }</td>
                     <td>
                         <button>Edit</button>
@@ -114,7 +115,7 @@ templ renderYears(years *map[int][]database.Course) {
                 summerCredits := 0
                 for _, course := range courses {
                     totalCredits += course.Credits
-                    if course.StartingSemester == 1 {
+                    if course.Semester == "Winter" {
                         winterCourses = append(winterCourses, course)
                         winterCredits += course.Credits
                     } else {
@@ -160,9 +161,9 @@ templ renderCreditTable(years *map[int][]database.Course) {
             for year := 1; year <= len(*years); year++ {
                 {{
                     courses := (*years)[year]
-                    creditsBySemester := make(map[int]int)
+                    creditsBySemester := make(map[string]int)
                     for _, course := range courses {
-                        creditsBySemester[course.StartingSemester] += course.Credits
+                        creditsBySemester[course.Semester] += course.Credits
                         totalSum += course.Credits
                     }
                     yearStr := ItoS(year)
@@ -170,12 +171,12 @@ templ renderCreditTable(years *map[int][]database.Course) {
                 <tr id={"SumWinterYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Winter </td>
-                    <td>{ ItoS(creditsBySemester[1]) }</td>
+                    <td>{ ItoS(creditsBySemester["Winter"]) }</td>
                 </tr>
                 <tr id={"SumSummerYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Summer </td>
-                    <td>{ ItoS(creditsBySemester[2]) }</td>
+                    <td>{ ItoS(creditsBySemester["Summer"]) }</td>
                 </tr>
             }
             <tr>

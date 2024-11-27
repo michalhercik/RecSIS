@@ -37,7 +37,6 @@ type CourseData struct {
 // TODO:
 //	- check validity of field types (consider enum types)
 //  - consider removing irrelevant or adding missing fields
-//  - maybe more teachers? there can be 3 teachers 
 type Course struct {
 	Id                   int
 	Code                 string
@@ -47,47 +46,18 @@ type Course struct {
 	ValidTo              int
 	Faculty              string
 	Guarantor            string
-	State                CourseState
-	StartingSemester     int
+	State                string
+	Semester     	     string
 	SemesterCount        int
 	Language             string
-	LectureHoursPerWeek1 int
-	SeminarHoursPerWeek1 int
-	LectureHoursPerWeek2 int
-	SeminarHoursPerWeek2 int
-	Exam                 ExamType
+	LectureHoursWinter   int
+	SeminarHoursWinter   int
+	LectureHoursSummer   int
+	SeminarHoursSummer   int
+	ExamWinter           string
+	ExamSummer           string
 	Credits              int
-	Teacher1             string
-	Teacher2             string
-	Teacher3             string
-	MinEnrollment        int
-	Capacity             int
-}
-
-// TODO: complete enum definition for other states
-type CourseState int
-type ExamType int
-
-var courseStateName = map[CourseState]string{
-	Taught: "taught",
-}
-
-func (cs CourseState) String() string {
-	return courseStateName[cs]
-}
-
-const (
-	Taught = iota
-)
-
-const (
-	ExamTypeAll = iota
-)
-
-var examTypeName = map[ExamType]string{
-	ExamTypeAll: "C+Ex",
-}
-
-func (et ExamType) String() string {
-	return examTypeName[et]
+	Teachers             []string
+	MinEnrollment        int // -1 means no limit
+	Capacity             int // -1 means no limit
 }
