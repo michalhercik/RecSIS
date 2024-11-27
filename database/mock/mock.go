@@ -112,11 +112,11 @@ func (db *MockDB) BlueprintAddYear(user int) {
 
 func getListOfCourses() []database.Course {
 	result := make([]database.Course, 50)
-	result[0] = database.Course{Id: 4950171, Code: "NAIL025", NameCze: "Evoluční algoritmy 1", NameEng: "Evolutionary Algorithms 1", ValidFrom: 2020, ValidTo: 9999, Faculty: 11320, Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 1, SemesterCount: 1, Language: "CZE", LectureHoursPerWeek1: 2, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 0, SeminarHoursPerWeek2: 0, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Mgr. Roman Neruda, CSc.", Teacher2: "doc. Mgr. Martin Pilát, Ph.D.", MinEnrollment: -1, Capacity: -1}
-	result[1] = database.Course{Id: 4950172, Code: "NAIL026", NameCze: "Evoluční algoritmy 2", NameEng: "Evolutionary Algorithms 2", ValidFrom: 2021, ValidTo: 9999, Faculty: 11321, Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 2, SemesterCount: 2, Language: "CZE", LectureHoursPerWeek1: 3, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 0, SeminarHoursPerWeek2: 0, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Mgr. Roman Neruda, CSc.", Teacher2: "doc. Mgr. Martin Pilát, Ph.D.", MinEnrollment: -1, Capacity: -1}
-	result[2] = database.Course{Id: 4950173, Code: "NAIL027", NameCze: "Strojové učení", NameEng: "Machine Learning", ValidFrom: 2020, ValidTo: 9999, Faculty: 11322, Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 1, SemesterCount: 1, Language: "ENG", LectureHoursPerWeek1: 4, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 1, SeminarHoursPerWeek2: 1, Exam: database.ExamTypeAll, Credits: 6, Teacher1: "Dr. John Doe", Teacher2: "Prof. Jane Roe", MinEnrollment: -1, Capacity: -1}
-	result[3] = database.Course{Id: 4950174, Code: "NAIL028", NameCze: "Zpracování obrazu", NameEng: "Image Processing", ValidFrom: 2021, ValidTo: 9999, Faculty: 11323, Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 2, SemesterCount: 2, Language: "ENG", LectureHoursPerWeek1: 3, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 1, SeminarHoursPerWeek2: 1, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Dr. Richard Roe", Teacher2: "Dr. Alice Smith", MinEnrollment: -1, Capacity: -1}
-	result[4] = database.Course{Id: 4950175, Code: "NAIL029", NameCze: "Návrh algoritmů", NameEng: "Algorithm Design", ValidFrom: 2020, ValidTo: 9999, Faculty: 11324, Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 1, SemesterCount: 1, Language: "CZE", LectureHoursPerWeek1: 2, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 0, SeminarHoursPerWeek2: 1, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Dr. Jan Novak", Teacher2: "Prof. Eva Brown", MinEnrollment: -1, Capacity: -1}
+	result[0] = database.Course{Id: 4950171, Code: "NAIL025", NameCze: "Evoluční algoritmy 1", NameEng: "Evolutionary Algorithms 1", ValidFrom: 2020, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 1, SemesterCount: 1, Language: "CZE", LectureHoursPerWeek1: 2, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 0, SeminarHoursPerWeek2: 0, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Mgr. Roman Neruda, CSc.", Teacher2: "doc. Mgr. Martin Pilát, Ph.D.", Teacher3: "", MinEnrollment: -1, Capacity: -1}
+	result[1] = database.Course{Id: 4950172, Code: "NAIL026", NameCze: "Evoluční algoritmy 2", NameEng: "Evolutionary Algorithms 2", ValidFrom: 2021, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 2, SemesterCount: 2, Language: "CZE", LectureHoursPerWeek1: 3, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 0, SeminarHoursPerWeek2: 0, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Mgr. Roman Neruda, CSc.", Teacher2: "doc. Mgr. Martin Pilát, Ph.D.", Teacher3: "", MinEnrollment: -1, Capacity: -1}
+	result[2] = database.Course{Id: 4950173, Code: "NAIL027", NameCze: "Strojové učení", NameEng: "Machine Learning", ValidFrom: 2020, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 1, SemesterCount: 1, Language: "ENG", LectureHoursPerWeek1: 4, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 1, SeminarHoursPerWeek2: 1, Exam: database.ExamTypeAll, Credits: 6, Teacher1: "Dr. John Doe", Teacher2: "Prof. Jane Roe", Teacher3: "", MinEnrollment: -1, Capacity: -1}
+	result[3] = database.Course{Id: 4950174, Code: "NAIL028", NameCze: "Zpracování obrazu", NameEng: "Image Processing", ValidFrom: 2021, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 2, SemesterCount: 2, Language: "ENG", LectureHoursPerWeek1: 3, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 1, SeminarHoursPerWeek2: 1, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Dr. Richard Roe", Teacher2: "", Teacher3: "", MinEnrollment: -1, Capacity: -1}
+	result[4] = database.Course{Id: 4950175, Code: "NAIL029", NameCze: "Návrh algoritmů", NameEng: "Algorithm Design", ValidFrom: 2020, ValidTo: 9999, Faculty: "MFF", Guarantor: "32-KTIML", State: database.Taught, StartingSemester: 1, SemesterCount: 1, Language: "CZE", LectureHoursPerWeek1: 2, SeminarHoursPerWeek1: 2, LectureHoursPerWeek2: 0, SeminarHoursPerWeek2: 1, Exam: database.ExamTypeAll, Credits: 5, Teacher1: "Dr. Jan Novak", Teacher2: "Prof. Eva Brown", Teacher3: "prof. RNDr. Michal Hercik PhD.", MinEnrollment: -1, Capacity: -1}
 
 	// Continue filling up to 50 records with similar structure
 	// Placeholder data is used here for illustrative purposes
@@ -128,7 +128,7 @@ func getListOfCourses() []database.Course {
 			NameEng:              fmt.Sprintf("Course Name %d", i),
 			ValidFrom:            2020,
 			ValidTo:              9999,
-			Faculty:              11000 + i,
+			Faculty:              "MFF",
 			Guarantor:            "32-KTIML",
 			State:                database.Taught,
 			StartingSemester:     1 + (i % 2),
@@ -142,6 +142,7 @@ func getListOfCourses() []database.Course {
 			Credits:              5 + (i % 2),
 			Teacher1:             fmt.Sprintf("Dr. Lecturer %d", i),
 			Teacher2:             fmt.Sprintf("Prof. Assistant %d", i),
+			Teacher3:             "",
 			MinEnrollment:        -1,
 			Capacity:             -1,
 		}

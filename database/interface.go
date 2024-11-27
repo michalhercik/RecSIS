@@ -37,6 +37,7 @@ type CourseData struct {
 // TODO:
 //	- check validity of field types (consider enum types)
 //  - consider removing irrelevant or adding missing fields
+//  - maybe more teachers? there can be 3 teachers 
 type Course struct {
 	Id                   int
 	Code                 string
@@ -44,7 +45,7 @@ type Course struct {
 	NameEng              string
 	ValidFrom            int
 	ValidTo              int
-	Faculty              int
+	Faculty              string
 	Guarantor            string
 	State                CourseState
 	StartingSemester     int
@@ -58,6 +59,7 @@ type Course struct {
 	Credits              int
 	Teacher1             string
 	Teacher2             string
+	Teacher3             string
 	MinEnrollment        int
 	Capacity             int
 }
