@@ -56,8 +56,11 @@ func main() {
 	// Handlers
 	//////////////////////////////////////////
 
+	// Icon
+	router.Handle("/favicon.ico", http.FileServer(http.Dir(".")))
+
 	// Home
-	router.HandleFunc("GET /", htmxRouter(home.HandlePage, home.HandleContent))
+	router.HandleFunc("GET /{$}", htmxRouter(home.HandlePage, home.HandleContent))
 	router.HandleFunc("GET /home", htmxRouter(home.HandlePage, home.HandleContent))
 
 	// Courses
