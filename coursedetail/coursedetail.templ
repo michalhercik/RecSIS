@@ -6,15 +6,81 @@ import (
     "strconv"
 )
 
+func ItoS(i int) string {
+    return strconv.Itoa(i)
+}
+
+func capacityStr(capacity int) string {
+    if capacity == -1 {
+        return "unlimited"
+    }
+    return ItoS(capacity)
+}
+
+func hoursExamStr(course database.Course) string {
+    lectureHours := course.LectureHoursPerWeek1 + course.LectureHoursPerWeek2
+    seminarHours := course.SeminarHoursPerWeek1 + course.SeminarHoursPerWeek2
+    return ItoS(lectureHours) + "/" + ItoS(seminarHours) + ", " + course.Exam.String()
+}
+
+func courseSISLink(code string) string {
+    return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
+}
+
 templ Content(data *database.CourseData) {
-    <h1>{ data.Course.NameEng }</h1>
-    <p><strong>Teacher:</strong> { data.Course.Teacher1 }</p>
-    <p><strong>Credits:</strong> { strconv.Itoa(data.Course.Credits) }</p>
-    <p><strong>Semester:</strong> { utils.SemesterStr(data.Course.StartingSemester) }</p>
+    {{ course := data.Course }}
+    <h1>{ course.Code + " - " + course.NameEng }</h1>
+    // TODO only if not emtpy/nil/...
+    <table>
+        <tr>
+            <td>Czech title:</td><td>{ course.NameCze }</td>
+        </tr>
+        <tr>
+            <td>Faculty:</td><td>{ course.Faculty }</td>
+        </tr>
+        <tr>
+            <td>Semester:</td><td>{ utils.SemesterStr(course.StartingSemester) }</td>
+        </tr>
+        <tr>
+            <td>E-Credits:</td><td>{ ItoS(course.Credits) }</td>
+        </tr>
+        <tr>
+            <td>Hours per week, examination:</td><td>{ hoursExamStr(course) }</td>
+        </tr>
+        <tr>
+            <td>Capacity:</td><td>{ capacityStr(course.Capacity) }</td>
+        </tr>
+        <tr>
+            <td>State of the course:</td><td>{ course.State.String() }</td>
+        </tr>
+        <tr>
+            <td>Language:</td><td>{ course.Language }</td>
+        </tr>
+        <tr>
+            <td>Additional information:</td><td><a>TODO link</a></td>
+        </tr>
+        <tr>
+            <td>Teacher(s):</td><td>{ course.Teacher1 }</td>
+        </tr>
+        if course.Teacher2 != "" {
+        <tr>
+            <td></td><td>{ course.Teacher2 }</td>
+        </tr>
+        }
+        if course.Teacher3 != "" {
+        <tr>
+            <td></td><td>{ course.Teacher3 }</td>
+        </tr>
+        }
+        <tr>
+            <td><a href={ templ.SafeURL(courseSISLink(course.Code)) }>SIS link</a></td>
+        </tr>
+    </table>
+    // TODO may add extend button for more info
 }
 
 templ Page(data *database.CourseData) {
-    @utils.Page("Blueprint") {
+    @utils.Page(data.Course.Code + " - " + data.Course.NameEng) {
         @Content(data)
     }
 }
