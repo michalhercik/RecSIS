@@ -2,25 +2,26 @@ package blueprint
 
 import (
 	"github.com/a-h/templ"
-    "github.com/michalhercik/RecSIS/database"
 	"net/http"
 	"strconv"
 )
 
+const user = 42 // TODO get user from session
+
 func HandleContent(w http.ResponseWriter, r *http.Request) templ.Component {
-	data := database.GetBlueprintData(database.User)
+	data := db.GetData(user)
 	return Content(&data)
 }
 
 func HandlePage(w http.ResponseWriter, r *http.Request) templ.Component {
-	data := database.GetBlueprintData(database.User)
+	data := db.GetData(user)
 	return Page(&data)
 }
 
 func HandleUnassignedRemoval(w http.ResponseWriter, r *http.Request) {
 	// Remove data from DB
 	courseId, _ := strconv.Atoi(r.PathValue("id"))
-	database.BlueprintRemoveUnassigned(database.User, courseId)
+	db.RemoveUnassigned(user, courseId)
     // Send http response
 	w.WriteHeader(http.StatusOK)
 }
@@ -28,9 +29,9 @@ func HandleUnassignedRemoval(w http.ResponseWriter, r *http.Request) {
 func HandleLastYearRemoval(w http.ResponseWriter, r *http.Request) {
     year := r.PathValue("year")
 
-    // Remove data from DB
+    // Update data in DB
     yearInt, _ := strconv.Atoi(year)
-    database.BlueprintRemoveYear(database.User, yearInt)
+    db.RemoveYear(user, yearInt)
 
     // Send refresh header
     w.Header().Set("HX-Refresh", "true") // htmx will trigger a full page reload
@@ -38,8 +39,8 @@ func HandleLastYearRemoval(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleYearAddition(w http.ResponseWriter, r *http.Request) {
-	// Update DB
-	database.BlueprintAddYear(database.User)
+	// Update data in DB
+	db.AddYear(user)
 	// Send refresh header
     w.Header().Set("HX-Refresh", "true") // htmx will trigger a full page reload
 	w.WriteHeader(http.StatusOK)

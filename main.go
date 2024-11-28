@@ -12,9 +12,8 @@ import (
 	"github.com/michalhercik/RecSIS/home"
 
 	// database
-	"github.com/michalhercik/RecSIS/database"
-	"github.com/michalhercik/RecSIS/database/mock"
-	//"github.com/michalhercik/RecSIS/database/real"
+	"github.com/michalhercik/RecSIS/mockdb"
+	// TODO potentially import real database
 
 	// template
 	"github.com/a-h/templ"
@@ -49,8 +48,11 @@ func main() {
 	// Database setup
 	//////////////////////////////////////////
 
-	database.SetDatabase(mock.NewMockDB())
-	//database.SetDatabase(real.NewRealDB())
+	mockDB := mockdb.NewDB()
+	blueprint.SetDatabase(blueprint.CreateDB(mockDB))
+	coursedetail.SetDatabase(coursedetail.CreateDB(mockDB))
+	courses.SetDatabase(courses.CreateDB(mockDB))
+	
 
 	//////////////////////////////////////////
 	// Handlers

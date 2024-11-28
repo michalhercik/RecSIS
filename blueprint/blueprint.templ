@@ -2,7 +2,6 @@ package blueprint
 
 import (
     "github.com/michalhercik/RecSIS/utils"
-    "github.com/michalhercik/RecSIS/database"
     "strconv"
 	"strings"
 	"sort"
@@ -13,7 +12,7 @@ func ItoS(i int) string {
 }
 
 // TODO only if there is at least one
-templ renderUnassigned(unassigned *[]database.Course) {
+templ renderUnassigned(unassigned *[]Course) {
     // sort courses by name to ensure consistent order
     {{
         sort.Slice(*unassigned, func(i, j int) bool {
@@ -56,7 +55,7 @@ templ renderUnassigned(unassigned *[]database.Course) {
     </table>
 }
 
-templ renderCourseTable(courses *[]database.Course) {
+templ renderCourseTable(courses *[]Course) {
     // sort courses by name to ensure consistent order
     {{
         sort.Slice(*courses, func(i, j int) bool {
@@ -92,7 +91,7 @@ templ renderCourseTable(courses *[]database.Course) {
 }
 
 // TODO only if there is at least one
-templ renderYears(years *map[int][]database.Course) {
+templ renderYears(years *map[int][]Course) {
     <h1>Blueprint</h1>
     {{ 
         totalCredits := 0
@@ -109,9 +108,9 @@ templ renderYears(years *map[int][]database.Course) {
         <div id={"BlueprintYear" + ItoS(year)}>
             <h2>Year { ItoS(year) }</h2>
             {{
-                winterCourses := make([]database.Course, 0)
+                winterCourses := make([]Course, 0)
                 winterCredits := 0
-                summerCourses := make([]database.Course, 0)
+                summerCourses := make([]Course, 0)
                 summerCredits := 0
                 for _, course := range courses {
                     totalCredits += course.Credits
@@ -144,7 +143,7 @@ templ renderYears(years *map[int][]database.Course) {
     <button hx-post="/blueprint/add-year">Add year</button>
 }
 
-templ renderCreditTable(years *map[int][]database.Course) {
+templ renderCreditTable(years *map[int][]Course) {
     if len(*years) > 0 {
     <h1>Credits</h1>
 
@@ -188,13 +187,13 @@ templ renderCreditTable(years *map[int][]database.Course) {
     }
 }
 
-templ Content(data *database.BlueprintData) {
-    @renderUnassigned(&data.Unassigned)
-    @renderYears(&data.Years)
-    @renderCreditTable(&data.Years)
+templ Content(data *BlueprintData) {
+    @renderUnassigned(&data.unassigned)
+    @renderYears(&data.years)
+    @renderCreditTable(&data.years)
 }
 
-templ Page(data *database.BlueprintData) {
+templ Page(data *BlueprintData) {
     @utils.Page("Blueprint") {
         @Content(data)
     }

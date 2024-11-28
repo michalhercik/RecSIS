@@ -2,7 +2,6 @@ package coursedetail
 
 import (
     "github.com/michalhercik/RecSIS/utils"
-    "github.com/michalhercik/RecSIS/database"
     "strconv"
 )
 
@@ -17,7 +16,7 @@ func capacityStr(capacity int) string {
     return ItoS(capacity)
 }
 
-templ hoursExams(course database.Course) {
+templ hoursExams(course Course) {
     {{ sem := course.Semester }}
     {{ semCount := course.SemesterCount }}
     if sem == "Winter" || semCount == 2 {
@@ -42,8 +41,8 @@ func courseSISLink(code string) string {
     return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
 }
 
-templ Content(data *database.CourseData) {
-    {{ course := data.Course }}
+templ Content(data *CourseData) {
+    {{ course := data.course }}
     <h1>{ course.Code + " - " + course.NameEng }</h1>
     // TODO only if not emtpy/nil/...
     <table>
@@ -70,7 +69,7 @@ templ Content(data *database.CourseData) {
             <td>Language:</td><td>{ course.Language }</td>
         </tr>
         <tr>
-            <td>Additional information:</td><td><a>TODO link</a></td>
+            <td>Additional information:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
         </tr>
         <tr>
             <td>Teacher(s):</td><td>{ course.Teachers[0] }</td>
@@ -81,14 +80,14 @@ templ Content(data *database.CourseData) {
         </tr>
         }
         <tr>
-            <td><a href={ templ.SafeURL(courseSISLink(course.Code)) }>SIS link</a></td>
+            <td>SIS link:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code)) }>{ courseSISLink(course.Code) }</a></td>
         </tr>
     </table>
     // TODO may add extend button for more info
 }
 
-templ Page(data *database.CourseData) {
-    @utils.Page(data.Course.Code + " - " + data.Course.NameEng) {
+templ Page(data *CourseData) {
+    @utils.Page(data.course.Code + " - " + data.course.NameEng) {
         @Content(data)
     }
 }
