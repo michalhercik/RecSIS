@@ -1,26 +1,14 @@
 services:
-  recsis:
-    container_name: recsis-webapp
-    build:
-      dockerfile: Dockerfile
-      context: ./
-      target: dev-stage
-    # volumes:
-    #   - ./:/app
-    ports:
-      - 80:8000
-    depends_on:
-      postgres:
-        condition: service_healthy
   postgres:
     container_name: recsis-postgres
     image: postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_USER: ${POSTGRES_USER:-recsis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-recsis}
       PGDATA: /data/postgres
     volumes:
-       - postgres:/data/postgres
+      #  - postgres:/data/postgres
+       - ./init-db:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     networks:
