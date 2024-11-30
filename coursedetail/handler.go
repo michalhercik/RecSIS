@@ -1,21 +1,25 @@
 package coursedetail
 
 import (
-	"github.com/a-h/templ"
 	"net/http"
-	"strconv"
+
+	"github.com/a-h/templ"
 )
 
 func HandleContent(w http.ResponseWriter, r *http.Request) templ.Component {
-	courseId, _ := strconv.Atoi(r.PathValue("id"))
-	// TODO handle error
-	data := db.GetData(courseId)
-	return Content(&data)
+	code := r.PathValue("code")
+	course, err := db.Course(code)
+	if err != nil {
+		return ContentNotFound(code)
+	}
+	return Content(course)
 }
 
 func HandlePage(w http.ResponseWriter, r *http.Request) templ.Component {
-	courseId, _ := strconv.Atoi(r.PathValue("id"))
-	// TODO handle error
-	data := db.GetData(courseId)
-	return Page(&data)
+	code := r.PathValue("code")
+	course, err := db.Course(code)
+	if err != nil {
+		return PageNotFound(code)
+	}
+	return Page(course)
 }

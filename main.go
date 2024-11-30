@@ -1,18 +1,22 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 
 	// pages
 	"github.com/michalhercik/RecSIS/blueprint"
-	"github.com/michalhercik/RecSIS/courses"
 	"github.com/michalhercik/RecSIS/coursedetail"
+	"github.com/michalhercik/RecSIS/courses"
 	"github.com/michalhercik/RecSIS/degreeplan"
 	"github.com/michalhercik/RecSIS/home"
 
 	// database
+	_ "github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/mockdb"
+
 	// TODO potentially import real database
 
 	// template
@@ -48,11 +52,25 @@ func main() {
 	// Database setup
 	//////////////////////////////////////////
 
+	const (
+		host     = "localhost"
+		port     = 5432
+		user     = "recsis"
+		password = "recsis"
+		dbname   = "recsis"
+	)
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+	db, err := sql.Open("postgres", psqlInfo)
+
+	if err != nil {
+		log.Fatalf("Database connection failed: %v", err)
+	}
+
 	mockDB := mockdb.NewDB()
 	blueprint.SetDatabase(blueprint.CreateDB(mockDB))
-	coursedetail.SetDatabase(coursedetail.CreateDB(mockDB))
+	coursedetail.SetDatabase(coursedetail.DbCourseReader{Db: db})
 	courses.SetDatabase(courses.CreateDB(mockDB))
-	
 
 	//////////////////////////////////////////
 	// Handlers
@@ -78,7 +96,7 @@ func main() {
 	router.HandleFunc("DELETE /blueprint/remove-unassigned/{id}", blueprint.HandleUnassignedRemoval)
 
 	// Course detail
-	router.HandleFunc("GET /course/{id}", htmxRouter(coursedetail.HandlePage, coursedetail.HandleContent))
+	router.HandleFunc("GET /course/{code}", htmxRouter(coursedetail.HandlePage, coursedetail.HandleContent))
 
 	//////////////////////////////////////////
 	// Server setup

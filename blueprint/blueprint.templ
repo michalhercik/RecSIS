@@ -34,16 +34,16 @@ templ renderUnassigned(unassigned *[]Course) {
         </thead>
         <tbody>
             for _, course := range *unassigned {
-                <tr id={ "id" + ItoS(course.Id) }>
-                    <td> @utils.CourseLink(ItoS(course.Id), course.Code) </td>
+                <tr id={ "id" + course.Code }>
+                    <td> @utils.CourseLink(course.Code, course.Code) </td>
                     <td>{ course.NameEng }</td>
                     <td>{ strings.Join(course.Teachers, ", ") }</td>
                     <td>{ course.Semester }</td>
                     <td>{ ItoS(course.Credits) }</td>
                     <td>
                         <button
-                            hx-delete={"/blueprint/remove-unassigned/" + ItoS(course.Id)}
-                            hx-target={"#id" + ItoS(course.Id)}
+                            hx-delete={"/blueprint/remove-unassigned/" + course.Code}
+                            hx-target={"#id" + course.Code}
                             hx-swap="delete">
                             Remove
                         </button>

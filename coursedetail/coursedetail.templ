@@ -5,6 +5,7 @@ import (
     "strconv"
 )
 
+// TODO: Why capital I?
 func ItoS(i int) string {
     return strconv.Itoa(i)
 }
@@ -16,23 +17,23 @@ func capacityStr(capacity int) string {
     return ItoS(capacity)
 }
 
-templ hoursExams(course Course) {
-    {{ sem := course.Semester }}
+templ hoursExams(course *Course) {
+    {{ sem := course.Start }}
     {{ semCount := course.SemesterCount }}
-    if sem == "Winter" || semCount == 2 {
+    if sem == 1 || semCount == 2 {
     <tr>
         <td>Hours per week, examination:</td>
-        <td>{ ItoS(course.LectureHoursWinter) + "/" + ItoS(course.SeminarHoursWinter) + ", " + course.ExamWinter }</td>
+        <td>{ ItoS(course.LectureRange1) + "/" + ItoS(course.SeminarRange1) + ", " + course.ExamType }</td>
     </tr>
     }
-    if sem == "Summer" || semCount == 2 {
+    if sem == 2 || semCount == 2 {
     <tr>
         if semCount == 1 {
         <td>Hours per week, examination:</td>
         } else {
         <td></td>
         }
-        <td>{ ItoS(course.LectureHoursSummer) + "/" + ItoS(course.SeminarHoursSummer) + ", " + course.ExamSummer }</td>
+        <td>{ ItoS(course.LectureRange2) + "/" + ItoS(course.SeminarRange2) + ", " + course.ExamType }</td>
     </tr>
     }
 }
@@ -41,19 +42,18 @@ func courseSISLink(code string) string {
     return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
 }
 
-templ Content(data *CourseData) {
-    {{ course := data.course }}
-    <h1>{ course.Code + " - " + course.NameEng }</h1>
+templ Content(course *Course) {
+    <h1>{ course.Code + " - " + course.NameEn }</h1>
     // TODO only if not emtpy/nil/...
     <table>
         <tr>
-            <td>Czech title:</td><td>{ course.NameCze }</td>
+            <td>Czech title:</td><td>{ course.NameCs }</td>
         </tr>
         <tr>
-            <td>Faculty:</td><td>{ course.Faculty }</td>
+            <td>Faculty:</td><td>{ course.Faculty.String() }</td>
         </tr>
         <tr>
-            <td>Semester:</td><td>{ course.Semester }</td>
+            <td>Semester:</td><td>{ ItoS(course.Start) }</td>
         </tr>
         <tr>
             <td>E-Credits:</td><td>{ ItoS(course.Credits) }</td>
@@ -72,13 +72,11 @@ templ Content(data *CourseData) {
             <td>Additional information:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
         </tr>
         <tr>
-            <td>Teacher(s):</td><td>{ course.Teachers[0] }</td>
+            <td>Teacher(s):</td><td>{ course.Teacher1.String() }</td>
         </tr>
-        for i := 1; i < len(course.Teachers); i++ {
         <tr>
-            <td></td><td>{ course.Teachers[i] }</td>
+            <td></td><td>{ course.Teacher2.String() }</td>
         </tr>
-        }
         <tr>
             <td>SIS link:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code)) }>{ courseSISLink(course.Code) }</a></td>
         </tr>
@@ -86,8 +84,18 @@ templ Content(data *CourseData) {
     // TODO may add extend button for more info
 }
 
-templ Page(data *CourseData) {
-    @utils.Page(data.course.Code + " - " + data.course.NameEng) {
-        @Content(data)
+templ Page(course *Course) {
+    @utils.Page(course.Code + " - " + course.NameEn) {
+        @Content(course)
     }
+}
+
+templ PageNotFound(code string) {
+    @utils.Page("Course not found") {
+        @ContentNotFound(code)
+    }
+}
+
+templ ContentNotFound(code string) {
+    <h1>Course with code { code } not found</h1>
 }

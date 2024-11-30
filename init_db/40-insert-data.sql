@@ -3,7 +3,7 @@ FROM '/docker-entrypoint-initdb.d/faculties.csv'
 DELIMITER ','
 CSV HEADER;
 
-COPY teachers(sis_id,department,faculty,first_name,last_name,title_before,title_after)
+COPY teachers(sis_id,department,faculty,last_name,first_name,title_before,title_after)
 FROM '/docker-entrypoint-initdb.d/teachers.csv'
 DELIMITER ','
 CSV HEADER;
