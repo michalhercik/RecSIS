@@ -20,8 +20,8 @@ func HandlePage(w http.ResponseWriter, r *http.Request) templ.Component {
 
 func HandleUnassignedRemoval(w http.ResponseWriter, r *http.Request) {
 	// Remove data from DB
-	courseId, _ := strconv.Atoi(r.PathValue("id"))
-	db.RemoveUnassigned(user, courseId)
+	courseCode := r.PathValue("code")
+	db.RemoveUnassigned(user, courseCode)
     // Send http response
 	w.WriteHeader(http.StatusOK)
 }

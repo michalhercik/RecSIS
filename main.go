@@ -93,7 +93,7 @@ func main() {
 	router.HandleFunc("GET /blueprint", htmxRouter(blueprint.HandlePage, blueprint.HandleContent))
 	router.HandleFunc("POST /blueprint/add-year", blueprint.HandleYearAddition)
 	router.HandleFunc("POST /blueprint/remove-year/{year}", blueprint.HandleLastYearRemoval)
-	router.HandleFunc("DELETE /blueprint/remove-unassigned/{id}", blueprint.HandleUnassignedRemoval)
+	router.HandleFunc("DELETE /blueprint/remove-unassigned/{code}", blueprint.HandleUnassignedRemoval)
 
 	// Course detail
 	router.HandleFunc("GET /course/{code}", htmxRouter(coursedetail.HandlePage, coursedetail.HandleContent))

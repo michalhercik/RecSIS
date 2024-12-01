@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-func ItoS(i int) string {
+func itos(i int) string {
     return strconv.Itoa(i)
 }
 
@@ -34,16 +34,16 @@ templ renderUnassigned(unassigned *[]Course) {
         </thead>
         <tbody>
             for _, course := range *unassigned {
-                <tr id={ "id" + course.Code }>
+                <tr id={ "code" + course.Code }>
                     <td> @utils.CourseLink(course.Code, course.Code) </td>
                     <td>{ course.NameEng }</td>
                     <td>{ strings.Join(course.Teachers, ", ") }</td>
                     <td>{ course.Semester }</td>
-                    <td>{ ItoS(course.Credits) }</td>
+                    <td>{ itos(course.Credits) }</td>
                     <td>
                         <button
                             hx-delete={"/blueprint/remove-unassigned/" + course.Code}
-                            hx-target={"#id" + course.Code}
+                            hx-target={"#code" + course.Code}
                             hx-swap="delete">
                             Remove
                         </button>
@@ -76,11 +76,11 @@ templ renderCourseTable(courses *[]Course) {
         <tbody>
             for _, course := range *courses {
                 <tr>
-                    <td> @utils.CourseLink(ItoS(course.Id), course.Code) </td>
+                    <td> @utils.CourseLink(itos(course.Id), course.Code) </td>
                     <td>{ course.NameEng }</td>
                     <td>{ strings.Join(course.Teachers, ", ") }</td>
                     <td>{ course.Semester }</td>
-                    <td>{ ItoS(course.Credits) }</td>
+                    <td>{ itos(course.Credits) }</td>
                     <td>
                         <button>Edit</button>
                     </td>
@@ -101,12 +101,12 @@ templ renderYears(years *map[int][]Course) {
             }
         }
     }}
-    <div>Total credits: { ItoS(totalCredits) }</div>
+    <div>Total credits: { itos(totalCredits) }</div>
 
     for year := 1; year <= len(*years); year++ {
         {{ courses := (*years)[year] }}
-        <div id={"BlueprintYear" + ItoS(year)}>
-            <h2>Year { ItoS(year) }</h2>
+        <div id={"BlueprintYear" + itos(year)}>
+            <h2>Year { itos(year) }</h2>
             {{
                 winterCourses := make([]Course, 0)
                 winterCredits := 0
@@ -123,19 +123,19 @@ templ renderYears(years *map[int][]Course) {
                     }
                 }
             }}
-            <div>Credits: { ItoS(winterCredits + summerCredits) }</div>
+            <div>Credits: { itos(winterCredits + summerCredits) }</div>
             <h3>Winter Semester</h3>
-            <div>Credits: { ItoS(winterCredits) }</div>
+            <div>Credits: { itos(winterCredits) }</div>
             @renderCourseTable(&winterCourses)
             <h3>Summer Semester</h3>
-            <div>Credits: { ItoS(summerCredits) }</div>
+            <div>Credits: { itos(summerCredits) }</div>
             @renderCourseTable(&summerCourses)
        </div>
     }
     if len(*years) > 0 {
     <button
         hx-swap="outerHTML"
-        hx-post={"/blueprint/remove-year/" + ItoS(len(*years))}
+        hx-post={"/blueprint/remove-year/" + itos(len(*years))}
         hx-target="this">
         Remove last year
     </button>
@@ -165,22 +165,22 @@ templ renderCreditTable(years *map[int][]Course) {
                         creditsBySemester[course.Semester] += course.Credits
                         totalSum += course.Credits
                     }
-                    yearStr := ItoS(year)
+                    yearStr := itos(year)
                 }}
                 <tr id={"SumWinterYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Winter </td>
-                    <td>{ ItoS(creditsBySemester["Winter"]) }</td>
+                    <td>{ itos(creditsBySemester["Winter"]) }</td>
                 </tr>
                 <tr id={"SumSummerYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Summer </td>
-                    <td>{ ItoS(creditsBySemester["Summer"]) }</td>
+                    <td>{ itos(creditsBySemester["Summer"]) }</td>
                 </tr>
             }
             <tr>
                 <td colspan="2"> Total </td>
-                <td>{ ItoS(totalSum) }</td>
+                <td>{ itos(totalSum) }</td>
             </tr>
         </tbody>
     </table>

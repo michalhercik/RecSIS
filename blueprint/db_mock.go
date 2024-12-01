@@ -64,10 +64,17 @@ func (db *MockDB) GetData(user int) BlueprintData {
 	return BlueprintData{unassigned: unassignedCourses, years: yearsCourses}
 }
 
-func (db *MockDB) RemoveUnassigned(user int, course int) {
+func (db *MockDB) RemoveUnassigned(user int, courseCode string) {
 	blueprintCourses := db.blueprintCourses[user]
+	var courseId int
+	for _, c := range db.courses {
+		if c.Code == courseCode {
+			courseId = c.Id
+			break
+		}
+	}
 	for i, idx := range blueprintCourses {
-		if idx == course {
+		if idx == courseId {
 			db.blueprintCourses[user] = append(blueprintCourses[:i], blueprintCourses[i+1:]...)
 			return
 		}

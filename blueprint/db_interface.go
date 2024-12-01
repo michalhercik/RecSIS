@@ -2,7 +2,7 @@ package blueprint
 
 type Database interface {
 	GetData(user int) BlueprintData
-	RemoveUnassigned(user int, course int)
+	RemoveUnassigned(user int, courseCode string)
 	RemoveYear(user int, year int)
 	AddYear(user int)
 }
