@@ -112,13 +112,11 @@ func equalCourse(c1, c2 *Course) error {
 	if c1.Credits != c2.Credits {
 		return fmt.Errorf("Credits: %d != %d", c1.Credits, c2.Credits)
 	}
-	err = equalTeacher(&c1.Teacher1, &c2.Teacher1)
-	if err != nil {
-		return fmt.Errorf("Teacher1: %v", err)
-	}
-	err = equalTeacher(&c1.Teacher2, &c2.Teacher2)
-	if err != nil {
-		return fmt.Errorf("Teacher2: %v", err)
+	for i := range c1.Teachers {
+		err = equalTeacher(&c1.Teachers[i], &c2.Teachers[i])
+		if err != nil {
+			return fmt.Errorf("Teacher1: %v", err)
+		}
 	}
 	if c1.MinEnrollment != c2.MinEnrollment {
 		return fmt.Errorf("MinEnrollment: %d != %d", c1.MinEnrollment, c2.MinEnrollment)
@@ -163,44 +161,46 @@ func createExpected() *Course {
 		State:         "N",
 		Start:         2,
 		SemesterCount: 1,
-		Language:      "CZE",
+		Language:      "Czech",
 		LectureRange1: 1,
 		SeminarRange1: 2,
 		LectureRange2: -1,
 		SeminarRange2: -1,
 		ExamType:      "*",
 		Credits:       4,
-		Teacher1: Teacher{
-			Id:         16,
-			SisId:      11275,
-			Department: "32-UFAL",
-			Faculty: Faculty{
-				Id:     3,
-				SisId:  11320,
-				NameCs: "Matematicko-fyzikální fakulta",
-				NameEn: "Faculty of Mathematics and Physics",
-				Abbr:   "MFF",
+		Teachers: []Teacher{
+			Teacher{
+				Id:         16,
+				SisId:      11275,
+				Department: "32-UFAL",
+				Faculty: Faculty{
+					Id:     3,
+					SisId:  11320,
+					NameCs: "Matematicko-fyzikální fakulta",
+					NameEn: "Faculty of Mathematics and Physics",
+					Abbr:   "MFF",
+				},
+				FirstName:   "Zdeněk",
+				LastName:    "Žabokrtský",
+				TitleBefore: "doc. Ing.",
+				TitleAfter:  "Ph.D.",
 			},
-			FirstName:   "Zdeněk",
-			LastName:    "Žabokrtský",
-			TitleBefore: "doc. Ing.",
-			TitleAfter:  "Ph.D.",
-		},
-		Teacher2: Teacher{
-			Id:         5,
-			SisId:      10876,
-			Department: "32-UFAL",
-			Faculty: Faculty{
-				Id:     3,
-				SisId:  11320,
-				NameCs: "Matematicko-fyzikální fakulta",
-				NameEn: "Faculty of Mathematics and Physics",
-				Abbr:   "MFF",
+			Teacher{
+				Id:         5,
+				SisId:      10876,
+				Department: "32-UFAL",
+				Faculty: Faculty{
+					Id:     3,
+					SisId:  11320,
+					NameCs: "Matematicko-fyzikální fakulta",
+					NameEn: "Faculty of Mathematics and Physics",
+					Abbr:   "MFF",
+				},
+				FirstName:   "Ondřej",
+				LastName:    "Bojar",
+				TitleBefore: "doc. RNDr.",
+				TitleAfter:  "Ph.D.",
 			},
-			FirstName:   "Ondřej",
-			LastName:    "Bojar",
-			TitleBefore: "doc. RNDr.",
-			TitleAfter:  "Ph.D.",
 		},
 		MinEnrollment:   10876,
 		Capacity:        -1,

@@ -47,7 +47,7 @@ templ Content(course *Course) {
     // TODO only if not emtpy/nil/...
     <table>
         <tr>
-            <td>Czech title:</td><td>{ course.NameCs }</td>
+            <td>Czech title:</td><td>{ course.NameEn }</td>
         </tr>
         <tr>
             <td>Faculty:</td><td>{ course.Faculty.String() }</td>
@@ -72,11 +72,13 @@ templ Content(course *Course) {
             <td>Additional information:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
         </tr>
         <tr>
-            <td>Teacher(s):</td><td>{ course.Teacher1.String() }</td>
+            <td>Teacher(s):</td><td>{ course.Teachers[0].String() }</td>
         </tr>
-        <tr>
-            <td></td><td>{ course.Teacher2.String() }</td>
-        </tr>
+        for _, teacher := range course.Teachers[1:] {
+            <tr>
+                <td></td><td>{ teacher.String() }</td>
+            </tr>
+        }
         <tr>
             <td>SIS link:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code)) }>{ courseSISLink(course.Code) }</a></td>
         </tr>

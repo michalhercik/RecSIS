@@ -36,7 +36,7 @@ SELECT
     c.taught,
     c.start_semester,
     c.semester_count,
-    c.taught_lang,
+    CASE WHEN c.taught_lang = 'CZE' THEN 'Czech' ELSE 'English' END,
     c.lecture_range1,
     c.seminar_range1,
     COALESCE(c.lecture_range2, -1),

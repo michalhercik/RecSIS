@@ -24,7 +24,7 @@ type Faculty struct {
 }
 
 func (f Faculty) String() string {
-	return f.NameCs
+	return f.NameEn
 }
 
 type Teacher struct {
@@ -62,8 +62,7 @@ type Course struct {
 	SeminarRange2   int
 	ExamType        string
 	Credits         int
-	Teacher1        Teacher
-	Teacher2        Teacher
+	Teachers        []Teacher
 	MinEnrollment   int // -1 means no limit
 	Capacity        int // -1 means no limit
 	AnnotationCs    string
@@ -78,11 +77,9 @@ type Course struct {
 func newCourse() *Course {
 	return &Course{
 		Faculty: Faculty{},
-		Teacher1: Teacher{
-			Faculty: Faculty{},
-		},
-		Teacher2: Teacher{
-			Faculty: Faculty{},
+		Teachers: []Teacher{
+			Teacher{Faculty: Faculty{}},
+			Teacher{Faculty: Faculty{}},
 		},
 	}
 }
