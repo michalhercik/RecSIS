@@ -3,87 +3,246 @@ package coursedetail
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
+	"strings"
+    "github.com/microcosm-cc/bluemonday"
 )
 
-// TODO: Why capital I?
-func ItoS(i int) string {
+var p *bluemonday.Policy 
+
+func itos(i int) string {
     return strconv.Itoa(i)
+}
+
+templ Ratings(ratings []Rating, courseCode string) {
+    {{
+        sum := 0
+        for _, rating := range ratings {
+            sum += rating.Rating
+        }
+    }}
+    <div id="rating">
+        Rating: { itos(sum) }
+        <button hx-post={ courseCode + "/like" } hx-target="#rating" hx-swap="outerHTML">Like</button>
+        <button hx-post={ courseCode + "/dislike" } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
+    </div>
+}
+
+func semesterStr(sem int) string {
+    switch sem {
+    case 1:
+        return "winter"
+    case 2:
+        return "summer"
+    case 3:
+        return "both"
+    default:
+        return "unknown"
+    }
+}
+
+func examTypeStr(examType string) string {
+    // to add: STEX, thesis, ...
+    switch examType {
+    case "Z":
+        return "C" // Z
+    case "1":
+        return "??" // do not know
+    case "F":
+        return "MC" // KZ
+    case "D":
+        return "??" // do not know
+    case "K":
+        return "Ex" // Zk
+    case "*":
+        return "C+Ex" // Z+Zk
+    default:
+        return "unknown"
+    }
+}
+
+templ hoursExams(course *Course) {
+    {{ semCount := course.SemesterCount }}
+    if semCount == 1 {
+    <tr>
+        <td>Hours per week, examination:</td>
+        <td>{ itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
+    </tr>
+    }
+    if semCount == 2 {
+    <tr>
+        <td rowspan="2">Hours per week, examination:</td>
+        <td>{ "winter s.:" + itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>{ "summer s.:" + itos(course.LectureRange2) + "/" + itos(course.SeminarRange2) + ", " + examTypeStr(course.ExamType)}</td>
+    </tr>
+    }
 }
 
 func capacityStr(capacity int) string {
     if capacity == -1 {
         return "unlimited"
     }
-    return ItoS(capacity)
+    return itos(capacity)
 }
 
-templ hoursExams(course *Course) {
-    {{ sem := course.Start }}
-    {{ semCount := course.SemesterCount }}
-    if sem == 1 || semCount == 2 {
-    <tr>
-        <td>Hours per week, examination:</td>
-        <td>{ ItoS(course.LectureRange1) + "/" + ItoS(course.SeminarRange1) + ", " + course.ExamType }</td>
-    </tr>
-    }
-    if sem == 2 || semCount == 2 {
-    <tr>
-        if semCount == 1 {
-        <td>Hours per week, examination:</td>
-        } else {
-        <td></td>
-        }
-        <td>{ ItoS(course.LectureRange2) + "/" + ItoS(course.SeminarRange2) + ", " + course.ExamType }</td>
-    </tr>
+func stateStr(state string) string {
+    switch state {
+    case "N":
+        return "taught"
+    case "V":
+        return "not taught"
+    default:
+        return "unknown"
     }
 }
 
 func courseSISLink(code string) string {
-    return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
+    // /eng/ for English version, nothing for Czech
+    return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
 }
 
-templ Content(course *Course) {
-    <h1>{ course.Code + " - " + course.NameEn }</h1>
-    // TODO only if not emtpy/nil/...
-    <table>
-        <tr>
-            <td>Czech title:</td><td>{ course.NameEn }</td>
-        </tr>
-        <tr>
-            <td>Faculty:</td><td>{ course.Faculty.String() }</td>
-        </tr>
-        <tr>
-            <td>Semester:</td><td>{ ItoS(course.Start) }</td>
-        </tr>
-        <tr>
-            <td>E-Credits:</td><td>{ ItoS(course.Credits) }</td>
-        </tr>
-        @hoursExams(course)
-        <tr>
-            <td>Capacity:</td><td>{ capacityStr(course.Capacity) }</td>
-        </tr>
-        <tr>
-            <td>State of the course:</td><td>{ course.State }</td>
-        </tr>
-        <tr>
-            <td>Language:</td><td>{ course.Language }</td>
-        </tr>
-        <tr>
-            <td>Additional information:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
-        </tr>
-        <tr>
-            <td>Teacher(s):</td><td>{ course.Teachers[0].String() }</td>
-        </tr>
-        for _, teacher := range course.Teachers[1:] {
+templ BasicInfo(course *Course) {
+    // TODO only if not empty/nil/...
+    <div id="basicinfo" class="courseinfobox">
+        <table>
+            <tr>
+                <td>Czech title:</td><td>{ course.NameCs }</td>
+            </tr>
+            <tr>
+                <td>Faculty:</td><td>{ course.Faculty.String() }</td>
+            </tr>
+            <tr>
+                <td>Semester:</td><td>{ semesterStr(course.Start) }</td>
+            </tr>
+            <tr>
+                <td>E-Credits:</td><td>{ itos(course.Credits) }</td>
+            </tr>
+            @hoursExams(course)
+            <tr>
+                <td>Capacity:</td><td>{ capacityStr(course.Capacity) }</td>
+            </tr>
+            <tr>
+                <td>State of the course:</td><td>{ stateStr(course.State) }</td>
+            </tr>
+            <tr>
+                <td>Language:</td><td>{ course.Language }</td>
+            </tr>
+            <tr>
+                <td>Additional information:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
+            </tr>
+            <tr>
+                <td>Teacher(s):</td><td>{ course.Teachers[0].String() }</td>
+            </tr>
+            for _, teacher := range course.Teachers[1:] {
             <tr>
                 <td></td><td>{ teacher.String() }</td>
             </tr>
+            }
+            <tr>
+                <td>SIS link:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code)) }>{ courseSISLink(course.Code) }</a></td>
+            </tr>
+        </table>
+        // TODO may add extend button for more info
+    </div>
+}
+
+templ renderSafeContent(content string) {
+    // prefix <HTML> -> probably HTML content
+    if strings.HasPrefix(content, "<HTML>") {
+    // TODO not sure that table is best practice, but it works
+    <table><tr><td>
+    @templ.Raw(p.Sanitize(content))
+    </td></tr></table>
+    } else {
+    // otherwise looks like markdown
+    <md-block>{ content }</md-block>
+    }
+}
+
+templ Annotation(annotation string) {
+    if annotation != "" {
+    <div id="annotation" class="courseinfobox">
+        <h2>Annotation</h2>
+        @renderSafeContent(annotation)
+    </div>
+    }
+}
+
+templ CompletionRequirements(completion string) {
+    if completion != "" {
+    <div id="completion" class="courseinfobox">
+        <h2>Completion requirements</h2>
+        @renderSafeContent(completion)
+    </div>
+    }
+}
+
+templ Literature(literature string) {
+    if literature != "" {
+    <div id="literature" class="courseinfobox">
+        <h2>Literature</h2>
+        @renderSafeContent(literature)
+    </div>
+    }
+}
+
+templ Sylabus(sylabus string) {
+    if sylabus != "" {
+    <div id="sylabus" class="courseinfobox">
+        <h2>Sylabus</h2>
+        @renderSafeContent(sylabus)
+    </div>
+    }
+}
+
+templ Comments(comments []Comment, courseCode string) {
+    <div id="comments" class="courseinfobox">
+        <h2>Comments</h2>
+        <ul>
+            for _, comment := range comments {
+            <li>
+                <div>
+                    <span>{ itos(comment.ID) }</span>
+                </div>
+                <div>
+                    { comment.Content }
+                </div>
+            </li>
+            }
+        </ul>
+        <form hx-post={ courseCode + "/add-comment" } hx-target="#comments" hx-swap="outerHTML">
+            <div>
+                <label for="comment">Add a comment:</label><br>
+                <textarea id="comment" name="comment" rows="1" cols="50" oninput="adjustTextareaHeight(this)"></textarea>
+            </div>
+            <div>
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+
+        // TODO is script OK? might use CSS or something else
+        <script>
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
         }
-        <tr>
-            <td>SIS link:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code)) }>{ courseSISLink(course.Code) }</a></td>
-        </tr>
-    </table>
-    // TODO may add extend button for more info
+        </script>
+    </div>
+}
+
+templ Content(course *Course) {
+    {{ p = bluemonday.UGCPolicy() }}
+    <h1>{ course.Code + " - " + course.NameEn }</h1>
+    @Ratings(course.Ratings, course.Code)
+    @BasicInfo(course)
+    // TODO add links to parts of the page
+    @Annotation(course.AnnotationEn)
+    @CompletionRequirements("") // TODO get data
+    @Literature("") // TODO get data
+    @Sylabus(course.SylabusEn)
+    @Comments(course.Comments, course.Code)
 }
 
 templ Page(course *Course) {
