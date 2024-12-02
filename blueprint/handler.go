@@ -1,40 +1,61 @@
 package blueprint
 
 import (
-	"github.com/a-h/templ"
 	"net/http"
 	"strconv"
+
+	"github.com/a-h/templ"
 )
 
 const user = 42 // TODO get user from session
 
 func HandleContent(w http.ResponseWriter, r *http.Request) templ.Component {
-	data := db.GetData(user)
-	return Content(&data)
+	data, err := db.BluePrint(user)
+	if err != nil {
+		return InternalServerErrorContent()
+	}
+	return Content(data)
 }
 
 func HandlePage(w http.ResponseWriter, r *http.Request) templ.Component {
-	data := db.GetData(user)
-	return Page(&data)
+	data, err := db.BluePrint(user)
+	if err != nil {
+		return InternalServerErrorPage()
+	}
+	return Page(data)
 }
 
-func HandleUnassignedRemoval(w http.ResponseWriter, r *http.Request) {
+func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {
 	// Remove data from DB
-	courseCode := r.PathValue("code")
-	db.RemoveUnassigned(user, courseCode)
-    // Send http response
+	year, err := strconv.Atoi(r.PathValue("year"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	semester, err := strconv.Atoi(r.PathValue("semester"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	db.RemoveCourse(
+		user,
+		r.PathValue("code"),
+		year,
+		semester,
+	)
+	// Send http response
 	w.WriteHeader(http.StatusOK)
 }
 
 func HandleLastYearRemoval(w http.ResponseWriter, r *http.Request) {
-    year := r.PathValue("year")
+	year := r.PathValue("year")
 
-    // Update data in DB
-    yearInt, _ := strconv.Atoi(year)
-    db.RemoveYear(user, yearInt)
+	// Update data in DB
+	yearInt, _ := strconv.Atoi(year)
+	db.RemoveYear(user, yearInt)
 
-    // Send refresh header
-    w.Header().Set("HX-Refresh", "true") // htmx will trigger a full page reload
+	// Send refresh header
+	w.Header().Set("HX-Refresh", "true") // htmx will trigger a full page reload
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -42,6 +63,6 @@ func HandleYearAddition(w http.ResponseWriter, r *http.Request) {
 	// Update data in DB
 	db.AddYear(user)
 	// Send refresh header
-    w.Header().Set("HX-Refresh", "true") // htmx will trigger a full page reload
+	w.Header().Set("HX-Refresh", "true") // htmx will trigger a full page reload
 	w.WriteHeader(http.StatusOK)
 }

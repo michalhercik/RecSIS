@@ -3,8 +3,6 @@ package blueprint
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
-	"strings"
-	"sort"
 )
 
 func itos(i int) string {
@@ -12,56 +10,12 @@ func itos(i int) string {
 }
 
 // TODO only if there is at least one
-templ renderUnassigned(unassigned *[]Course) {
-    // sort courses by name to ensure consistent order
-    {{
-        sort.Slice(*unassigned, func(i, j int) bool {
-            return (*unassigned)[i].NameEng < (*unassigned)[j].NameEng
-        })
-    }}
+templ renderUnassigned(unassigned AcademicYear) {
     <h1>Unassigned courses</h1>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Teacher(s)</th>
-                <th>Semester</th>
-                <th>Credits</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            for _, course := range *unassigned {
-                <tr id={ "code" + course.Code }>
-                    <td> @utils.CourseLink(course.Code, course.Code) </td>
-                    <td>{ course.NameEng }</td>
-                    <td>{ strings.Join(course.Teachers, ", ") }</td>
-                    <td>{ course.Semester }</td>
-                    <td>{ itos(course.Credits) }</td>
-                    <td>
-                        <button
-                            hx-delete={"/blueprint/remove-unassigned/" + course.Code}
-                            hx-target={"#code" + course.Code}
-                            hx-swap="delete">
-                            Remove
-                        </button>
-                        <button>Assign</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    @renderYear(unassigned)
 }
 
-templ renderCourseTable(courses *[]Course) {
-    // sort courses by name to ensure consistent order
-    {{
-        sort.Slice(*courses, func(i, j int) bool {
-            return (*courses)[i].NameEng < (*courses)[j].NameEng
-        })
-    }}
+templ renderCourseTable(courses []Course) {
     <table>
         <thead>
             <tr>
@@ -74,12 +28,18 @@ templ renderCourseTable(courses *[]Course) {
             </tr>
         </thead>
         <tbody>
-            for _, course := range *courses {
+            for _, course := range courses {
                 <tr>
-                    <td> @utils.CourseLink(itos(course.Id), course.Code) </td>
-                    <td>{ course.NameEng }</td>
-                    <td>{ strings.Join(course.Teachers, ", ") }</td>
-                    <td>{ course.Semester }</td>
+                    <td> @utils.CourseLink(course.Code) </td>
+                    <td>{ course.NameEn }</td>
+                    <td>
+                    { course.Teachers[0].String() }
+                    for _, teacher := range course.Teachers[1:] {
+                        <td>, { teacher.String() }</td>
+                    }
+                    </td>
+                    // <td>{ strings.Join(course.Teachers, ", ") }</td>
+                    <td>{ course.Start.String() }</td>
                     <td>{ itos(course.Credits) }</td>
                     <td>
                         <button>Edit</button>
@@ -90,52 +50,38 @@ templ renderCourseTable(courses *[]Course) {
     </table>
 }
 
+templ renderYear(year AcademicYear) {
+    <div id={"BlueprintYear" + itos(year.position)}>
+        <h2>Year { itos(year.position) }</h2>
+        <div>Credits: { itos(year.credits()) }</div>
+        <h3>Winter Semester</h3>
+        <div>Credits: { itos(year.winterCredits()) }</div>
+        @renderCourseTable(year.winter)
+        <h3>Summer Semester</h3>
+        <div>Credits: { itos(year.summerCredits()) }</div>
+        @renderCourseTable(year.summer)
+    </div>
+}
+
 // TODO only if there is at least one
-templ renderYears(years *map[int][]Course) {
+templ renderYears(years []AcademicYear) {
     <h1>Blueprint</h1>
     {{ 
         totalCredits := 0
-        for _, courses := range *years {
-            for _, course := range courses {
-                totalCredits += course.Credits
-            }
+        for _, year := range years {
+            totalCredits += year.credits()
         }
     }}
     <div>Total credits: { itos(totalCredits) }</div>
 
-    for year := 1; year <= len(*years); year++ {
-        {{ courses := (*years)[year] }}
-        <div id={"BlueprintYear" + itos(year)}>
-            <h2>Year { itos(year) }</h2>
-            {{
-                winterCourses := make([]Course, 0)
-                winterCredits := 0
-                summerCourses := make([]Course, 0)
-                summerCredits := 0
-                for _, course := range courses {
-                    totalCredits += course.Credits
-                    if course.Semester == "Winter" {
-                        winterCourses = append(winterCourses, course)
-                        winterCredits += course.Credits
-                    } else {
-                        summerCourses = append(summerCourses, course)
-                        summerCredits += course.Credits
-                    }
-                }
-            }}
-            <div>Credits: { itos(winterCredits + summerCredits) }</div>
-            <h3>Winter Semester</h3>
-            <div>Credits: { itos(winterCredits) }</div>
-            @renderCourseTable(&winterCourses)
-            <h3>Summer Semester</h3>
-            <div>Credits: { itos(summerCredits) }</div>
-            @renderCourseTable(&summerCourses)
-       </div>
+    for _, year := range years {
+        @renderYear(year)
     }
-    if len(*years) > 0 {
+
+    if len(years) > 0 {
     <button
         hx-swap="outerHTML"
-        hx-post={"/blueprint/remove-year/" + itos(len(*years))}
+        hx-post={"/blueprint/remove-year/" + itos(len(years))}
         hx-target="this">
         Remove last year
     </button>
@@ -143,8 +89,8 @@ templ renderYears(years *map[int][]Course) {
     <button hx-post="/blueprint/add-year">Add year</button>
 }
 
-templ renderCreditTable(years *map[int][]Course) {
-    if len(*years) > 0 {
+templ renderCreditTable(years []AcademicYear) {
+    if len(years) > 0 {
     <h1>Credits</h1>
 
     <table id="CreditsSum">
@@ -157,25 +103,20 @@ templ renderCreditTable(years *map[int][]Course) {
         </thead>
         <tbody>
             {{ totalSum := 0 }}
-            for year := 1; year <= len(*years); year++ {
+            for _,year := range years {
                 {{
-                    courses := (*years)[year]
-                    creditsBySemester := make(map[string]int)
-                    for _, course := range courses {
-                        creditsBySemester[course.Semester] += course.Credits
-                        totalSum += course.Credits
-                    }
-                    yearStr := itos(year)
+                    totalSum += year.credits()
+                    yearStr := itos(year.position)
                 }}
                 <tr id={"SumWinterYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Winter </td>
-                    <td>{ itos(creditsBySemester["Winter"]) }</td>
+                    <td>{ itos(year.winterCredits()) }</td>
                 </tr>
                 <tr id={"SumSummerYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Summer </td>
-                    <td>{ itos(creditsBySemester["Summer"]) }</td>
+                    <td>{ itos(year.summerCredits()) }</td>
                 </tr>
             }
             <tr>
@@ -187,14 +128,27 @@ templ renderCreditTable(years *map[int][]Course) {
     }
 }
 
-templ Content(data *BlueprintData) {
-    @renderUnassigned(&data.unassigned)
-    @renderYears(&data.years)
-    @renderCreditTable(&data.years)
+templ Content(data *Blueprint) {
+    if len(data.years) >= 2 {
+        @renderUnassigned(data.years[0])
+        @renderYears(data.years[1:])
+        @renderCreditTable(data.years[1:])
+    }
 }
 
-templ Page(data *BlueprintData) {
+templ Page(data *Blueprint) {
     @utils.Page("Blueprint") {
         @Content(data)
+    }
+}
+
+templ InternalServerErrorContent() {
+    <h1>Internal Server Error</h1>
+    <p>Something went wrong</p>
+}
+
+templ InternalServerErrorPage() {
+    @utils.Page("Internal Server Error") {
+        @InternalServerErrorContent()
     }
 }

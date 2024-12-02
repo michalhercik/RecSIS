@@ -55,6 +55,6 @@ templ Footer() {
     </footer>
 }
 
-templ CourseLink(Id string, Code string) {
-    <a href={ templ.SafeURL("/course/" + Id) }>{ Code }</a>
+templ CourseLink(Code string) {
+    <a href={ templ.SafeURL("/course/" + Code) }>{ Code }</a>
 }
