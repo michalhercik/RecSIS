@@ -69,7 +69,7 @@ func main() {
 
 	mockDB := mockdb.NewDB()
 	blueprint.SetDatabase(blueprint.CreateDB(mockDB))
-	coursedetail.SetDatabase(coursedetail.DbCourseReader{Db: db})
+	coursedetail.SetDatabase(coursedetail.DBCourseReader{DB: db})
 	courses.SetDatabase(courses.CreateDB(mockDB))
 
 	//////////////////////////////////////////
@@ -97,6 +97,9 @@ func main() {
 
 	// Course detail
 	router.HandleFunc("GET /course/{code}", htmxRouter(coursedetail.HandlePage, coursedetail.HandleContent))
+	router.HandleFunc("POST /course/{code}/add-comment", coursedetail.HandleAddingComment)
+	router.HandleFunc("POST /course/{code}/like", coursedetail.HandleLike)
+	router.HandleFunc("POST /course/{code}/dislike", coursedetail.HandleDislike)
 
 	//////////////////////////////////////////
 	// Server setup

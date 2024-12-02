@@ -3,21 +3,37 @@ package coursedetail
 import "fmt"
 
 // TODO: change interface name if interface changes
-type Courser interface {
+type CourseDataManager interface {
 	Course(code string) (*Course, error)
+	AddComment(code string, commentContent string) error
+	GetComments(code string) ([]Comment, error)
 }
 
 // TODO: rename db to something more descriptive (Mock data are not database...)
-var db Courser
+var db CourseDataManager
 
 // TODO: rename to something more general but descriptive (doesn't have to be Database)
-func SetDatabase(newDB Courser) {
+func SetDatabase(newDB CourseDataManager) {
 	db = newDB
 }
 
+// TODO add more fields
+type Rating struct {
+	ID       int
+	UserID   int
+	Rating   int // 1..like -1..dislike
+}
+
+// TODO add more fields
+type Comment struct {
+	ID       int
+	UserID   int
+	Content  string
+}
+
 type Faculty struct {
-	Id     int
-	SisId  int
+	ID     int
+	SisID  int
 	NameCs string
 	NameEn string
 	Abbr   string
@@ -28,8 +44,8 @@ func (f Faculty) String() string {
 }
 
 type Teacher struct {
-	Id          int
-	SisId       int
+	ID          int
+	SisID       int
 	Department  string
 	Faculty     Faculty
 	FirstName   string
@@ -39,12 +55,12 @@ type Teacher struct {
 }
 
 func (t Teacher) String() string {
-	return fmt.Sprintf("%s %s %s %s",
+	return fmt.Sprintf("%s %s %s, %s",
 		t.TitleBefore, t.FirstName, t.LastName, t.TitleAfter)
 }
 
 type Course struct {
-	Id              int
+	ID              int
 	Code            string
 	NameCs          string
 	NameEn          string
@@ -72,6 +88,8 @@ type Course struct {
 	Classifications []string
 	Classes         []string
 	Link            string // link to course webpage (not SIS)
+	Comments		[]Comment
+	Ratings			[]Rating
 }
 
 func newCourse() *Course {

@@ -6,22 +6,22 @@ import (
 	"github.com/michalhercik/RecSIS/coursedetail/sqlquery"
 )
 
-type DbCourseReader struct {
-	Db *sql.DB
+type DBCourseReader struct {
+	DB *sql.DB
 }
 
-func (reader DbCourseReader) Course(code string) (*Course, error) {
-	row := reader.Db.QueryRow(sqlquery.Course, code)
+func (reader DBCourseReader) Course(code string) (*Course, error) {
+	row := reader.DB.QueryRow(sqlquery.Course, code)
 	course := newCourse()
 	err := row.Scan(
-		&course.Id,
+		&course.ID,
 		&course.Code,
 		&course.NameCs,
 		&course.NameEn,
 		&course.ValidFrom,
 		&course.ValidTo,
-		&course.Faculty.Id,
-		&course.Faculty.SisId,
+		&course.Faculty.ID,
+		&course.Faculty.SisID,
 		&course.Faculty.NameCs,
 		&course.Faculty.NameEn,
 		&course.Faculty.Abbr,
@@ -36,11 +36,11 @@ func (reader DbCourseReader) Course(code string) (*Course, error) {
 		&course.SeminarRange2,
 		&course.ExamType,
 		&course.Credits,
-		&course.Teachers[0].Id,
-		&course.Teachers[0].SisId,
+		&course.Teachers[0].ID,
+		&course.Teachers[0].SisID,
 		&course.Teachers[0].Department,
-		&course.Teachers[0].Faculty.Id,
-		&course.Teachers[0].Faculty.SisId,
+		&course.Teachers[0].Faculty.ID,
+		&course.Teachers[0].Faculty.SisID,
 		&course.Teachers[0].Faculty.NameCs,
 		&course.Teachers[0].Faculty.NameEn,
 		&course.Teachers[0].Faculty.Abbr,
@@ -48,11 +48,11 @@ func (reader DbCourseReader) Course(code string) (*Course, error) {
 		&course.Teachers[0].LastName,
 		&course.Teachers[0].TitleBefore,
 		&course.Teachers[0].TitleAfter,
-		&course.Teachers[1].Id,
-		&course.Teachers[1].SisId,
+		&course.Teachers[1].ID,
+		&course.Teachers[1].SisID,
 		&course.Teachers[1].Department,
-		&course.Teachers[1].Faculty.Id,
-		&course.Teachers[1].Faculty.SisId,
+		&course.Teachers[1].Faculty.ID,
+		&course.Teachers[1].Faculty.SisID,
 		&course.Teachers[1].Faculty.NameCs,
 		&course.Teachers[1].Faculty.NameEn,
 		&course.Teachers[1].Faculty.Abbr,
@@ -67,5 +67,36 @@ func (reader DbCourseReader) Course(code string) (*Course, error) {
 		&course.SylabusCs,
 		&course.SylabusEn,
 	)
+
+	// TODO: this is mock - change to real data
+	course.Comments = []Comment{
+		{ID: 1, UserID: 1, Content: "This is a comment"},
+		{ID: 2, UserID: 2, Content: "This is another comment"},
+		{ID: 3, UserID: 3, Content: "This is yet another comment"},
+	}
+	course.Ratings = []Rating{
+		{ID: 1, UserID: 1, Rating: 1},
+		{ID: 2, UserID: 2, Rating: 1},
+		{ID: 3, UserID: 3, Rating: -1},
+	}
+
 	return course, err
+}
+
+// TODO: MOCK - implement
+func (reader DBCourseReader) AddComment(code, commentContent string) error {
+	//_, err := reader.DB.Exec(sqlquery.AddComment, code, commentContent)
+	//return err
+	return nil
+}
+
+// TODO: MOCK - implement
+func (reader DBCourseReader) GetComments(code string) ([]Comment, error) {
+	comments := []Comment{
+		{ID: 1, UserID: 1, Content: "This is a comment"},
+		{ID: 2, UserID: 2, Content: "This is another comment"},
+		{ID: 3, UserID: 3, Content: "This is yet another comment"},
+		{ID: 4, UserID: 4, Content: "I think that Michal is great name"},
+	}
+	return comments, nil
 }
