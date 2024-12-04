@@ -85,6 +85,8 @@ func main() {
 
 	// Courses
 	router.HandleFunc("GET /courses", htmxRouter(courses.HandlePage, courses.HandleContent))
+	router.HandleFunc("GET /courses/page", courses.HandlePaging)
+	router.HandleFunc("GET /courses/search", courses.HandleSearch)
 
 	// Degree plan
 	router.HandleFunc("GET /degreeplan", htmxRouter(degreeplan.HandlePage, degreeplan.HandleContent))

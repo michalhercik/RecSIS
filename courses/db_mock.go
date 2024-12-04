@@ -30,6 +30,30 @@ func CreateDB(db *mockdb.DB) *MockDB {
 	return &MockDB{courses: courses}
 }
 
-func (db *MockDB) GetData() CoursesData {
-	return CoursesData{courses: db.courses}
+func (db *MockDB) Courses(query query) coursesPage {
+	var courses []Course
+	startIndex := query.startIndex
+	if startIndex < 0 {
+		startIndex = 0
+	}
+	if startIndex >= len(db.courses) {
+		courses = []Course{}
+	}
+
+	endIndex := startIndex + query.maxCount
+	if endIndex > len(db.courses) {
+		endIndex = len(db.courses)
+	}
+
+	courses = db.courses[startIndex:endIndex]
+	total := len(db.courses)
+	count := len(courses)
+
+	return coursesPage{
+		courses:    courses,
+		startIndex: startIndex,
+		count:      count,
+		total:      total,
+		sorted:     query.sorted,
+	}
 }

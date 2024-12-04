@@ -2,16 +2,101 @@ package courses
 
 import (
     "github.com/michalhercik/RecSIS/utils"
+    "strconv"
 )
 
-templ Content(data *CoursesData) {
-    <form>
-        <input type="text"/>
+const user = 42
+const coursesPerPage = 10
+
+func itos(i int) string {
+    return strconv.Itoa(i)
+}
+
+templ Search() {
+    <form
+        hx-get={ "/courses/search?user=" + itos(user) }
+        hx-target="#courses"
+        hx-swap="outerHTML"
+        hx-include="[name=search],[name=sort]"
+    >
+        <input type="text" name="search" id="search" placeholder="Search..." />
+        <button type="submit">Search</button>
+        <label for="sort">Sort by:</label>
+        <select name="sort" id="sort">
+            <option value="relevance">Relevance</option>
+            <option value="recommended">Recommended</option>
+            <option value="rating">Rating</option>
+            <option value="most_popular">Most Popular</option>
+            <option value="newest">Newest</option>
+        </select>
     </form>
 }
 
-templ Page(data *CoursesData) {
+func queryString(user int, startIndex int, maxCount int, search string, sorted sortType) string {
+    return "?user=" + itos(user) + 
+           "&startIndex=" + itos(startIndex) + 
+           "&maxCount=" + itos(maxCount) + 
+           "&search=" + search + 
+           "&sorted=" + itos(int(sorted))
+}
+
+templ Courses(coursesPage *coursesPage) {
+    <div id="courses">
+        {{ endIndex := coursesPage.startIndex + coursesPage.count }}
+        <h2>{ coursesPage.sorted.String() + ":" }</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Title</th>
+                    <th>Semester</th>
+                </tr>
+            </thead>
+            <tbody>
+            for _, course := range coursesPage.courses {
+                <tr>
+                    <td> @utils.CourseLink(course.Code) </td>
+                    <td>{ course.NameEng }</td>
+                    <td>{ course.Semester }</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        <p>Results { itos(coursesPage.startIndex + 1) } to { itos(endIndex) } of { itos(coursesPage.total) }</p>
+        <div>
+            if coursesPage.startIndex > 0 {
+            <button
+                hx-get={ "/courses/page" + queryString(user, coursesPage.startIndex - coursesPerPage, coursesPerPage, coursesPage.search, coursesPage.sorted) }
+                hx-target="#courses"
+                hx-swap="outerHTML">
+                Previous
+            </button>
+            }
+            if endIndex < coursesPage.total {
+            <button
+                hx-get={ "/courses/page" + queryString(user, endIndex, coursesPerPage, coursesPage.search, coursesPage.sorted) }
+                hx-target="#courses"
+                hx-swap="outerHTML">
+                Next
+            </button>
+            <button
+                hx-get={ "/courses/page" + queryString(user, coursesPage.startIndex, coursesPage.count + coursesPerPage, coursesPage.search, coursesPage.sorted) }
+                hx-target="#courses"
+                hx-swap="outerHTML">
+                Load More
+            </button>
+            }
+        </div>
+    </div>
+}
+
+templ Content(coursesPage *coursesPage) {
+    @Search()
+    @Courses(coursesPage)
+}
+
+templ Page(coursesPage *coursesPage) {
     @utils.Page("Courses") {
-        @Content(data)
+        @Content(coursesPage)
     }
 }
