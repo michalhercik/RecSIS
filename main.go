@@ -99,7 +99,7 @@ func main() {
 
 	// Course detail
 	router.HandleFunc("GET /course/{code}", htmxRouter(coursedetail.HandlePage, coursedetail.HandleContent))
-	router.HandleFunc("POST /course/{code}/add-comment", coursedetail.HandleAddingComment)
+	router.HandleFunc("POST /course/{code}/comment", coursedetail.HandleCommentAddition)
 	router.HandleFunc("POST /course/{code}/like", coursedetail.HandleLike)
 	router.HandleFunc("POST /course/{code}/dislike", coursedetail.HandleDislike)
 

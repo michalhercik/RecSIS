@@ -24,7 +24,7 @@ func HandlePage(w http.ResponseWriter, r *http.Request) templ.Component {
 	return Page(course)
 }
 
-func HandleAddingComment(w http.ResponseWriter, r *http.Request) {
+func HandleCommentAddition(w http.ResponseWriter, r *http.Request) {
 	// get the course code and comment content from the request
 	code := r.PathValue("code")
 	commentContent := r.FormValue("comment")

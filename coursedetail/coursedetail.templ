@@ -212,7 +212,7 @@ templ Comments(comments []Comment, courseCode string) {
             </li>
             }
         </ul>
-        <form hx-post={ courseCode + "/add-comment" } hx-target="#comments" hx-swap="outerHTML">
+        <form hx-post={ courseCode + "/comment" } hx-target="#comments" hx-swap="outerHTML">
             <div>
                 <label for="comment">Add a comment:</label><br>
                 <textarea id="comment" name="comment" rows="1" cols="50" oninput="adjustTextareaHeight(this)"></textarea>
