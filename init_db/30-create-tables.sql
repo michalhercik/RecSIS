@@ -64,9 +64,26 @@ CREATE TABLE classes(
 );
 
 CREATE TABLE requisites(
-    course VARCHAR(10),
-    requisite VARCHAR(10),
+    course VARCHAR(10) NOT NULL,
+    requisite VARCHAR(10) NOT NULL,
     requisite_type CHAR(1) NOT NULL,
     from_year INT NOT NULL,
     to_year INT NOT NULL
+);
+
+CREATE TABLE blueprint_years(
+    id SERIAL PRIMARY KEY,
+    student INT NOT NULL,
+    position INT NOT NULL,
+    UNIQUE (student, position)
+);
+
+CREATE TABLE blueprint_semesters(
+    id SERIAL PRIMARY KEY,
+    blueprint_year INT REFERENCES blueprint_years(id) NOT NULL,
+    course INT REFERENCES courses(id) NOT NULL,
+    semester INT NOT NULL,
+    position INT NOT NULL,
+    UNIQUE (blueprint_year, semester, course),
+    UNIQUE (blueprint_year, semester, position)
 );

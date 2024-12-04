@@ -27,3 +27,13 @@ COPY requisites(course,requisite_type,requisite,from_year,to_year)
 FROM '/docker-entrypoint-initdb.d/requisities.csv'
 DELIMITER ','
 CSV HEADER;
+
+COPY blueprint_years(student,position)
+FROM '/docker-entrypoint-initdb.d/blueprint_years.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY blueprint_semesters(blueprint_year,course,semester,position)
+FROM '/docker-entrypoint-initdb.d/blueprint_semesters.csv'
+DELIMITER ','
+CSV HEADER;

@@ -96,8 +96,8 @@ func newCourse() *Course {
 	return &Course{
 		Faculty: Faculty{},
 		Teachers: []Teacher{
-			Teacher{Faculty: Faculty{}},
-			Teacher{Faculty: Faculty{}},
+			{Faculty: Faculty{}},
+			{Faculty: Faculty{}},
 		},
 	}
 }
