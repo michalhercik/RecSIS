@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -12,6 +13,7 @@ const user = 42 // TODO get user from session
 func HandleContent(w http.ResponseWriter, r *http.Request) templ.Component {
 	data, err := db.BluePrint(user)
 	if err != nil {
+		log.Println(err)
 		return InternalServerErrorContent()
 	}
 	return Content(data)
@@ -20,13 +22,13 @@ func HandleContent(w http.ResponseWriter, r *http.Request) templ.Component {
 func HandlePage(w http.ResponseWriter, r *http.Request) templ.Component {
 	data, err := db.BluePrint(user)
 	if err != nil {
+		log.Println(err)
 		return InternalServerErrorPage()
 	}
 	return Page(data)
 }
 
 func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {
-	// Remove data from DB
 	year, err := strconv.Atoi(r.PathValue("year"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -37,32 +39,38 @@ func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	db.RemoveCourse(
+	err = db.RemoveCourse(
 		user,
 		r.PathValue("code"),
 		year,
 		semester,
 	)
-	// Send http response
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func HandleLastYearRemoval(w http.ResponseWriter, r *http.Request) {
-	year := r.PathValue("year")
-
-	// Update data in DB
-	yearInt, _ := strconv.Atoi(year)
-	db.RemoveYear(user, yearInt)
-
-	// Send refresh header
-	w.Header().Set("HX-Refresh", "true") // htmx will trigger a full page reload
-	w.WriteHeader(http.StatusOK)
+func HandleYearRemoval(w http.ResponseWriter, r *http.Request) {
+	if err := db.RemoveYear(user); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	// TODO: Render just credits stats with own sql query for performance
+	HandleContent(w, r).
+		Render(r.Context(), w)
 }
 
 func HandleYearAddition(w http.ResponseWriter, r *http.Request) {
-	// Update data in DB
-	db.AddYear(user)
-	// Send refresh header
-	w.Header().Set("HX-Refresh", "true") // htmx will trigger a full page reload
-	w.WriteHeader(http.StatusOK)
+	log.Println("Adding year")
+	if err := db.AddYear(user); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// TODO: Render just credits stats with own sql query for performance
+	HandleContent(w, r).
+		Render(r.Context(), w)
 }

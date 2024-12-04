@@ -68,7 +68,7 @@ func main() {
 	}
 
 	mockDB := mockdb.NewDB()
-	blueprint.SetDataManager(blueprint.DBManager{Db: db})
+	blueprint.SetDataManager(blueprint.DBManager{DB: db})
 	coursedetail.SetDatabase(coursedetail.DBCourseReader{DB: db})
 	courses.SetDatabase(courses.CreateDB(mockDB))
 
@@ -91,9 +91,9 @@ func main() {
 
 	// Blueprint
 	router.HandleFunc("GET /blueprint", htmxRouter(blueprint.HandlePage, blueprint.HandleContent))
-	router.HandleFunc("POST /blueprint/add-year", blueprint.HandleYearAddition)
-	router.HandleFunc("POST /blueprint/remove-year/{year}", blueprint.HandleLastYearRemoval)
-	router.HandleFunc("DELETE /blueprint/delete/year/{year}/{semester}/{code}", blueprint.HandleCourseRemoval)
+	router.HandleFunc("POST /blueprint/year", blueprint.HandleYearAddition)
+	router.HandleFunc("DELETE /blueprint/year", blueprint.HandleYearRemoval)
+	router.HandleFunc("DELETE /blueprint/{year}/{semester}/{code}", blueprint.HandleCourseRemoval)
 
 	// Course detail
 	router.HandleFunc("GET /course/{code}", htmxRouter(coursedetail.HandlePage, coursedetail.HandleContent))

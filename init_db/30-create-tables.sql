@@ -74,12 +74,16 @@ CREATE TABLE requisites(
 CREATE TABLE blueprint_years(
     id SERIAL PRIMARY KEY,
     student INT NOT NULL,
-    position INT NOT NULL
+    position INT NOT NULL,
+    UNIQUE (student, position)
 );
 
 CREATE TABLE blueprint_semesters(
-    blueprint_year INT REFERENCES blueprint_years(id),
+    id SERIAL PRIMARY KEY,
+    blueprint_year INT REFERENCES blueprint_years(id) NOT NULL,
     course INT REFERENCES courses(id) NOT NULL,
     semester INT NOT NULL,
-    position INT NOT NULL
+    position INT NOT NULL,
+    UNIQUE (blueprint_year, semester, course),
+    UNIQUE (blueprint_year, semester, position)
 );

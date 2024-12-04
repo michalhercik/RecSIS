@@ -1,56 +1,16 @@
 package blueprint
 
-import "fmt"
-
-// type Database interface {
-// 	GetData(user int) BlueprintData
-// 	RemoveUnassigned(user int, courseCode string)
-// 	RemoveYear(user int, year int)
-// 	AddYear(user int)
-// }
-
-// var db Database
-
-// func SetDatabase(newDB Database) {
-// 	db = newDB
-// }
-
-// type Course struct {
-// 	Id      int
-// 	Code    string
-// 	NameCze string
-// 	NameEng string
-// 	//ValidFrom            int
-// 	//ValidTo              int
-// 	//Faculty              string
-// 	//Guarantor            string
-// 	//State                string
-// 	Semester string
-// 	//SemesterCount        int
-// 	//Language             string
-// 	LectureHoursWinter int
-// 	SeminarHoursWinter int
-// 	LectureHoursSummer int
-// 	SeminarHoursSummer int
-// 	ExamWinter         string
-// 	ExamSummer         string
-// 	Credits            int
-// 	Teachers           []string
-// 	// MinEnrollment        int // -1 means no limit
-// 	// Capacity             int // -1 means no limit
-// }
-
-type BlueprintData struct {
-	unassigned []Course
-	years      map[int][]Course
-}
+import (
+	"fmt"
+	"strings"
+)
 
 type DataManager interface {
 	BluePrint(user int) (*Blueprint, error)
-	AddCourse(user int, course string, year int, semester int, position int)
-	RemoveCourse(user int, course string, year int, semester int)
-	AddYear(user int)
-	RemoveYear(user int, year int)
+	AddCourse(user int, course string, year int, semester int, position int) error
+	RemoveCourse(user int, course string, year int, semester int) error
+	AddYear(user int) error
+	RemoveYear(user int) error
 }
 
 var db DataManager
@@ -60,85 +20,107 @@ func SetDataManager(newDb DataManager) {
 }
 
 type Teacher struct {
-	SisId       int
-	FirstName   string
-	LastName    string
-	TitleBefore string
-	TitleAfter  string
+	sisId       int
+	firstName   string
+	lastName    string
+	titleBefore string
+	titleAfter  string
 }
 
 func (t Teacher) String() string {
 	return fmt.Sprintf("%s %s %s %s",
-		t.TitleBefore, t.FirstName, t.LastName, t.TitleAfter)
+		t.titleBefore, t.firstName, t.lastName, t.titleAfter)
 }
 
 type Semester int
 
 const (
-	Winter Semester = iota
-	Summer
+	winter Semester = iota + 1
+	summer
+	both
 )
 
-var SemesterNameEn = map[Semester]string{
-	Winter: "Winter",
-	Summer: "Summer",
+var semesterNameEn = map[Semester]string{
+	winter: "Winter",
+	summer: "Summer",
+	both:   "Both",
 }
 
 func (s Semester) String() string {
-	return SemesterNameEn[s]
+	return semesterNameEn[s]
+}
+
+type SemesterPosition int
+
+const (
+	none SemesterPosition = iota
+	winterP
+	summerP
+)
+
+type Teachers []Teacher
+
+func (t Teachers) string() string {
+	names := []string{}
+	for _, teacher := range t {
+		names = append(names, teacher.String())
+	}
+	return strings.Join(names, ", ")
+}
+
+func (t *Teachers) trim() {
+	result := Teachers{}
+	for _, teacher := range *t {
+		if teacher.sisId != -1 {
+			result = append(result, teacher)
+		}
+	}
+	*t = result
 }
 
 type Course struct {
-	Position int
-	Code     string
-	NameCs   string
-	NameEn   string
-	// ValidFrom       int
-	// ValidTo         int
-	// Faculty         Faculty
-	// Guarantor       string
-	// State           string
-	Start Semester
-	// SemesterCount   int
-	// Language        string
-	LectureRange1 int
-	SeminarRange1 int
-	LectureRange2 int
-	SeminarRange2 int
-	ExamType      string
-	Credits       int
-	Teachers      []Teacher
-	// MinEnrollment   int // -1 means no limit
-	// Capacity        int // -1 means no limit
-	// AnnotationCs    string
-	// AnnotationEn    string
-	// SylabusCs       string
-	// SylabusEn       string
-	// Classifications []string
-	// Classes         []string
-	// Link            string // link to course webpage (not SIS)
+	position         int
+	code             string
+	nameCs           string
+	nameEn           string
+	start            Semester
+	semesterPosition SemesterPosition
+	lectureRange1    int
+	seminarRange1    int
+	lectureRange2    int
+	seminarRange2    int
+	examType         string
+	credits          int
+	teachers         Teachers
+}
+
+func newCourse() *Course {
+	return &Course{
+		teachers: []Teacher{{}, {}},
+	}
 }
 
 type AcademicYear struct {
-	position int
-	winter   []Course
-	summer   []Course
+	position   int
+	winter     []Course
+	summer     []Course
+	unassigned []Course
+}
+
+func sumCredits(courses []Course) int {
+	sum := 0
+	for _, course := range courses {
+		sum += course.credits
+	}
+	return sum
 }
 
 func (ay AcademicYear) winterCredits() int {
-	sum := 0
-	for _, course := range ay.winter {
-		sum += course.Credits
-	}
-	return sum
+	return sumCredits(ay.winter)
 }
 
 func (ay AcademicYear) summerCredits() int {
-	sum := 0
-	for _, course := range ay.summer {
-		sum += course.Credits
-	}
-	return sum
+	return sumCredits(ay.summer)
 }
 
 func (ay AcademicYear) credits() int {
@@ -147,4 +129,25 @@ func (ay AcademicYear) credits() int {
 
 type Blueprint struct {
 	years []AcademicYear
+}
+
+func (b *Blueprint) assign(year int, course *Course) error {
+	if year < 0 {
+		return fmt.Errorf("year must be non-negative %d", year)
+	}
+	if year > len(b.years) {
+		return fmt.Errorf("invalid year %d > %d", year, len(b.years))
+	}
+	target := &b.years[year]
+	switch course.semesterPosition {
+	case winterP:
+		target.winter = append(target.winter, *course)
+	case summerP:
+		target.summer = append(target.summer, *course)
+	case none:
+		target.unassigned = append(target.unassigned, *course)
+	default:
+		return fmt.Errorf("unknown semester placement %d", course.semesterPosition)
+	}
+	return nil
 }

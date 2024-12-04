@@ -3,6 +3,7 @@ package blueprint
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
+	"fmt"
 )
 
 func itos(i int) string {
@@ -11,8 +12,41 @@ func itos(i int) string {
 
 // TODO only if there is at least one
 templ renderUnassigned(unassigned AcademicYear) {
+    // sort courses by name to ensure consistent order
     <h1>Unassigned courses</h1>
-    @renderYear(unassigned)
+
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Teacher(s)</th>
+                <th>Semester</th>
+                <th>Credits</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            for _, course := range unassigned.unassigned {
+                <tr id={ "code" + course.code }>
+                    <td> @utils.CourseLink(course.code) </td>
+                    <td>{ course.nameEn }</td>
+                    <td>{ course.teachers.string() }</td>
+                    <td>{ course.start.String() }</td>
+                    <td>{ itos(course.credits) }</td>
+                    <td>
+                        <button
+                            hx-delete={fmt.Sprintf("/blueprint/%d/%d/%s", unassigned.position, course.semesterPosition, course.code)}
+                            hx-target={"#code" + course.code}
+                            hx-swap="delete">
+                            Remove
+                        </button>
+                        <button>Assign</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
 
 templ renderCourseTable(courses []Course) {
@@ -30,17 +64,11 @@ templ renderCourseTable(courses []Course) {
         <tbody>
             for _, course := range courses {
                 <tr>
-                    <td> @utils.CourseLink(course.Code) </td>
-                    <td>{ course.NameEn }</td>
-                    <td>
-                    { course.Teachers[0].String() }
-                    for _, teacher := range course.Teachers[1:] {
-                        <td>, { teacher.String() }</td>
-                    }
-                    </td>
-                    // <td>{ strings.Join(course.Teachers, ", ") }</td>
-                    <td>{ course.Start.String() }</td>
-                    <td>{ itos(course.Credits) }</td>
+                    <td> @utils.CourseLink(course.code) </td>
+                    <td>{ course.nameEn }</td>
+                    <td>{ course.teachers.string() }</td>
+                    <td>{ course.start.String() }</td>
+                    <td>{ itos(course.credits) }</td>
                     <td>
                         <button>Edit</button>
                     </td>
@@ -79,14 +107,18 @@ templ renderYears(years []AcademicYear) {
     }
 
     if len(years) > 0 {
+    <!-- hx-swap="outerHTML" -->
     <button
-        hx-swap="outerHTML"
-        hx-post={"/blueprint/remove-year/" + itos(len(years))}
-        hx-target="this">
+        hx-delete={"/blueprint/year"}
+        hx-target="main">
         Remove last year
     </button>
     }
-    <button hx-post="/blueprint/add-year">Add year</button>
+    <button 
+        hx-post={"/blueprint/year"}
+        hx-target="main">
+        Add year
+    </button>
 }
 
 templ renderCreditTable(years []AcademicYear) {
