@@ -15,37 +15,38 @@ func HandleContent(w http.ResponseWriter, r *http.Request) templ.Component {
 	return Content(course)
 }
 
-func HandlePage(w http.ResponseWriter, r *http.Request) templ.Component {
+func HandlePage(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
 	course, err := db.Course(code)
 	if err != nil {
-		return PageNotFound(code)
+		PageNotFound(code).Render(r.Context(), w)
+	} else {
+		Page(course).Render(r.Context(), w)
 	}
-	return Page(course)
 }
 
 func HandleCommentAddition(w http.ResponseWriter, r *http.Request) {
 	// get the course code and comment content from the request
 	code := r.PathValue("code")
 	commentContent := r.FormValue("comment")
-	
+
 	// sanitize the comment
 	// TODO maybe not change the content, but return an error if the content is not valid
 	sanitizedComment := sanitize(commentContent)
 
 	// add the comment to the database
 	err := db.AddComment(code, sanitizedComment)
-    if err != nil {
-        http.Error(w, "Unable to add comment", http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(w, "Unable to add comment", http.StatusInternalServerError)
+		return
+	}
 
 	// return the page with the updated comments
 	newComments, err := db.GetComments(code)
-    if err != nil {
-        http.Error(w, "Unable to retrieve comments", http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(w, "Unable to retrieve comments", http.StatusInternalServerError)
+		return
+	}
 	// TODO please check if this is the correct way to render the page
 	Comments(newComments, code).Render(r.Context(), w)
 }

@@ -19,13 +19,14 @@ func HandleContent(w http.ResponseWriter, r *http.Request) templ.Component {
 	return Content(data)
 }
 
-func HandlePage(w http.ResponseWriter, r *http.Request) templ.Component {
+func HandlePage(w http.ResponseWriter, r *http.Request) {
 	data, err := db.BluePrint(user)
 	if err != nil {
 		log.Println(err)
-		return InternalServerErrorPage()
+		InternalServerErrorPage().Render(r.Context(), w)
+	} else {
+		Page(data).Render(r.Context(), w)
 	}
-	return Page(data)
 }
 
 func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {

@@ -15,9 +15,7 @@ import (
 
 	// database
 	_ "github.com/lib/pq"
-
 	// template
-	"github.com/a-h/templ"
 )
 
 func logging(next http.Handler) http.Handler {
@@ -27,18 +25,6 @@ func logging(next http.Handler) http.Handler {
 			log.Println(r.Method, r.URL.Path)
 		}
 	})
-}
-
-type generator func(http.ResponseWriter, *http.Request) templ.Component
-
-func htmxRouter(page generator, content generator) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		component := page(w, r)
-		if r.Header.Get("hx-request") == "true" {
-			component = content(w, r)
-		}
-		component.Render(r.Context(), w)
-	}
 }
 
 func main() {
@@ -76,25 +62,25 @@ func main() {
 	router.Handle("/favicon.ico", http.FileServer(http.Dir(".")))
 
 	// Home
-	router.HandleFunc("GET /{$}", htmxRouter(home.HandlePage, home.HandleContent))
-	router.HandleFunc("GET /home", htmxRouter(home.HandlePage, home.HandleContent))
+	router.HandleFunc("GET /{$}", home.HandlePage)
+	router.HandleFunc("GET /home", home.HandlePage)
 
 	// Courses
-	router.HandleFunc("GET /courses", htmxRouter(courses.HandlePage, courses.HandleContent))
+	router.HandleFunc("GET /courses", courses.HandlePage)
 	router.HandleFunc("GET /courses/page", courses.HandlePaging)
 	router.HandleFunc("GET /courses/search", courses.HandleSearch)
 
 	// Degree plan
-	router.HandleFunc("GET /degreeplan", htmxRouter(degreeplan.HandlePage, degreeplan.HandleContent))
+	router.HandleFunc("GET /degreeplan", degreeplan.HandlePage)
 
 	// Blueprint
-	router.HandleFunc("GET /blueprint", htmxRouter(blueprint.HandlePage, blueprint.HandleContent))
+	router.HandleFunc("GET /blueprint", blueprint.HandlePage)
 	router.HandleFunc("POST /blueprint/year", blueprint.HandleYearAddition)
 	router.HandleFunc("DELETE /blueprint/year", blueprint.HandleYearRemoval)
 	router.HandleFunc("DELETE /blueprint/{year}/{semester}/{code}", blueprint.HandleCourseRemoval)
 
 	// Course detail
-	router.HandleFunc("GET /course/{code}", htmxRouter(coursedetail.HandlePage, coursedetail.HandleContent))
+	router.HandleFunc("GET /course/{code}", coursedetail.HandlePage)
 	router.HandleFunc("POST /course/{code}/comment", coursedetail.HandleCommentAddition)
 	router.HandleFunc("POST /course/{code}/like", coursedetail.HandleLike)
 	router.HandleFunc("POST /course/{code}/dislike", coursedetail.HandleDislike)

@@ -10,20 +10,16 @@ templ Page(title string) {
             <script type="text/javascript" src="https://livejs.com/live.js"></script>
             <script type="module" src="https://md-block.verou.me/md-block.js"></script>
         </head>
-        { children... }
+        <body hx-boost="true">
+            @Header()
+            <hr/>
+            <main>
+                { children... }
+            </main>
+            <hr/>
+            @Footer()
+        </body>
     </html>
-}
-
-templ Body() {
-    <body hx-boost="true">
-        @Header()
-        <hr/>
-        <main>
-            { children... }
-        </main>
-        <hr/>
-        @Footer()
-    </body>
 }
 
 templ navItem(url string, text string) {
