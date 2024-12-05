@@ -95,8 +95,10 @@ templ Courses(coursesPage *coursesPage) {
 }
 
 templ Content(coursesPage *coursesPage) {
-    @Search()
-    @Courses(coursesPage)
+    @utils.Body() {
+        @Search()
+        @Courses(coursesPage)
+    }
 }
 
 templ Page(coursesPage *coursesPage) {

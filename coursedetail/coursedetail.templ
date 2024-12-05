@@ -233,16 +233,18 @@ templ Comments(comments []Comment, courseCode string) {
 }
 
 templ Content(course *Course) {
-    {{ p = bluemonday.UGCPolicy() }}
-    <h1>{ course.Code + " - " + course.NameEn }</h1>
-    @Ratings(course.Ratings, course.Code)
-    @BasicInfo(course)
-    // TODO add links to parts of the page
-    @Annotation(course.AnnotationEn)
-    @CompletionRequirements("") // TODO get data
-    @Literature("") // TODO get data
-    @Sylabus(course.SylabusEn)
-    @Comments(course.Comments, course.Code)
+    @utils.Body() {
+        {{ p = bluemonday.UGCPolicy() }}
+        <h1>{ course.Code + " - " + course.NameEn }</h1>
+        @Ratings(course.Ratings, course.Code)
+        @BasicInfo(course)
+        // TODO add links to parts of the page
+        @Annotation(course.AnnotationEn)
+        @CompletionRequirements("") // TODO get data
+        @Literature("") // TODO get data
+        @Sylabus(course.SylabusEn)
+        @Comments(course.Comments, course.Code)
+    }
 }
 
 templ Page(course *Course) {
@@ -258,5 +260,7 @@ templ PageNotFound(code string) {
 }
 
 templ ContentNotFound(code string) {
-    <h1>Course with code { code } not found</h1>
+    @utils.Body() {
+        <h1>Course with code { code } not found</h1>
+    }
 }

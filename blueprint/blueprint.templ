@@ -161,10 +161,12 @@ templ renderCreditTable(years []AcademicYear) {
 }
 
 templ Content(data *Blueprint) {
-    if len(data.years) >= 2 {
-        @renderUnassigned(data.years[0])
-        @renderYears(data.years[1:])
-        @renderCreditTable(data.years[1:])
+    @utils.Body() {
+        if len(data.years) >= 2 {
+            @renderUnassigned(data.years[0])
+            @renderYears(data.years[1:])
+            @renderCreditTable(data.years[1:])
+        }
     }
 }
 

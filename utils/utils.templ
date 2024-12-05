@@ -10,20 +10,24 @@ templ Page(title string) {
             <script type="text/javascript" src="https://livejs.com/live.js"></script>
             <script type="module" src="https://md-block.verou.me/md-block.js"></script>
         </head>
-        <body>
-            @Header()
-            <hr/>
-            <main>
-                { children... }
-            </main>
-            <hr/>
-            @Footer()
-        </body>
+        { children... }
     </html>
 }
 
+templ Body() {
+    <body hx-boost="true">
+        @Header()
+        <hr/>
+        <main>
+            { children... }
+        </main>
+        <hr/>
+        @Footer()
+    </body>
+}
+
 templ navItem(url string, text string) {
-    <li><a hx-get={ url } hx-target="main" hx-push-url="true">{ text }</a></li>
+    <li><a href={ templ.URL(url) }>{ text }</a></li>
 }
 
 templ Header() {
@@ -57,5 +61,5 @@ templ Footer() {
 }
 
 templ CourseLink(Code string) {
-    <a href={ templ.SafeURL("/course/" + Code) }>{ Code }</a>
+    <a href={ templ.URL("/course/" + Code) }>{ Code }</a>
 }
