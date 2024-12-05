@@ -15,9 +15,6 @@ import (
 
 	// database
 	_ "github.com/lib/pq"
-	"github.com/michalhercik/RecSIS/mockdb"
-
-	// TODO potentially import real database
 
 	// template
 	"github.com/a-h/templ"
@@ -67,10 +64,9 @@ func main() {
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
-	mockDB := mockdb.NewDB()
 	blueprint.SetDataManager(blueprint.DBManager{DB: db})
-	coursedetail.SetDatabase(coursedetail.DBCourseReader{DB: db})
-	courses.SetDatabase(courses.CreateDB(mockDB))
+	coursedetail.SetDataManager(coursedetail.DBManager{DB: db})
+	courses.SetDataManager(courses.DBManager{DB: db})
 
 	//////////////////////////////////////////
 	// Handlers

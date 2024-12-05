@@ -6,11 +6,11 @@ import (
 	"github.com/michalhercik/RecSIS/coursedetail/sqlquery"
 )
 
-type DBCourseReader struct {
+type DBManager struct {
 	DB *sql.DB
 }
 
-func (reader DBCourseReader) Course(code string) (*Course, error) {
+func (reader DBManager) Course(code string) (*Course, error) {
 	row := reader.DB.QueryRow(sqlquery.Course, code)
 	course := newCourse()
 	err := row.Scan(
@@ -84,14 +84,14 @@ func (reader DBCourseReader) Course(code string) (*Course, error) {
 }
 
 // TODO: MOCK - implement
-func (reader DBCourseReader) AddComment(code, commentContent string) error {
+func (reader DBManager) AddComment(code, commentContent string) error {
 	//_, err := reader.DB.Exec(sqlquery.AddComment, code, commentContent)
 	//return err
 	return nil
 }
 
 // TODO: MOCK - implement
-func (reader DBCourseReader) GetComments(code string) ([]Comment, error) {
+func (reader DBManager) GetComments(code string) ([]Comment, error) {
 	comments := []Comment{
 		{ID: 1, UserID: 1, Content: "This is a comment"},
 		{ID: 2, UserID: 2, Content: "This is another comment"},

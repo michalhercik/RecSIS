@@ -1,12 +1,17 @@
 package courses
 
-type Database interface {
-	Courses(query query) coursesPage
+import (
+	"fmt"
+	"strings"
+)
+
+type DataManager interface {
+	Courses(query query) (coursesPage, error)
 }
 
-var db Database
+var db DataManager
 
-func SetDatabase(newDB Database) {
+func SetDataManager(newDB DataManager) {
 	db = newDB
 }
 
@@ -49,27 +54,74 @@ func (st sortType) String() string {
 	return sortTypeName[st]
 }
 
+type Teacher struct {
+	sisId       int
+	firstName   string
+	lastName    string
+	titleBefore string
+	titleAfter  string
+}
+
+func (t Teacher) String() string {
+	return fmt.Sprintf("%s %s %s %s",
+		t.titleBefore, t.firstName, t.lastName, t.titleAfter)
+}
+
+type Semester int
+
+const (
+	winter Semester = iota + 1
+	summer
+	both
+)
+
+var semesterNameEn = map[Semester]string{
+	winter: "Winter",
+	summer: "Summer",
+	both:   "Both",
+}
+
+func (s Semester) String() string {
+	return semesterNameEn[s]
+}
+
+type Teachers []Teacher
+
+func (t Teachers) string() string {
+	names := []string{}
+	for _, teacher := range t {
+		names = append(names, teacher.String())
+	}
+	return strings.Join(names, ", ")
+}
+
+func (t *Teachers) trim() {
+	result := Teachers{}
+	for _, teacher := range *t {
+		if teacher.sisId != -1 {
+			result = append(result, teacher)
+		}
+	}
+	*t = result
+}
+
 type Course struct {
-	Id                   int
-	Code                 string
-	NameCze              string
-	NameEng              string
-	//ValidFrom            int
-	//ValidTo              int
-	//Faculty              string
-	//Guarantor            string
-	//State                string
-	Semester     	     string
-	//SemesterCount        int
-	//Language             string
-	LectureHoursWinter   int
-	SeminarHoursWinter   int
-	LectureHoursSummer   int
-	SeminarHoursSummer   int
-	ExamWinter           string
-	ExamSummer           string
-	Credits              int
-	Teachers             []string
-	// MinEnrollment        int // -1 means no limit
-	// Capacity             int // -1 means no limit
+	position         int
+	code             string
+	nameCs           string
+	nameEn           string
+	start            Semester
+	lectureRange1    int
+	seminarRange1    int
+	lectureRange2    int
+	seminarRange2    int
+	examType         string
+	credits          int
+	teachers         Teachers
+}
+
+func newCourse() *Course {
+	return &Course{
+		teachers: []Teacher{{}, {}},
+	}
 }

@@ -15,8 +15,8 @@ type DataManager interface {
 
 var db DataManager
 
-func SetDataManager(newDb DataManager) {
-	db = newDb
+func SetDataManager(newDB DataManager) {
+	db = newDB
 }
 
 type Teacher struct {

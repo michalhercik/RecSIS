@@ -3,17 +3,15 @@ package coursedetail
 import "fmt"
 
 // TODO: change interface name if interface changes
-type CourseDataManager interface {
+type DataManager interface {
 	Course(code string) (*Course, error)
 	AddComment(code string, commentContent string) error
 	GetComments(code string) ([]Comment, error)
 }
 
-// TODO: rename db to something more descriptive (Mock data are not database...)
-var db CourseDataManager
+var db DataManager
 
-// TODO: rename to something more general but descriptive (doesn't have to be Database)
-func SetDatabase(newDB CourseDataManager) {
+func SetDataManager(newDB DataManager) {
 	db = newDB
 }
 
@@ -100,9 +98,4 @@ func newCourse() *Course {
 			{Faculty: Faculty{}},
 		},
 	}
-}
-
-type CourseData struct {
-	course Course
-	// TODO add comments and ratings
 }

@@ -42,6 +42,9 @@ func queryString(user int, startIndex int, maxCount int, search string, sorted s
 
 templ Courses(coursesPage *coursesPage) {
     <div id="courses">
+        if coursesPage.total == 0 {
+            <p>No courses found</p>
+        } else {
         {{ endIndex := coursesPage.startIndex + coursesPage.count }}
         <h2>{ coursesPage.sorted.String() + ":" }</h2>
         <table>
@@ -55,9 +58,9 @@ templ Courses(coursesPage *coursesPage) {
             <tbody>
             for _, course := range coursesPage.courses {
                 <tr>
-                    <td> @utils.CourseLink(course.Code) </td>
-                    <td>{ course.NameEng }</td>
-                    <td>{ course.Semester }</td>
+                    <td> @utils.CourseLink(course.code) </td>
+                    <td>{ course.nameEn }</td>
+                    <td>{ course.start.String() }</td>
                 </tr>
             }
             </tbody>
@@ -87,6 +90,7 @@ templ Courses(coursesPage *coursesPage) {
             </button>
             }
         </div>
+        }
     </div>
 }
 
