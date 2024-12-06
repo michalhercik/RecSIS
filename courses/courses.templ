@@ -8,6 +8,14 @@ import (
 const user = 42
 const coursesPerPage = 10
 
+const (
+    op_relevance = "rel"
+    op_recommended = "rec"
+    op_rating = "rat"
+    op_mostPopular = "pop"
+    op_newest = "new"
+)
+
 func itos(i int) string {
     return strconv.Itoa(i)
 }
@@ -23,11 +31,11 @@ templ Search() {
         <button type="submit">Search</button>
         <label for="sort">Sort by:</label>
         <select name="sort" id="sort">
-            <option value="relevance">Relevance</option>
-            <option value="recommended">Recommended</option>
-            <option value="rating">Rating</option>
-            <option value="most_popular">Most Popular</option>
-            <option value="newest">Newest</option>
+            <option value={ op_relevance }>Relevance</option>
+            <option value={ op_recommended }>Recommended</option>
+            <option value={ op_rating }>Rating</option>
+            <option value={ op_mostPopular }>Most Popular</option>
+            <option value={ op_newest }>Newest</option>
         </select>
     </form>
 }
@@ -38,6 +46,37 @@ func queryString(user int, startIndex int, maxCount int, search string, sorted s
            "&maxCount=" + itos(maxCount) + 
            "&search=" + search + 
            "&sorted=" + itos(int(sorted))
+}
+
+templ BlueprintAssignment(assignments []Assignment, code string) {
+    <td id="bpassignment">
+        for _, assignment := range assignments {
+            <p>{ assignment.String() }</p>
+        }
+        <button
+            hx-post={ "/courses/blueprint/" + code }
+            hx-target="#bpassignment"
+            hx-swap="outerHTML">
+            Add
+        </button>
+        if len(assignments) == 1 {
+        <button
+            hx-delete={ "/courses/blueprint/" + code }
+            hx-target="#bpassignment"
+            hx-swap="outerHTML">
+            Remove
+        </button>
+        }
+    </td>
+}
+
+templ paginationButton(text string, start, end int, coursesPage *coursesPage) {
+    <button
+        hx-get={ "/courses/page" + queryString(user, start, end, coursesPage.search, coursesPage.sorted) }
+        hx-target="#courses"
+        hx-swap="outerHTML">
+        { text }
+    </button>
 }
 
 templ Courses(coursesPage *coursesPage) {
@@ -53,6 +92,7 @@ templ Courses(coursesPage *coursesPage) {
                     <th>Code</th>
                     <th>Title</th>
                     <th>Semester</th>
+                    <th>Blueprint</th>
                 </tr>
             </thead>
             <tbody>
@@ -61,6 +101,7 @@ templ Courses(coursesPage *coursesPage) {
                     <td> @utils.CourseLink(course.code) </td>
                     <td>{ course.nameEn }</td>
                     <td>{ course.start.String() }</td>
+                    @BlueprintAssignment(course.blueprintAssignments, course.code)
                 </tr>
             }
             </tbody>
@@ -68,26 +109,11 @@ templ Courses(coursesPage *coursesPage) {
         <p>Results { itos(coursesPage.startIndex + 1) } to { itos(endIndex) } of { itos(coursesPage.total) }</p>
         <div>
             if coursesPage.startIndex > 0 {
-            <button
-                hx-get={ "/courses/page" + queryString(user, coursesPage.startIndex - coursesPerPage, coursesPerPage, coursesPage.search, coursesPage.sorted) }
-                hx-target="#courses"
-                hx-swap="outerHTML">
-                Previous
-            </button>
+                @paginationButton("Previous", coursesPage.startIndex - coursesPerPage, coursesPerPage, coursesPage)
             }
             if endIndex < coursesPage.total {
-            <button
-                hx-get={ "/courses/page" + queryString(user, endIndex, coursesPerPage, coursesPage.search, coursesPage.sorted) }
-                hx-target="#courses"
-                hx-swap="outerHTML">
-                Next
-            </button>
-            <button
-                hx-get={ "/courses/page" + queryString(user, coursesPage.startIndex, coursesPage.count + coursesPerPage, coursesPage.search, coursesPage.sorted) }
-                hx-target="#courses"
-                hx-swap="outerHTML">
-                Load More
-            </button>
+                @paginationButton("Next", endIndex, coursesPerPage, coursesPage)
+                @paginationButton("Load More", coursesPage.startIndex, coursesPage.count + coursesPerPage, coursesPage)
             }
         </div>
         }

@@ -46,19 +46,19 @@ func HandlePaging(w http.ResponseWriter, r *http.Request) {
 
 func sortTypeFromString(st string) sortType {
 	switch st {
-	case "relevance":
-		return relevance
-	case "recommended":
-		return recommended
-	case "rating":
-		return rating
-	case "most_popular":
-		return mostPopular
-	case "newest":
-		return newest
-	default:
-		return relevance
-	}
+    case op_relevance:
+        return relevance
+    case op_recommended:
+        return recommended
+    case op_rating:
+        return rating
+    case op_mostPopular:
+        return mostPopular
+    case op_newest:
+        return newest
+    default:
+        return relevance
+    }
 }
 
 func HandleSearch(w http.ResponseWriter, r *http.Request) {
@@ -81,4 +81,34 @@ func HandleSearch(w http.ResponseWriter, r *http.Request) {
 
 	// Render search results
 	Courses(&coursesPage).Render(r.Context(), w)
+}
+
+func HandleBlueprintAddition(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters from URL
+	code := r.PathValue("code")
+
+	// Make data changes
+	assignments, err := db.AddCourseToBlueprint(user, code)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Render the result
+	BlueprintAssignment(assignments, code).Render(r.Context(), w)
+}
+
+func HandleBlueprintRemoval(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters from URL
+	code := r.PathValue("code")
+
+	// Make data changes
+	err := db.RemoveCourseFromBlueprint(user, code)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Render the result
+	BlueprintAssignment([]Assignment{}, code).Render(r.Context(), w)
 }

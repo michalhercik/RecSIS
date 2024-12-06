@@ -72,6 +72,8 @@ func main() {
 	router.HandleFunc("GET /courses", courses.HandlePage)
 	router.HandleFunc("GET /courses/page", courses.HandlePaging)
 	router.HandleFunc("GET /courses/search", courses.HandleSearch)
+	router.HandleFunc("POST /courses/blueprint/{code}", courses.HandleBlueprintAddition)
+	router.HandleFunc("DELETE /courses/blueprint/{year}/{semester}/{code}", courses.HandleBlueprintRemoval)
 
 	// Degree plan
 	router.HandleFunc("GET /degreeplan", degreeplan.HandlePage)
@@ -87,6 +89,8 @@ func main() {
 	router.HandleFunc("POST /course/{code}/comment", coursedetail.HandleCommentAddition)
 	router.HandleFunc("POST /course/{code}/like", coursedetail.HandleLike)
 	router.HandleFunc("POST /course/{code}/dislike", coursedetail.HandleDislike)
+	router.HandleFunc("POST /course/{code}/blueprint", coursedetail.HandleBlueprintAddition)
+	router.HandleFunc("DELETE /course/{code}/blueprint", coursedetail.HandleBlueprintRemoval)
 
 	//////////////////////////////////////////
 	// Server setup

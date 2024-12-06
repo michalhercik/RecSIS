@@ -7,6 +7,8 @@ import (
     "github.com/microcosm-cc/bluemonday"
 )
 
+const user = 42
+
 var p *bluemonday.Policy 
 
 func itos(i int) string {
@@ -27,17 +29,27 @@ templ Ratings(ratings []Rating, courseCode string) {
     </div>
 }
 
-func semesterStr(sem int) string {
-    switch sem {
-    case 1:
-        return "winter"
-    case 2:
-        return "summer"
-    case 3:
-        return "both"
-    default:
-        return "unknown"
-    }
+templ BlueprintAssignment(assignments []Assignment, code string) {
+    <div id="bpassignment">
+        Blueprint assignment:
+        for _, assignment := range assignments {
+            <p>{ assignment.String() }</p>
+        }
+        <button
+            hx-post={ "/course/" + code + "/blueprint" }
+            hx-target="#bpassignment"
+            hx-swap="outerHTML">
+            Add
+        </button>
+        if len(assignments) == 1 {
+        <button
+            hx-delete={ "/course/" + code + "/blueprint" }
+            hx-target="#bpassignment"
+            hx-swap="outerHTML">
+            Remove
+        </button>
+        }
+    </div>
 }
 
 func examTypeStr(examType string) string {
@@ -114,7 +126,7 @@ templ BasicInfo(course *Course) {
                 <td>Faculty:</td><td>{ course.Faculty.String() }</td>
             </tr>
             <tr>
-                <td>Semester:</td><td>{ semesterStr(course.Start) }</td>
+                <td>Semester:</td><td>{ course.Start.String() }</td>
             </tr>
             <tr>
                 <td>E-Credits:</td><td>{ itos(course.Credits) }</td>
@@ -236,6 +248,7 @@ templ Content(course *Course) {
     {{ p = bluemonday.UGCPolicy() }}
     <h1>{ course.Code + " - " + course.NameEn }</h1>
     @Ratings(course.Ratings, course.Code)
+    @BlueprintAssignment(course.BlueprintAssignments, course.Code)
     @BasicInfo(course)
     // TODO add links to parts of the page
     @Annotation(course.AnnotationEn)

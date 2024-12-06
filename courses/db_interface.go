@@ -7,6 +7,8 @@ import (
 
 type DataManager interface {
 	Courses(query query) (coursesPage, error)
+	AddCourseToBlueprint(user int, code string) ([]Assignment, error)
+	RemoveCourseFromBlueprint(user int, code string) error
 }
 
 var db DataManager
@@ -105,19 +107,32 @@ func (t *Teachers) trim() {
 	*t = result
 }
 
+type Assignment struct {
+	year     int
+	semester Semester
+}
+
+func (a Assignment) String() string {
+	result := fmt.Sprintf("Year %d, semester %s", a.year, a.semester)
+	if a.year == 0 {
+		result = "Not assigned"
+	}
+	return result
+}
+
 type Course struct {
-	position         int
-	code             string
-	nameCs           string
-	nameEn           string
-	start            Semester
-	lectureRange1    int
-	seminarRange1    int
-	lectureRange2    int
-	seminarRange2    int
-	examType         string
-	credits          int
-	teachers         Teachers
+	code            	 string
+	nameCs          	 string
+	nameEn          	 string
+	start           	 Semester
+	lectureRange1   	 int
+	seminarRange1   	 int
+	lectureRange2   	 int
+	seminarRange2   	 int
+	examType        	 string
+	credits         	 int
+	teachers        	 Teachers
+	blueprintAssignments []Assignment 
 }
 
 func newCourse() *Course {

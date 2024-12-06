@@ -7,6 +7,7 @@ import (
 
 type DataManager interface {
 	BluePrint(user int) (*Blueprint, error)
+	// TODO: this method is not needed - there should be MoveCourse method
 	AddCourse(user int, course string, year int, semester int, position int) error
 	RemoveCourse(user int, course string, year int, semester int) error
 	AddYear(user int) error

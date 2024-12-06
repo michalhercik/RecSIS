@@ -70,3 +70,33 @@ func HandleDislike(w http.ResponseWriter, r *http.Request) {
 	// TODO please check if this is the correct way to render the page
 	Ratings([]Rating{}, code).Render(r.Context(), w)
 }
+
+func HandleBlueprintAddition(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters from URL
+	code := r.PathValue("code")
+
+	// Make data changes
+	assignments, err := db.AddCourseToBlueprint(user, code)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Render the result
+	BlueprintAssignment(assignments, code).Render(r.Context(), w)
+}
+
+func HandleBlueprintRemoval(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters from URL
+	code := r.PathValue("code")
+
+	// Make data changes
+	err := db.RemoveCourseFromBlueprint(user, code)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Render the result
+	BlueprintAssignment([]Assignment{}, code).Render(r.Context(), w)
+}

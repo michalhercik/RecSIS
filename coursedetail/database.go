@@ -100,3 +100,19 @@ func (reader DBManager) GetComments(code string) ([]Comment, error) {
 	}
 	return comments, nil
 }
+
+func (m DBManager) AddCourseToBlueprint(user int, code string) ([]Assignment, error) {
+	// TODO: Implement this method
+	// year=0, semester=course.semester, position=-1
+	// this must be done in a transaction, must return the all assignments
+	return nil, nil
+}
+
+func (m DBManager) RemoveCourseFromBlueprint(user int, code string) error {
+	// TODO: Implement this method
+	// it is expected that there is only one course with the given code
+	// if not return an error
+	// by that we do not have to return the assignments - there should be none after the removal
+	return nil
+}
+
