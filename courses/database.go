@@ -39,7 +39,7 @@ func scan(rows *sql.Rows, course *Course) error {
 
 func (m DBManager) Courses(q query) (coursesPage, error) {
 	// TODO: Take in account the search and sorted fields
-	
+
 	// Execute count query to get total number of courses
 	var total int
 	err := m.DB.QueryRow(sqlquery.CountCourses, ).Scan(&total)
@@ -61,6 +61,7 @@ func (m DBManager) Courses(q query) (coursesPage, error) {
 		if err := scan(rows, course); err != nil {
 			return coursesPage{}, fmt.Errorf("failed to scan course: %w", err)
 		}
+		course.teachers.trim()
 		courses = append(courses, *course)
 	}
 

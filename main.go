@@ -61,6 +61,9 @@ func main() {
 	// Icon
 	router.Handle("/favicon.ico", http.FileServer(http.Dir(".")))
 
+	// Styles
+	router.Handle("GET /style.css", http.FileServer(http.Dir("utils/")))
+
 	// Home
 	router.HandleFunc("GET /{$}", home.HandlePage)
 	router.HandleFunc("GET /home", home.HandlePage)
