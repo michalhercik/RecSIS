@@ -6,23 +6,97 @@ import (
 	"fmt"
 )
 
+const lastPosition = -1
+
 func itos(i int) string {
     return strconv.Itoa(i)
 }
 
+func examTypeStr(examType string) string {
+    // to add: STEX, thesis, ...
+    switch examType {
+    case "Z":
+        return "C" // Z
+    case "1":
+        return "??" // do not know
+    case "F":
+        return "MC" // KZ
+    case "D":
+        return "??" // do not know
+    case "K":
+        return "Ex" // Zk
+    case "*":
+        return "C+Ex" // Z+Zk
+    default:
+        return "unknown"
+    }
+}
+
+templ hoursExams(course *Course) {
+    {{ semCount := course.semesterCount }}
+    if semCount == 1 {
+    <td>{ itos(course.lectureRange1) + "/" + itos(course.seminarRange1) + ", " + examTypeStr(course.examType)}</td>
+    }
+    if semCount == 2 {
+    <td>{ "winter s.:" + itos(course.lectureRange1) + "/" + itos(course.seminarRange1) + ", " + examTypeStr(course.examType) + "\nsummer s.:" + itos(course.lectureRange2) + "/" + itos(course.seminarRange2) + ", " + examTypeStr(course.examType)}</td>
+    }
+}
+
+templ assignMenu(code string, semester Semester, yearCount int) {
+    {{
+        xdata := "{ year: null"
+        xdisabled := "!year"
+        if semester.isBoth() {
+            xdata += ", semester: null"
+            xdisabled += " || !semester"
+        }
+        xdata += " }"
+    }}
+    // TODO: if there can be multiple of the same courses than this will be ambiguous, we must uniquely identify the course
+    <div class="context-menu" x-show={ code + "open" } @click.outside={ code + "open = false" } x-data={ xdata }>
+        <form hx-post={ fmt.Sprintf("/blueprint/assign/%s/%s", itos(int(semester)), code) } hx-target="main">
+            <fieldset>
+                <legend>Choose a year</legend>
+                for i := 0; i < yearCount; i++ {
+                    <label>
+                        <input type="radio" name="year" value={itos(i + 1)} x-model="year" />
+                        Year { itos(i + 1) }
+                    </label>
+                    <br/>
+                }
+            </fieldset>
+            if semester.isBoth() {
+            <fieldset>
+                <legend>Choose a semester</legend>
+                <label>
+                    <input type="radio" name="semester" value="1" x-model="semester" />
+                    Winter
+                </label>
+                <br/>
+                <label>
+                    <input type="radio" name="semester" value="2" x-model="semester" />
+                    Summer
+                </label>
+            </fieldset>
+            }
+            <button type="submit" x-bind:disabled={ xdisabled }>Assign</button>
+        </form>
+    </div>
+}
+
 // TODO only if there is at least one
-templ renderUnassigned(unassigned AcademicYear) {
-    // sort courses by name to ensure consistent order
+templ renderUnassigned(unassigned AcademicYear, yearCount int) {
     <h1>Unassigned courses</h1>
 
     <table>
         <thead>
             <tr>
                 <th>Code</th>
-                <th>Name</th>
-                <th>Teacher(s)</th>
-                <th>Semester</th>
+                <th>Title</th>
                 <th>Credits</th>
+                <th>Semester</th>
+                <th>Scope, examination</th>
+                <th>Teacher(s)</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -31,9 +105,10 @@ templ renderUnassigned(unassigned AcademicYear) {
                 <tr id={ "code" + course.code }>
                     <td> @utils.CourseLink(course.code) </td>
                     <td>{ course.nameEn }</td>
-                    <td>{ course.teachers.string() }</td>
-                    <td>{ course.start.String() }</td>
                     <td>{ itos(course.credits) }</td>
+                    <td>{ course.start.String() }</td>
+                    @hoursExams(&course)
+                    <td> @templ.Raw(course.teachers.string()) </td>
                     <td>
                         <button
                             hx-delete={fmt.Sprintf("/blueprint/%d/%d/%s", unassigned.position, course.semesterPosition, course.code)}
@@ -41,7 +116,10 @@ templ renderUnassigned(unassigned AcademicYear) {
                             hx-swap="delete">
                             Remove
                         </button>
-                        <button>Assign</button>
+                        <div x-data={ "{ " + course.code + "open: false }" } style="position: relative;">
+                            <button @click={ course.code + "open = ! " + course.code + "open" }>Assign</button>
+                            @assignMenu(course.code, course.start, yearCount)
+                        </div>
                     </td>
                 </tr>
             }
@@ -49,16 +127,18 @@ templ renderUnassigned(unassigned AcademicYear) {
     </table>
 }
 
+// TODO only if there is at least one
 templ renderCourseTable(courses []Course) {
     <table>
         <thead>
             <tr>
                 <th>Code</th>
-                <th>Name</th>
-                <th>Teacher(s)</th>
-                <th>Semester</th>
+                <th>Title</th>
                 <th>Credits</th>
-                <th>Edit palce</th>
+                <th>Semester</th>
+                <th>Scope, examination</th>
+                <th>Teacher(s)</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -66,11 +146,20 @@ templ renderCourseTable(courses []Course) {
                 <tr>
                     <td> @utils.CourseLink(course.code) </td>
                     <td>{ course.nameEn }</td>
-                    <td>{ course.teachers.string() }</td>
-                    <td>{ course.start.String() }</td>
                     <td>{ itos(course.credits) }</td>
+                    <td>{ course.start.String() }</td>
+                    @hoursExams(&course)
+                    <td> @templ.Raw(course.teachers.string()) </td>
                     <td>
-                        <button>Edit</button>
+                        // TODO: implement
+                        <button>Move</button>
+                        // TODO: the course is just moved to the end of unassigned, is it possible to just transfer it somehow and not reload the page?
+                        // TODO: if there can be multiple of the same courses than this will be ambiguous, we must uniquely identify the course
+                        <button
+                            hx-post={fmt.Sprintf("/blueprint/unassign/%s", course.code)} 
+                            hx-target="main">
+                            Unassign
+                        </button>
                     </td>
                 </tr>
             }
@@ -91,7 +180,6 @@ templ renderYear(year AcademicYear) {
     </div>
 }
 
-// TODO only if there is at least one
 templ renderYears(years []AcademicYear) {
     <h1>Blueprint</h1>
     {{ 
@@ -161,8 +249,10 @@ templ renderCreditTable(years []AcademicYear) {
 }
 
 templ Content(data *Blueprint) {
+    if len(data.years) >= 1 {
+        @renderUnassigned(data.years[0], len(data.years) - 1)
+    }
     if len(data.years) >= 2 {
-        @renderUnassigned(data.years[0])
         @renderYears(data.years[1:])
         @renderCreditTable(data.years[1:])
     }

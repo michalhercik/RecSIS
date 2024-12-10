@@ -76,13 +76,13 @@ templ hoursExams(course *Course) {
     {{ semCount := course.SemesterCount }}
     if semCount == 1 {
     <tr>
-        <td>Hours per week, examination:</td>
+        <td>Scope, examination:</td>
         <td>{ itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
     </tr>
     }
     if semCount == 2 {
     <tr>
-        <td rowspan="2">Hours per week, examination:</td>
+        <td rowspan="2">Scope, examination:</td>
         <td>{ "winter s.:" + itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
     </tr>
     <tr>
@@ -111,7 +111,7 @@ func stateStr(state string) string {
 }
 
 func courseSISLink(code string) string {
-    // /eng/ for English version, nothing for Czech
+    // /eng/ for English version, nothing for Czech version
     return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
 }
 
@@ -225,22 +225,17 @@ templ Comments(comments []Comment, courseCode string) {
             }
         </ul>
         <form hx-post={ courseCode + "/comment" } hx-target="#comments" hx-swap="outerHTML">
-            <div>
+            <div x-data="{ adjustTextarea($event) { 
+                $event.target.style.height = 'auto'; 
+                $event.target.style.height = ($event.target.scrollHeight) + 'px'; 
+            } }">
                 <label for="comment">Add a comment:</label><br>
-                <textarea id="comment" name="comment" rows="1" cols="50" oninput="adjustTextareaHeight(this)"></textarea>
+                <textarea id="comment" name="comment" rows="1" cols="50" @input="adjustTextarea" style="overflow:hidden;"></textarea>
             </div>
             <div>
                 <button type="submit">Submit</button>
             </div>
         </form>
-
-        // TODO is script OK? might use CSS or something else
-        <script>
-        function adjustTextareaHeight(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
-        }
-        </script>
     </div>
 }
 

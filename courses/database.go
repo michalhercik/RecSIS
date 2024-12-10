@@ -17,6 +17,7 @@ func scan(rows *sql.Rows, course *Course) error {
 		&course.nameCs,
 		&course.nameEn,
 		&course.start,
+		&course.semesterCount,
 		&course.lectureRange1,
 		&course.lectureRange2,
 		&course.seminarRange1,
@@ -62,6 +63,8 @@ func (m DBManager) Courses(q query) (coursesPage, error) {
 			return coursesPage{}, fmt.Errorf("failed to scan course: %w", err)
 		}
 		course.teachers.trim()
+		// TODO: This is a temporary solution, remove it later
+		course.rating = 42
 		courses = append(courses, *course)
 	}
 

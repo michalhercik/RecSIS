@@ -3,6 +3,8 @@ package courses
 import (
 	"fmt"
 	"strings"
+
+	//"log"
 )
 
 type DataManager interface {
@@ -94,7 +96,7 @@ func (t Teachers) string() string {
 	for _, teacher := range t {
 		names = append(names, teacher.String())
 	}
-	return strings.Join(names, ", ")
+	return strings.Join(names, "<br>")
 }
 
 func (t *Teachers) trim() {
@@ -125,6 +127,7 @@ type Course struct {
 	nameCs          	 string
 	nameEn          	 string
 	start           	 Semester
+	semesterCount   	 int
 	lectureRange1   	 int
 	seminarRange1   	 int
 	lectureRange2   	 int
@@ -132,6 +135,7 @@ type Course struct {
 	examType        	 string
 	credits         	 int
 	teachers        	 Teachers
+	rating				 int
 	blueprintAssignments []Assignment 
 }
 

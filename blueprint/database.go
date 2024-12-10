@@ -20,6 +20,7 @@ func scan(rows *sql.Rows, year *int, course *Course) error {
 		&course.nameCs,
 		&course.nameEn,
 		&course.start,
+		&course.semesterCount,
 		&course.lectureRange1,
 		&course.lectureRange2,
 		&course.seminarRange1,
@@ -103,7 +104,9 @@ func (m DBManager) BluePrint(user int) (*Blueprint, error) {
 	return blueprint, nil
 }
 
-func (m DBManager) AddCourse(user int, course string, year int, semester int, position int) error {
+// TODO: implement
+// TODO: the position determines the new position, should we update all the position or think of something more efficient?
+func (m DBManager) MoveCourse(user int, course string, year int, semester int, position int) error {
 	return nil
 }
 
@@ -137,6 +140,7 @@ func (m DBManager) AddYear(user int) error {
 	return nil
 }
 
+// TODO: this must remove all courses from the year but add them to unassigned
 func (m DBManager) RemoveYear(user int) error {
 	tx, err := m.DB.Begin()
 	if err != nil {

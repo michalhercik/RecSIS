@@ -40,6 +40,36 @@ templ Search() {
     </form>
 }
 
+func examTypeStr(examType string) string {
+    // to add: STEX, thesis, ...
+    switch examType {
+    case "Z":
+        return "C" // Z
+    case "1":
+        return "??" // do not know
+    case "F":
+        return "MC" // KZ
+    case "D":
+        return "??" // do not know
+    case "K":
+        return "Ex" // Zk
+    case "*":
+        return "C+Ex" // Z+Zk
+    default:
+        return "unknown"
+    }
+}
+
+templ hoursExams(course *Course) {
+    {{ semCount := course.semesterCount }}
+    if semCount == 1 {
+    <td>{ itos(course.lectureRange1) + "/" + itos(course.seminarRange1) + ", " + examTypeStr(course.examType)}</td>
+    }
+    if semCount == 2 {
+    <td>{ "winter s.:" + itos(course.lectureRange1) + "/" + itos(course.seminarRange1) + ", " + examTypeStr(course.examType) + "\nsummer s.:" + itos(course.lectureRange2) + "/" + itos(course.seminarRange2) + ", " + examTypeStr(course.examType)}</td>
+    }
+}
+
 func queryString(user int, startIndex int, maxCount int, search string, sorted sortType) string {
     return "?user=" + itos(user) + 
            "&startIndex=" + itos(startIndex) + 
@@ -91,8 +121,12 @@ templ Courses(coursesPage *coursesPage) {
                 <tr>
                     <th>Code</th>
                     <th>Title</th>
+                    <th>Credits</th>
                     <th>Semester</th>
-                    <th>Blueprint</th>
+                    <th>Scope, examination</th>
+                    <th>Teacher(s)</th>
+                    <th>Rating</th>
+                    <th>Blueprint</th>  
                 </tr>
             </thead>
             <tbody>
@@ -100,7 +134,11 @@ templ Courses(coursesPage *coursesPage) {
                 <tr>
                     <td> @utils.CourseLink(course.code) </td>
                     <td>{ course.nameEn }</td>
+                    <td>{ itos(course.credits) }</td>
                     <td>{ course.start.String() }</td>
+                    @hoursExams(&course)
+                    <td> @templ.Raw(course.teachers.string()) </td>
+                    <td>{ itos(course.rating) }</td>
                     @BlueprintAssignment(course.blueprintAssignments, course.code)
                 </tr>
             }

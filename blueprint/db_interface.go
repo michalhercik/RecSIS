@@ -7,8 +7,7 @@ import (
 
 type DataManager interface {
 	BluePrint(user int) (*Blueprint, error)
-	// TODO: this method is not needed - there should be MoveCourse method
-	AddCourse(user int, course string, year int, semester int, position int) error
+	MoveCourse(user int, course string, year int, semester int, position int) error
 	RemoveCourse(user int, course string, year int, semester int) error
 	AddYear(user int) error
 	RemoveYear(user int) error
@@ -51,6 +50,17 @@ func (s Semester) String() string {
 	return semesterNameEn[s]
 }
 
+func (s Semester) isBoth() bool {
+	switch s {
+	case winter:
+		return false
+	case summer:
+		return false
+	default:
+		return true
+	}
+}
+
 type SemesterPosition int
 
 const (
@@ -66,7 +76,7 @@ func (t Teachers) string() string {
 	for _, teacher := range t {
 		names = append(names, teacher.String())
 	}
-	return strings.Join(names, ", ")
+	return strings.Join(names, "<br>")
 }
 
 func (t *Teachers) trim() {
@@ -85,6 +95,7 @@ type Course struct {
 	nameCs           string
 	nameEn           string
 	start            Semester
+	semesterCount    int
 	semesterPosition SemesterPosition
 	lectureRange1    int
 	seminarRange1    int

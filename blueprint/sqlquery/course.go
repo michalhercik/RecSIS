@@ -16,6 +16,7 @@ SELECT
 	c.name_cs,
 	c.name_en,
 	c.start_semester,
+	c.semester_count,
 	c.lecture_range1,
 	COALESCE(c.lecture_range2, -1),
 	c.seminar_range1,
@@ -35,7 +36,7 @@ SELECT
 FROM blueprint_semesters AS s
 LEFT JOIN blueprint_years AS y on y.id=s.blueprint_year
 LEFT JOIN courses AS c ON s.course=c.id
-LEFT JOIN teachers AS t1 ON t1.id = c.teacher1
-LEFT JOIN teachers AS t2 ON t2.id = c.teacher2
+LEFT JOIN teachers AS t1 ON t1.sis_id = c.teacher1
+LEFT JOIN teachers AS t2 ON t2.sis_id = c.teacher2
 WHERE student = $1;
 `
