@@ -7,8 +7,9 @@ import (
 
 type DataManager interface {
 	BluePrint(user int) (*Blueprint, error)
-	MoveCourse(user int, course string, year int, semester int, position int) error
-	RemoveCourse(user int, course string, year int, semester int) error
+	AppendCourse(user int, course int, year int, semester SemesterPosition) error
+	MoveCourse(user int, course int, year int, semester SemesterPosition, position int) error
+	RemoveCourse(user int, course int) error
 	AddYear(user int) error
 	RemoveYear(user int) error
 }
@@ -50,17 +51,6 @@ func (s Semester) String() string {
 	return semesterNameEn[s]
 }
 
-func (s Semester) isBoth() bool {
-	switch s {
-	case winter:
-		return false
-	case summer:
-		return false
-	default:
-		return true
-	}
-}
-
 type SemesterPosition int
 
 const (
@@ -90,6 +80,7 @@ func (t *Teachers) trim() {
 }
 
 type Course struct {
+	ID               int
 	position         int
 	code             string
 	nameCs           string

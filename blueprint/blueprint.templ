@@ -42,11 +42,12 @@ templ hoursExams(course *Course) {
     }
 }
 
-templ assignMenu(code string, semester Semester, yearCount int) {
+templ assignMenu(course Course, semester Semester, yearCount int) {
     {{
+        code := course.code
         xdata := "{ year: null"
         xdisabled := "!year"
-        if semester.isBoth() {
+        if semester == both {
             xdata += ", semester: null"
             xdisabled += " || !semester"
         }
@@ -54,7 +55,13 @@ templ assignMenu(code string, semester Semester, yearCount int) {
     }}
     // TODO: if there can be multiple of the same courses than this will be ambiguous, we must uniquely identify the course
     <div class="context-menu" x-show={ code + "open" } @click.outside={ code + "open = false" } x-data={ xdata }>
-        <form hx-post={ fmt.Sprintf("/blueprint/assign/%s/%s", itos(int(semester)), code) } hx-target="main">
+        <form 
+            hx-patch={ fmt.Sprintf("/blueprint/course/%d", course.ID) } 
+            hx-target="main" 
+            if semester != both {
+                hx-vals={ fmt.Sprintf(`"semester": %d`, int(course.start)) }
+            }
+        >
             <fieldset>
                 <legend>Choose a year</legend>
                 for i := 0; i < yearCount; i++ {
@@ -65,7 +72,7 @@ templ assignMenu(code string, semester Semester, yearCount int) {
                     <br/>
                 }
             </fieldset>
-            if semester.isBoth() {
+            if semester == both {
             <fieldset>
                 <legend>Choose a semester</legend>
                 <label>
@@ -111,14 +118,14 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int) {
                     <td> @templ.Raw(course.teachers.string()) </td>
                     <td>
                         <button
-                            hx-delete={fmt.Sprintf("/blueprint/%d/%d/%s", unassigned.position, course.semesterPosition, course.code)}
+                            hx-delete={fmt.Sprintf("/blueprint/course/%d", course.ID)}
                             hx-target={"#code" + course.code}
                             hx-swap="delete">
                             Remove
                         </button>
                         <div x-data={ "{ " + course.code + "open: false }" } style="position: relative;">
                             <button @click={ course.code + "open = ! " + course.code + "open" }>Assign</button>
-                            @assignMenu(course.code, course.start, yearCount)
+                            @assignMenu(course, course.start, yearCount)
                         </div>
                     </td>
                 </tr>
@@ -156,7 +163,8 @@ templ renderCourseTable(courses []Course) {
                         // TODO: the course is just moved to the end of unassigned, is it possible to just transfer it somehow and not reload the page?
                         // TODO: if there can be multiple of the same courses than this will be ambiguous, we must uniquely identify the course
                         <button
-                            hx-post={fmt.Sprintf("/blueprint/unassign/%s", course.code)} 
+                            hx-patch={fmt.Sprintf("/blueprint/course/%d", course.ID)} 
+                            hx-vals={ `"year": 0, "semester": 0` }
                             hx-target="main">
                             Unassign
                         </button>

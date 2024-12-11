@@ -115,4 +115,3 @@ func (m DBManager) RemoveCourseFromBlueprint(user int, code string) error {
 	// by that we do not have to return the assignments - there should be none after the removal
 	return nil
 }
-

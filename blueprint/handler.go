@@ -30,22 +30,13 @@ func HandlePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {
-	year, err := strconv.Atoi(r.PathValue("year"))
+	course, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Println(err)
+		http.Error(w, "Unable to parse course ID", http.StatusBadRequest)
 		return
 	}
-	semester, err := strconv.Atoi(r.PathValue("semester"))
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = db.RemoveCourse(
-		user,
-		r.PathValue("code"),
-		year,
-		semester,
-	)
+	err = db.RemoveCourse(user, course)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -64,27 +55,15 @@ func HandleYearRemoval(w http.ResponseWriter, r *http.Request) {
 		Render(r.Context(), w)
 }
 
-func HandleCourseUnassign(w http.ResponseWriter, r *http.Request) {
-	err := db.MoveCourse(
-		user,
-		r.PathValue("code"),
-		0, // unassigned year
-		0, // semester is not used
-		lastPosition, // position is last
-	)
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	// TODO: Render just the necessary for performance
-	HandleContent(w, r).Render(r.Context(), w)
+func HandleCourseAddition(w http.ResponseWriter, r *http.Request) {
+	// TODO: Implement
+	http.Error(w, "Not implemented", http.StatusNotImplemented)
 }
 
-func HandleCourseAssign(w http.ResponseWriter, r *http.Request) {
-	semester, err := strconv.Atoi(r.PathValue("semester"))
+func HandleCourseMovement(w http.ResponseWriter, r *http.Request) {
+	course, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "Unable to parse course ID", http.StatusBadRequest)
 		return
 	}
 	err = r.ParseForm()
@@ -97,21 +76,18 @@ func HandleCourseAssign(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse year", http.StatusBadRequest)
 		return
 	}
-	if semester == int(both) {
-		semester, err = strconv.Atoi(r.FormValue("semester"))
-		if err != nil {
-			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
-			return
-		}
+	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+	semester := SemesterPosition(semesterInt)
+	if err != nil {
+		http.Error(w, "Unable to parse semester", http.StatusBadRequest)
+		return
 	}
-	err = db.MoveCourse(
+	err = db.AppendCourse(
 		user,
-		r.PathValue("code"),
+		course,
 		year,
 		semester,
-		lastPosition,
 	)
-	log.Println("Assigning course", r.PathValue("code"), "to year", year, "semester", semester)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

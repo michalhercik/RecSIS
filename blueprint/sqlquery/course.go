@@ -1,15 +1,55 @@
 package sqlquery
 
+const ShiftCourses = `
+UPDATE blueprint_semesters
+SET position = position + 1
+WHERE blueprint_year = (
+	SELECT id FROM blueprint_years 
+	WHERE student=$1 AND position=$2
+	)
+AND semester = $3
+AND position >= $4;
+`
+
+const MoveCourse = `
+UPDATE blueprint_semesters
+SET semester=$1, position=$2, blueprint_year=(
+	SELECT id FROM blueprint_years 
+	WHERE student=$3 
+	AND position=$4
+	)
+WHERE id=$5;
+`
+
+const AppendCourse = `
+WITH year AS (
+	SELECT id FROM blueprint_years
+	WHERE student=$1 AND position=$2
+)
+
+UPDATE blueprint_semesters
+SET 
+	semester=$3, 
+	blueprint_year=(SELECT id FROM year),
+	position= (
+		SELECT MAX(position) + 1
+		FROM blueprint_semesters
+		WHERE blueprint_year=(SELECT id FROM year)
+		AND semester=$3
+	) 
+WHERE id=$4;
+`
+
 const DeleteCourse = `
 DELETE FROM blueprint_semesters 
-WHERE blueprint_year = (SELECT id FROM blueprint_years WHERE student=$1 AND position=$2)
-AND semester = $3
-AND course IN (SELECT id FROM courses WHERE code=$4);
+WHERE blueprint_year IN (SELECT id FROM blueprint_years WHERE student=$1)
+AND id = $2
 `
 
 const SelectCourses = `
 SELECT
 	y.position,
+	s.id,
 	s.position,
 	s.semester,
 	c.code,
