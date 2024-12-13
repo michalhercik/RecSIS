@@ -57,7 +57,39 @@ func HandleYearRemoval(w http.ResponseWriter, r *http.Request) {
 
 func HandleCourseAddition(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement
-	http.Error(w, "Not implemented", http.StatusNotImplemented)
+	origin := r.PostFormValue("origin")
+	course := r.PathValue("code")
+	year, err := strconv.Atoi(r.FormValue("year"))
+	if err != nil {
+		http.Error(w, "Unable to parse year", http.StatusBadRequest)
+		return
+	}
+	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+	// TODO: check validity of semesterInt
+	semester := SemesterPosition(semesterInt)
+	if err != nil {
+		http.Error(w, "Unable to parse semester", http.StatusBadRequest)
+		return
+	}
+	err = db.InsertCourse(
+		user,
+		course,
+		year,
+		semester,
+	)
+	if err != nil {
+		http.Error(w, "Unable to parse semester", http.StatusBadRequest)
+	}
+	switch origin {
+	case "courses":
+		http.Error(w, "Not implemented", http.StatusNotImplemented)
+	case "coursedetail":
+		http.Error(w, "Not implemented", http.StatusNotImplemented)
+	case "degreeplan":
+		http.Error(w, "Not implemented", http.StatusNotImplemented)
+	default:
+		http.Error(w, "Not implemented", http.StatusNotImplemented)
+	}
 }
 
 func HandleCourseMovement(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +109,7 @@ func HandleCourseMovement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+	// TODO: check validity of semesterInt
 	semester := SemesterPosition(semesterInt)
 	if err != nil {
 		http.Error(w, "Unable to parse semester", http.StatusBadRequest)
