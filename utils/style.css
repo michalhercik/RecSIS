@@ -31,3 +31,84 @@ body {
     min-width: 230px;
     left: 25px;
 }
+
+/* Option menu styles */
+.option-menu {
+    padding: .25rem .25rem;
+    /* space on left and right - if not good delete */
+    width: 98% !important;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Blueprint tables styles */
+/* TODO: For small screens, the font should be smaller */
+.blueprint-table {
+    margin-bottom: 0 !important;
+    /* space on left and right - if not good delete */
+    width: 98% !important;
+    table-layout: fixed;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.headline {
+    border-top: 1px solid #979797 !important;
+}
+
+.headtext {
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.short {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.blueprint-table th:nth-child(1),
+.blueprint-table td:nth-child(1) {
+    width: 21px;
+}
+
+.blueprint-table th:nth-child(2),
+.blueprint-table td:nth-child(2) {
+    width: 88px;
+}
+
+.blueprint-table th:nth-child(3),
+.blueprint-table td:nth-child(3) {
+    width: 35%;
+    min-width: 350px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.blueprint-table th:nth-child(4),
+.blueprint-table td:nth-child(4) {
+    width: 70px;
+}
+
+.blueprint-table th:nth-child(5),
+.blueprint-table td:nth-child(5) {
+    width: 100px;
+}
+
+.blueprint-table th:nth-child(6),
+.blueprint-table td:nth-child(6) {
+    width: 100px;
+}
+
+.blueprint-table th:nth-child(7),
+.blueprint-table td:nth-child(7) {
+    width: 20%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.blueprint-table th:nth-child(8),
+.blueprint-table td:nth-child(8) {
+    width: 100px;
+}

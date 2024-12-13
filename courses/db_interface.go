@@ -38,10 +38,10 @@ type query struct {
 
 const (
 	relevance    = iota
-	recommended  = iota
-	rating       = iota
-	mostPopular  = iota
-	newest       = iota
+	recommended  
+	rating       
+	mostPopular  
+	newest       
 )
 
 type sortType int

@@ -8,8 +8,19 @@ import (
 
 const lastPosition = -1
 
-func itos(i int) string {
-    return strconv.Itoa(i)
+templ optionMenu(yearCount int) {
+    <div class="option-menu">
+        <input type="checkbox" name="check-all" value="1" />
+
+        <label>Number of years:</label>
+        <button hx-post="/decrement" hx-target="main" :disabled={ strconv.Itoa(yearCount) + " <= 0" }>-</button>
+        <input type="text" id="valueBox" name="valueBox" value={ strconv.Itoa(yearCount) } readonly />
+        <button hx-post="/increment" hx-target="main">+</button>
+
+        <button @click="showUnassigned = !showUnassigned" x-text="showUnassigned ? 'Hide unassigned' : 'Show unassigned'"></button>
+
+        <button>Credits<i class="bi bi-caret-down-fill"></i></button>
+    </div>
 }
 
 func examTypeStr(examType string) string {
@@ -32,13 +43,43 @@ func examTypeStr(examType string) string {
     }
 }
 
-templ hoursExams(course *Course) {
+func hoursExamsString(lecture, seminar int, examType string) string {
+    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examTypeStr(examType)
+}
+
+templ winterSummer(course *Course) {
     {{ semCount := course.semesterCount }}
     if semCount == 1 {
-    <td>{ itos(course.lectureRange1) + "/" + itos(course.seminarRange1) + ", " + examTypeStr(course.examType)}</td>
+        switch course.start {
+        case winter:
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>---</td>
+        case summer:
+            <td>---</td>
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+        case both:
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+        default:
+            <td>---</td>
+            <td>---</td>
+        }
     }
     if semCount == 2 {
-    <td>{ "winter s.:" + itos(course.lectureRange1) + "/" + itos(course.seminarRange1) + ", " + examTypeStr(course.examType) + "\nsummer s.:" + itos(course.lectureRange2) + "/" + itos(course.seminarRange2) + ", " + examTypeStr(course.examType)}</td>
+        switch course.start {
+        case winter:
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
+        case summer:
+            <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+        case both:
+            <td>unsupported</td>
+            <td>unsupported</td>
+        default:
+            <td>---</td>
+            <td>---</td>
+        }
     }
 }
 
@@ -54,13 +95,13 @@ templ assignMenu(code string, semester Semester, yearCount int) {
     }}
     // TODO: if there can be multiple of the same courses than this will be ambiguous, we must uniquely identify the course
     <div class="context-menu" x-show={ code + "open" } @click.outside={ code + "open = false" } x-data={ xdata }>
-        <form hx-post={ fmt.Sprintf("/blueprint/assign/%s/%s", itos(int(semester)), code) } hx-target="main">
+        <form hx-post={ fmt.Sprintf("/blueprint/assign/%s/%s", strconv.Itoa(int(semester)), code) } hx-target="main">
             <fieldset>
                 <legend>Choose a year</legend>
                 for i := 0; i < yearCount; i++ {
                     <label>
-                        <input type="radio" name="year" value={itos(i + 1)} x-model="year" />
-                        Year { itos(i + 1) }
+                        <input type="radio" name="year" value={strconv.Itoa(i + 1)} x-model="year" />
+                        Year { strconv.Itoa(i + 1) }
                     </label>
                     <br/>
                 }
@@ -69,12 +110,12 @@ templ assignMenu(code string, semester Semester, yearCount int) {
             <fieldset>
                 <legend>Choose a semester</legend>
                 <label>
-                    <input type="radio" name="semester" value="1" x-model="semester" />
+                    <input type="radio" name="semester" value={ strconv.Itoa(int(winter)) } x-model="semester" />
                     Winter
                 </label>
                 <br/>
                 <label>
-                    <input type="radio" name="semester" value="2" x-model="semester" />
+                    <input type="radio" name="semester" value={ strconv.Itoa(int(winter)) } x-model="semester" />
                     Summer
                 </label>
             </fieldset>
@@ -86,127 +127,144 @@ templ assignMenu(code string, semester Semester, yearCount int) {
 
 // TODO only if there is at least one
 templ renderUnassigned(unassigned AcademicYear, yearCount int) {
-    <h1>Unassigned courses</h1>
-
-    <table>
-        <thead>
+    <table class="table table-sm blueprint-table">
+        <thead class="table-secondary">
             <tr>
+                <th></th>
                 <th>Code</th>
                 <th>Title</th>
                 <th>Credits</th>
-                <th>Semester</th>
-                <th>Scope, examination</th>
+                <th>Winter</th>
+                <th>Summer</th>
                 <th>Teacher(s)</th>
-                <th>Actions</th>
+                <th></th>
             </tr>
         </thead>
-        <tbody>
-            for _, course := range unassigned.unassigned {
-                <tr id={ "code" + course.code }>
-                    <td> @utils.CourseLink(course.code) </td>
-                    <td>{ course.nameEn }</td>
-                    <td>{ itos(course.credits) }</td>
-                    <td>{ course.start.String() }</td>
-                    @hoursExams(&course)
-                    <td> @templ.Raw(course.teachers.string()) </td>
-                    <td>
-                        <button
-                            hx-delete={fmt.Sprintf("/blueprint/%d/%d/%s", unassigned.position, course.semesterPosition, course.code)}
-                            hx-target={"#code" + course.code}
-                            hx-swap="delete">
-                            Remove
-                        </button>
-                        <div x-data={ "{ " + course.code + "open: false }" } style="position: relative;">
-                            <button @click={ course.code + "open = ! " + course.code + "open" }>Assign</button>
-                            @assignMenu(course.code, course.start, yearCount)
-                        </div>
-                    </td>
-                </tr>
-            }
-        </tbody>
     </table>
+    <div x-show="showUnassigned">
+        //<h1>Unassigned courses</h1>
+        <table class="table table-hover table-sm blueprint-table">
+            // <thead>
+            //     <tr>
+            //         <th></th>
+            //         <th>Code</th>
+            //         <th>Title</th>
+            //         <th>Credits</th>
+            //         <th>Winter</th>
+            //         <th>Summer</th>
+            //         <th>Teacher(s)</th>
+            //         //<th>Actions</th>
+            //     </tr>
+            // </thead>
+            <tbody>
+                for _, course := range unassigned.unassigned {
+                    <tr id={ "code" + course.code } x-data="{ checked: false }" @click="if (!$event.target.closest('a')) { checked = !checked; $refs.checkbox.checked = checked }">
+                        <td><input type="checkbox" name="course" value={ course.code } x-ref="checkbox" /></td>
+                        <td> @utils.CourseLink(course.code) </td>
+                        <td>{ course.nameEn }</td>
+                        <td>{ strconv.Itoa(course.credits) }</td>
+                        @winterSummer(&course)
+                        <td> @templ.Raw(course.teachers.string()) </td>
+                        <td></td> // TODO here will be buttons for del, unassign, ... - will be icons, show on hover
+                        // <td>
+                        //     <button
+                        //         hx-delete={fmt.Sprintf("/blueprint/%d/%d/%s", unassigned.position, course.semesterPosition, course.code)}
+                        //         hx-target={"#code" + course.code}
+                        //         hx-swap="delete">
+                        //         Remove
+                        //     </button>
+                        //     <div x-data={ "{ " + course.code + "open: false }" } style="position: relative;">
+                        //         <button @click={ course.code + "open = ! " + course.code + "open" }>Assign</button>
+                        //         @assignMenu(course.code, course.start, yearCount)
+                        //     </div>
+                        // </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 // TODO only if there is at least one
 templ renderCourseTable(courses []Course) {
-    <table>
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Title</th>
-                <th>Credits</th>
-                <th>Semester</th>
-                <th>Scope, examination</th>
-                <th>Teacher(s)</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
+    <table class="table table-hover table-sm blueprint-table">
         <tbody>
             for _, course := range courses {
-                <tr>
+                <tr x-data="{ checked: false }" @click="if (!$event.target.closest('a')) { checked = !checked; $refs.checkbox.checked = checked }">
+                    <td><input type="checkbox" name="course" value={ course.code } x-ref="checkbox" /></td>
                     <td> @utils.CourseLink(course.code) </td>
                     <td>{ course.nameEn }</td>
-                    <td>{ itos(course.credits) }</td>
-                    <td>{ course.start.String() }</td>
-                    @hoursExams(&course)
+                    <td>{ strconv.Itoa(course.credits) }</td>
+                    @winterSummer(&course)
                     <td> @templ.Raw(course.teachers.string()) </td>
-                    <td>
+                    <td></td> // TODO here will be buttons for del, unassign, ... - will be icons, show on hover
+                    //<td>
                         // TODO: implement
-                        <button>Move</button>
+                        // <button>Move</button>
                         // TODO: the course is just moved to the end of unassigned, is it possible to just transfer it somehow and not reload the page?
                         // TODO: if there can be multiple of the same courses than this will be ambiguous, we must uniquely identify the course
-                        <button
-                            hx-post={fmt.Sprintf("/blueprint/unassign/%s", course.code)} 
-                            hx-target="main">
-                            Unassign
-                        </button>
-                    </td>
+                        // <button
+                        //     hx-post={fmt.Sprintf("/blueprint/unassign/%s", course.code)} 
+                        //     hx-target="main">
+                        //     Unassign
+                        // </button>
+                    //</td>
                 </tr>
             }
         </tbody>
     </table>
 }
 
+templ tableHeadline(text string, credits int) {
+    <table class="table table-sm table-hover headline table-light blueprint-table"><tbody><tr x-data="{ checked: false }" @click="if (!$event.target.closest('a')) { checked = !checked; $refs.checkbox.checked = checked }">
+        <td class="short"><input type="checkbox" name="course" x-ref="checkbox" /></td>
+        <td class="short headtext text-center">{ text }</td>
+        <td class="short"></td>
+        <td class="short headtext">{ strconv.Itoa(credits) }</td>
+        <td class="short"></td>
+        <td class="short"></td>
+        <td class="short"></td>
+        <td class="short"></td>
+    </tr></tbody></table>
+}
+
 templ renderYear(year AcademicYear) {
-    <div id={"BlueprintYear" + itos(year.position)}>
-        <h2>Year { itos(year.position) }</h2>
-        <div>Credits: { itos(year.credits()) }</div>
-        <h3>Winter Semester</h3>
-        <div>Credits: { itos(year.winterCredits()) }</div>
+    <div id={"BlueprintYear" + strconv.Itoa(year.position)}>
+        @tableHeadline("Year " + strconv.Itoa(year.position), year.credits())
+        @tableHeadline("Winter", year.winterCredits())
         @renderCourseTable(year.winter)
-        <h3>Summer Semester</h3>
-        <div>Credits: { itos(year.summerCredits()) }</div>
+        @tableHeadline("Summer", year.summerCredits())
         @renderCourseTable(year.summer)
     </div>
 }
 
 templ renderYears(years []AcademicYear) {
-    <h1>Blueprint</h1>
-    {{ 
-        totalCredits := 0
-        for _, year := range years {
-            totalCredits += year.credits()
-        }
-    }}
-    <div>Total credits: { itos(totalCredits) }</div>
+    //<h1>Blueprint</h1>
+    // {{ 
+    //     totalCredits := 0
+    //     for _, year := range years {
+    //         totalCredits += year.credits()
+    //     }
+    // }}
+    // <div>Total credits: { strconv.Itoa(totalCredits) }</div>
 
     for _, year := range years {
         @renderYear(year)
     }
 
-    if len(years) > 0 {
-    <!-- hx-swap="outerHTML" -->
-    <button
-        hx-delete={"/blueprint/year"}
-        hx-target="main">
-        Remove last year
-    </button>
-    }
-    <button 
-        hx-post={"/blueprint/year"}
-        hx-target="main">
-        Add year
-    </button>
+    // if len(years) > 0 {
+    // <!-- hx-swap="outerHTML" -->
+    // <button
+    //     hx-delete={"/blueprint/year"}
+    //     hx-target="main">
+    //     Remove last year
+    // </button>
+    // }
+    // <button 
+    //     hx-post={"/blueprint/year"}
+    //     hx-target="main">
+    //     Add year
+    // </button>
 }
 
 templ renderCreditTable(years []AcademicYear) {
@@ -226,22 +284,22 @@ templ renderCreditTable(years []AcademicYear) {
             for _,year := range years {
                 {{
                     totalSum += year.credits()
-                    yearStr := itos(year.position)
+                    yearStr := strconv.Itoa(year.position)
                 }}
                 <tr id={"SumWinterYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Winter </td>
-                    <td>{ itos(year.winterCredits()) }</td>
+                    <td>{ strconv.Itoa(year.winterCredits()) }</td>
                 </tr>
                 <tr id={"SumSummerYear" + yearStr}>
                     <td>{ yearStr }</td>
                     <td> Summer </td>
-                    <td>{ itos(year.summerCredits()) }</td>
+                    <td>{ strconv.Itoa(year.summerCredits()) }</td>
                 </tr>
             }
             <tr>
                 <td colspan="2"> Total </td>
-                <td>{ itos(totalSum) }</td>
+                <td>{ strconv.Itoa(totalSum) }</td>
             </tr>
         </tbody>
     </table>
@@ -249,13 +307,14 @@ templ renderCreditTable(years []AcademicYear) {
 }
 
 templ Content(data *Blueprint) {
-    if len(data.years) >= 1 {
+    <div x-data="{ showUnassigned: true }" >
+        @optionMenu(len(data.years) - 1)
         @renderUnassigned(data.years[0], len(data.years) - 1)
-    }
-    if len(data.years) >= 2 {
-        @renderYears(data.years[1:])
-        @renderCreditTable(data.years[1:])
-    }
+        if len(data.years) >= 2 {
+            @renderYears(data.years[1:])
+            @renderCreditTable(data.years[1:])
+        }
+    </div>
 }
 
 templ Page(data *Blueprint) {
