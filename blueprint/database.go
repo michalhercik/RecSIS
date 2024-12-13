@@ -105,6 +105,14 @@ func (m DBManager) BluePrint(user int) (*Blueprint, error) {
 	return blueprint, nil
 }
 
+func (m DBManager) InsertCourse(user int, course string, year int, semester SemesterPosition) error {
+	_, err := m.DB.Exec(sqlquery.InsertCourse, user, year, int(semester), course)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // TODO: implement
 // TODO: the position determines the new position, should we update all the position or think of something more efficient?
 func (m DBManager) MoveCourse(user int, course int, year int, semester SemesterPosition, position int) error {

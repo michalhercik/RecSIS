@@ -11,6 +11,26 @@ AND semester = $3
 AND position >= $4;
 `
 
+const InsertCourse = `
+WITH year AS (
+	SELECT id FROM blueprint_years
+	WHERE student=$1 AND position=$2
+)
+
+INSERT INTO blueprint_semesters (semester, course, blueprint_year, position)
+VALUES(
+	$3,
+	(SELECT id FROM courses WHERE code=$4),
+	(SELECT id FROM year),
+	(
+		SELECT MAX(position) + 1
+		FROM blueprint_semesters
+		WHERE blueprint_year=(SELECT id FROM year)
+		AND semester=$3
+	)
+);
+`
+
 const MoveCourse = `
 UPDATE blueprint_semesters
 SET semester=$1, position=$2, blueprint_year=(
