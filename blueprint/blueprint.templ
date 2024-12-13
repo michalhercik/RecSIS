@@ -11,9 +11,18 @@ const lastPosition = -1
 templ optionMenu(yearCount int) {
     <div class="option-menu">
         <label>Number of years:</label>
-        <button hx-post="/decrement" hx-target="main" :disabled={ strconv.Itoa(yearCount) + " <= 0" }>-</button>
+        <button
+            hx-delete="/blueprint/year"
+            hx-target="main"
+            :disabled={ strconv.Itoa(yearCount) + " <= 0" }>
+            <i class="bi bi-dash"></i>
+        </button>
         <label id="valueBox">{ strconv.Itoa(yearCount) }</label>
-        <button hx-post="/increment" hx-target="main">+</button>
+        <button
+            hx-post="/blueprint/year"
+            hx-target="main">
+            <i class="bi bi-plus"></i>
+        </button>
 
         <button @click="showUnassigned = !showUnassigned" x-text="showUnassigned ? 'Hide unassigned' : 'Show unassigned'"></button>
 
@@ -271,20 +280,6 @@ templ renderYears(years []AcademicYear) {
     for _, year := range years {
         @renderYear(year)
     }
-
-    // if len(years) > 0 {
-    // <!-- hx-swap="outerHTML" -->
-    // <button
-    //     hx-delete={"/blueprint/year"}
-    //     hx-target="main">
-    //     Remove last year
-    // </button>
-    // }
-    // <button 
-    //     hx-post={"/blueprint/year"}
-    //     hx-target="main">
-    //     Add year
-    // </button>
 }
 
 templ renderCreditTable(years []AcademicYear) {
