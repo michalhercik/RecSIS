@@ -81,10 +81,10 @@ func main() {
 	// Blueprint
 	router.HandleFunc("GET /blueprint", blueprint.HandlePage)
 	router.HandleFunc("POST /blueprint/year", blueprint.HandleYearAddition)
-	router.HandleFunc("POST /blueprint/unassign/{code}", blueprint.HandleCourseUnassign)
-	router.HandleFunc("POST /blueprint/assign/{semester}/{code}", blueprint.HandleCourseAssign)
 	router.HandleFunc("DELETE /blueprint/year", blueprint.HandleYearRemoval)
-	router.HandleFunc("DELETE /blueprint/{year}/{semester}/{code}", blueprint.HandleCourseRemoval)
+	router.HandleFunc("POST /blueprint/course/{code}", blueprint.HandleCourseAddition)
+	router.HandleFunc("PATCH /blueprint/course/{id}", blueprint.HandleCourseMovement)
+	router.HandleFunc("DELETE /blueprint/course/{id}", blueprint.HandleCourseRemoval)
 
 	// Course detail
 	router.HandleFunc("GET /course/{code}", coursedetail.HandlePage)

@@ -79,11 +79,11 @@ CREATE TABLE blueprint_years(
 );
 
 CREATE TABLE blueprint_semesters(
-    id SERIAL PRIMARY KEY,
+    id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     blueprint_year INT REFERENCES blueprint_years(id) NOT NULL,
     course INT REFERENCES courses(id) NOT NULL,
     semester INT NOT NULL,
     position INT NOT NULL,
     UNIQUE (blueprint_year, semester, course),
-    UNIQUE (blueprint_year, semester, position)
+    UNIQUE (blueprint_year, semester, position) DEFERRABLE INITIALLY DEFERRED
 );

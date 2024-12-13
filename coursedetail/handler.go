@@ -1,6 +1,7 @@
 package coursedetail
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -19,6 +20,7 @@ func HandlePage(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
 	course, err := db.Course(code)
 	if err != nil {
+		log.Printf("HandlePage error %s: %v", code, err)
 		PageNotFound(code).Render(r.Context(), w)
 	} else {
 		Page(course).Render(r.Context(), w)

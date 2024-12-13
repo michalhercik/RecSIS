@@ -14,6 +14,7 @@ type DBManager struct {
 func scan(rows *sql.Rows, year *int, course *Course) error {
 	err := rows.Scan(
 		year,
+		&course.ID,
 		&course.position,
 		&course.semesterPosition,
 		&course.code,
@@ -106,12 +107,45 @@ func (m DBManager) BluePrint(user int) (*Blueprint, error) {
 
 // TODO: implement
 // TODO: the position determines the new position, should we update all the position or think of something more efficient?
-func (m DBManager) MoveCourse(user int, course string, year int, semester int, position int) error {
+func (m DBManager) MoveCourse(user int, course int, year int, semester SemesterPosition, position int) error {
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.Exec(sqlquery.ShiftCourses, user, year, semester, position)
+	if err != nil {
+		return err
+	}
+	res, err := tx.Exec(sqlquery.MoveCourse, semester, position, user, year, course)
+	if err != nil {
+		return err
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if count != 1 {
+		tx.Rollback()
+		return fmt.Errorf("expected 1 row to be affected, got %d", count)
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (m DBManager) RemoveCourse(user int, course string, year int, semester int) error {
-	res, err := m.DB.Exec(sqlquery.DeleteCourse, user, year, semester, course)
+func (m DBManager) AppendCourse(user int, course int, year int, semester SemesterPosition) error {
+	_, err := m.DB.Exec(sqlquery.AppendCourse, user, year, int(semester), course)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m DBManager) RemoveCourse(user int, course int) error {
+	res, err := m.DB.Exec(sqlquery.DeleteCourse, user, course)
 	if err != nil {
 		return err
 	}
