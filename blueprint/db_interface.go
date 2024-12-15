@@ -31,8 +31,8 @@ type Teacher struct {
 }
 
 func (t Teacher) String() string {
-	return fmt.Sprintf("%s %s %s %s",
-		t.titleBefore, t.firstName, t.lastName, t.titleAfter)
+	return fmt.Sprintf("%c. %s",
+		t.firstName[0], t.lastName)
 }
 
 type Semester int
@@ -68,7 +68,10 @@ func (t Teachers) string() string {
 	for _, teacher := range t {
 		names = append(names, teacher.String())
 	}
-	return strings.Join(names, "<br>")
+	if len(names) == 0 {
+		return "---"
+	}
+	return strings.Join(names, ", ")
 }
 
 func (t *Teachers) trim() {
