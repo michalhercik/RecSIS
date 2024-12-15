@@ -34,6 +34,11 @@ func scan(rows *sql.Rows, course *Course) error {
 		&course.teachers[1].lastName,
 		&course.teachers[1].titleBefore,
 		&course.teachers[1].titleAfter,
+		&course.teachers[2].sisId,
+		&course.teachers[2].firstName,
+		&course.teachers[2].lastName,
+		&course.teachers[2].titleBefore,
+		&course.teachers[2].titleAfter,
 	)
 	return err
 }
@@ -43,7 +48,7 @@ func (m DBManager) Courses(q query) (coursesPage, error) {
 
 	// Execute count query to get total number of courses
 	var total int
-	err := m.DB.QueryRow(sqlquery.CountCourses, ).Scan(&total)
+	err := m.DB.QueryRow(sqlquery.CountCourses).Scan(&total)
 	if err != nil {
 		return coursesPage{}, fmt.Errorf("failed to count courses: %w", err)
 	}
@@ -58,7 +63,10 @@ func (m DBManager) Courses(q query) (coursesPage, error) {
 	// Parse rows into courses slice
 	var courses []Course
 	for rows.Next() {
-		course := newCourse()
+		course := &Course{
+			teachers: []Teacher{{}, {}, {}},
+		}
+
 		if err := scan(rows, course); err != nil {
 			return coursesPage{}, fmt.Errorf("failed to scan course: %w", err)
 		}

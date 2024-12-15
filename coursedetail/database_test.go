@@ -257,7 +257,7 @@ func TestDbCourse(t *testing.T) {
 	}
 	defer db.Close()
 
-	courseReader := DbCourseReader{Db: db}
+	courseReader := DBManager{DB: db}
 	course, err := courseReader.Course(expected.Code)
 	if err != nil {
 		t.Fatalf("error getting course: %v", err)

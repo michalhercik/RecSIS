@@ -99,12 +99,6 @@ type Course struct {
 	teachers         Teachers
 }
 
-func newCourse() *Course {
-	return &Course{
-		teachers: []Teacher{{}, {}},
-	}
-}
-
 type AcademicYear struct {
 	position   int
 	winter     []Course

@@ -1,6 +1,7 @@
 package courses
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -16,8 +17,13 @@ func getDefaultQuery() query {
 }
 
 func HandlePage(w http.ResponseWriter, r *http.Request) {
-	recommendedCourses, _ := db.Courses(getDefaultQuery())
-	Page(&recommendedCourses).Render(r.Context(), w)
+	recommendedCourses, err := db.Courses(getDefaultQuery())
+	if err != nil {
+		log.Printf("HandlePage: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		Page(&recommendedCourses).Render(r.Context(), w)
+	}
 }
 
 func HandlePaging(w http.ResponseWriter, r *http.Request) {
@@ -46,19 +52,19 @@ func HandlePaging(w http.ResponseWriter, r *http.Request) {
 
 func sortTypeFromString(st string) sortType {
 	switch st {
-    case op_relevance:
-        return relevance
-    case op_recommended:
-        return recommended
-    case op_rating:
-        return rating
-    case op_mostPopular:
-        return mostPopular
-    case op_newest:
-        return newest
-    default:
-        return relevance
-    }
+	case op_relevance:
+		return relevance
+	case op_recommended:
+		return recommended
+	case op_rating:
+		return rating
+	case op_mostPopular:
+		return mostPopular
+	case op_newest:
+		return newest
+	default:
+		return relevance
+	}
 }
 
 func HandleSearch(w http.ResponseWriter, r *http.Request) {

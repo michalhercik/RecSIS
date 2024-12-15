@@ -3,7 +3,6 @@ package courses
 import (
 	"fmt"
 	"strings"
-
 	//"log"
 )
 
@@ -33,15 +32,15 @@ type query struct {
 	startIndex int
 	maxCount   int
 	search     string
-	sorted     sortType 
+	sorted     sortType
 }
 
 const (
-	relevance    = iota
-	recommended  = iota
-	rating       = iota
-	mostPopular  = iota
-	newest       = iota
+	relevance   = iota
+	recommended = iota
+	rating      = iota
+	mostPopular = iota
+	newest      = iota
 )
 
 type sortType int
@@ -51,7 +50,7 @@ var sortTypeName = map[sortType]string{
 	recommended: "Recommended",
 	rating:      "By rating",
 	mostPopular: "Most popular",
-	newest:		 "Newest",
+	newest:      "Newest",
 }
 
 func (st sortType) String() string {
@@ -123,24 +122,18 @@ func (a Assignment) String() string {
 }
 
 type Course struct {
-	code            	 string
-	nameCs          	 string
-	nameEn          	 string
-	start           	 Semester
-	semesterCount   	 int
-	lectureRange1   	 int
-	seminarRange1   	 int
-	lectureRange2   	 int
-	seminarRange2   	 int
-	examType        	 string
-	credits         	 int
-	teachers        	 Teachers
-	rating				 int
-	blueprintAssignments []Assignment 
-}
-
-func newCourse() *Course {
-	return &Course{
-		teachers: []Teacher{{}, {}},
-	}
+	code                 string
+	nameCs               string
+	nameEn               string
+	start                Semester
+	semesterCount        int
+	lectureRange1        int
+	seminarRange1        int
+	lectureRange2        int
+	seminarRange2        int
+	examType             string
+	credits              int
+	teachers             Teachers
+	rating               int
+	blueprintAssignments []Assignment
 }

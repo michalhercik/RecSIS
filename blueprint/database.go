@@ -38,6 +38,11 @@ func scan(rows *sql.Rows, year *int, course *Course) error {
 		&course.teachers[1].lastName,
 		&course.teachers[1].titleBefore,
 		&course.teachers[1].titleAfter,
+		&course.teachers[2].sisId,
+		&course.teachers[2].firstName,
+		&course.teachers[2].lastName,
+		&course.teachers[2].titleBefore,
+		&course.teachers[2].titleAfter,
 	)
 	return err
 }
@@ -70,10 +75,14 @@ func selectCourses(tx *sql.Tx, user int, blueprint *Blueprint) error {
 	defer rows.Close()
 	for rows.Next() {
 		var year int
-		course := newCourse()
+		course := &Course{
+			teachers: []Teacher{{}, {}, {}},
+		}
+
 		if err := scan(rows, &year, course); err != nil {
 			return err
 		}
+		// TODO: delet trim method. put the code right here
 		course.teachers.trim()
 		if err := blueprint.assign(year, course); err != nil {
 			return err

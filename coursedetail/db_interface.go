@@ -19,28 +19,22 @@ func SetDataManager(newDB DataManager) {
 
 // TODO add more fields
 type Rating struct {
-	ID       int
-	UserID   int
-	Rating   int // 1..like -1..dislike
+	ID     int
+	UserID int
+	Rating int // 1..like -1..dislike
 }
 
 // TODO add more fields
 type Comment struct {
-	ID       int
-	UserID   int
-	Content  string
+	ID      int
+	UserID  int
+	Content string
 }
 
 type Faculty struct {
-	ID     int
-	SisID  int
-	NameCs string
-	NameEn string
-	Abbr   string
-}
-
-func (f Faculty) String() string {
-	return f.NameEn
+	SisID int
+	Name  string
+	Abbr  string
 }
 
 type Semester int
@@ -62,10 +56,7 @@ func (s Semester) String() string {
 }
 
 type Teacher struct {
-	ID          int
 	SisID       int
-	Department  string
-	Faculty     Faculty
 	FirstName   string
 	LastName    string
 	TitleBefore string
@@ -90,46 +81,38 @@ func (a Assignment) String() string {
 	return result
 }
 
-type Course struct {
-	ID              	 int
-	Code            	 string
-	NameCs          	 string
-	NameEn          	 string
-	ValidFrom       	 int
-	ValidTo         	 int
-	Faculty         	 Faculty
-	Guarantor       	 string
-	State           	 string
-	Start           	 Semester
-	SemesterCount   	 int
-	Language        	 string
-	LectureRange1   	 int
-	SeminarRange1   	 int
-	LectureRange2   	 int
-	SeminarRange2   	 int
-	ExamType        	 string
-	Credits         	 int
-	Teachers        	 []Teacher
-	MinEnrollment   	 int // -1 means no limit
-	Capacity        	 int // -1 means no limit
-	AnnotationCs    	 string
-	AnnotationEn    	 string
-	SylabusCs       	 string
-	SylabusEn       	 string
-	Classifications 	 []string
-	Classes         	 []string
-	Link            	 string // link to course webpage (not SIS)
-	Comments			 []Comment
-	Ratings				 []Rating
-	BlueprintAssignments []Assignment 
+type Description struct {
+	title   string
+	content string
 }
 
-func newCourse() *Course {
-	return &Course{
-		Faculty: Faculty{},
-		Teachers: []Teacher{
-			{Faculty: Faculty{}},
-			{Faculty: Faculty{}},
-		},
-	}
+type Course struct {
+	Code                     string
+	Name                     string
+	Faculty                  Faculty
+	GuarantorDepartment      string
+	State                    string
+	Start                    Semester
+	SemesterCount            int
+	Language                 string
+	LectureRange1            int
+	SeminarRange1            int
+	LectureRange2            int
+	SeminarRange2            int
+	ExamType                 string
+	Credits                  int
+	Guarantors               []Teacher
+	Teachers                 []Teacher
+	MinEnrollment            int // -1 means no limit
+	Capacity                 int // -1 means no limit
+	Annotation               Description
+	CompletitionRequirements Description
+	ExamRequirements         Description
+	Sylabus                  Description
+	Classifications          []string
+	Classes                  []string
+	Link                     string // link to course webpage (not SIS)
+	Comments                 []Comment
+	Ratings                  []Rating
+	BlueprintAssignments     []Assignment
 }

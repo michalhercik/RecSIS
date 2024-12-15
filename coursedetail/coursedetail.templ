@@ -120,10 +120,10 @@ templ BasicInfo(course *Course) {
     <div id="basicinfo" class="courseinfobox">
         <table>
             <tr>
-                <td>Czech title:</td><td>{ course.NameCs }</td>
+                <td>Czech title:</td><td>{ course.Name }</td>
             </tr>
             <tr>
-                <td>Faculty:</td><td>{ course.Faculty.String() }</td>
+                <td>Faculty:</td><td>{ course.Faculty.Name }</td>
             </tr>
             <tr>
                 <td>Semester:</td><td>{ course.Start.String() }</td>
@@ -144,6 +144,14 @@ templ BasicInfo(course *Course) {
             <tr>
                 <td>Additional information:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
             </tr>
+            <tr>
+                <td>Guarantor(s):</td><td>{ course.Guarantors[0].String() }</td>
+            </tr>
+            for _, teacher := range course.Guarantors[1:] {
+            <tr>
+                <td></td><td>{ teacher.String() }</td>
+            </tr>
+            }
             <tr>
                 <td>Teacher(s):</td><td>{ course.Teachers[0].String() }</td>
             </tr>
@@ -241,20 +249,20 @@ templ Comments(comments []Comment, courseCode string) {
 
 templ Content(course *Course) {
     {{ p = bluemonday.UGCPolicy() }}
-    <h1>{ course.Code + " - " + course.NameEn }</h1>
+    <h1>{ course.Code + " - " + course.Name }</h1>
     @Ratings(course.Ratings, course.Code)
     @BlueprintAssignment(course.BlueprintAssignments, course.Code)
     @BasicInfo(course)
     // TODO add links to parts of the page
-    @Annotation(course.AnnotationEn)
+    @Annotation(course.Annotation.content)
     @CompletionRequirements("") // TODO get data
     @Literature("") // TODO get data
-    @Sylabus(course.SylabusEn)
+    @Sylabus(course.Sylabus.content)
     @Comments(course.Comments, course.Code)
 }
 
 templ Page(course *Course) {
-    @utils.Page(course.Code + " - " + course.NameEn) {
+    @utils.Page(course.Code + " - " + course.Name) {
         @Content(course)
     }
 }

@@ -2,30 +2,49 @@ package coursedetail
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/michalhercik/RecSIS/coursedetail/sqlquery"
 )
+
+type DBLang int
+
+const (
+	cs DBLang = iota
+	en
+)
+
+var DBLangs = map[DBLang]string{
+	cs: "CZE",
+	en: "ENG",
+}
+
+func (l DBLang) String() string {
+	return DBLangs[l]
+}
 
 type DBManager struct {
 	DB *sql.DB
 }
 
-func (reader DBManager) Course(code string) (*Course, error) {
-	row := reader.DB.QueryRow(sqlquery.Course, code)
-	course := newCourse()
+func selectCourse(tx *sql.Tx, code string, lang DBLang) (*Course, error) {
+	row := tx.QueryRow(sqlquery.Course, code, en.String())
+	course := &Course{
+		Faculty:                  Faculty{},
+		Guarantors:               []Teacher{{}, {}, {}},
+		Annotation:               Description{},
+		CompletitionRequirements: Description{},
+		ExamRequirements:         Description{},
+		Sylabus:                  Description{},
+	}
+
 	err := row.Scan(
-		&course.ID,
 		&course.Code,
-		&course.NameCs,
-		&course.NameEn,
-		&course.ValidFrom,
-		&course.ValidTo,
-		&course.Faculty.ID,
+		&course.Name,
 		&course.Faculty.SisID,
-		&course.Faculty.NameCs,
-		&course.Faculty.NameEn,
+		&course.Faculty.Name,
 		&course.Faculty.Abbr,
-		&course.Guarantor,
+		&course.GuarantorDepartment,
 		&course.State,
 		&course.Start,
 		&course.SemesterCount,
@@ -36,38 +55,77 @@ func (reader DBManager) Course(code string) (*Course, error) {
 		&course.SeminarRange2,
 		&course.ExamType,
 		&course.Credits,
-		&course.Teachers[0].ID,
-		&course.Teachers[0].SisID,
-		&course.Teachers[0].Department,
-		&course.Teachers[0].Faculty.ID,
-		&course.Teachers[0].Faculty.SisID,
-		&course.Teachers[0].Faculty.NameCs,
-		&course.Teachers[0].Faculty.NameEn,
-		&course.Teachers[0].Faculty.Abbr,
-		&course.Teachers[0].FirstName,
-		&course.Teachers[0].LastName,
-		&course.Teachers[0].TitleBefore,
-		&course.Teachers[0].TitleAfter,
-		&course.Teachers[1].ID,
-		&course.Teachers[1].SisID,
-		&course.Teachers[1].Department,
-		&course.Teachers[1].Faculty.ID,
-		&course.Teachers[1].Faculty.SisID,
-		&course.Teachers[1].Faculty.NameCs,
-		&course.Teachers[1].Faculty.NameEn,
-		&course.Teachers[1].Faculty.Abbr,
-		&course.Teachers[1].FirstName,
-		&course.Teachers[1].LastName,
-		&course.Teachers[1].TitleBefore,
-		&course.Teachers[1].TitleAfter,
+		&course.Guarantors[0].SisID,
+		&course.Guarantors[0].FirstName,
+		&course.Guarantors[0].LastName,
+		&course.Guarantors[0].TitleBefore,
+		&course.Guarantors[0].TitleAfter,
+		&course.Guarantors[1].SisID,
+		&course.Guarantors[1].FirstName,
+		&course.Guarantors[1].LastName,
+		&course.Guarantors[1].TitleBefore,
+		&course.Guarantors[1].TitleAfter,
+		&course.Guarantors[2].SisID,
+		&course.Guarantors[2].FirstName,
+		&course.Guarantors[2].LastName,
+		&course.Guarantors[2].TitleBefore,
+		&course.Guarantors[2].TitleAfter,
 		&course.MinEnrollment,
 		&course.Capacity,
-		&course.AnnotationCs,
-		&course.AnnotationEn,
-		&course.SylabusCs,
-		&course.SylabusEn,
+		&course.Annotation.title,
+		&course.Annotation.content,
+		&course.CompletitionRequirements.title,
+		&course.CompletitionRequirements.content,
+		&course.ExamRequirements.title,
+		&course.ExamRequirements.content,
+		&course.Sylabus.title,
+		&course.Sylabus.content,
 	)
+	if err != nil {
+		return course, fmt.Errorf("selectCourse: %v", err)
+	}
+	return course, nil
+}
 
+func selectTeachers(tx *sql.Tx, course *Course) error {
+	rows, err := tx.Query(sqlquery.CourseTeachers, course.Code)
+	if err != nil {
+		return fmt.Errorf("selectTeachers: %v", err)
+	}
+	defer rows.Close()
+	course.Teachers = []Teacher{}
+	for rows.Next() {
+		var teacher Teacher
+		if err := rows.Scan(
+			&teacher.SisID,
+			&teacher.FirstName,
+			&teacher.LastName,
+			&teacher.TitleBefore,
+			&teacher.TitleAfter,
+		); err != nil {
+			return fmt.Errorf("selectTeachers: %v", err)
+		}
+		course.Teachers = append(course.Teachers, teacher)
+	}
+	return nil
+}
+
+func (reader DBManager) Course(code string) (*Course, error) {
+	tx, err := reader.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	course, err := selectCourse(tx, code, en)
+	if err != nil {
+		return nil, err
+	}
+	if err = selectTeachers(tx, course); err != nil {
+		return course, err
+	}
+	if err = tx.Commit(); err != nil {
+		return course, err
+	}
 	// TODO: this is mock - change to real data
 	course.Comments = []Comment{
 		{ID: 1, UserID: 1, Content: "This is a comment"},
