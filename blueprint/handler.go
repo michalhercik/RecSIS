@@ -6,6 +6,8 @@ import (
 	"strconv"
 
 	"github.com/a-h/templ"
+	
+    "github.com/michalhercik/RecSIS/courses"
 )
 
 const user = 42 // TODO get user from session
@@ -42,7 +44,9 @@ func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	// TODO: Render just credits stats with own sql query for performance
+	HandleContent(w, r).
+		Render(r.Context(), w)
 }
 
 func HandleYearRemoval(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +86,8 @@ func HandleCourseAddition(w http.ResponseWriter, r *http.Request) {
 	}
 	switch origin {
 	case "courses":
-		http.Error(w, "Not implemented", http.StatusNotImplemented)
+		courses.BlueprintAssignment(nil, course).Render(r.Context(), w)
+		//http.Error(w, "Not implemented", http.StatusNotImplemented)
 	case "coursedetail":
 		http.Error(w, "Not implemented", http.StatusNotImplemented)
 	case "degreeplan":

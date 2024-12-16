@@ -21,14 +21,13 @@ body {
     overflow-y: scroll;
 }
 
-/* Context menu styles */
-.context-menu {
+/* Credits div box styles */
+.credits-box {
     position: absolute;
     background: white;
     border: 1px solid #ccc;
     padding: 10px;
     z-index: 1000;
-    min-width: 230px;
     left: 25px;
 }
 

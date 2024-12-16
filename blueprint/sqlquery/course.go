@@ -52,10 +52,12 @@ SET
 	semester=$3, 
 	blueprint_year=(SELECT id FROM year),
 	position= (
-		SELECT MAX(position) + 1
-		FROM blueprint_semesters
-		WHERE blueprint_year=(SELECT id FROM year)
-		AND semester=$3
+		COALESCE(
+			(SELECT MAX(position) + 1
+			FROM blueprint_semesters
+			WHERE blueprint_year=(SELECT id FROM year)
+			AND semester=$3), 1
+		)
 	) 
 WHERE id=$4;
 `
