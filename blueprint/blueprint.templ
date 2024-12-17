@@ -7,6 +7,7 @@ import (
 
 const lastPosition = -1
 
+// top floating menu with buttons, ...
 templ optionMenu(data *Blueprint) {
     {{
         yearCount := len(data.years) - 1
@@ -14,8 +15,10 @@ templ optionMenu(data *Blueprint) {
         anyYears := len(data.years) > 1
     }}
     <div class="option-menu sticky-top bg-light p-2" x-data="{ showCredits: false }">
+        // change number of years
         <label>Number of years:</label>
         <button
+            class="btn btn-sm btn-outline-dark"
             hx-delete="/blueprint/year"
             hx-target="main"
             :disabled={ strconv.Itoa(yearCount) + " <= 0" }>
@@ -23,19 +26,26 @@ templ optionMenu(data *Blueprint) {
         </button>
         <label id="valueBox">{ strconv.Itoa(yearCount) }</label>
         <button
+            class="btn btn-sm btn-outline-dark"
             hx-post="/blueprint/year"
             hx-target="main">
             <i class="bi bi-plus"></i>
         </button>
 
+        // show/hide unassigned courses
         <button 
+            class="btn btn-sm btn-outline-dark"
             @click="showUnassigned = !showUnassigned" 
             x-text="showUnassigned ? 'Hide unassigned' : 'Show unassigned'"
             :disabled={ strconv.FormatBool(!anyUnassigned) }>
         </button>
 
+        // show/hide credits
         <div style="position: relative; display: inline-block;">
-            <button @click="showCredits = !showCredits" :disabled={ strconv.FormatBool(!anyYears) }>
+            <button
+                @click="showCredits = !showCredits"
+                :disabled={ strconv.FormatBool(!anyYears) }
+                class="btn btn-sm btn-outline-dark">
                 Credits <i :class="showCredits ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
             </button>
 
@@ -43,6 +53,34 @@ templ optionMenu(data *Blueprint) {
                 @renderCreditTable(data.years[1:])
             </div>
         </div>
+
+        // take care of checked courses
+        // assign
+        // TODO: make correct vals
+        <button
+            x-show="checkedCourses.length > 0"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title="Assign all checked courses"
+            class="btn btn-outline-dark btn-sm bi bi-arrows-move"
+            hx-patch="/blueprint/courses/" 
+            hx-vals={ `"type": "selected", "year": ` + "TODO" + `, "semester": ` + "TODO" }
+            hx-target="main">
+        </button>
+        // remove
+        // TODO: make correct vals
+        <button
+            x-show="checkedCourses.length > 0"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title="Remove all checked courses"
+            class="btn btn-outline-dark btn-sm bi bi-trash-fill"
+            hx-delete="/blueprint/courses"
+            hx-vals={ `"type": "selected", "year": ` + "TODO" + `, "semester": ` + "TODO" }
+            hx-target="main">
+        </button>
+        // TODO: remove this, just for show and to know how to get the checked courses
+        <span x-text="checkedCourses"></span>
     </div>
 }
 
@@ -72,7 +110,8 @@ func hoursExamsString(lecture, seminar int, examType string) string {
 
 templ winterSummer(course *Course) {
     {{ semCount := course.semesterCount }}
-    if semCount == 1 {
+    switch semCount {
+    case 1:
         switch course.start {
         case winter:
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
@@ -84,11 +123,10 @@ templ winterSummer(course *Course) {
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
         default:
-            <td>---</td>
-            <td>---</td>
+            <td>unsupported</td>
+            <td>unsupported</td>
         }
-    }
-    if semCount == 2 {
+    case 2:
         switch course.start {
         case winter:
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
@@ -100,9 +138,12 @@ templ winterSummer(course *Course) {
             <td>unsupported</td>
             <td>unsupported</td>
         default:
-            <td>---</td>
-            <td>---</td>
+            <td>unsupported</td>
+            <td>unsupported</td>
         }
+    default:
+        <td>unsupported</td>
+        <td>unsupported</td>
     }
 }
 
@@ -157,7 +198,7 @@ templ winterSummer(course *Course) {
 
 // TODO only if there is at least one
 templ renderUnassigned(unassigned AcademicYear, yearCount int) {
-    // header for the whole page
+    // tables header for the whole page
     <table class="table table-sm blueprint-table">
         <thead class="table-secondary">
             <tr>
@@ -194,23 +235,49 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int) {
                 for _, course := range unassigned.unassigned {
                     <tr
                         id={ "code" + course.code }
-                        x-data="{ checked: false, hover: false }"
-                        @click="if (!$event.target.closest('a') && !$event.target.closest('button')) { checked = !checked; $refs.checkbox.checked = checked }"
+                        x-data="{ hover: false }"
+                        @click={ `if (!$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('input')) {
+                            const checkbox = document.getElementById('checkbox` + strconv.Itoa(course.ID) + `');
+                            checkbox.checked = !checkbox.checked;
+                            checkbox.dispatchEvent(new Event('change'));
+                        }` }
                         @mouseover="hover = true"
                         @mouseleave="hover = false"
                         x-sort:item
                     >
-                        <td><input type="checkbox" name="course" value={ strconv.Itoa(course.ID) } x-ref="checkbox" /></td>
+                        <td>
+                            <input
+                                type="checkbox"
+                                id={ "checkbox" + strconv.Itoa(course.ID) }
+                                name={ "course" + strconv.Itoa(course.ID) }
+                                value={ strconv.Itoa(course.ID) }
+                                x-model="checkedCourses"/>
+                        </td>
                         <td> @utils.CourseLink(course.code) </td>
                         <td>{ course.nameEn }</td>
                         <td>{ strconv.Itoa(course.credits) }</td>
                         @winterSummer(&course)
                         <td> @templ.Raw(course.teachers.string()) </td>
-                        <td class="text-end align-middle" style="padding-top: 0; padding-bottom: 0;">
-                            // TODO move button
+                        <td class="text-end align-middle short">
+                            // move button
+                            // TODO make correct patch,vals
+                            <button
+                                x-show="hover && !isSorting"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Assign"
+                                class="btn btn-outline-secondary btn-sm bi bi-arrows-move"
+                                style="--bs-btn-border-color: transparent;"
+                                hx-patch={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
+                                hx-vals={ `"year": 0, "semester": 0` }
+                                hx-target="main">
+                            </button>
                             // delete button
                             <button
                                 x-show="hover && !isSorting"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Remove"
                                 class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                                 style="--bs-btn-border-color: transparent;"
                                 hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
@@ -219,6 +286,9 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int) {
                             // drag button
                             <button
                                 x-show="hover && !isSorting"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Drag and drop to sort"
                                 class="btn btn-sm bi bi-grip-horizontal"
                                 style="--bs-btn-active-border-color: transparent;"
                                 x-sort:handle>
@@ -257,32 +327,61 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum int) {
             <tbody x-sort x-sort:group="courses">
                 for _, course := range courses {
                     <tr
-                        x-data="{ checked: false, hover: false }"
-                        @click="if (!$event.target.closest('a') && !$event.target.closest('button')) { checked = !checked; $refs.checkbox.checked = checked }"
+                        x-data="{ hover: false }"
+                        @click={ `if (!$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('input')) {
+                            const checkbox = document.getElementById('checkbox` + strconv.Itoa(course.ID) + `');
+                            checkbox.checked = !checkbox.checked;
+                            checkbox.dispatchEvent(new Event('change'));
+                        }` }
                         @mouseover="hover = true"
                         @mouseleave="hover = false"
                         x-sort:item
                     >
-                        <td><input type="checkbox" name="course" value={ course.code } x-ref="checkbox" /></td>
+                        <td>
+                            <input
+                                type="checkbox"
+                                id={ "checkbox" + strconv.Itoa(course.ID) }
+                                name={ "course" + strconv.Itoa(course.ID) }
+                                value={ strconv.Itoa(course.ID) }
+                                x-model="checkedCourses"/>
+                        </td>
                         <td> @utils.CourseLink(course.code) </td>
                         <td>{ course.nameEn }</td>
                         <td>{ strconv.Itoa(course.credits) }</td>
                         @winterSummer(&course)
                         <td> @templ.Raw(course.teachers.string()) </td>
-                        <td class="text-end align-middle" style="padding-top: 0; padding-bottom: 0;">
+                        <td class="text-end align-middle short">
                             // unassign button
                             <button
                                 x-show="hover && !isSorting"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Unassign"
                                 class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                                 style="--bs-btn-border-color: transparent;"
                                 hx-patch={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
                                 hx-vals={ `"year": 0, "semester": 0` }
                                 hx-target="main">
                             </button>
-                            // TODO move button
+                            // move button
+                            // TODO make correct vals
+                            <button
+                                x-show="hover && !isSorting"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Reassign"
+                                class="btn btn-outline-secondary btn-sm bi bi-arrows-move"
+                                style="--bs-btn-border-color: transparent;"
+                                hx-patch={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
+                                hx-vals={ `"year": 0, "semester": 0` }
+                                hx-target="main">
+                            </button>
                             // delete button
                             <button
                                 x-show="hover && !isSorting"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Remove"
                                 class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                                 style="--bs-btn-border-color: transparent;"
                                 hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
@@ -291,6 +390,9 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum int) {
                             // drag button
                             <button
                                 x-show="hover && !isSorting"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Drag and drop to sort"
                                 class="btn btn-sm bi bi-grip-horizontal"
                                 style="--bs-btn-active-border-color: transparent;"
                                 x-sort:handle>
@@ -303,40 +405,116 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum int) {
     </div>
 }
 
-templ tableHeadline(text string, yearNum, credits int, year bool) {
-    {{
-        tdClass := ""
-        tableClass := ""
-        specifier := ""
-        show := "true"
-        if year {
-            tdClass = "yeartext"
-            tableClass = "headline"
-            specifier = "Year" + strconv.Itoa(yearNum)
-        } else {
-            tdClass = "semtext"
-            specifier = text + strconv.Itoa(yearNum)
-            show = "Year" + strconv.Itoa(yearNum)
-        }
-        onClick := specifier + " = !" + specifier
-    }}
-    <div x-show={ show }>
-        <table class={ "table table-sm table-hover table-light blueprint-table " + tableClass }>
+templ yearHeadline(yearNum, credits int) {
+    <div>
+        <table class={ "table table-sm table-hover table-light blueprint-table headline" }>
             <tbody>
-                <tr>
+                <tr
+                    x-data="{ hover: false }"
+                    @mouseover="hover = true"
+                    @mouseleave="hover = false"
+                >
                     <td class="short">
                         <i
-                            :class={ specifier + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }
-                            @click={ onClick }>
+                            :class={ "Year" + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }
+                            @click={ "Year" + strconv.Itoa(yearNum) + " = !" + "Year" + strconv.Itoa(yearNum) }>
                         </i>
                     </td>
-                    <td class={ "short " + tdClass }>{ text }</td>
+                    <td class={ "short yeartext" }>{ "Year " + strconv.Itoa(yearNum) }</td>
                     <td class="short"></td>
-                    <td class={ "short " + tdClass }>{ strconv.Itoa(credits) }</td>
-                    <td class="short"></td>
-                    <td class="short"></td>
+                    <td class={ "short yeartext" }>{ strconv.Itoa(credits) }</td>
                     <td class="short"></td>
                     <td class="short"></td>
+                    <td class="short"></td>
+                    <td class="short text-end align-middle" style="line-height: 1;">
+                        // unassign all courses button
+                        // TODO make correct patch,vals
+                        <button
+                            x-show="hover && !isSorting"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title={ "Unassign all courses in Year " + strconv.Itoa(yearNum) }
+                            class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
+                            style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+                            hx-patch={ "/blueprint/all-courses-in-this-year-unassign-TODO" } 
+                            hx-vals={ `"year": 0, "semester": 0` }
+                            hx-target="main">
+                        </button>
+                        // remove all courses button
+                        <button
+                            x-show="hover && !isSorting"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title={ "Remove all courses in Year " + strconv.Itoa(yearNum) }
+                            class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
+                            style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+                            hx-delete="/blueprint/courses"
+                            hx-vals={ `"type": "year", "year": ` + strconv.Itoa(yearNum) }
+                            hx-target="main">
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+
+templ semesterHeadline(semesterNum, yearNum, credits int) {
+    {{
+        semesterText := ""
+        if semesterNum == 1 {
+            semesterText = "Winter"
+        } else if semesterNum == 2 {
+            semesterText = "Summer"
+        }
+    }}
+    <div x-show={ "Year" + strconv.Itoa(yearNum) }>
+        <table class={ "table table-sm table-hover table-light blueprint-table " }>
+            <tbody>
+                <tr
+                    x-data="{ hover: false }"
+                    @mouseover="hover = true"
+                    @mouseleave="hover = false"
+                >
+                    <td class="short">
+                        <i
+                            :class={ semesterText + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }
+                            @click={ semesterText + strconv.Itoa(yearNum) + " = !" + semesterText + strconv.Itoa(yearNum) }>
+                        </i>
+                    </td>
+                    <td class={ "short semtext" }>{ semesterText }</td>
+                    <td class="short"></td>
+                    <td class={ "short semtext" }>{ strconv.Itoa(credits) }</td>
+                    <td class="short"></td>
+                    <td class="short"></td>
+                    <td class="short"></td>
+                    <td class="short text-end align-middle" style="line-height: 1;">
+                        // unassign all courses button
+                        // TODO make correct vals
+                        <button
+                            x-show="hover && !isSorting"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title={ "Unassign all courses in this " + semesterText + " semester" }
+                            class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
+                            style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+                            hx-patch={ "/blueprint/courses" } 
+                            hx-vals={ `"type": "semester-unassign", "year": ` + strconv.Itoa(yearNum) + `, "semester": ` + strconv.Itoa(semesterNum) }
+                            hx-target="main">
+                        </button>
+                        // remove all courses button
+                        <button
+                            x-show="hover && !isSorting"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title={ "Remove all courses in this " + semesterText + " semester" }
+                            class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
+                            style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+                            hx-delete="/blueprint/courses"
+                            hx-vals={ `"type": "semester", "year": ` + strconv.Itoa(yearNum) + `, "semester": ` + strconv.Itoa(semesterNum) }
+                            hx-target="main">
+                        </button>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -345,10 +523,10 @@ templ tableHeadline(text string, yearNum, credits int, year bool) {
 
 templ renderYear(year AcademicYear) {
     <div id={"BlueprintYear" + strconv.Itoa(year.position)}>
-        @tableHeadline("Year " + strconv.Itoa(year.position), year.position, year.credits(), true)
-        @tableHeadline("Winter",year.position, year.winterCredits(), false)
+        @yearHeadline(year.position, year.credits())
+        @semesterHeadline(1, year.position, year.winterCredits())
         @renderCourseTable(year.winter, true, year.position)
-        @tableHeadline("Summer",year.position, year.summerCredits(), false)
+        @semesterHeadline(2, year.position, year.summerCredits())
         @renderCourseTable(year.summer, false, year.position)
     </div>
 }
@@ -418,7 +596,7 @@ templ Content(data *Blueprint) {
             summer += " Summer" + strconv.Itoa(i) + ": true,"
             year += " Year" + strconv.Itoa(i) + ": true,"
         }
-        xdata := "{ showUnassigned: true," + winter + summer + year + " "
+        xdata := "{ checkedCourses: [], showUnassigned: true," + winter + summer + year + " "
         // drag&drop (sorting) focus/hover chrome bug (https://alpinejs.dev/plugins/sort#css-hover-bug) solution
         xdata += ` 
             isSorting: false, 
@@ -427,10 +605,22 @@ templ Content(data *Blueprint) {
                 this.checkSortingClass();
                 const observer = new MutationObserver(() => this.checkSortingClass());
                 observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-            }
+            },
         }` 
 
     }}
+    // bootstrap tooltip initialization
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl, {
+                    delay: { show: 750 } // define delay for tooltip show
+                });
+            });
+        });
+    </script>
+
     <div x-data={ xdata } x-init="init()">
         @optionMenu(data)
         @renderUnassigned(data.years[0], len(data.years) - 1)
