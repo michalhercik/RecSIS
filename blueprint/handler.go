@@ -6,6 +6,8 @@ import (
 	"strconv"
 
 	"github.com/a-h/templ"
+	
+    "github.com/michalhercik/RecSIS/courses"
 )
 
 const user = 42 // TODO get user from session
@@ -29,6 +31,72 @@ func HandlePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO: Implement, connect to db, add more cases
+func HandleCoursesMovement(w http.ResponseWriter, r *http.Request) {
+	callType := r.FormValue("type")
+	switch callType {
+	case "year-unassign":
+		year, err := strconv.Atoi(r.FormValue("year"))
+		if err != nil {
+			http.Error(w, "Unable to parse year", http.StatusBadRequest)
+			return
+		}
+		log.Println("Unassigning all courses from year", year)
+	case "semester-unassign":
+		year, err := strconv.Atoi(r.FormValue("year"))
+		if err != nil {
+			http.Error(w, "Unable to parse year", http.StatusBadRequest)
+			return
+		}
+		semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+		if err != nil {
+			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
+			return
+		}
+		log.Println("Unassigning all courses from year/semester", year, semesterInt)
+	case "selected":
+		log.Println("Unassigning selected courses")
+	default:
+		 http.Error(w, "Invalid type", http.StatusBadRequest)
+	}
+
+	HandleContent(w, r).
+		Render(r.Context(), w)
+}
+
+// TODO: Implement, connect to db, add more cases
+func HandleCoursesRemoval(w http.ResponseWriter, r *http.Request) {
+	callType := r.FormValue("type")
+	switch callType {
+	case "year":
+		year, err := strconv.Atoi(r.FormValue("year"))
+		if err != nil {
+			http.Error(w, "Unable to parse year", http.StatusBadRequest)
+			return
+		}
+		log.Println("Removing all courses from year", year)
+	case "semester":
+		year, err := strconv.Atoi(r.FormValue("year"))
+		if err != nil {
+			http.Error(w, "Unable to parse year", http.StatusBadRequest)
+			return
+		}
+		semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+		if err != nil {
+			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
+			return
+		}
+		log.Println("Removing all courses from semester", year, semesterInt)
+	case "selected":
+		log.Println("Removing selected courses")
+	default:
+		 http.Error(w, "Invalid type", http.StatusBadRequest)
+	}
+
+	HandleContent(w, r).
+		Render(r.Context(), w)
+}
+
 func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {
 	course, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
@@ -42,7 +110,9 @@ func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	// TODO: Render just credits stats with own sql query for performance
+	HandleContent(w, r).
+		Render(r.Context(), w)
 }
 
 func HandleYearRemoval(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +128,7 @@ func HandleYearRemoval(w http.ResponseWriter, r *http.Request) {
 func HandleCourseAddition(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement
 	origin := r.PostFormValue("origin")
+	log.Println("Adding course from", origin)
 	course := r.PathValue("code")
 	year, err := strconv.Atoi(r.FormValue("year"))
 	if err != nil {
@@ -71,6 +142,7 @@ func HandleCourseAddition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse semester", http.StatusBadRequest)
 		return
 	}
+	
 	err = db.InsertCourse(
 		user,
 		course,
@@ -82,7 +154,8 @@ func HandleCourseAddition(w http.ResponseWriter, r *http.Request) {
 	}
 	switch origin {
 	case "courses":
-		http.Error(w, "Not implemented", http.StatusNotImplemented)
+		courses.BlueprintAssignment(nil, course).Render(r.Context(), w)
+		//http.Error(w, "Not implemented", http.StatusNotImplemented)
 	case "coursedetail":
 		http.Error(w, "Not implemented", http.StatusNotImplemented)
 	case "degreeplan":

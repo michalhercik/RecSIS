@@ -84,7 +84,9 @@ func main() {
 	router.HandleFunc("DELETE /blueprint/year", blueprint.HandleYearRemoval)
 	router.HandleFunc("POST /blueprint/course/{code}", blueprint.HandleCourseAddition)
 	router.HandleFunc("PATCH /blueprint/course/{id}", blueprint.HandleCourseMovement)
+	router.HandleFunc("PATCH /blueprint/courses", blueprint.HandleCoursesMovement)
 	router.HandleFunc("DELETE /blueprint/course/{id}", blueprint.HandleCourseRemoval)
+	router.HandleFunc("DELETE /blueprint/courses", blueprint.HandleCoursesRemoval)
 
 	// Course detail
 	router.HandleFunc("GET /course/{code}", coursedetail.HandlePage)
