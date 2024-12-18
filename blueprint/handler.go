@@ -105,6 +105,7 @@ func HandleCourseMovement(w http.ResponseWriter, r *http.Request) {
 	}
 	year, err := strconv.Atoi(r.FormValue("year"))
 	if err != nil {
+		log.Println(r.FormValue("year"))
 		http.Error(w, "Unable to parse year", http.StatusBadRequest)
 		return
 	}
@@ -115,12 +116,19 @@ func HandleCourseMovement(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse semester", http.StatusBadRequest)
 		return
 	}
-	err = db.AppendCourse(
-		user,
-		course,
-		year,
-		semester,
-	)
+	position, err := strconv.Atoi(r.FormValue("position"))
+	if err != nil {
+		http.Error(w, "Unable to parse position", http.StatusBadRequest)
+		return
+	}
+	if position == -1 {
+		err = db.AppendCourse(user, course, year, semester)
+	} else if position >= 0 {
+		err = db.MoveCourse(user, course, year, semester, position)
+	} else {
+		http.Error(w, "Invalid position", http.StatusBadRequest)
+		return
+	}
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

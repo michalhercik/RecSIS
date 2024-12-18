@@ -125,30 +125,16 @@ func (m DBManager) InsertCourse(user int, course string, year int, semester Seme
 // TODO: implement
 // TODO: the position determines the new position, should we update all the position or think of something more efficient?
 func (m DBManager) MoveCourse(user int, course int, year int, semester SemesterPosition, position int) error {
-	tx, err := m.DB.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	_, err = tx.Exec(sqlquery.ShiftCourses, user, year, semester, position)
-	if err != nil {
-		return err
-	}
-	res, err := tx.Exec(sqlquery.MoveCourse, semester, position, user, year, course)
+	res, err := m.DB.Exec(sqlquery.MoveCourse, semester, position, user, year, course)
 	if err != nil {
 		return err
 	}
 	count, err := res.RowsAffected()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	if count != 1 {
-		tx.Rollback()
 		return fmt.Errorf("expected 1 row to be affected, got %d", count)
-	}
-	if err := tx.Commit(); err != nil {
-		return err
 	}
 	return nil
 }

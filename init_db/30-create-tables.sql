@@ -136,6 +136,39 @@ CREATE TABLE blueprint_semesters(
     course INT REFERENCES courses(id) NOT NULL,
     semester INT NOT NULL,
     position INT NOT NULL,
+    secondary_position INT NOT NULL DEFAULT 2,
     UNIQUE (blueprint_year, semester, course),
     UNIQUE (blueprint_year, semester, position) DEFERRABLE INITIALLY DEFERRED
 );
+
+CREATE OR REPLACE FUNCTION blueprint_course_positioning()
+   RETURNS TRIGGER
+AS
+$$
+BEGIN
+    UPDATE blueprint_semesters
+    SET position = new_position, secondary_position = 2
+    FROM (
+        SELECT 
+            id as sub_id,
+            position, 
+            ROW_NUMBER() OVER (
+                PARTITION BY blueprint_year, semester 
+                ORDER BY position, secondary_position
+            ) AS new_position
+        FROM blueprint_semesters
+        WHERE (
+            (blueprint_year = NEW.blueprint_year AND semester = NEW.semester)
+            OR (blueprint_year = OLD.blueprint_year AND semester = OLD.semester)
+        )
+    )
+    WHERE id=sub_id;
+   RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+CREATE TRIGGER blueprint_course_positioning_trigger
+AFTER UPDATE OF secondary_position ON blueprint_semesters
+FOR EACH ROW
+WHEN (pg_trigger_depth() = 0)
+EXECUTE FUNCTION blueprint_course_positioning();

@@ -1,16 +1,5 @@
 package sqlquery
 
-const ShiftCourses = `
-UPDATE blueprint_semesters
-SET position = position + 1
-WHERE blueprint_year = (
-	SELECT id FROM blueprint_years 
-	WHERE student=$1 AND position=$2
-	)
-AND semester = $3
-AND position >= $4;
-`
-
 const InsertCourse = `
 WITH year AS (
 	SELECT id FROM blueprint_years
@@ -32,11 +21,25 @@ VALUES(
 `
 
 const MoveCourse = `
+WITH course AS (
+	SELECT * FROM blueprint_semesters
+	WHERE id=$5
+)
+
 UPDATE blueprint_semesters
-SET semester=$1, position=$2, blueprint_year=(
-	SELECT id FROM blueprint_years 
-	WHERE student=$3 
-	AND position=$4
+SET 
+	semester = $1, 
+	position = $2, 
+	secondary_position = CASE 
+		WHEN (SELECT year from course) = blueprint_year 
+			AND (SELECT semester from course) = semester 
+			AND (SELECT position from course) < $2
+			THEN 3, 
+		ELSE 1
+	blueprint_year = (
+		SELECT id FROM blueprint_years 
+		WHERE student=$3 
+		AND position=$4
 	)
 WHERE id=$5;
 `
@@ -104,5 +107,6 @@ LEFT JOIN courses AS c ON s.course=c.id
 LEFT JOIN teachers AS t1 ON t1.sis_id = c.teacher1
 LEFT JOIN teachers AS t2 ON t2.sis_id = c.teacher2
 LEFT JOIN teachers AS t3 ON t3.sis_id = c.teacher3
-WHERE student = $1;
+WHERE student = $1
+ORDER BY s.position;
 `
