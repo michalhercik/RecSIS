@@ -49,10 +49,9 @@ templ optionMenu(data *Blueprint) {
 
         // take care of checked courses
         // assign
-        // TODO: make correct vals
         <div style="position: relative; display: inline-block;">
             <button
-                x-show="checkedCourses.length > 0"
+                x-show="checkedNumber > 0"
                 data-bs-toggle="tooltip"
                 data-bs-placement="bottom"
                 data-bs-title="Assign all checked courses"
@@ -78,7 +77,8 @@ templ optionMenu(data *Blueprint) {
                     class="btn btn-outline-secondary btn-sm text-nowrap" 
                     style="--bs-btn-border-color: transparent; min-width: 120px;"
                     hx-patch="/blueprint/courses" 
-                    :hx-vals={ "JSON.stringify({ courses: checkedCourses.join(','), type: 'selected', year: " + strconv.Itoa(i) + ", semester: 1, position: -1 })" }
+                    hx-vals={ `"type": "selected", "year": ` + strconv.Itoa(i) + `, "semester": 1, "position": -1` }
+                    hx-include="input[type=checkbox]:checked" 
                     hx-target="main">
                     { "Year " + strconv.Itoa(i) + " Winter" }
                 </button>
@@ -86,8 +86,9 @@ templ optionMenu(data *Blueprint) {
                     type="button"
                     class="btn btn-outline-secondary btn-sm text-nowrap"
                     style="--bs-btn-border-color: transparent; min-width: 120px;"
-                    hx-patch="/blueprint/courses" 
-                    :hx-vals={ "JSON.stringify({ courses: checkedCourses.join(','), type: 'selected', year: " + strconv.Itoa(i) + ", semester: 2, position: -1 })" }
+                    hx-patch="/blueprint/courses"
+                    hx-vals={ `"type": "selected", "year": ` + strconv.Itoa(i) + `, "semester": 2, "position": -1` }
+                    hx-include="input[type=checkbox]:checked" 
                     hx-target="main">
                     { "Year " + strconv.Itoa(i) + " Summer" }
                 </button>
@@ -96,17 +97,16 @@ templ optionMenu(data *Blueprint) {
         </div>
         // remove
         <button
-            x-show="checkedCourses.length > 0"
+            x-show="checkedNumber > 0"
             data-bs-toggle="tooltip"
             data-bs-placement="bottom"
             data-bs-title="Remove all checked courses"
             class="btn btn-outline-dark btn-sm bi bi-trash-fill"
             hx-delete="/blueprint/courses"
-            :hx-vals="JSON.stringify({ courses: checkedCourses.join(','), type: 'selected' })"
+            hx-vals={ `"type": "selected"` }
+            hx-include="input[type=checkbox]:checked" 
             hx-target="main">
         </button>
-        // TODO: remove this, just for show and to know how to get the checked courses
-        <span x-text="checkedCourses"></span>
     </div>
 }
 
@@ -215,9 +215,9 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int) {
                         <input
                             type="checkbox"
                             id={ "checkbox" + strconv.Itoa(course.ID) }
-                            name={ "course" + strconv.Itoa(course.ID) }
+                            name="selected"
                             value={ strconv.Itoa(course.ID) }
-                            x-model="checkedCourses"/>
+                            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"/>
                     </td>
                     <td> @utils.CourseLink(course.code) </td>
                     <td>{ course.nameEn }</td>
@@ -339,9 +339,9 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int)
                         <input
                             type="checkbox"
                             id={ "checkbox" + strconv.Itoa(course.ID) }
-                            name={ "course" + strconv.Itoa(course.ID) }
+                            name="selected"
                             value={ strconv.Itoa(course.ID) }
-                            x-model="checkedCourses"/>
+                            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"/>
                     </td>
                     <td> @utils.CourseLink(course.code) </td>
                     <td>{ course.nameEn }</td>
@@ -642,7 +642,7 @@ templ Content(data *Blueprint) {
             summer += " Summer" + strconv.Itoa(i) + ": true,"
             year += " Year" + strconv.Itoa(i) + ": true,"
         }
-        xdata := "{ checkedCourses: [], showUnassigned: true," + winter + summer + year + " "
+        xdata := "{ checkedNumber: 0, showUnassigned: true," + winter + summer + year + " "
         // drag&drop (sorting) focus/hover chrome bug (https://alpinejs.dev/plugins/sort#css-hover-bug) solution
         xdata += ` 
             isSorting: false, 

@@ -55,8 +55,9 @@ func HandleCoursesMovement(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
 			return
 		}
-		courses := r.FormValue("courses")
-		log.Println("Moving selected courses to year/semester", year, semesterInt, courses)
+		r.ParseForm()
+		courses := r.Form["selected"]
+		log.Println("Moving selected courses to year/semester", courses, year, semesterInt)
 	default:
 		 http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
@@ -89,7 +90,8 @@ func HandleCoursesRemoval(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("Removing all courses from semester", year, semesterInt)
 	case "selected":
-		courses := r.FormValue("courses")
+		r.ParseForm()
+		courses := r.Form["selected"]
 		log.Println("Removing selected courses", courses)
 	default:
 		 http.Error(w, "Invalid type", http.StatusBadRequest)
