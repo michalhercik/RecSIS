@@ -31,11 +31,12 @@ SET
 	semester = $1, 
 	position = $2, 
 	secondary_position = CASE 
-		WHEN (SELECT year from course) = blueprint_year 
+		WHEN (SELECT blueprint_year from course) = blueprint_year 
 			AND (SELECT semester from course) = semester 
 			AND (SELECT position from course) < $2
-			THEN 3, 
+			THEN 3
 		ELSE 1
+	END,
 	blueprint_year = (
 		SELECT id FROM blueprint_years 
 		WHERE student=$3 
