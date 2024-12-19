@@ -98,7 +98,14 @@ func HandleCoursesMovement(w http.ResponseWriter, r *http.Request) {
 	case "semester-unassign":
 		err = unassignSemester(r)
 	case "selected":
-		log.Println("Unassigning selected courses")
+		semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+		if err != nil {
+			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
+			return
+		}
+		r.ParseForm()
+		courses := r.Form["selected"]
+		log.Println("Moving selected courses to year/semester", courses, year, semesterInt)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
@@ -143,7 +150,9 @@ func HandleCoursesRemoval(w http.ResponseWriter, r *http.Request) {
 	case "semester":
 		err = removeCoursesBySemester(r)
 	case "selected":
-		log.Println("Removing selected courses")
+		r.ParseForm()
+		courses := r.Form["selected"]
+		log.Println("Removing selected courses", courses)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
