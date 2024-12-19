@@ -8,10 +8,14 @@ import (
 type DataManager interface {
 	BluePrint(user int) (*Blueprint, error)
 	// TODO: rename InsertCourse and AppendCourse
-	InsertCourse(user int, course string, year int, semester SemesterPosition) error
-	AppendCourse(user int, course int, year int, semester SemesterPosition) error
-	MoveCourse(user int, course int, year int, semester SemesterPosition, position int) error
-	RemoveCourse(user int, course int) error
+	InsertCourse(user int, course string, year int, semester SemesterPosition) (int, error)
+	AppendCourses(user, year int, semester SemesterPosition, courses ...int) error
+	MoveCourses(user, year int, semester SemesterPosition, position int, courses ...int) error
+	UnassignYear(user, year int) error
+	UnassignSemester(user, year int, semester SemesterPosition) error
+	RemoveCourses(user int, courses ...int) error
+	RemoveCoursesBySemester(user, year int, semester SemesterPosition) error
+	RemoveCoursesByYear(user, year int) error
 	AddYear(user int) error
 	RemoveYear(user int) error
 }

@@ -17,31 +17,27 @@ VALUES(
 		WHERE blueprint_year=(SELECT id FROM year)
 		AND semester=$3
 	)
-);
+)
+RETURNING id;
 `
 
 const MoveCourse = `
 WITH course AS (
 	SELECT * FROM blueprint_semesters
 	WHERE id=$5
+), new_year AS (
+	SELECT * FROM blueprint_years 
+	WHERE student=$3 
+	AND position=$4
 )
 
 UPDATE blueprint_semesters
 SET 
 	semester = $1, 
 	position = $2, 
-	secondary_position = CASE 
-		WHEN (SELECT year from course) = blueprint_year 
-			AND (SELECT semester from course) = semester 
-			AND (SELECT position from course) < $2
-			THEN 3, 
-		ELSE 1
-	blueprint_year = (
-		SELECT id FROM blueprint_years 
-		WHERE student=$3 
-		AND position=$4
-	)
-WHERE id=$5;
+	secondary_position = 2 + array_position($5, id) 
+	blueprint_year = (SELECT id FROM new_year)
+WHERE id=any($5);
 `
 
 const AppendCourse = `
@@ -59,16 +55,75 @@ SET
 			(SELECT MAX(position) + 1
 			FROM blueprint_semesters
 			WHERE blueprint_year=(SELECT id FROM year)
-			AND semester=$3), 1
+			AND semester=$3) + array_position($4, id), 1
 		)
 	) 
-WHERE id=$4;
+WHERE id = any($4);
+`
+
+const UnassignYear = `
+WITH unassigned_year AS (
+	SELECT id FROM blueprint_years
+	WHERE student=$1 AND position=0
+), max_position AS (
+	SELECT MAX(position) AS pos FROM blueprint_semesters
+	WHERE blueprint_year=(SELECT id from unassigned_year)
+), selected_year AS (
+	SELECT id FROM blueprint_years
+	WHERE student=$1 AND position=$2
+)
+
+UPDATE blueprint_semesters
+SET 
+	blueprint_year = (SELECT id from unassigned_year),
+	position = (select pos from max_position) + position,
+	semester = 0
+WHERE blueprint_year = (SELECT id from selected_year);
+`
+
+const UnassignSemester = `
+WITH unassigned_year AS (
+	SELECT id FROM blueprint_years
+	WHERE student=$1 AND position=0
+), max_position AS (
+	SELECT COALESCE(MAX(position), 0) AS pos FROM blueprint_semesters
+	WHERE blueprint_year=(SELECT id from unassigned_year)
+), selected_year AS (
+	SELECT id FROM blueprint_years
+	WHERE student=$1 AND position=$2
+)
+
+UPDATE blueprint_semesters
+SET 
+	blueprint_year = (SELECT id from unassigned_year),
+	position = (select pos from max_position) + position,
+	semester = 0
+WHERE blueprint_year = (SELECT id from selected_year) 
+AND semester=$3;
 `
 
 const DeleteCourse = `
 DELETE FROM blueprint_semesters 
 WHERE blueprint_year IN (SELECT id FROM blueprint_years WHERE student=$1)
-AND id = $2
+AND id = any($2);
+`
+
+const DeleteCoursesBySemester = `
+DELETE FROM blueprint_semesters
+WHERE semester=$3
+AND blueprint_year IN (
+	SELECT id FROM blueprint_years 
+		WHERE student=$1
+		AND position=$2
+);
+`
+const DeleteCoursesByYear = `
+DELETE FROM blueprint_semesters
+WHERE blueprint_year IN (
+	SELECT id FROM blueprint_years 
+		WHERE student=$1
+		AND position=$2
+);
 `
 
 const SelectCourses = `

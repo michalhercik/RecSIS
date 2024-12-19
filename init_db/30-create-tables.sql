@@ -141,7 +141,7 @@ CREATE TABLE blueprint_semesters(
     UNIQUE (blueprint_year, semester, position) DEFERRABLE INITIALLY DEFERRED
 );
 
-CREATE OR REPLACE FUNCTION blueprint_course_positioning()
+CREATE OR REPLACE FUNCTION blueprint_course_reordering()
    RETURNS TRIGGER
 AS
 $$
@@ -158,17 +158,23 @@ BEGIN
             ) AS new_position
         FROM blueprint_semesters
         WHERE (
-            (blueprint_year = NEW.blueprint_year AND semester = NEW.semester)
+            CASE 
+                WHEN NEW IS NULL THEN false 
+                ELSE (blueprint_year = NEW.blueprint_year AND semester = NEW.semester)
+            END
             OR (blueprint_year = OLD.blueprint_year AND semester = OLD.semester)
         )
     )
     WHERE id=sub_id;
-   RETURN NEW;
+    RETURN CASE 
+        WHEN NEW IS NULL THEN OLD 
+        ELSE NEW
+    END;
 END;
 $$ LANGUAGE PLPGSQL;
 
-CREATE TRIGGER blueprint_course_positioning_trigger
-AFTER UPDATE OF secondary_position ON blueprint_semesters
+CREATE TRIGGER blueprint_course_reordering_trigger
+AFTER UPDATE OR DELETE ON blueprint_semesters
 FOR EACH ROW
 WHEN (pg_trigger_depth() = 0)
-EXECUTE FUNCTION blueprint_course_positioning();
+EXECUTE FUNCTION blueprint_course_reordering();

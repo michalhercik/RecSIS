@@ -1,14 +1,50 @@
 package blueprint
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/a-h/templ"
-	
-    "github.com/michalhercik/RecSIS/courses"
 )
+
+// ===============================================================================================================================
+// Utils
+// ===============================================================================================================================
+
+func parseYear(r *http.Request) (int, error) {
+	year, err := strconv.Atoi(r.FormValue("year"))
+	if err != nil {
+		return year, err
+	}
+	return year, nil
+}
+
+func parseSemester(r *http.Request) (SemesterPosition, error) {
+	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+	if err != nil {
+		return 0, err
+	}
+	semester := SemesterPosition(semesterInt)
+	return semester, nil
+}
+
+func parseYearSemester(r *http.Request) (int, SemesterPosition, error) {
+	year, err := parseYear(r)
+	if err != nil {
+		return 0, 0, err
+	}
+	semester, err := parseSemester(r)
+	if err != nil {
+		return year, 0, err
+	}
+	return year, semester, nil
+}
+
+// ===============================================================================================================================
+// Page
+// ===============================================================================================================================
 
 const user = 42 // TODO get user from session
 
@@ -31,68 +67,91 @@ func HandlePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ===============================================================================================================================
+// Move Courses
+// ===============================================================================================================================
+
+func unassignYear(r *http.Request) error {
+	year, err := parseYear(r)
+	if err != nil {
+		return err
+	}
+	err = db.UnassignYear(user, year)
+	return err
+}
+
+func unassignSemester(r *http.Request) error {
+	year, semester, err := parseYearSemester(r)
+	if err != nil {
+		return err
+	}
+	err = db.UnassignSemester(user, year, semester)
+	return err
+}
+
 // TODO: Implement, connect to db, add more cases
 func HandleCoursesMovement(w http.ResponseWriter, r *http.Request) {
-	callType := r.FormValue("type")
-	switch callType {
+	var err error
+	switch r.FormValue("type") {
 	case "year-unassign":
-		year, err := strconv.Atoi(r.FormValue("year"))
-		if err != nil {
-			http.Error(w, "Unable to parse year", http.StatusBadRequest)
-			return
-		}
-		log.Println("Unassigning all courses from year", year)
+		err = unassignYear(r)
 	case "semester-unassign":
-		year, err := strconv.Atoi(r.FormValue("year"))
-		if err != nil {
-			http.Error(w, "Unable to parse year", http.StatusBadRequest)
-			return
-		}
-		semesterInt, err := strconv.Atoi(r.FormValue("semester"))
-		if err != nil {
-			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
-			return
-		}
-		log.Println("Unassigning all courses from year/semester", year, semesterInt)
+		err = unassignSemester(r)
 	case "selected":
 		log.Println("Unassigning selected courses")
 	default:
-		 http.Error(w, "Invalid type", http.StatusBadRequest)
+		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
 
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	HandleContent(w, r).
 		Render(r.Context(), w)
 }
 
+// ===============================================================================================================================
+// Remove Courses
+// ===============================================================================================================================
+
+func removeCoursesByYear(r *http.Request) error {
+	year, err := parseYear(r)
+	if err != nil {
+		return err
+	}
+	err = db.RemoveCoursesByYear(user, year)
+	return err
+}
+
+func removeCoursesBySemester(r *http.Request) error {
+	year, semester, err := parseYearSemester(r)
+	if err != nil {
+		return err
+	}
+	err = db.RemoveCoursesBySemester(user, year, semester)
+	return err
+}
+
 // TODO: Implement, connect to db, add more cases
 func HandleCoursesRemoval(w http.ResponseWriter, r *http.Request) {
-	callType := r.FormValue("type")
-	switch callType {
+	var err error
+	switch r.FormValue("type") {
 	case "year":
-		year, err := strconv.Atoi(r.FormValue("year"))
-		if err != nil {
-			http.Error(w, "Unable to parse year", http.StatusBadRequest)
-			return
-		}
-		log.Println("Removing all courses from year", year)
+		err = removeCoursesByYear(r)
 	case "semester":
-		year, err := strconv.Atoi(r.FormValue("year"))
-		if err != nil {
-			http.Error(w, "Unable to parse year", http.StatusBadRequest)
-			return
-		}
-		semesterInt, err := strconv.Atoi(r.FormValue("semester"))
-		if err != nil {
-			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
-			return
-		}
-		log.Println("Removing all courses from semester", year, semesterInt)
+		err = removeCoursesBySemester(r)
 	case "selected":
 		log.Println("Removing selected courses")
 	default:
-		 http.Error(w, "Invalid type", http.StatusBadRequest)
+		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
-
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	HandleContent(w, r).
 		Render(r.Context(), w)
 }
@@ -104,7 +163,7 @@ func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse course ID", http.StatusBadRequest)
 		return
 	}
-	err = db.RemoveCourse(user, course)
+	err = db.RemoveCourses(user, course)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -114,6 +173,10 @@ func HandleCourseRemoval(w http.ResponseWriter, r *http.Request) {
 	HandleContent(w, r).
 		Render(r.Context(), w)
 }
+
+// ===============================================================================================================================
+// ...
+// ===============================================================================================================================
 
 func HandleYearRemoval(w http.ResponseWriter, r *http.Request) {
 	if err := db.RemoveYear(user); err != nil {
@@ -127,42 +190,34 @@ func HandleYearRemoval(w http.ResponseWriter, r *http.Request) {
 
 func HandleCourseAddition(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement
-	origin := r.PostFormValue("origin")
-	log.Println("Adding course from", origin)
 	course := r.PathValue("code")
-	year, err := strconv.Atoi(r.FormValue("year"))
+	year, err := strconv.Atoi(r.PostFormValue("year"))
 	if err != nil {
 		http.Error(w, "Unable to parse year", http.StatusBadRequest)
 		return
 	}
-	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+	semesterInt, err := strconv.Atoi(r.PostFormValue("semester"))
 	// TODO: check validity of semesterInt
 	semester := SemesterPosition(semesterInt)
 	if err != nil {
 		http.Error(w, "Unable to parse semester", http.StatusBadRequest)
 		return
 	}
-	
-	err = db.InsertCourse(
+
+	courseID, err := db.InsertCourse(
 		user,
 		course,
 		year,
 		semester,
 	)
 	if err != nil {
-		http.Error(w, "Unable to parse semester", http.StatusBadRequest)
+		log.Println(err)
+		http.Error(w, "", http.StatusBadRequest)
+		return
 	}
-	switch origin {
-	case "courses":
-		courses.BlueprintAssignment(nil, course).Render(r.Context(), w)
-		//http.Error(w, "Not implemented", http.StatusNotImplemented)
-	case "coursedetail":
-		http.Error(w, "Not implemented", http.StatusNotImplemented)
-	case "degreeplan":
-		http.Error(w, "Not implemented", http.StatusNotImplemented)
-	default:
-		http.Error(w, "Not implemented", http.StatusNotImplemented)
-	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]int{"id": courseID})
 }
 
 func HandleCourseMovement(w http.ResponseWriter, r *http.Request) {
@@ -195,9 +250,9 @@ func HandleCourseMovement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if position == -1 {
-		err = db.AppendCourse(user, course, year, semester)
+		err = db.AppendCourses(user, year, semester, course)
 	} else if position >= 0 {
-		err = db.MoveCourse(user, course, year, semester, position)
+		err = db.MoveCourses(user, year, semester, position, course)
 	} else {
 		http.Error(w, "Invalid position", http.StatusBadRequest)
 		return
