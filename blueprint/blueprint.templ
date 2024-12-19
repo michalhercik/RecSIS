@@ -13,7 +13,7 @@ templ optionMenu(data *Blueprint) {
         yearCount := len(data.years) - 1
         anyYears := len(data.years) > 1
     }}
-    <div class="option-menu sticky-top bg-light p-2" x-data="{ showCredits: false }">
+    <div class="option-menu sticky-top bg-light p-2" x-data="{ showCredits: false, openAssign: false,  tooltipEnabled: true }">
         // change number of years
         <label>
             Number of years:
@@ -50,18 +50,51 @@ templ optionMenu(data *Blueprint) {
         // take care of checked courses
         // assign
         // TODO: make correct vals
-        <button
-            x-show="checkedCourses.length > 0"
-            data-bs-toggle="tooltip"
-            data-bs-placement="bottom"
-            data-bs-title="Assign all checked courses"
-            class="btn btn-outline-dark btn-sm bi bi-arrows-move"
-            hx-patch="/blueprint/courses/" 
-            hx-vals={ `"type": "selected", "year": ` + "TODO" + `, "semester": ` + "TODO" }
-            hx-target="main">
-        </button>
+        <div style="position: relative; display: inline-block;">
+            <button
+                x-show="checkedCourses.length > 0"
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                data-bs-title="Assign all checked courses"
+                class="btn btn-outline-dark btn-sm bi bi-arrows-move"
+                @click="openAssign = !openAssign;
+                        tooltipEnabled = !tooltipEnabled; 
+                        let tooltip = bootstrap.Tooltip.getInstance($el); 
+                        if (tooltipEnabled) {
+                            initializeTooltips();
+                        } else { 
+                            tooltip.disable();
+                            tooltip.hide();
+                        }">
+            </button>
+            <div
+                x-show="openAssign"
+                class="assign-box"
+                @click.outside="openAssign = false"
+            >
+                for i := 1; i <= yearCount; i++ {
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm text-nowrap" 
+                    style="--bs-btn-border-color: transparent; min-width: 120px;"
+                    hx-patch="/blueprint/courses" 
+                    :hx-vals={ "JSON.stringify({ courses: checkedCourses.join(','), type: 'selected', year: " + strconv.Itoa(i) + ", semester: 1, position: -1 })" }
+                    hx-target="main">
+                    { "Year " + strconv.Itoa(i) + " Winter" }
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm text-nowrap"
+                    style="--bs-btn-border-color: transparent; min-width: 120px;"
+                    hx-patch="/blueprint/courses" 
+                    :hx-vals={ "JSON.stringify({ courses: checkedCourses.join(','), type: 'selected', year: " + strconv.Itoa(i) + ", semester: 2, position: -1 })" }
+                    hx-target="main">
+                    { "Year " + strconv.Itoa(i) + " Summer" }
+                </button>
+                }
+            </div>
+        </div>
         // remove
-        // TODO: make correct vals
         <button
             x-show="checkedCourses.length > 0"
             data-bs-toggle="tooltip"
@@ -69,7 +102,7 @@ templ optionMenu(data *Blueprint) {
             data-bs-title="Remove all checked courses"
             class="btn btn-outline-dark btn-sm bi bi-trash-fill"
             hx-delete="/blueprint/courses"
-            hx-vals={ `"type": "selected", "year": ` + "TODO" + `, "semester": ` + "TODO" }
+            :hx-vals="JSON.stringify({ courses: checkedCourses.join(','), type: 'selected' })"
             hx-target="main">
         </button>
         // TODO: remove this, just for show and to know how to get the checked courses

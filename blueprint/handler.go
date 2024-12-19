@@ -34,20 +34,15 @@ func HandlePage(w http.ResponseWriter, r *http.Request) {
 // TODO: Implement, connect to db, add more cases
 func HandleCoursesMovement(w http.ResponseWriter, r *http.Request) {
 	callType := r.FormValue("type")
+	year, err := strconv.Atoi(r.FormValue("year"))
+	if err != nil {
+		http.Error(w, "Unable to parse year", http.StatusBadRequest)
+		return
+	}
 	switch callType {
 	case "year-unassign":
-		year, err := strconv.Atoi(r.FormValue("year"))
-		if err != nil {
-			http.Error(w, "Unable to parse year", http.StatusBadRequest)
-			return
-		}
 		log.Println("Unassigning all courses from year", year)
 	case "semester-unassign":
-		year, err := strconv.Atoi(r.FormValue("year"))
-		if err != nil {
-			http.Error(w, "Unable to parse year", http.StatusBadRequest)
-			return
-		}
 		semesterInt, err := strconv.Atoi(r.FormValue("semester"))
 		if err != nil {
 			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
@@ -55,7 +50,13 @@ func HandleCoursesMovement(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("Unassigning all courses from year/semester", year, semesterInt)
 	case "selected":
-		log.Println("Unassigning selected courses")
+		semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+		if err != nil {
+			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
+			return
+		}
+		courses := r.FormValue("courses")
+		log.Println("Moving selected courses to year/semester", year, semesterInt, courses)
 	default:
 		 http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
@@ -88,7 +89,8 @@ func HandleCoursesRemoval(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("Removing all courses from semester", year, semesterInt)
 	case "selected":
-		log.Println("Removing selected courses")
+		courses := r.FormValue("courses")
+		log.Println("Removing selected courses", courses)
 	default:
 		 http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
