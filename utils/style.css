@@ -40,6 +40,18 @@ body {
     margin-right: auto;
 }
 
+/* Assign box styles */
+.assign-box {
+    position: absolute;
+    top: 100%; /* Position it directly below the parent */
+    left: 50%; /* Center it horizontally */
+    transform: translateX(-50%); /* Adjust for the element's width */
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    z-index: 1000;
+}   
+
 /* Blueprint tables styles */
 /* TODO: For small screens, the font should be smaller */
 .blueprint-table {
