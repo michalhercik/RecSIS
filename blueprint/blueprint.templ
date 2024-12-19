@@ -491,8 +491,8 @@ templ yearHeadline(yearNum, credits int) {
                             data-bs-title={ "Unassign all courses in Year " + strconv.Itoa(yearNum) }
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
-                            hx-patch={ "/blueprint/all-courses-in-this-year-unassign-TODO" } 
-                            hx-vals={ `"year": 0, "semester": 0` }
+                            hx-patch={ "/blueprint/courses" } 
+                            hx-vals={ `"type": "year-unassign", "year": ` + strconv.Itoa(yearNum) +`, "semester": 0` }
                             hx-target="main">
                         </button>
                         // remove all courses button
@@ -691,7 +691,7 @@ templ Content(data *Blueprint) {
         function sortHxPatch(item, year, semester, position) {
             htmx.ajax('PATCH', '/blueprint/course/' + item, {
                 target: 'main', 
-                values: { year: year, semester: semester, position: position + 1}
+                values: { year: year, semester: semester, position: position + 1 }
             });
         }
     </script>

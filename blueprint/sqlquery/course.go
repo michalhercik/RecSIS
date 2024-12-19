@@ -24,7 +24,7 @@ RETURNING id;
 const MoveCourses = `
 WITH course AS (
 	SELECT * FROM blueprint_semesters
-	WHERE id=$5
+	WHERE id=ANY($5)
 ), new_year AS (
 	SELECT * FROM blueprint_years 
 	WHERE student=$3 
@@ -37,7 +37,7 @@ SET
 	position = $2, 
 	secondary_position = 2 + array_position($5, id),
 	blueprint_year = (SELECT id FROM new_year)
-WHERE id=any($5);
+WHERE id=ANY($5);
 `
 
 const AppendCourses = `
@@ -66,7 +66,7 @@ WITH unassigned_year AS (
 	SELECT id FROM blueprint_years
 	WHERE student=$1 AND position=0
 ), max_position AS (
-	SELECT MAX(position) AS pos FROM blueprint_semesters
+	SELECT COALESCE(MAX(position), 0) AS pos FROM blueprint_semesters
 	WHERE blueprint_year=(SELECT id from unassigned_year)
 ), selected_year AS (
 	SELECT id FROM blueprint_years
