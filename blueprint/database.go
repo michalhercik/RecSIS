@@ -125,7 +125,7 @@ func (m DBManager) InsertCourse(user int, course string, year int, semester Seme
 // TODO: implement
 // TODO: the position determines the new position, should we update all the position or think of something more efficient?
 func (m DBManager) MoveCourses(user int, year int, semester SemesterPosition, position int, courses ...int) error {
-	res, err := m.DB.Exec(sqlquery.MoveCourse, semester, position, user, year, pq.Array(courses))
+	res, err := m.DB.Exec(sqlquery.MoveCourses, semester, position, user, year, pq.Array(courses))
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (m DBManager) MoveCourses(user int, year int, semester SemesterPosition, po
 }
 
 func (m DBManager) AppendCourses(user int, year int, semester SemesterPosition, courses ...int) error {
-	_, err := m.DB.Exec(sqlquery.AppendCourse, user, year, int(semester), pq.Array(courses))
+	_, err := m.DB.Exec(sqlquery.AppendCourses, user, year, int(semester), pq.Array(courses))
 	if err != nil {
 		return err
 	}
@@ -158,16 +158,9 @@ func (m DBManager) UnassignSemester(user int, year int, semester SemesterPositio
 }
 
 func (m DBManager) RemoveCourses(user int, courses ...int) error {
-	res, err := m.DB.Exec(sqlquery.DeleteCourse, user, pq.Array(courses))
+	_, err := m.DB.Exec(sqlquery.DeleteCourses, user, pq.Array(courses))
 	if err != nil {
 		return err
-	}
-	count, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if count != 1 {
-		return fmt.Errorf("expected 1 row to be affected, got %d", count)
 	}
 	return nil
 }

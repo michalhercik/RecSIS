@@ -2,6 +2,7 @@ package blueprint
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -40,6 +41,18 @@ func parseYearSemester(r *http.Request) (int, SemesterPosition, error) {
 		return year, 0, err
 	}
 	return year, semester, nil
+}
+
+func atoiSlice(s []string) ([]int, error) {
+	result := make([]int, len(s))
+	for i, elem := range s {
+		var err error
+		result[i], err = strconv.Atoi(elem)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
 }
 
 // ===============================================================================================================================
@@ -89,6 +102,31 @@ func unassignSemester(r *http.Request) error {
 	return err
 }
 
+func moveCourses(r *http.Request) error {
+	year, semester, err := parseYearSemester(r)
+	if err != nil {
+		return err
+	}
+	r.ParseForm()
+	courses, err := atoiSlice(r.Form["selected"])
+	if err != nil {
+		return err
+	}
+	position, err := strconv.Atoi(r.FormValue("position"))
+	if err != nil {
+		return err
+	}
+	log.Println("Moving selected courses to year/semester", courses, year, semester)
+	if position == lastPosition {
+		err = db.AppendCourses(user, year, semester, courses...)
+	} else if position > 0 {
+		err = db.MoveCourses(user, year, semester, position, courses...)
+	} else {
+		err = fmt.Errorf("invalid position %d", position)
+	}
+	return err
+}
+
 // TODO: Implement, connect to db, add more cases
 func HandleCoursesMovement(w http.ResponseWriter, r *http.Request) {
 	var err error
@@ -98,18 +136,10 @@ func HandleCoursesMovement(w http.ResponseWriter, r *http.Request) {
 	case "semester-unassign":
 		err = unassignSemester(r)
 	case "selected":
-		semesterInt, err := strconv.Atoi(r.FormValue("semester"))
-		if err != nil {
-			http.Error(w, "Unable to parse semester", http.StatusBadRequest)
-			return
-		}
-		r.ParseForm()
-		courses := r.Form["selected"]
-		log.Println("Moving selected courses to year/semester", courses, year, semesterInt)
+		err = moveCourses(r)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
-
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -141,6 +171,17 @@ func removeCoursesBySemester(r *http.Request) error {
 	return err
 }
 
+func removeCourses(r *http.Request) error {
+	r.ParseForm()
+	courses, err := atoiSlice(r.Form["selected"])
+	if err != nil {
+		return err
+	}
+	log.Println("Removing selected courses", courses)
+	err = db.RemoveCourses(user, courses...)
+	return err
+}
+
 // TODO: Implement, connect to db, add more cases
 func HandleCoursesRemoval(w http.ResponseWriter, r *http.Request) {
 	var err error
@@ -150,9 +191,7 @@ func HandleCoursesRemoval(w http.ResponseWriter, r *http.Request) {
 	case "semester":
 		err = removeCoursesBySemester(r)
 	case "selected":
-		r.ParseForm()
-		courses := r.Form["selected"]
-		log.Println("Removing selected courses", courses)
+		err = removeCourses(r)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}

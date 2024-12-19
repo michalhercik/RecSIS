@@ -21,7 +21,7 @@ VALUES(
 RETURNING id;
 `
 
-const MoveCourse = `
+const MoveCourses = `
 WITH course AS (
 	SELECT * FROM blueprint_semesters
 	WHERE id=$5
@@ -35,12 +35,12 @@ UPDATE blueprint_semesters
 SET 
 	semester = $1, 
 	position = $2, 
-	secondary_position = 2 + array_position($5, id) 
+	secondary_position = 2 + array_position($5, id),
 	blueprint_year = (SELECT id FROM new_year)
 WHERE id=any($5);
 `
 
-const AppendCourse = `
+const AppendCourses = `
 WITH year AS (
 	SELECT id FROM blueprint_years
 	WHERE student=$1 AND position=$2
@@ -102,7 +102,7 @@ WHERE blueprint_year = (SELECT id from selected_year)
 AND semester=$3;
 `
 
-const DeleteCourse = `
+const DeleteCourses = `
 DELETE FROM blueprint_semesters 
 WHERE blueprint_year IN (SELECT id FROM blueprint_years WHERE student=$1)
 AND id = any($2);
