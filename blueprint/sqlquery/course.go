@@ -22,21 +22,30 @@ RETURNING id;
 `
 
 const MoveCourses = `
-WITH course AS (
+WITH courses AS (
 	SELECT * FROM blueprint_semesters
 	WHERE id=ANY($5)
 ), new_year AS (
 	SELECT * FROM blueprint_years 
 	WHERE student=$3 
 	AND position=$4
+), condition AS (
+	SELECT count(*) as c FROM courses 
+	WHERE courses.blueprint_year = (SELECT id FROM new_year)
+	AND courses.semester = $1
+	AND courses.position < $2
 )
 
-UPDATE blueprint_semesters
+UPDATE blueprint_semesters AS bs
 SET 
 	semester = $1, 
 	position = $2, 
-	secondary_position = 2 + array_position($5, id),
-	blueprint_year = (SELECT id FROM new_year)
+	blueprint_year = (SELECT id FROM new_year),
+	secondary_position = CASE
+	WHEN (SELECT c FROM condition) > 0
+	THEN 2 + array_position($5, id)
+	ELSE 1 - array_length($5, 1) + array_position($5, id)
+	END
 WHERE id=ANY($5);
 `
 
