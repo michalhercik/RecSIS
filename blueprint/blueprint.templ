@@ -139,13 +139,13 @@ templ winterSummer(course *Course) {
     switch semCount {
     case 1:
         switch course.start {
-        case winter:
+        case teachingWinterOnly:
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
             <td>---</td>
-        case summer:
+        case teachingSummerOnly:
             <td>---</td>
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
-        case both:
+        case teachingBoth:
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
         default:
@@ -154,13 +154,13 @@ templ winterSummer(course *Course) {
         }
     case 2:
         switch course.start {
-        case winter:
+        case teachingWinterOnly:
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
             <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
-        case summer:
+        case teachingSummerOnly:
             <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
             <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
-        case both:
+        case teachingBoth:
             <td>unsupported</td>
             <td>unsupported</td>
         default:

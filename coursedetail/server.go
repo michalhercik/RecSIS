@@ -1,24 +1,25 @@
 package coursedetail
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/a-h/templ"
 )
 
-func HandleContent(w http.ResponseWriter, r *http.Request) templ.Component {
-	code := r.PathValue("code")
-	course, err := db.Course(code)
-	if err != nil {
-		return ContentNotFound(code)
-	}
-	return Content(course)
+type Server struct {
+	Data DataManager
 }
 
-func HandlePage(w http.ResponseWriter, r *http.Request) {
+func (s Server) Register(router *http.ServeMux, prefix string) {
+	router.HandleFunc(fmt.Sprintf("GET %s/{code}", prefix), s.page)
+	router.HandleFunc(fmt.Sprintf("POST %s/{code}/comment", prefix), s.commentAddition)
+	router.HandleFunc(fmt.Sprintf("POST %s/{code}/like", prefix), s.like)
+	router.HandleFunc(fmt.Sprintf("POST %s/{code}/dislike", prefix), s.dislike)
+}
+
+func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
-	course, err := db.Course(code)
+	course, err := s.Data.Course(code)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", code, err)
 		PageNotFound(code).Render(r.Context(), w)
@@ -27,7 +28,7 @@ func HandlePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleCommentAddition(w http.ResponseWriter, r *http.Request) {
+func (s Server) commentAddition(w http.ResponseWriter, r *http.Request) {
 	// get the course code and comment content from the request
 	code := r.PathValue("code")
 	commentContent := r.FormValue("comment")
@@ -37,14 +38,14 @@ func HandleCommentAddition(w http.ResponseWriter, r *http.Request) {
 	sanitizedComment := sanitize(commentContent)
 
 	// add the comment to the database
-	err := db.AddComment(code, sanitizedComment)
+	err := s.Data.AddComment(code, sanitizedComment)
 	if err != nil {
 		http.Error(w, "Unable to add comment", http.StatusInternalServerError)
 		return
 	}
 
 	// return the page with the updated comments
-	newComments, err := db.GetComments(code)
+	newComments, err := s.Data.GetComments(code)
 	if err != nil {
 		http.Error(w, "Unable to retrieve comments", http.StatusInternalServerError)
 		return
@@ -53,7 +54,7 @@ func HandleCommentAddition(w http.ResponseWriter, r *http.Request) {
 	Comments(newComments, code).Render(r.Context(), w)
 }
 
-func HandleLike(w http.ResponseWriter, r *http.Request) {
+func (s Server) like(w http.ResponseWriter, r *http.Request) {
 	// get the course code from the request
 	code := r.PathValue("code")
 
@@ -63,7 +64,7 @@ func HandleLike(w http.ResponseWriter, r *http.Request) {
 	Ratings([]Rating{}, code).Render(r.Context(), w)
 }
 
-func HandleDislike(w http.ResponseWriter, r *http.Request) {
+func (s Server) dislike(w http.ResponseWriter, r *http.Request) {
 	// get the course code from the request
 	code := r.PathValue("code")
 
@@ -71,34 +72,4 @@ func HandleDislike(w http.ResponseWriter, r *http.Request) {
 
 	// TODO please check if this is the correct way to render the page
 	Ratings([]Rating{}, code).Render(r.Context(), w)
-}
-
-func HandleBlueprintAddition(w http.ResponseWriter, r *http.Request) {
-	// Parse query parameters from URL
-	code := r.PathValue("code")
-
-	// Make data changes
-	assignments, err := db.AddCourseToBlueprint(user, code)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Render the result
-	BlueprintAssignment(assignments, code).Render(r.Context(), w)
-}
-
-func HandleBlueprintRemoval(w http.ResponseWriter, r *http.Request) {
-	// Parse query parameters from URL
-	code := r.PathValue("code")
-
-	// Make data changes
-	err := db.RemoveCourseFromBlueprint(user, code)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Render the result
-	BlueprintAssignment([]Assignment{}, code).Render(r.Context(), w)
 }

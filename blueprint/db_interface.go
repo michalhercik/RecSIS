@@ -7,23 +7,16 @@ import (
 
 type DataManager interface {
 	BluePrint(user int) (*Blueprint, error)
-	// TODO: rename InsertCourse and AppendCourse
-	InsertCourse(user int, course string, year int, semester SemesterPosition) (int, error)
-	AppendCourses(user, year int, semester SemesterPosition, courses ...int) error
-	MoveCourses(user, year int, semester SemesterPosition, position int, courses ...int) error
+	NewCourse(user int, course string, year int, semester SemesterAssignment) (int, error)
+	AppendCourses(user, year int, semester SemesterAssignment, courses ...int) error
+	InsertCourses(user, year int, semester SemesterAssignment, position int, courses ...int) error
 	UnassignYear(user, year int) error
-	UnassignSemester(user, year int, semester SemesterPosition) error
+	UnassignSemester(user, year int, semester SemesterAssignment) error
 	RemoveCourses(user int, courses ...int) error
-	RemoveCoursesBySemester(user, year int, semester SemesterPosition) error
+	RemoveCoursesBySemester(user, year int, semester SemesterAssignment) error
 	RemoveCoursesByYear(user, year int) error
 	AddYear(user int) error
 	RemoveYear(user int) error
-}
-
-var db DataManager
-
-func SetDataManager(newDB DataManager) {
-	db = newDB
 }
 
 type Teacher struct {
@@ -39,30 +32,20 @@ func (t Teacher) String() string {
 		t.firstName[0], t.lastName)
 }
 
-type Semester int
+type TeachingSemester int
 
 const (
-	winter Semester = iota + 1
-	summer
-	both
+	teachingWinterOnly TeachingSemester = iota + 1
+	teachingSummerOnly
+	teachingBoth
 )
 
-var semesterNameEn = map[Semester]string{
-	winter: "Winter",
-	summer: "Summer",
-	both:   "Both",
-}
-
-func (s Semester) String() string {
-	return semesterNameEn[s]
-}
-
-type SemesterPosition int
+type SemesterAssignment int
 
 const (
-	none SemesterPosition = iota
-	winterP
-	summerP
+	assignmentNone SemesterAssignment = iota
+	assignmentWinter
+	assignmentSummer
 )
 
 type Teachers []Teacher
@@ -94,9 +77,9 @@ type Course struct {
 	code             string
 	nameCs           string
 	nameEn           string
-	start            Semester
+	start            TeachingSemester
 	semesterCount    int
-	semesterPosition SemesterPosition
+	semesterPosition SemesterAssignment
 	lectureRange1    int
 	seminarRange1    int
 	lectureRange2    int
@@ -146,14 +129,14 @@ func (b *Blueprint) assign(year int, course *Course) error {
 	}
 	target := &b.years[year]
 	switch course.semesterPosition {
-	case winterP:
+	case assignmentWinter:
 		target.winter = append(target.winter, *course)
-	case summerP:
+	case assignmentSummer:
 		target.summer = append(target.summer, *course)
-	case none:
+	case assignmentNone:
 		target.unassigned = append(target.unassigned, *course)
 	default:
-		return fmt.Errorf("unknown semester placement %d", course.semesterPosition)
+		return fmt.Errorf("unknown semester assignment %d", course.semesterPosition)
 	}
 	return nil
 }

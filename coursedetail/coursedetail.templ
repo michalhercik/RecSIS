@@ -4,6 +4,7 @@ import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
 	"strings"
+    "fmt"
     "github.com/microcosm-cc/bluemonday"
 )
 
@@ -24,8 +25,8 @@ templ Ratings(ratings []Rating, courseCode string) {
     }}
     <div id="rating">
         Rating: { itos(sum) }
-        <button hx-post={ courseCode + "/like" } hx-target="#rating" hx-swap="outerHTML">Like</button>
-        <button hx-post={ courseCode + "/dislike" } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
+        <button hx-post={ fmt.Sprintf("/course/%s/like", courseCode) } hx-target="#rating" hx-swap="outerHTML">Like</button>
+        <button hx-post={ fmt.Sprintf("/course/%s/dislike", courseCode) } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
     </div>
 }
 
@@ -232,7 +233,7 @@ templ Comments(comments []Comment, courseCode string) {
             </li>
             }
         </ul>
-        <form hx-post={ courseCode + "/comment" } hx-target="#comments" hx-swap="outerHTML">
+        <form hx-post={ fmt.Sprintf("course/%s/comment", courseCode) } hx-target="#comments" hx-swap="outerHTML">
             <div x-data="{ adjustTextarea($event) { 
                 $event.target.style.height = 'auto'; 
                 $event.target.style.height = ($event.target.scrollHeight) + 'px'; 

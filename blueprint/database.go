@@ -68,6 +68,16 @@ func selectYears(tx *sql.Tx, user int) ([]AcademicYear, error) {
 	return years, nil
 }
 
+func trim(teachers []Teacher) Teachers {
+	result := Teachers{}
+	for _, teacher := range teachers {
+		if teacher.sisId != -1 {
+			result = append(result, teacher)
+		}
+	}
+	return result
+}
+
 func selectCourses(tx *sql.Tx, user int, blueprint *Blueprint) error {
 	rows, err := tx.Query(sqlquery.SelectCourses, user)
 	if err != nil {
@@ -79,12 +89,10 @@ func selectCourses(tx *sql.Tx, user int, blueprint *Blueprint) error {
 		course := &Course{
 			teachers: []Teacher{{}, {}, {}},
 		}
-
 		if err := scan(rows, &year, course); err != nil {
 			return err
 		}
-		// TODO: delet trim method. put the code right here
-		course.teachers.trim()
+		course.teachers = trim(course.teachers)
 		if err := blueprint.assign(year, course); err != nil {
 			return err
 		}
@@ -115,16 +123,14 @@ func (m DBManager) BluePrint(user int) (*Blueprint, error) {
 	return blueprint, nil
 }
 
-func (m DBManager) InsertCourse(user int, course string, year int, semester SemesterPosition) (int, error) {
+func (m DBManager) NewCourse(user int, course string, year int, semester SemesterAssignment) (int, error) {
 	row := m.DB.QueryRow(sqlquery.InsertCourse, user, year, int(semester), course)
 	var courseID int
 	err := row.Scan(&courseID)
 	return courseID, err
 }
 
-// TODO: implement
-// TODO: the position determines the new position, should we update all the position or think of something more efficient?
-func (m DBManager) MoveCourses(user int, year int, semester SemesterPosition, position int, courses ...int) error {
+func (m DBManager) InsertCourses(user int, year int, semester SemesterAssignment, position int, courses ...int) error {
 	res, err := m.DB.Exec(sqlquery.MoveCourses, semester, position, user, year, pq.Array(courses))
 	if err != nil {
 		return err
@@ -139,7 +145,7 @@ func (m DBManager) MoveCourses(user int, year int, semester SemesterPosition, po
 	return nil
 }
 
-func (m DBManager) AppendCourses(user int, year int, semester SemesterPosition, courses ...int) error {
+func (m DBManager) AppendCourses(user int, year int, semester SemesterAssignment, courses ...int) error {
 	_, err := m.DB.Exec(sqlquery.AppendCourses, user, year, int(semester), pq.Array(courses))
 	if err != nil {
 		return err
@@ -152,7 +158,7 @@ func (m DBManager) UnassignYear(user int, year int) error {
 	return err
 }
 
-func (m DBManager) UnassignSemester(user int, year int, semester SemesterPosition) error {
+func (m DBManager) UnassignSemester(user int, year int, semester SemesterAssignment) error {
 	_, err := m.DB.Exec(sqlquery.UnassignSemester, user, year, int(semester))
 	return err
 }
@@ -165,7 +171,7 @@ func (m DBManager) RemoveCourses(user int, courses ...int) error {
 	return nil
 }
 
-func (m DBManager) RemoveCoursesBySemester(user, year int, semester SemesterPosition) error {
+func (m DBManager) RemoveCoursesBySemester(user, year int, semester SemesterAssignment) error {
 	_, err := m.DB.Exec(sqlquery.DeleteCoursesBySemester, user, year, int(semester))
 	return err
 }

@@ -1,10 +1,21 @@
 package courses
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 )
+
+type Server struct {
+	Data DataManager
+}
+
+func (s Server) Register(router *http.ServeMux, prefix string) {
+	router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page)
+	router.HandleFunc(fmt.Sprintf("GET %s/page", prefix), s.paging)
+	router.HandleFunc(fmt.Sprintf("GET %s/search", prefix), s.search)
+}
 
 func getDefaultQuery() query {
 	return query{
@@ -16,8 +27,8 @@ func getDefaultQuery() query {
 	}
 }
 
-func HandlePage(w http.ResponseWriter, r *http.Request) {
-	recommendedCourses, err := db.Courses(getDefaultQuery())
+func (s Server) page(w http.ResponseWriter, r *http.Request) {
+	recommendedCourses, err := s.Data.Courses(getDefaultQuery())
 	if err != nil {
 		log.Printf("HandlePage: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -26,7 +37,7 @@ func HandlePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandlePaging(w http.ResponseWriter, r *http.Request) {
+func (s Server) paging(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters from URL
 	user, _ := strconv.Atoi(r.URL.Query().Get("user"))
 	startIndex, _ := strconv.Atoi(r.URL.Query().Get("startIndex"))
@@ -44,7 +55,7 @@ func HandlePaging(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get result from search
-	coursesPage, _ := db.Courses(query)
+	coursesPage, _ := s.Data.Courses(query)
 
 	// Render search results
 	Courses(&coursesPage).Render(r.Context(), w)
@@ -67,7 +78,7 @@ func sortTypeFromString(st string) sortType {
 	}
 }
 
-func HandleSearch(w http.ResponseWriter, r *http.Request) {
+func (s Server) search(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters from URL
 	user, _ := strconv.Atoi(r.URL.Query().Get("user"))
 	search := r.URL.Query().Get("search")
@@ -83,38 +94,8 @@ func HandleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get result from search
-	coursesPage, _ := db.Courses(query)
+	coursesPage, _ := s.Data.Courses(query)
 
 	// Render search results
 	Courses(&coursesPage).Render(r.Context(), w)
-}
-
-func HandleBlueprintAddition(w http.ResponseWriter, r *http.Request) {
-	// Parse query parameters from URL
-	code := r.PathValue("code")
-
-	// Make data changes
-	assignments, err := db.AddCourseToBlueprint(user, code)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Render the result
-	BlueprintAssignment(assignments, code).Render(r.Context(), w)
-}
-
-func HandleBlueprintRemoval(w http.ResponseWriter, r *http.Request) {
-	// Parse query parameters from URL
-	code := r.PathValue("code")
-
-	// Make data changes
-	err := db.RemoveCourseFromBlueprint(user, code)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Render the result
-	BlueprintAssignment([]Assignment{}, code).Render(r.Context(), w)
 }

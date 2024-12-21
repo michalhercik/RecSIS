@@ -11,12 +11,6 @@ type DataManager interface {
 	RemoveCourseFromBlueprint(user int, code string) error
 }
 
-var db DataManager
-
-func SetDataManager(newDB DataManager) {
-	db = newDB
-}
-
 // TODO add more fields
 type Rating struct {
 	ID     int
