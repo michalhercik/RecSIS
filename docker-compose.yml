@@ -12,6 +12,8 @@ services:
         condition: service_healthy
     networks:
       - postgres
+    volumes:
+      - ./utils/:/app/utils/
   postgres:
     container_name: recsis-postgres
     image: postgres
