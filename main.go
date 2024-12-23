@@ -36,7 +36,7 @@ func main() {
 	//////////////////////////////////////////
 
 	const (
-		host     = "localhost"
+		host     = "postgres"
 		port     = 5432
 		user     = "recsis"
 		password = "recsis"
@@ -76,7 +76,7 @@ func main() {
 	// Server setup
 	//////////////////////////////////////////
 	server := http.Server{
-		Addr:    "localhost:8000", // when run as docker container remove localhost
+		Addr:    ":8000", // when run as docker container remove localhost
 		Handler: logging(router),
 	}
 

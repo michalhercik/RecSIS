@@ -1,4 +1,17 @@
 services:
+  recsis:
+    container_name: recsis-webapp
+    build:
+      dockerfile: Dockerfile
+      context: ./
+      target: deploy-stage
+    ports:
+      - 8000:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - postgres
   postgres:
     container_name: recsis-postgres
     image: postgres
