@@ -1,5 +1,20 @@
 package utils
 
+templ watermark() {
+    <div class="watermark" style="
+        position:fixed;
+        bottom:50%;
+        left:15%;
+        opacity:0.3;
+        z-index:99;
+        color: black;
+        pointer-events:none;
+    ">
+        <span style="font-size:60px">For demonstration purposes only!</span><br/>
+        <span style="font-size:30px">The state is global</span>
+    </div>
+}
+
 templ Page(title string) {
     <!DOCTYPE html>
     <html lang="en">
@@ -24,6 +39,7 @@ templ Page(title string) {
             <script type="module" src="https://md-block.verou.me/md-block.js"></script>
         </head>
         <body hx-boost="true">
+            @watermark()
             @Header(title)
             <main>
                 { children... }
@@ -75,7 +91,7 @@ templ Header(title string) {
 templ Footer() {
     <footer>
         In case of any issues, please contact the RecSIS team.
-        <a href="mailto:recsis@gmail.com">recsis@gmail.com</a>
+        <a href="mailto:TODO@TODO.com">TODO@TODO.com</a>
     </footer>
 }
 
