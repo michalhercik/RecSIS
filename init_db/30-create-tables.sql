@@ -47,8 +47,24 @@ CREATE TABLE courses(
     teacher2 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
     teacher3 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
     min_number INT,
-    capacity INT
+    capacity INT,
+    search_vector tsvector GENERATED ALWAYS AS (
+        to_tsvector('simple', code) || ' ' || to_tsvector('english', name_en) || ' ' || to_tsvector('simple', name_en)
+    ) STORED
 );
+
+-- search query:
+--
+-- WITH search AS (
+--     SELECT to_tsquery(string_agg(lexeme || ':*', ' & ' order by positions)) AS query
+--     FROM unnest(to_tsvector('programming'))
+-- )
+-- SELECT code, name_cs, name_en, search_vector, ts_rank(search_vector, search.query) AS rank
+-- FROM courses, search
+-- WHERE (search_vector @@ search.query)
+-- ORDER BY rank DESC
+
+CREATE INDEX courses_search_vector_idx ON courses USING gin(search_vector);
 
 CREATE TABLE classifications(
     course VARCHAR(10),
@@ -149,25 +165,25 @@ BEGIN
     UPDATE blueprint_semesters
     SET position = new_position, secondary_position = 2
     FROM (
-        SELECT 
+        SELECT
             id as sub_id,
-            position, 
+            position,
             ROW_NUMBER() OVER (
-                PARTITION BY blueprint_year, semester 
+                PARTITION BY blueprint_year, semester
                 ORDER BY position, secondary_position
             ) AS new_position
         FROM blueprint_semesters
         WHERE (
-            CASE 
-                WHEN NEW IS NULL THEN false 
+            CASE
+                WHEN NEW IS NULL THEN false
                 ELSE (blueprint_year = NEW.blueprint_year AND semester = NEW.semester)
             END
             OR (blueprint_year = OLD.blueprint_year AND semester = OLD.semester)
         )
     )
     WHERE id=sub_id;
-    RETURN CASE 
-        WHEN NEW IS NULL THEN OLD 
+    RETURN CASE
+        WHEN NEW IS NULL THEN OLD
         ELSE NEW
     END;
 END;
