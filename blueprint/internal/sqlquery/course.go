@@ -1,6 +1,16 @@
 package sqlquery
 
-const InsertCourse = `
+/*
+Param order:
+	1. student
+	2. blueprint_years.position
+	3. blueprint_semesters.semester
+	4. blueprint_semesters.position
+	5. blueprint.id
+	6. course.code
+*/
+
+const InsertCourse = `--sql
 WITH year AS (
 	SELECT id FROM blueprint_years
 	WHERE student=$1 AND position=$2
@@ -21,25 +31,25 @@ VALUES(
 RETURNING id;
 `
 
-const MoveCourses = `
+const MoveCourses = `--sql
 WITH courses AS (
 	SELECT * FROM blueprint_semesters
 	WHERE id=ANY($5)
 ), new_year AS (
-	SELECT * FROM blueprint_years 
-	WHERE student=$3 
+	SELECT * FROM blueprint_years
+	WHERE student=$3
 	AND position=$4
 ), condition AS (
-	SELECT count(*) as c FROM courses 
+	SELECT count(*) as c FROM courses
 	WHERE courses.blueprint_year = (SELECT id FROM new_year)
 	AND courses.semester = $1
 	AND courses.position < $2
 )
 
 UPDATE blueprint_semesters AS bs
-SET 
-	semester = $1, 
-	position = $2, 
+SET
+	semester = $1,
+	position = $2,
 	blueprint_year = (SELECT id FROM new_year),
 	secondary_position = CASE
 	WHEN (SELECT c FROM condition) > 0
@@ -49,15 +59,15 @@ SET
 WHERE id=ANY($5);
 `
 
-const AppendCourses = `
+const AppendCourses = `--sql
 WITH year AS (
 	SELECT id FROM blueprint_years
 	WHERE student=$1 AND position=$2
 )
 
 UPDATE blueprint_semesters
-SET 
-	semester=$3, 
+SET
+	semester=$3,
 	blueprint_year=(SELECT id FROM year),
 	position= (
 		COALESCE(
@@ -66,11 +76,11 @@ SET
 			WHERE blueprint_year=(SELECT id FROM year)
 			AND semester=$3) + array_position($4, id), 1
 		)
-	) 
+	)
 WHERE id = any($4);
 `
 
-const UnassignYear = `
+const UnassignYear = `--sql
 WITH unassigned_year AS (
 	SELECT id FROM blueprint_years
 	WHERE student=$1 AND position=0
@@ -83,14 +93,14 @@ WITH unassigned_year AS (
 )
 
 UPDATE blueprint_semesters
-SET 
+SET
 	blueprint_year = (SELECT id from unassigned_year),
 	position = (select pos from max_position) + position,
 	semester = 0
 WHERE blueprint_year = (SELECT id from selected_year);
 `
 
-const UnassignSemester = `
+const UnassignSemester = `--sql
 WITH unassigned_year AS (
 	SELECT id FROM blueprint_years
 	WHERE student=$1 AND position=0
@@ -103,39 +113,39 @@ WITH unassigned_year AS (
 )
 
 UPDATE blueprint_semesters
-SET 
+SET
 	blueprint_year = (SELECT id from unassigned_year),
 	position = (select pos from max_position) + position,
 	semester = 0
-WHERE blueprint_year = (SELECT id from selected_year) 
+WHERE blueprint_year = (SELECT id from selected_year)
 AND semester=$3;
 `
 
-const DeleteCourses = `
-DELETE FROM blueprint_semesters 
+const DeleteCourses = `--sql
+DELETE FROM blueprint_semesters
 WHERE blueprint_year IN (SELECT id FROM blueprint_years WHERE student=$1)
 AND id = any($2);
 `
 
-const DeleteCoursesBySemester = `
+const DeleteCoursesBySemester = `--sql
 DELETE FROM blueprint_semesters
 WHERE semester=$3
 AND blueprint_year IN (
-	SELECT id FROM blueprint_years 
+	SELECT id FROM blueprint_years
 		WHERE student=$1
 		AND position=$2
 );
 `
-const DeleteCoursesByYear = `
+const DeleteCoursesByYear = `--sql
 DELETE FROM blueprint_semesters
 WHERE blueprint_year IN (
-	SELECT id FROM blueprint_years 
+	SELECT id FROM blueprint_years
 		WHERE student=$1
 		AND position=$2
 );
 `
 
-const SelectCourses = `
+const SelectCourses = `--sql
 SELECT
 	y.position,
 	s.id,
@@ -152,17 +162,17 @@ SELECT
 	COALESCE(c.seminar_range2, -1),
 	COALESCE(c.exam_type, ''),
 	COALESCE(c.credits, -1),
-	COALESCE(t1.sis_id, -1), 
+	COALESCE(t1.sis_id, -1),
 	COALESCE(t1.first_name, ''),
 	COALESCE(t1.last_name, ''),
 	COALESCE(t1.title_before, ''),
 	COALESCE(t1.title_after,''),
-	COALESCE(t2.sis_id, -1), 
+	COALESCE(t2.sis_id, -1),
 	COALESCE(t2.first_name, ''),
 	COALESCE(t2.last_name, ''),
 	COALESCE(t2.title_before, ''),
 	COALESCE(t2.title_after, ''),
-	COALESCE(t3.sis_id, -1), 
+	COALESCE(t3.sis_id, -1),
 	COALESCE(t3.first_name, ''),
 	COALESCE(t3.last_name, ''),
 	COALESCE(t3.title_before, ''),

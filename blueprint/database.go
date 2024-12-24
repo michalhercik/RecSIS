@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
-	"github.com/michalhercik/RecSIS/blueprint/sqlquery"
+	"github.com/michalhercik/RecSIS/blueprint/internal/sqlquery"
 )
 
 type DBManager struct {

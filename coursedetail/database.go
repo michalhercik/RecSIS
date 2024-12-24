@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/michalhercik/RecSIS/coursedetail/sqlquery"
+	"github.com/michalhercik/RecSIS/coursedetail/internal/sqlquery"
 )
 
 type DBLang int

@@ -66,11 +66,9 @@ func main() {
 	}.Register(router, "/courses")
 	degreeplan.Server{}.Register(router, "/degreeplan")
 
-	// Icon
-	router.Handle("/favicon.ico", http.FileServer(http.Dir(".")))
-
-	// Styles
-	router.Handle("GET /style.css", http.FileServer(http.Dir("utils/")))
+	static := http.FileServer(http.Dir("static"))
+	router.Handle("/favicon.ico", static)
+	router.Handle("GET /style.css", static)
 
 	//////////////////////////////////////////
 	// Server setup
