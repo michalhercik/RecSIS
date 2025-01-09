@@ -1,19 +1,19 @@
 services:
-  recsis:
-    container_name: recsis-webapp
-    build:
-      dockerfile: Dockerfile
-      context: ./
-      target: deploy-stage
-    ports:
-      - 80:8000
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - postgres
-    volumes:
-      - ./utils/:/app/utils/
+  # recsis:
+  #   container_name: recsis-webapp
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: ./
+  #     target: deploy-stage
+  #   ports:
+  #     - 80:8000
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - recsis
+  #   volumes:
+  #     - ./utils/:/app/utils/
   postgres:
     container_name: recsis-postgres
     image: postgres
@@ -27,7 +27,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - postgres
+      - recsis
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
@@ -41,11 +41,19 @@ services:
     ports:
       - 8080:8080
     networks:
-      - postgres
-  
-networks:
-  postgres:
-    driver: bridge
+      - recsis
+  meilisearch:
+    container_name: recsis-meilisearch
+    image: getmeili/meilisearch
+    environment:
+      MEILI_MASTER_KEY: MASTER_KEY
+    volumes:
+      - ./meili_data:/meili_data
+    ports:
+      - 7700:7700
+    networks:
+      - recsis
 
-volumes:
-    postgres:
+networks:
+  recsis:
+    driver: bridge

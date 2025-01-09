@@ -71,10 +71,10 @@ templ hoursExams(course *Course) {
 }
 
 func queryString(user int, startIndex int, maxCount int, search string, sorted sortType) string {
-    return "?user=" + itos(user) + 
-           "&startIndex=" + itos(startIndex) + 
-           "&maxCount=" + itos(maxCount) + 
-           "&search=" + search + 
+    return "?user=" + itos(user) +
+           "&startIndex=" + itos(startIndex) +
+           "&maxCount=" + itos(maxCount) +
+           "&search=" + search +
            "&sorted=" + itos(int(sorted))
 }
 
@@ -126,14 +126,14 @@ templ Courses(coursesPage *coursesPage) {
                     <th>Scope, examination</th>
                     <th>Teacher(s)</th>
                     <th>Rating</th>
-                    <th>Blueprint</th>  
+                    <th>Blueprint</th>
                 </tr>
             </thead>
             <tbody>
             for _, course := range coursesPage.courses {
                 <tr>
                     <td> @utils.CourseLink(course.code) </td>
-                    <td>{ course.nameEn }</td>
+                    <td>{ course.name }</td>
                     <td>{ itos(course.credits) }</td>
                     <td>{ course.start.String() }</td>
                     @hoursExams(&course)
