@@ -15,12 +15,14 @@ import (
 
 	// database
 	_ "github.com/lib/pq"
+	"github.com/meilisearch/meilisearch-go"
 	// template
 )
 
 func logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
+		// PRODUCTION: remove condition -> log everything
 		if r.Method != "HEAD" {
 			log.Println(r.Method, r.URL.Path)
 		}
@@ -35,8 +37,9 @@ func main() {
 	// Database setup
 	//////////////////////////////////////////
 
+	// Postgres
 	const (
-		host     = "localhost"
+		host     = "localhost" // DOCKER, PRODUCTION: when run as docker container change to network name
 		port     = 5432
 		user     = "recsis"
 		password = "recsis"
@@ -50,6 +53,13 @@ func main() {
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
+	// MeiliSearch
+	const (
+		hostMeili = "http://localhost:7700"
+		searchKey = "MASTER_KEY"
+	)
+	meiliClient := meilisearch.New("http://localhost:7700", meilisearch.WithAPIKey(searchKey))
+
 	//////////////////////////////////////////
 	// Handlers
 	//////////////////////////////////////////
@@ -62,7 +72,8 @@ func main() {
 		Data: coursedetail.DBManager{DB: db},
 	}.Register(router, "/course")
 	courses.Server{
-		Data: courses.DBManager{DB: db},
+		Data:   courses.DBManager{DB: db},
+		Search: courses.MeiliSearch{Client: meiliClient},
 	}.Register(router, "/courses")
 	degreeplan.Server{}.Register(router, "/degreeplan")
 
@@ -74,7 +85,7 @@ func main() {
 	// Server setup
 	//////////////////////////////////////////
 	server := http.Server{
-		Addr:    "localhost:8000", // when run as docker container remove localhost
+		Addr:    "localhost:8000", // DOCKER, PRODUCTION: when run as docker container remove localhost
 		Handler: logging(router),
 	}
 
