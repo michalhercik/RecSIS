@@ -67,56 +67,56 @@ func (m DBManager) Blueprint(user int, courses []string) (map[string][]Assignmen
 	return res, nil
 }
 
-func (m DBManager) Courses(q query) (coursesPage, error) {
-	// TODO: Take in account the search and sorted fields
+// func (m DBManager) Courses(q query) (coursesPage, error) {
+// 	// TODO: Take in account the search and sorted fields
 
-	// Execute count query to get total number of courses
-	var total int
-	err := m.DB.QueryRow(sqlquery.CountCourses).Scan(&total)
-	if err != nil {
-		return coursesPage{}, fmt.Errorf("failed to count courses: %w", err)
-	}
+// 	// Execute count query to get total number of courses
+// 	var total int
+// 	err := m.DB.QueryRow(sqlquery.CountCourses).Scan(&total)
+// 	if err != nil {
+// 		return coursesPage{}, fmt.Errorf("failed to count courses: %w", err)
+// 	}
 
-	// Execute main query to get courses
-	rows, err := m.DB.Query(sqlquery.GetCourses, q.startIndex, q.maxCount)
-	if err != nil {
-		return coursesPage{}, fmt.Errorf("failed to fetch courses: %w", err)
-	}
-	defer rows.Close()
+// 	// Execute main query to get courses
+// 	rows, err := m.DB.Query(sqlquery.GetCourses, q.startIndex, q.maxCount)
+// 	if err != nil {
+// 		return coursesPage{}, fmt.Errorf("failed to fetch courses: %w", err)
+// 	}
+// 	defer rows.Close()
 
-	// Parse rows into courses slice
-	var courses []Course
-	for rows.Next() {
-		course := &Course{
-			teachers: []Teacher{{}, {}, {}},
-		}
+// 	// Parse rows into courses slice
+// 	var courses []Course
+// 	for rows.Next() {
+// 		course := &Course{
+// 			teachers: []Teacher{{}, {}, {}},
+// 		}
 
-		if err := scan(rows, course); err != nil {
-			return coursesPage{}, fmt.Errorf("failed to scan course: %w", err)
-		}
-		course.teachers.trim()
-		// TODO: This is a temporary solution, remove it later
-		course.rating = 42
-		courses = append(courses, *course)
-	}
+// 		if err := scan(rows, course); err != nil {
+// 			return coursesPage{}, fmt.Errorf("failed to scan course: %w", err)
+// 		}
+// 		course.teachers.trim()
+// 		// TODO: This is a temporary solution, remove it later
+// 		course.rating = 42
+// 		courses = append(courses, *course)
+// 	}
 
-	// Check for any errors during iteration
-	if err := rows.Err(); err != nil {
-		return coursesPage{}, fmt.Errorf("error during rows iteration: %w", err)
-	}
+// 	// Check for any errors during iteration
+// 	if err := rows.Err(); err != nil {
+// 		return coursesPage{}, fmt.Errorf("error during rows iteration: %w", err)
+// 	}
 
-	// Build the coursesPage result
-	result := coursesPage{
-		courses:    courses,
-		startIndex: q.startIndex,
-		count:      len(courses),
-		total:      total,
-		search:     q.search,
-		sorted:     q.sorted,
-	}
+// 	// Build the coursesPage result
+// 	result := coursesPage{
+// 		courses:    courses,
+// 		startIndex: q.startIndex,
+// 		count:      len(courses),
+// 		total:      total,
+// 		search:     q.search,
+// 		sorted:     q.sorted,
+// 	}
 
-	return result, nil
-}
+// 	return result, nil
+// }
 
 func (m DBManager) AddCourseToBlueprint(user int, code string) ([]Assignment, error) {
 	// TODO: Implement this method

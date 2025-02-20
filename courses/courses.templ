@@ -6,39 +6,7 @@ import (
 )
 
 const user = 42
-const coursesPerPage = 10
-
-const (
-    op_relevance = "rel"
-    op_recommended = "rec"
-    op_rating = "rat"
-    op_mostPopular = "pop"
-    op_newest = "new"
-)
-
-func itos(i int) string {
-    return strconv.Itoa(i)
-}
-
-templ Search() {
-    <form
-        hx-get={ "/courses/search?user=" + itos(user) }
-        hx-target="#courses"
-        hx-swap="outerHTML"
-        hx-include="[name=search],[name=sort]"
-    >
-        <input type="text" name="search" id="search" placeholder="Search..." />
-        <button type="submit">Search</button>
-        <label for="sort">Sort by:</label>
-        <select name="sort" id="sort">
-            <option value={ op_relevance }>Relevance</option>
-            <option value={ op_recommended }>Recommended</option>
-            <option value={ op_rating }>Rating</option>
-            <option value={ op_mostPopular }>Most Popular</option>
-            <option value={ op_newest }>Newest</option>
-        </select>
-    </form>
-}
+const coursesPerPage = 20
 
 func examTypeStr(examType string) string {
     // to add: STEX, thesis, ...
@@ -60,29 +28,54 @@ func examTypeStr(examType string) string {
     }
 }
 
-templ hoursExams(course *Course) {
-    {{ semCount := course.semesterCount }}
-    if semCount == 1 {
-    <td>{ itos(course.lectureRange1) + "/" + itos(course.seminarRange1) + ", " + examTypeStr(course.examType)}</td>
-    }
-    if semCount == 2 {
-    <td>{ "winter s.:" + itos(course.lectureRange1) + "/" + itos(course.seminarRange1) + ", " + examTypeStr(course.examType) + "\nsummer s.:" + itos(course.lectureRange2) + "/" + itos(course.seminarRange2) + ", " + examTypeStr(course.examType)}</td>
-    }
+func hoursExamsString(lecture, seminar int, examType string) string {
+    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examTypeStr(examType)
 }
 
-func queryString(user int, startIndex int, maxCount int, search string, sorted sortType) string {
-    return "?user=" + itos(user) +
-           "&startIndex=" + itos(startIndex) +
-           "&maxCount=" + itos(maxCount) +
-           "&search=" + search +
-           "&sorted=" + itos(int(sorted))
+templ winterSummer(course *Course) {
+    {{ semCount := course.semesterCount }}
+    switch semCount {
+    case 1:
+        switch course.start {
+        case teachingWinterOnly:
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>---</td>
+        case teachingSummerOnly:
+            <td>---</td>
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+        case teachingBoth:
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+        default:
+            <td>unsupported</td>
+            <td>unsupported</td>
+        }
+    case 2:
+        switch course.start {
+        case teachingWinterOnly:
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
+        case teachingSummerOnly:
+            <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
+            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+        case teachingBoth:
+            <td>unsupported</td>
+            <td>unsupported</td>
+        default:
+            <td>unsupported</td>
+            <td>unsupported</td>
+        }
+    default:
+        <td>unsupported</td>
+        <td>unsupported</td>
+    }
 }
 
 templ BlueprintAssignment(assignments []Assignment, code string) {
     <td id="bpassignment">
-        for _, assignment := range assignments {
-            <p>{ assignment.String() }</p>
-        }
+        // for _, assignment := range assignments {
+        //     <p>{ assignment.String() }</p>
+        // }
         <button
             hx-post={ "/courses/blueprint/" + code }
             hx-target="#bpassignment"
@@ -100,30 +93,64 @@ templ BlueprintAssignment(assignments []Assignment, code string) {
     </td>
 }
 
-templ paginationButton(text string, start, end int, coursesPage *coursesPage) {
-    <button
-        hx-get={ "/courses/page" + queryString(user, start, end, coursesPage.search, coursesPage.sorted) }
+templ Search() {
+    <form
+        hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
         hx-target="#courses"
-        hx-swap="outerHTML">
+        hx-swap="outerHTML"
+        hx-include="[name=search],[name=sort]"
+    >
+        <input type="text" name="search" id="search" placeholder="Search..." />
+        <button type="submit">Search</button>
+        <label for="sort">Sort by:</label>
+        <select name="sort" id="sort">
+            <option value={ strconv.Itoa(relevance) }>Relevance</option>
+            <option value={ strconv.Itoa(recommended) }>Recommended</option>
+            <option value={ strconv.Itoa(rating) }>Rating</option>
+            <option value={ strconv.Itoa(mostPopular) }>Most Popular</option>
+            <option value={ strconv.Itoa(newest) }>Newest</option>
+        </select>
+    </form>
+}
+
+templ paginationButton(text string, page, hitsPerPage int) {
+    <button
+        hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
+        hx-target="#courses"
+        hx-swap="outerHTML show:top"
+        hx-include="[name=search],[name=sort]"
+        hx-vals={ `"page": ` + strconv.Itoa(page) + `, "hitsPerPage": ` + strconv.Itoa(hitsPerPage) }
+    >
         { text }
+    </button>
+}
+
+templ loadMoreButton(page, hitsPerPage int) {
+    <button
+        hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
+        hx-target="#courses"
+        hx-swap="outerHTML"
+        hx-include="[name=search],[name=sort]"
+        hx-vals={ `"page": ` + strconv.Itoa(page) + `, "hitsPerPage": ` + strconv.Itoa(hitsPerPage) }
+    >
+        Load More
     </button>
 }
 
 templ Courses(coursesPage *coursesPage) {
     <div id="courses">
-        if coursesPage.total == 0 {
+        if coursesPage.totalPages == 0 {
             <p>No courses found</p>
         } else {
-        {{ endIndex := coursesPage.startIndex + coursesPage.count }}
-        <h2>{ coursesPage.sorted.String() + ":" }</h2>
+        <h2>{ coursesPage.sortedBy.String() + ":" }</h2>
         <table>
             <thead>
                 <tr>
                     <th>Code</th>
                     <th>Title</th>
                     <th>Credits</th>
-                    <th>Semester</th>
-                    <th>Scope, examination</th>
+                    <th>Winter</th>
+                    <th>Summer</th>
                     <th>Teacher(s)</th>
                     <th>Rating</th>
                     <th>Blueprint</th>
@@ -134,24 +161,23 @@ templ Courses(coursesPage *coursesPage) {
                 <tr>
                     <td> @utils.CourseLink(course.code) </td>
                     <td>{ course.name }</td>
-                    <td>{ itos(course.credits) }</td>
-                    <td>{ course.start.String() }</td>
-                    @hoursExams(&course)
-                    <td> @templ.Raw(course.teachers.string()) </td>
-                    <td>{ itos(course.rating) }</td>
+                    <td>{ strconv.Itoa(course.credits) }</td>
+                    @winterSummer(&course)
+                    <td>{ course.teachers.string() }</td>
+                    <td>{ strconv.Itoa(course.rating) }</td>
                     @BlueprintAssignment(course.blueprintAssignments, course.code)
                 </tr>
             }
             </tbody>
         </table>
-        <p>Results { itos(coursesPage.startIndex + 1) } to { itos(endIndex) } of { itos(coursesPage.total) }</p>
+        <p>Page { strconv.Itoa(coursesPage.page) } of { strconv.Itoa(coursesPage.totalPages) }</p>
         <div>
-            if coursesPage.startIndex > 0 {
-                @paginationButton("Previous", coursesPage.startIndex - coursesPerPage, coursesPerPage, coursesPage)
+            if coursesPage.page > 1 {
+                @paginationButton("Previous Page", coursesPage.page - 1, coursesPage.pageSize)
             }
-            if endIndex < coursesPage.total {
-                @paginationButton("Next", endIndex, coursesPerPage, coursesPage)
-                @paginationButton("Load More", coursesPage.startIndex, coursesPage.count + coursesPerPage, coursesPage)
+            if coursesPage.page < coursesPage.totalPages {
+                @paginationButton("Next Page", coursesPage.page + 1, coursesPage.pageSize)
+                @loadMoreButton(coursesPage.page, coursesPage.pageSize + coursesPerPage)
             }
         </div>
         }

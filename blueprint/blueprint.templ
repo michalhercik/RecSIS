@@ -223,7 +223,7 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int) {
                     <td>{ course.nameEn }</td>
                     <td>{ strconv.Itoa(course.credits) }</td>
                     @winterSummer(&course)
-                    <td> @templ.Raw(course.teachers.string()) </td>
+                    <td>{ course.teachers.string() }</td>
                     <td class="text-end align-middle short">
                         // move button
                         <div style="position: relative; display: inline-block;">

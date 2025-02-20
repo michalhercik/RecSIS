@@ -8,7 +8,7 @@ import (
 )
 
 type DataManager interface {
-	Courses(query query) (coursesPage, error)
+	//Courses(query query) (coursesPage, error)
 	Blueprint(user int, courses []string) (map[string][]Assignment, error)
 	AddCourseToBlueprint(user int, code string) ([]Assignment, error)
 	RemoveCourseFromBlueprint(user int, code string) error
@@ -24,20 +24,20 @@ const (
 
 type coursesPage struct {
 	courses    []Course
-	startIndex int
-	count      int
-	total      int
+	page	   int
+	pageSize   int
+	totalPages int
 	search     string
-	sorted     sortType
+	sortedBy   sortType
 }
 
-type query struct {
-	user       int
-	startIndex int
-	maxCount   int
-	search     string
-	sorted     sortType
-}
+// type query struct {
+// 	user       int
+// 	startIndex int
+// 	maxCount   int
+// 	search     string
+// 	sorted     sortType
+// }
 
 const (
 	relevance = iota
@@ -74,24 +74,6 @@ func (t Teacher) String() string {
 		t.titleBefore, t.firstName, t.lastName, t.titleAfter)
 }
 
-type Semester int
-
-const (
-	winter Semester = iota + 1
-	summer
-	both
-)
-
-var semesterNameEn = map[Semester]string{
-	winter: "Winter",
-	summer: "Summer",
-	both:   "Both",
-}
-
-func (s Semester) String() string {
-	return semesterNameEn[s]
-}
-
 type Teachers []Teacher
 
 func (t Teachers) string() string {
@@ -99,7 +81,10 @@ func (t Teachers) string() string {
 	for _, teacher := range t {
 		names = append(names, teacher.String())
 	}
-	return strings.Join(names, "<br>")
+	if len(names) == 0 {
+		return "---"
+	}
+	return strings.Join(names, ", ")
 }
 
 func (t *Teachers) trim() {
@@ -111,6 +96,14 @@ func (t *Teachers) trim() {
 	}
 	*t = result
 }
+
+type TeachingSemester int
+
+const (
+	teachingWinterOnly TeachingSemester = iota + 1
+	teachingSummerOnly
+	teachingBoth
+)
 
 type Assignment struct {
 	year     int
@@ -130,7 +123,7 @@ type Course struct {
 	name                 string
 	nameCs               string // TODO: delete after transition to name
 	nameEn               string // TODO: delete after transition to name
-	start                Semester
+	start                TeachingSemester
 	semesterCount        int
 	lectureRange1        int
 	seminarRange1        int
@@ -145,27 +138,27 @@ type Course struct {
 
 func (c *Course) UnmarshalJSON(data []byte) error {
 	raw := struct {
-		Code              string   `json:"code"`
-		NameCS            string   `json:"nameCs"`
-		NameEN            string   `json:"nameEn"`
-		Start             Semester `json:"start"`
-		SemesterCount     int      `json:"semesterCount"`
-		LectureRange1     int      `json:"lectureRange1"`
-		SeminarRange1     int      `json:"seminarRange1"`
-		LectureRange2     int      `json:"lectureRange2"`
-		SeminarRange2     int      `json:"seminarRange2"`
-		ExamType          string   `json:"examType"`
-		Credits           int      `json:"credits"`
-		Teacher1Id        int      `json:"teacher1Id"`
-		Teacher1Firstname string   `json:"teacher1Firstname"`
-		Teacher1Lastname  string   `json:"teacher1Lastname"`
-		Teacher2Id        int      `json:"teacher2Id"`
-		Teacher2Firstname string   `json:"teacher2Firstname"`
-		Teacher2Lastname  string   `json:"teacher2Lastname"`
-		Teacher3Id        int      `json:"teacher3Id"`
-		Teacher3Firstname string   `json:"teacher3Firstname"`
-		Teacher3Lastname  string   `json:"teacher3Lastname"`
-		Rating            int      `json:"rating"`
+		Code              string   			`json:"code"`
+		NameCS            string   			`json:"nameCs"`
+		NameEN            string   			`json:"nameEn"`
+		Start             TeachingSemester  `json:"start"`
+		SemesterCount     int      			`json:"semesterCount"`
+		LectureRange1     int      			`json:"lectureRange1"`
+		SeminarRange1     int      			`json:"seminarRange1"`
+		LectureRange2     int      			`json:"lectureRange2"`
+		SeminarRange2     int      			`json:"seminarRange2"`
+		ExamType          string   			`json:"examType"`
+		Credits           int      			`json:"credits"`
+		Teacher1Id        int      			`json:"teacher1Id"`
+		Teacher1Firstname string   			`json:"teacher1Firstname"`
+		Teacher1Lastname  string   			`json:"teacher1Lastname"`
+		Teacher2Id        int      			`json:"teacher2Id"`
+		Teacher2Firstname string   			`json:"teacher2Firstname"`
+		Teacher2Lastname  string   			`json:"teacher2Lastname"`
+		Teacher3Id        int      			`json:"teacher3Id"`
+		Teacher3Firstname string   			`json:"teacher3Firstname"`
+		Teacher3Lastname  string   			`json:"teacher3Lastname"`
+		Rating            int      			`json:"rating"`
 	}{}
 	err := json.Unmarshal(data, &raw)
 	if err != nil {

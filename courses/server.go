@@ -23,24 +23,26 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	req := parseQueryRequest(r)
-	coursesPage, err := s.search(req)
+	res, err := s.search(req)
 	if err != nil {
 		log.Printf("quickSearch: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	Page(coursesPage).Render(r.Context(), w)
+	coursesPage := createPageContent(res, req)
+	Page(&coursesPage).Render(r.Context(), w)
 }
 
 func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	req := parseQueryRequest(r)
-	coursesPage, err := s.search(req)
+	res, err := s.search(req)
 	if err != nil {
 		log.Printf("quickSearch: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	Courses(coursesPage).Render(r.Context(), w)
+	coursesPage := createPageContent(res, req)
+	Courses(&coursesPage).Render(r.Context(), w)
 }
 
 func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
@@ -66,20 +68,41 @@ func parseQueryRequest(r *http.Request) Request {
 	query := r.FormValue("search")
 	page, err := strconv.ParseInt(r.FormValue("page"), 10, 64)
 	if err != nil {
-		page = 0
+		page = 1
 	}
+	hitsPerPage, err := strconv.ParseInt(r.FormValue("hitsPerPage"), 10, 64)
+	if err != nil {
+		hitsPerPage = coursesPerPage
+	}
+	sorted, err := strconv.ParseInt(r.FormValue("sort"), 10, 32)
+	if err != nil {
+		sorted = 0
+	}
+	sortedBy := sortType(sorted)
 
 	req := Request{
 		query:       query,
 		indexUID:    courseIndex,
 		page:        page,
-		hitsPerPage: 20,
+		hitsPerPage: hitsPerPage,
 		lang:        czech,
+		sortedBy:    sortedBy,
 	}
 	return req
 }
 
-func (s Server) search(req Request) (*coursesPage, error) {
+func createPageContent(res *Response, req Request) coursesPage {
+	return coursesPage{
+		courses:    res.courses,
+		page:       int(req.page),
+		pageSize:   int(req.hitsPerPage),
+		totalPages: int(res.totalPages),
+		search:     req.query,
+		sortedBy:   req.sortedBy,
+	}
+}
+
+func (s Server) search(req Request) (*Response, error) {
 	// search for courses
 	res, err := s.Search.Search(&req)
 	if err != nil {
@@ -100,16 +123,7 @@ func (s Server) search(req Request) (*coursesPage, error) {
 			res.courses[i].blueprintAssignments = assignment
 		}
 	}
-	// TODO: We should revisit the design and make it more fit for MeiliSearch API
-	coursesPage := coursesPage{
-		courses:    res.courses,
-		startIndex: int(req.page * req.hitsPerPage),
-		count:      int(req.hitsPerPage),
-		total:      int(req.hitsPerPage * res.totalPages),
-		search:     req.query,
-		sorted:     relevance,
-	}
-	return &coursesPage, nil
+	return res, nil
 }
 
 // func getDefaultQuery() query {
