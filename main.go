@@ -75,7 +75,9 @@ func main() {
 		Data:   courses.DBManager{DB: db},
 		Search: courses.MeiliSearch{Client: meiliClient},
 	}.Register(router, "/courses")
-	degreeplan.Server{}.Register(router, "/degreeplan")
+	degreeplan.Server{
+		Data: degreeplan.DBManager{DB: db},
+	}.Register(router, "/degreeplan")
 
 	static := http.FileServer(http.Dir("static"))
 	router.Handle("/favicon.ico", static)

@@ -38,8 +38,9 @@ FROM '/docker-entrypoint-initdb.d/course_teachers.csv'
 DELIMITER ','
 CSV HEADER;
 
-COPY degree_plans(code, plan_year, course, bloc_code, bloc_type, bloc_limit)
-FROM '/docker-entrypoint-initdb.d/degree_plans.csv'
+-- COPY degree_plans(code, plan_year, course, bloc_code, bloc_type, bloc_limit)
+COPY degree_plans(code, plan_year, lang, blocs)
+FROM '/docker-entrypoint-initdb.d/transformed_degree_plan.csv'
 DELIMITER ','
 CSV HEADER;
 
@@ -117,3 +118,13 @@ VALUES
 (3,(SELECT id FROM courses WHERE code='NPRG074'),2,3),
 (3,(SELECT id FROM courses WHERE code='NSWI041'),2,4),
 (3,(SELECT id FROM courses WHERE code='NSZZ031'),2,5);
+
+INSERT INTO users (id) VALUES (81411247);
+
+INSERT INTO bla_studies(user_id, degree_plan_code, start_year)
+VALUES
+    (81411247, 'NIPVS19B', 2020),
+    (81411247, 'NISD23N', 2023);
+
+INSERT INTO sessions(id, user_id, expires_at)
+VALUES ('977e69df-0b48-4790-a409-b86656ff86bc', 81411247, '2200-01-01 00:00:00-00'::timestamptz);

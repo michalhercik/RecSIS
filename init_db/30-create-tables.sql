@@ -101,13 +101,17 @@ CREATE TABLE course_teachers(
 );
 
 CREATE TABLE degree_plans(
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    -- id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    -- code VARCHAR(15) NOT NULL,
+    -- plan_year INT NOT NULL,
+    -- course VARCHAR(10) NOT NULL,
+    -- bloc_code INT NOT NULL,
+    -- bloc_type CHAR(1) NOT NULL,
+    -- bloc_limit INT --NOT NULL
     code VARCHAR(15) NOT NULL,
     plan_year INT NOT NULL,
-    course VARCHAR(10) NOT NULL,
-    bloc_code INT NOT NULL,
-    bloc_type CHAR(1) NOT NULL,
-    bloc_limit INT --NOT NULL
+    lang CHAR(2) NOT NULL,
+    blocs jsonb
 );
 
 CREATE TABLE degree_programmes(
@@ -194,3 +198,22 @@ AFTER UPDATE OR DELETE ON blueprint_semesters
 FOR EACH ROW
 WHEN (pg_trigger_depth() = 0)
 EXECUTE FUNCTION blueprint_course_reordering();
+
+CREATE TABLE users (
+    id INT PRIMARY KEY
+);
+
+-- TODO: rename
+CREATE TABLE bla_studies (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INT REFERENCES users(id) NOT NULL,
+    degree_plan_code VARCHAR(15) NOT NULL,
+    start_year INT NOT NULL
+);
+
+-- TODO: Clean up expired sessions
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id INT REFERENCES users(id),
+    expires_at TIMESTAMPTZ NOT NULL
+);

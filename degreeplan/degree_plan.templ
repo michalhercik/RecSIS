@@ -1,15 +1,24 @@
 package degreeplan
 
-import "github.com/michalhercik/RecSIS/utils"
+import (
+    "github.com/michalhercik/RecSIS/utils"
+    "strconv"
+)
 
-templ Page() {
+templ Page(dp *DegreePlan) {
     @utils.Page("Degree plan") {
-        @Content()
+        @Content(dp)
     }
 }
 
-templ Content() {
+templ Content(dp *DegreePlan) {
     <h1>Degree plan</h1>
-    <h2>Error 404</h2>
-    <p>Under construction</p>
+    for _, bloc := range dp.blocs {
+        <h2>{ bloc.Name } ({ strconv.Itoa(bloc.Limit) })</h2>
+        <ul>
+        for _, course := range bloc.Courses {
+            <li>{ course.Code } { course.Name } { course.Note }</li>
+        }
+        </ul>
+    }
 }
