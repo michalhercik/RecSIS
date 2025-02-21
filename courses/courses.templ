@@ -137,56 +137,48 @@ templ loadMoreButton(page, hitsPerPage int) {
     </button>
 }
 
+templ Pagination(coursesPage *coursesPage) {
+    <p>Page { strconv.Itoa(coursesPage.page) } of { strconv.Itoa(coursesPage.totalPages) }</p>
+    <div>
+        if coursesPage.page > 1 {
+            @paginationButton("Previous Page", coursesPage.page - 1, coursesPage.pageSize)
+        }
+        if coursesPage.page < coursesPage.totalPages {
+            @paginationButton("Next Page", coursesPage.page + 1, coursesPage.pageSize)
+            @loadMoreButton(coursesPage.page, coursesPage.pageSize + coursesPerPage)
+        }
+    </div>
+}
+
 templ Courses(coursesPage *coursesPage) {
     <div id="courses">
         if coursesPage.totalPages == 0 {
             <p>No courses found</p>
         } else {
-        <h2>{ coursesPage.sortedBy.String() + ":" }</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Title</th>
-                    <th>Credits</th>
-                    <th>Winter</th>
-                    <th>Summer</th>
-                    <th>Teacher(s)</th>
-                    <th>Rating</th>
-                    <th>Blueprint</th>
-                </tr>
-            </thead>
-            <tbody>
-            for _, course := range coursesPage.courses {
-                <tr>
-                    <td> @utils.CourseLink(course.code) </td>
-                    <td>{ course.name }</td>
-                    <td>{ strconv.Itoa(course.credits) }</td>
-                    @winterSummer(&course)
-                    <td>{ course.teachers.string() }</td>
-                    <td>{ strconv.Itoa(course.rating) }</td>
-                    @BlueprintAssignment(course.blueprintAssignments, course.code)
-                </tr>
-            }
-            </tbody>
-        </table>
-        <p>Page { strconv.Itoa(coursesPage.page) } of { strconv.Itoa(coursesPage.totalPages) }</p>
-        <div>
-            if coursesPage.page > 1 {
-                @paginationButton("Previous Page", coursesPage.page - 1, coursesPage.pageSize)
-            }
-            if coursesPage.page < coursesPage.totalPages {
-                @paginationButton("Next Page", coursesPage.page + 1, coursesPage.pageSize)
-                @loadMoreButton(coursesPage.page, coursesPage.pageSize + coursesPerPage)
-            }
-        </div>
+            <h2>{ coursesPage.sortedBy.String() + ":" }</h2>
+            <div class="row row-cols-1 row-cols-xs-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-4 row-cols-xxl-5">
+                for _, course := range coursesPage.courses {
+                    <div class="col card">
+                        <div class="card-body">
+                            <h5 class="card-title">{ course.name }</h5>
+                            <p class="card-text"><strong>Code:</strong> @utils.CourseLink(course.code) </p>
+                            <p class="card-text"><strong>Credits:</strong>{ strconv.Itoa(course.credits) }</p>
+                            <p class="card-text"><strong>Winter/Summer:</strong> TODO </p>
+                            <p class="card-text"><strong>Teacher(s):</strong>{ course.teachers.string() }</p>
+                        </div>
+                    </div>
+                }
+            </div>
+            @Pagination(coursesPage)
         }
     </div>
 }
 
 templ Content(coursesPage *coursesPage) {
-    @Search()
-    @Courses(coursesPage)
+    <div class="container">
+        @Search()
+        @Courses(coursesPage)
+    </div>
 }
 
 templ Page(coursesPage *coursesPage) {
