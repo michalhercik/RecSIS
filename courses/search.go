@@ -20,7 +20,7 @@ type Request struct {
 	page        int64
 	hitsPerPage int64
 	lang        Language
-	sortedBy	sortType
+	sortedBy    sortType
 }
 
 type Response struct {

@@ -24,7 +24,7 @@ const (
 
 type coursesPage struct {
 	courses    []Course
-	page	   int
+	page       int
 	pageSize   int
 	totalPages int
 	search     string
@@ -121,6 +121,7 @@ func (a Assignment) String() string {
 type Course struct {
 	code                 string
 	name                 string
+	annotation           string
 	nameCs               string // TODO: delete after transition to name
 	nameEn               string // TODO: delete after transition to name
 	start                TeachingSemester
@@ -138,27 +139,29 @@ type Course struct {
 
 func (c *Course) UnmarshalJSON(data []byte) error {
 	raw := struct {
-		Code              string   			`json:"code"`
-		NameCS            string   			`json:"nameCs"`
-		NameEN            string   			`json:"nameEn"`
-		Start             TeachingSemester  `json:"start"`
-		SemesterCount     int      			`json:"semesterCount"`
-		LectureRange1     int      			`json:"lectureRange1"`
-		SeminarRange1     int      			`json:"seminarRange1"`
-		LectureRange2     int      			`json:"lectureRange2"`
-		SeminarRange2     int      			`json:"seminarRange2"`
-		ExamType          string   			`json:"examType"`
-		Credits           int      			`json:"credits"`
-		Teacher1Id        int      			`json:"teacher1Id"`
-		Teacher1Firstname string   			`json:"teacher1Firstname"`
-		Teacher1Lastname  string   			`json:"teacher1Lastname"`
-		Teacher2Id        int      			`json:"teacher2Id"`
-		Teacher2Firstname string   			`json:"teacher2Firstname"`
-		Teacher2Lastname  string   			`json:"teacher2Lastname"`
-		Teacher3Id        int      			`json:"teacher3Id"`
-		Teacher3Firstname string   			`json:"teacher3Firstname"`
-		Teacher3Lastname  string   			`json:"teacher3Lastname"`
-		Rating            int      			`json:"rating"`
+		Code              string           `json:"code"`
+		NameCS            string           `json:"nameCs"`
+		NameEN            string           `json:"nameEn"`
+		AnnotationCs      string           `json:"annotationCs"`
+		AnnotationEn      string           `json:"annotationEn"`
+		Start             TeachingSemester `json:"start"`
+		SemesterCount     int              `json:"semesterCount"`
+		LectureRange1     int              `json:"lectureRange1"`
+		SeminarRange1     int              `json:"seminarRange1"`
+		LectureRange2     int              `json:"lectureRange2"`
+		SeminarRange2     int              `json:"seminarRange2"`
+		ExamType          string           `json:"examType"`
+		Credits           int              `json:"credits"`
+		Teacher1Id        int              `json:"teacher1Id"`
+		Teacher1Firstname string           `json:"teacher1Firstname"`
+		Teacher1Lastname  string           `json:"teacher1Lastname"`
+		Teacher2Id        int              `json:"teacher2Id"`
+		Teacher2Firstname string           `json:"teacher2Firstname"`
+		Teacher2Lastname  string           `json:"teacher2Lastname"`
+		Teacher3Id        int              `json:"teacher3Id"`
+		Teacher3Firstname string           `json:"teacher3Firstname"`
+		Teacher3Lastname  string           `json:"teacher3Lastname"`
+		Rating            int              `json:"rating"`
 	}{}
 	err := json.Unmarshal(data, &raw)
 	if err != nil {
@@ -167,8 +170,10 @@ func (c *Course) UnmarshalJSON(data []byte) error {
 	c.code = raw.Code
 	if raw.NameCS != "" {
 		c.name = raw.NameCS
+		c.annotation = raw.AnnotationCs
 	} else {
 		c.name = raw.NameEN
+		c.annotation = raw.AnnotationEn
 	}
 	c.start = raw.Start
 	c.semesterCount = raw.SemesterCount
