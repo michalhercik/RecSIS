@@ -6,7 +6,7 @@ import (
 )
 
 const user = 42
-const coursesPerPage = 20
+const coursesPerPage = 24
 
 func examTypeStr(examType string) string {
     // to add: STEX, thesis, ...
@@ -32,73 +32,47 @@ func hoursExamsString(lecture, seminar int, examType string) string {
     return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examTypeStr(examType)
 }
 
-templ winterSummer(course *Course) {
-    {{ semCount := course.semesterCount }}
+func semesterHoursExamsString(course *Course) string {
+    semCount := course.semesterCount
+    result := ""
     switch semCount {
     case 1:
         switch course.start {
         case teachingWinterOnly:
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
-            <td>---</td>
+            result = "Winter: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
         case teachingSummerOnly:
-            <td>---</td>
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            result = "Summer: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
         case teachingBoth:
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            result = "Both: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
         default:
-            <td>unsupported</td>
-            <td>unsupported</td>
+            result = "unsupported"
         }
     case 2:
         switch course.start {
+        // TODO: this probably wont fit, fix this
         case teachingWinterOnly:
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
-            <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
+            result = "Winter: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) + ", Summer: " + hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType)
+        // TODO: this probably wont fit, fix this
         case teachingSummerOnly:
-            <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            result = "Winter: " + hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) + ", Summer: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
         case teachingBoth:
-            <td>unsupported</td>
-            <td>unsupported</td>
+            result = "unsupported"
         default:
-            <td>unsupported</td>
-            <td>unsupported</td>
+            result = "unsupported"
         }
     default:
-        <td>unsupported</td>
-        <td>unsupported</td>
+        result = "unsupported"
     }
+    return result
 }
 
-templ BlueprintAssignment(assignments []Assignment, code string) {
-    <td id="bpassignment">
-        // for _, assignment := range assignments {
-        //     <p>{ assignment.String() }</p>
-        // }
-        <button
-            hx-post={ "/courses/blueprint/" + code }
-            hx-target="#bpassignment"
-            hx-swap="outerHTML">
-            Add
-        </button>
-        if len(assignments) == 1 {
-        <button
-            hx-delete={ "/courses/blueprint/" + code }
-            hx-target="#bpassignment"
-            hx-swap="outerHTML">
-            Remove
-        </button>
-        }
-    </td>
-}
-
-templ Search() {
+templ Search(coursesPage *coursesPage) {
     <form
         hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
         hx-target="#courses"
         hx-swap="outerHTML"
-        hx-include="[name=search],[name=sort]"
+        hx-include="[name=search],[name=sort],[name=semester]"
+        class="pt-3 pb-3"
     >
         <input type="text" name="search" id="search" placeholder="Search..." />
         <button type="submit">Search</button>
@@ -110,7 +84,70 @@ templ Search() {
             <option value={ strconv.Itoa(mostPopular) }>Most Popular</option>
             <option value={ strconv.Itoa(newest) }>Newest</option>
         </select>
+        <label for="semester">Semester:</label>
+        <select name="semester" id="semester">
+            <option value={ strconv.Itoa(int(teachingBoth)) }>Both</option>
+            <option value={ strconv.Itoa(int(teachingWinterOnly)) }>Winter</option>
+            <option value={ strconv.Itoa(int(teachingSummerOnly)) }>Summer</option>
+        </select>
     </form>
+}
+
+templ BlueprintAssignment(assignments []Assignment, code string) {
+    <div class="mt-auto">
+        if len(assignments) > 0 {
+            <dl>
+                <dt>Blueprint assignment:</dt>
+                for _, assignment := range assignments {
+                // TODO: this string is broken, year and semester is swapped
+                <dd>{ assignment.String() }</dd>
+                }
+            </dl>
+        }
+    </div>
+    <div class="d-flex justify-content-end mt-0">
+        <div class="btn-group">
+            <button type="button" class="btn btn-success">Assign</button>
+            <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu">
+                for year := 1; year <= 3; year++ {
+                    <li><a class="dropdown-item" href="#">Year { strconv.Itoa(year) } Winter</a></li>
+                    <li><a class="dropdown-item" href="#">Year { strconv.Itoa(year) } Summer</a></li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+templ CourseCard(course *Course) {
+    <div
+        class="card border-dark custom-card"
+        onmouseover="this.classList.add('hover-color')"
+        onmouseout="this.classList.remove('hover-color')"
+        @click={ `if (!$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('input')) {
+            window.location.href='/course/` + course.code + `';
+        }` }
+        x-data="{ expanded: false, showButton: false }"
+        x-init="$nextTick(() => { showButton = $refs.annotation.scrollHeight > 250 })"
+    >
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">{ course.code }</h6>
+            <small>{ semesterHoursExamsString(course) }</small>
+            <small>{ "Credits: " + strconv.Itoa(course.credits) }</small>
+        </div>
+        <div class="card-body text-dark d-flex flex-column">
+            <div :class="{ 'expanded': expanded, 'annotation-container': showButton }">
+                <h5 class="card-title">{ course.name }</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{ "Teacher(s): " + course.teachers.string() }</h6>
+                <p class="card-text" style="text-align: justify;" x-ref="annotation">{ course.annotation }</p>
+            </div>
+            <button class="btn btn-link p-0" @click="expanded = !expanded" x-show="showButton" x-text="expanded ? 'Read less' : 'Read more'"></button>
+            @BlueprintAssignment(course.blueprintAssignments, course.code)
+        </div>
+    </div>
 }
 
 templ paginationButton(text string, page, hitsPerPage int) {
@@ -152,32 +189,31 @@ templ Pagination(coursesPage *coursesPage) {
 
 templ Courses(coursesPage *coursesPage) {
     <div id="courses">
-        if coursesPage.totalPages == 0 {
-            <p>No courses found</p>
-        } else {
-            <h2>{ coursesPage.sortedBy.String() + ":" }</h2>
-            <div class="row row-cols-1 row-cols-xs-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-4 row-cols-xxl-5">
+        <h2>{ coursesPage.sortedBy.String() + ":" }</h2>
+        <div class="grid">
+            if coursesPage.totalPages == 0 {
+                <p>No courses found</p>
+            } else {
                 for _, course := range coursesPage.courses {
-                    <div class="col card">
-                        <div class="card-body">
-                            <h5 class="card-title">{ course.name }</h5>
-                            <p class="card-text"><strong>Code:</strong> @utils.CourseLink(course.code) </p>
-                            <p class="card-text"><strong>Credits:</strong>{ strconv.Itoa(course.credits) }</p>
-                            <p class="card-text"><strong>Winter/Summer:</strong> TODO </p>
-                            <p class="card-text"><strong>Teacher(s):</strong>{ course.teachers.string() }</p>
-                        </div>
-                    </div>
+                    @CourseCard(&course)
                 }
-            </div>
+            }
+            for i := 0; i < 10; i++ {
+                <div class="card custom-card border-0"></div>
+            }
+        </div>
+        if coursesPage.totalPages > 0 {
             @Pagination(coursesPage)
         }
     </div>
 }
 
 templ Content(coursesPage *coursesPage) {
-    <div class="container">
-        @Search()
-        @Courses(coursesPage)
+    <div class="custom-container">
+        <div>
+            @Search(coursesPage)
+            @Courses(coursesPage)
+        </div>
     </div>
 }
 

@@ -110,10 +110,23 @@ type Assignment struct {
 	semester SemesterAssignment
 }
 
+// TODO: this string is broken, year and semester is swapped
 func (a Assignment) String() string {
-	result := fmt.Sprintf("Year %d, semester %d", a.year, a.semester)
+	semester := ""
+	switch a.semester {
+	case assignmentNone:
+		semester = "None"
+	case assignmentWinter:
+		semester = "Winter"
+	case assignmentSummer:
+		semester = "Summer"
+	default:
+		semester = "unsupported"
+	}
+
+	result := fmt.Sprintf("Year %d, %s semester", a.year, semester)
 	if a.year == 0 {
-		result = "Not assigned"
+		result = "Unassigned"
 	}
 	return result
 }
