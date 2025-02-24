@@ -15,23 +15,21 @@ templ optionMenu(data *Blueprint) {
     }}
     <div class="option-menu sticky-top bg-light p-2" x-data="{ showCredits: false, openAssign: false,  tooltipEnabled: true }">
         // change number of years
-        <label>
-            Number of years:
-            <button
-                class="btn btn-sm btn-outline-dark"
-                hx-delete="/blueprint/year"
-                hx-target="main"
-                :disabled={ strconv.Itoa(yearCount) + " <= 0" }>
-                <i class="bi bi-dash"></i>
-            </button>
-            { strconv.Itoa(yearCount) }
-            <button
-                class="btn btn-sm btn-outline-dark"
-                hx-post="/blueprint/year"
-                hx-target="main">
-                <i class="bi bi-plus"></i>
-            </button>
-        </label>
+        Number of years:
+        <button
+            class="btn btn-sm btn-outline-dark"
+            hx-delete="/blueprint/year"
+            hx-target="main"
+            :disabled={ strconv.Itoa(yearCount) + " <= 0" }>
+            <i class="bi bi-dash"></i>
+        </button>
+        { strconv.Itoa(yearCount) }
+        <button
+            class="btn btn-sm btn-outline-dark"
+            hx-post="/blueprint/year"
+            hx-target="main">
+            <i class="bi bi-plus"></i>
+        </button>
 
         // show/hide credits
         <div style="position: relative; display: inline-block;">
