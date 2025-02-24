@@ -60,8 +60,7 @@ func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	_ = res
-	//TODO: render res
+	QuickResults(res).Render(r.Context(), w)
 }
 
 func parseQueryRequest(r *http.Request) Request {

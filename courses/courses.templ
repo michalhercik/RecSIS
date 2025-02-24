@@ -66,6 +66,29 @@ func semesterHoursExamsString(course *Course) string {
     return result
 }
 
+templ QuickResults(res *QuickResponse) {
+    <div
+        id="quick-search-results"
+        x-cloak
+        class="dropdown-menu w-100 shadow-sm show"
+    >
+        if res.approxHits == -1 {
+            // Don't render anything if approxHits is -1
+        } else if len(res.courses) == 0 {
+            <div class="dropdown-item text-muted">No results found</div>
+        } else {
+            for _, course := range res.courses {
+                <a
+                    href={ templ.URL("/course/" + course.code) }
+                    class="dropdown-item text-truncate"
+                >
+                    { course.code + " - " + course.name }
+                </a>
+            }
+        }
+    </div>
+}
+
 templ Search(coursesPage *coursesPage) {
     <form
         hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
@@ -73,27 +96,54 @@ templ Search(coursesPage *coursesPage) {
         hx-swap="outerHTML"
         hx-include="[name=search],[name=sort],[name=semester]"
         class="pt-3 pb-3"
+        x-data="{ searchInput: '' }"
     >
-        <input type="text" name="search" id="search" placeholder="Search..." />
-        <button type="submit">Search</button>
-        <label for="sort">Sort by:</label>
-        <select name="sort" id="sort">
-            <option value={ strconv.Itoa(relevance) }>Relevance</option>
-            <option value={ strconv.Itoa(recommended) }>Recommended</option>
-            <option value={ strconv.Itoa(rating) }>Rating</option>
-            <option value={ strconv.Itoa(mostPopular) }>Most Popular</option>
-            <option value={ strconv.Itoa(newest) }>Newest</option>
-        </select>
-        <label for="semester">Semester:</label>
-        <select name="semester" id="semester">
-            <option value={ strconv.Itoa(int(teachingBoth)) }>Both</option>
-            <option value={ strconv.Itoa(int(teachingWinterOnly)) }>Winter</option>
-            <option value={ strconv.Itoa(int(teachingSummerOnly)) }>Summer</option>
-        </select>
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-10 col-sm-12">
+                <div class="dropdown">
+                    <div class="input-group">
+                        <input type="text" name="search" id="search" class="form-control" placeholder="Search..." autocomplete="off"
+                            x-model="searchInput"
+                            hx-get="/courses/quicksearch"
+                            hx-trigger="input changed"
+                            hx-target="#quick-search-results"
+                            hx-swap="outerHTML"
+                        />
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                    <div x-show="searchInput.length > 0">
+                        @QuickResults(&QuickResponse{
+                            approxHits: -1,
+                            courses: []Course{},
+                        })
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center mt-3">
+            <div class="col-lg-3 col-md-5 col-sm-12">
+                <label for="sort">Sort by:</label>
+                <select name="sort" id="sort" class="form-select">
+                    <option value={ strconv.Itoa(relevance) }>Relevance</option>
+                    <option value={ strconv.Itoa(recommended) }>Recommended</option>
+                    <option value={ strconv.Itoa(rating) }>Rating</option>
+                    <option value={ strconv.Itoa(mostPopular) }>Most Popular</option>
+                    <option value={ strconv.Itoa(newest) }>Newest</option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-5 col-sm-12">
+                <label for="semester">Semester:</label>
+                <select name="semester" id="semester" class="form-select">
+                    <option value={ strconv.Itoa(int(teachingBoth)) }>Both</option>
+                    <option value={ strconv.Itoa(int(teachingWinterOnly)) }>Winter</option>
+                    <option value={ strconv.Itoa(int(teachingSummerOnly)) }>Summer</option>
+                </select>
+            </div>
+        </div>
     </form>
 }
 
-templ BlueprintAssignment(assignments []Assignment, code string) {
+templ blueprintAssignment(assignments []Assignment, code string) {
     <div class="mt-auto">
         if len(assignments) > 0 {
             <dl>
@@ -122,7 +172,7 @@ templ BlueprintAssignment(assignments []Assignment, code string) {
     </div>
 }
 
-templ CourseCard(course *Course) {
+templ courseCard(course *Course) {
     <div
         class="card border-dark custom-card"
         onmouseover="this.classList.add('hover-color')"
@@ -145,13 +195,14 @@ templ CourseCard(course *Course) {
                 <p class="card-text" style="text-align: justify;" x-ref="annotation">{ course.annotation }</p>
             </div>
             <button class="btn btn-link p-0" @click="expanded = !expanded" x-show="showButton" x-text="expanded ? 'Read less' : 'Read more'"></button>
-            @BlueprintAssignment(course.blueprintAssignments, course.code)
+            @blueprintAssignment(course.blueprintAssignments, course.code)
         </div>
     </div>
 }
 
 templ paginationButton(text string, page, hitsPerPage int) {
     <button
+        class="btn btn-outline-dark"
         hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
         hx-target="#courses"
         hx-swap="outerHTML show:top"
@@ -164,6 +215,7 @@ templ paginationButton(text string, page, hitsPerPage int) {
 
 templ loadMoreButton(page, hitsPerPage int) {
     <button
+        class="btn btn-outline-dark"
         hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
         hx-target="#courses"
         hx-swap="outerHTML"
@@ -174,7 +226,7 @@ templ loadMoreButton(page, hitsPerPage int) {
     </button>
 }
 
-templ Pagination(coursesPage *coursesPage) {
+templ pagination(coursesPage *coursesPage) {
     <p>Page { strconv.Itoa(coursesPage.page) } of { strconv.Itoa(coursesPage.totalPages) }</p>
     <div>
         if coursesPage.page > 1 {
@@ -195,7 +247,7 @@ templ Courses(coursesPage *coursesPage) {
                 <p>No courses found</p>
             } else {
                 for _, course := range coursesPage.courses {
-                    @CourseCard(&course)
+                    @courseCard(&course)
                 }
             }
             for i := 0; i < 10; i++ {
@@ -203,7 +255,7 @@ templ Courses(coursesPage *coursesPage) {
             }
         </div>
         if coursesPage.totalPages > 0 {
-            @Pagination(coursesPage)
+            @pagination(coursesPage)
         }
     </div>
 }
