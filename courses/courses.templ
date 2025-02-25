@@ -96,22 +96,23 @@ templ Search(coursesPage *coursesPage) {
         hx-swap="outerHTML"
         hx-include="[name=search],[name=sort],[name=semester]"
         class="pt-3 pb-3"
-        x-data="{ searchInput: '' }"
+        x-data="{ searchInput: '', quickResOpen: true }"
     >
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-10 col-sm-12">
-                <div class="dropdown">
+                <div class="dropdown" @click.away="quickResOpen = false">
                     <div class="input-group">
                         <input type="text" name="search" id="search" class="form-control" placeholder="Search..." autocomplete="off"
                             x-model="searchInput"
+                            @click="quickResOpen = true"
                             hx-get="/courses/quicksearch"
                             hx-trigger="input changed"
                             hx-target="#quick-search-results"
                             hx-swap="outerHTML"
                         />
-                        <button type="submit" class="btn btn-primary">Search</button>
+                        <button type="submit" class="btn btn-primary" @click="quickResOpen = false">Search</button>
                     </div>
-                    <div x-show="searchInput.length > 0">
+                    <div x-show="quickResOpen && searchInput.length > 0">
                         @QuickResults(&QuickResponse{
                             approxHits: -1,
                             courses: []Course{},
