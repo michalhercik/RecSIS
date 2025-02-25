@@ -22,7 +22,7 @@ templ Page(title string) {
             <meta charset="UTF-8">
             <title>{ title }</title>
             // css
-            <link rel="stylesheet" href="style.css">
+            <link rel="stylesheet" href="/style.css">
             // bootstrap
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -33,8 +33,6 @@ templ Page(title string) {
             // alpine js
             <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script> // drag and drop
             <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-            // markdown rendering
-            <script type="module" src="https://md-block.verou.me/md-block.js"></script>
         </head>
         <body hx-boost="true">
             // @watermark()
