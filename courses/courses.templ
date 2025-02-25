@@ -175,7 +175,7 @@ templ blueprintAssignment(assignments []Assignment, code string) {
 templ courseCard(course *Course) {
     <div
         class="card border-dark custom-card"
-        onmouseover="this.classList.add('hover-color')"
+        onmouseover="this.classList.add('bg-light')"
         onmouseout="this.classList.remove('hover-color')"
         @click={ `if (!$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('input')) {
             window.location.href='/course/` + course.code + `';

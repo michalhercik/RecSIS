@@ -1,12 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 
 	// pages
+	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/blueprint"
 	"github.com/michalhercik/RecSIS/coursedetail"
 	"github.com/michalhercik/RecSIS/courses"
@@ -47,7 +47,7 @@ func main() {
 	)
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err := sqlx.Open("postgres", psqlInfo)
 
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)

@@ -1,9 +1,9 @@
 package coursedetail
 
 import (
-	"database/sql"
 	"fmt"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/coursedetail/internal/sqlquery"
 )
 
@@ -24,10 +24,10 @@ func (l DBLang) String() string {
 }
 
 type DBManager struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
-func selectCourse(tx *sql.Tx, code string, lang DBLang) (*Course, error) {
+func selectCourse(tx *sqlx.Tx, code string, lang DBLang) (*Course, error) {
 	row := tx.QueryRow(sqlquery.Course, code, en.String())
 	course := &Course{
 		Faculty:                  Faculty{},
@@ -87,7 +87,7 @@ func selectCourse(tx *sql.Tx, code string, lang DBLang) (*Course, error) {
 	return course, nil
 }
 
-func selectTeachers(tx *sql.Tx, course *Course) error {
+func selectTeachers(tx *sqlx.Tx, course *Course) error {
 	rows, err := tx.Query(sqlquery.CourseTeachers, course.Code)
 	if err != nil {
 		return fmt.Errorf("selectTeachers: %v", err)
@@ -111,7 +111,7 @@ func selectTeachers(tx *sql.Tx, course *Course) error {
 }
 
 func (reader DBManager) Course(code string) (*Course, error) {
-	tx, err := reader.DB.Begin()
+	tx, err := reader.DB.Beginx()
 	if err != nil {
 		return nil, err
 	}

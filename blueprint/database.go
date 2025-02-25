@@ -4,12 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/blueprint/internal/sqlquery"
 )
 
 type DBManager struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 func scan(rows *sql.Rows, year *int, course *Course) error {
