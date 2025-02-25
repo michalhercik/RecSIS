@@ -177,7 +177,7 @@ func (m DBManager) RemoveCoursesBySemester(user, year int, semester SemesterAssi
 }
 
 func (m DBManager) RemoveCoursesByYear(user, year int) error {
-	_, err := m.DB.Exec(sqlquery.DeleteYearCourses, user, year)
+	_, err := m.DB.Exec(sqlquery.DeleteCoursesByYear, user, year)
 	return err
 }
 

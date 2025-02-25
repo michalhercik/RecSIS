@@ -22,10 +22,12 @@ VALUES(
 	(SELECT id FROM courses WHERE code=$4),
 	(SELECT id FROM year),
 	(
-		SELECT MAX(position) + 1
-		FROM blueprint_semesters
-		WHERE blueprint_year=(SELECT id FROM year)
-		AND semester=$3
+		COALESCE(
+			(SELECT MAX(position) + 1
+			FROM blueprint_semesters
+			WHERE blueprint_year=(SELECT id FROM year)
+			AND semester=$3), 1
+		)
 	)
 )
 RETURNING id;
