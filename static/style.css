@@ -152,10 +152,6 @@ body {
     margin-bottom: 0;
 }
 
-.hover-color {
-    background-color: rgb(220, 220, 220) !important;
-}
-
 /* Courses annotation styles */
 .annotation-container {
     max-height: 250px;
@@ -167,4 +163,9 @@ body {
 .annotation-container.expanded {
     max-height: none;
     mask-image: none;
+}
+
+.annotation-text {
+    text-align: justify;
+    font-size: 0.9em;
 }
