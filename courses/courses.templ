@@ -83,6 +83,7 @@ templ QuickResults(res *QuickResponse) {
                 <a
                     href={ templ.URL("/course/" + course.code) }
                     class="dropdown-item text-truncate"
+                    hx-boost="false"
                 >
                     { course.code + " - " + course.name }
                 </a>
@@ -98,22 +99,23 @@ templ Search(coursesPage *coursesPage) {
         hx-swap="outerHTML"
         hx-include="[name=search],[name=sort],[name=semester]"
         class="pt-3 pb-3"
-        x-data="{ searchInput: '' }"
+        x-data="{ searchInput: '', quickResOpen: true }"
     >
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-10 col-sm-12">
-                <div class="dropdown">
+                <div class="dropdown" @click.away="quickResOpen = false">
                     <div class="input-group">
                         <input type="text" name="search" id="search" class="form-control" placeholder="Search..." autocomplete="off"
                             x-model="searchInput"
+                            @click="quickResOpen = true"
                             hx-get="/courses/quicksearch"
                             hx-trigger="input changed"
                             hx-target="#quick-search-results"
                             hx-swap="outerHTML"
                         />
-                        <button type="submit" class="btn btn-primary">Search</button>
+                        <button type="submit" class="btn btn-primary" @click="quickResOpen = false">Search</button>
                     </div>
-                    <div x-show="searchInput.length > 0">
+                    <div x-show="quickResOpen && searchInput.length > 0">
                         @QuickResults(&QuickResponse{
                             approxHits: -1,
                             courses: []Course{},
@@ -159,8 +161,13 @@ templ blueprintAssignment(assignments []Assignment, code string) {
     </div>
     <div class="d-flex justify-content-end mt-0">
         <div class="btn-group">
-            <button type="button" class="btn btn-success">Assign</button>
-            <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split"
+            <button type="button" class="btn btn-outline-dark"
+                hx-post={ "/blueprint/course/" + code }
+                hx-vals={ `"year": 0, "semester": 0` }
+            >
+                Assign
+            </button>
+            <button type="button" class="btn btn-outline-dark dropdown-toggle dropdown-toggle-split"
                 data-bs-toggle="dropdown" aria-expanded="false">
                 <span class="visually-hidden">Toggle Dropdown</span>
             </button>
@@ -181,12 +188,7 @@ func coursePath(code string) string {
 
 templ courseCard(course *Course) {
     <div
-        class="card border-dark custom-card"
-        onmouseover="this.classList.add('bg-light')"
-        onmouseout="this.classList.remove('hover-color')"
-        @click={ `if (!$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('input')) {
-            window.location.href='/course/` + url.PathEscape(course.code) + `';
-        }` }
+        class="card custom-card rounded-0"
         x-data="{ expanded: false, showButton: false }"
         x-init="$nextTick(() => { showButton = $refs.annotation.scrollHeight > 250 })"
     >
@@ -197,11 +199,11 @@ templ courseCard(course *Course) {
         </div>
         <div class="card-body text-dark d-flex flex-column">
             <div :class="{ 'expanded': expanded, 'annotation-container': showButton }">
-                <h5 class="card-title">{ course.name }</h5>
+                <h5 class="card-title "><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL("/course/" + course.code ) }>{ course.name }</a></h5>
                 <h6 class="card-subtitle mb-2 text-muted">{ "Teacher(s): " + course.teachers.string() }</h6>
-                <p class="card-text" style="text-align: justify;" x-ref="annotation">{ course.annotation }</p>
+                <p class="card-text annotation-text" x-ref="annotation">{ course.annotation }</p>
             </div>
-            <button class="btn btn-link p-0" @click="expanded = !expanded" x-show="showButton" x-text="expanded ? 'Read less' : 'Read more'"></button>
+            <button class="btn btn-link text-secondary" @click="expanded = !expanded" x-show="showButton" x-text="expanded ? 'Read less' : 'Read more'"></button>
             @blueprintAssignment(course.blueprintAssignments, course.code)
         </div>
     </div>
