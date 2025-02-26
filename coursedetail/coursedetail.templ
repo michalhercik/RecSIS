@@ -10,7 +10,7 @@ import (
 
 const user = 42
 
-var p *bluemonday.Policy 
+var p *bluemonday.Policy
 
 func itos(i int) string {
     return strconv.Itoa(i)
@@ -124,10 +124,10 @@ templ BasicInfo(course *Course) {
                 <td>Czech title:</td><td>{ course.Name }</td>
             </tr>
             <tr>
-                <td>Faculty:</td><td>{ course.Faculty.Name }</td>
+                <td>Faculty:</td><td>{ course.Faculty }</td>
             </tr>
             <tr>
-                <td>Semester:</td><td>{ course.Start.String() }</td>
+                <td>Semester:</td><td>{ course.Start }</td>
             </tr>
             <tr>
                 <td>E-Credits:</td><td>{ itos(course.Credits) }</td>
@@ -145,21 +145,29 @@ templ BasicInfo(course *Course) {
             <tr>
                 <td>Additional information:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
             </tr>
+            if len(course.Guarantors) > 0 {
             <tr>
                 <td>Guarantor(s):</td><td>{ course.Guarantors[0].String() }</td>
             </tr>
+            }
+            if len(course.Guarantors) > 1 {
             for _, teacher := range course.Guarantors[1:] {
             <tr>
                 <td></td><td>{ teacher.String() }</td>
             </tr>
             }
+            }
+            if len(course.Teachers) > 0 {
             <tr>
                 <td>Teacher(s):</td><td>{ course.Teachers[0].String() }</td>
             </tr>
+            }
+            if len(course.Teachers) > 1 {
             for _, teacher := range course.Teachers[1:] {
             <tr>
                 <td></td><td>{ teacher.String() }</td>
             </tr>
+            }
             }
             <tr>
                 <td>SIS link:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code)) }>{ courseSISLink(course.Code) }</a></td>
@@ -234,9 +242,9 @@ templ Comments(comments []Comment, courseCode string) {
             }
         </ul>
         <form hx-post={ fmt.Sprintf("course/%s/comment", courseCode) } hx-target="#comments" hx-swap="outerHTML">
-            <div x-data="{ adjustTextarea($event) { 
-                $event.target.style.height = 'auto'; 
-                $event.target.style.height = ($event.target.scrollHeight) + 'px'; 
+            <div x-data="{ adjustTextarea($event) {
+                $event.target.style.height = 'auto';
+                $event.target.style.height = ($event.target.scrollHeight) + 'px';
             } }">
                 <label for="comment">Add a comment:</label><br>
                 <textarea id="comment" name="comment" rows="1" cols="50" @input="adjustTextarea" style="overflow:hidden;"></textarea>
@@ -255,10 +263,10 @@ templ Content(course *Course) {
     @BlueprintAssignment(course.BlueprintAssignments, course.Code)
     @BasicInfo(course)
     // TODO add links to parts of the page
-    @Annotation(course.Annotation.content)
+    @Annotation(course.Annotation.Content)
     @CompletionRequirements("") // TODO get data
     @Literature("") // TODO get data
-    @Sylabus(course.Sylabus.content)
+    @Sylabus(course.Sylabus.Content)
     @Comments(course.Comments, course.Code)
 }
 

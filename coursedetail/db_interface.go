@@ -1,15 +1,25 @@
 package coursedetail
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // TODO: change interface name if interface changes
 type DataManager interface {
-	Course(code string) (*Course, error)
+	Course(code string, lang DBLang) (*Course, error)
 	AddComment(code string, commentContent string) error
 	GetComments(code string) ([]Comment, error)
 	AddCourseToBlueprint(user int, code string) ([]Assignment, error)
 	RemoveCourseFromBlueprint(user int, code string) error
 }
+
+type DBLang string
+
+const (
+	cs DBLang = "cs"
+	en DBLang = "en"
+)
 
 // TODO add more fields
 type Rating struct {
@@ -50,16 +60,31 @@ func (s Semester) String() string {
 }
 
 type Teacher struct {
-	SisID       int
-	FirstName   string
-	LastName    string
-	TitleBefore string
-	TitleAfter  string
+	SisID       int    `json:"KOD"`
+	FirstName   string `json:"JMENO"`
+	LastName    string `json:"PRIJMENI"`
+	TitleBefore string `json:"TITULPRED"`
+	TitleAfter  string `json:"TITULZA"`
 }
 
 func (t Teacher) String() string {
 	return fmt.Sprintf("%s %s %s, %s",
 		t.TitleBefore, t.FirstName, t.LastName, t.TitleAfter)
+}
+
+type TeacherSlice []Teacher
+
+func (ts *TeacherSlice) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case []byte:
+		json.Unmarshal(v, &ts)
+		return nil
+	case string:
+		json.Unmarshal([]byte(v), &ts)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
 }
 
 type Assignment struct {
@@ -76,33 +101,50 @@ func (a Assignment) String() string {
 }
 
 type Description struct {
-	title   string
-	content string
+	Title   string `json:"TITLE"`
+	Content string `json:"MEMO"`
+}
+
+func (d *Description) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case []byte:
+		json.Unmarshal(v, &d)
+		return nil
+	case string:
+		json.Unmarshal([]byte(v), &d)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+func (d Description) Value() (interface{}, error) {
+	return json.Marshal(d)
 }
 
 type Course struct {
-	Code                     string
-	Name                     string
-	Faculty                  Faculty
-	GuarantorDepartment      string
-	State                    string
-	Start                    Semester
-	SemesterCount            int
-	Language                 string
-	LectureRange1            int
-	SeminarRange1            int
-	LectureRange2            int
-	SeminarRange2            int
-	ExamType                 string
-	Credits                  int
-	Guarantors               []Teacher
-	Teachers                 []Teacher
-	MinEnrollment            int // -1 means no limit
-	Capacity                 int // -1 means no limit
-	Annotation               Description
-	CompletitionRequirements Description
-	ExamRequirements         Description
-	Sylabus                  Description
+	Code                     string       `db:"code"`
+	Name                     string       `db:"title"`
+	Faculty                  string       `db:"faculty"`
+	GuarantorDepartment      string       `db:"guarantor"`
+	State                    string       `db:"taught"`
+	Start                    string       `db:"start_semester"`
+	SemesterCount            int          `db:"semester_count"`
+	Language                 string       `db:"taught_lang"`
+	LectureRange1            int          `db:"lecture_range1"`
+	SeminarRange1            int          `db:"seminar_range1"`
+	LectureRange2            int          `db:"lecture_range2"`
+	SeminarRange2            int          `db:"seminar_range2"`
+	ExamType                 string       `db:"exam_type"`
+	Credits                  int          `db:"credits"`
+	Guarantors               TeacherSlice `db:"guarantors"`
+	Teachers                 TeacherSlice `db:"teachers"`
+	MinEnrollment            int          `db:"min_number"` // -1 means no limit
+	Capacity                 int          `db:"capacity"`   // -1 means no limit
+	Annotation               Description  `db:"annotation"`
+	CompletitionRequirements Description  `db:"aim"`
+	ExamRequirements         Description  `db:"requirements"`
+	Sylabus                  Description  `db:"syllabus"`
 	Classifications          []string
 	Classes                  []string
 	Link                     string // link to course webpage (not SIS)

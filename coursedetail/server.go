@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path"
 )
 
 type Server struct {
@@ -12,6 +13,7 @@ type Server struct {
 
 func (s Server) Register(router *http.ServeMux, prefix string) {
 	router.HandleFunc(fmt.Sprintf("GET %s/{code}", prefix), s.page)
+	router.HandleFunc(fmt.Sprintf("GET %s/{code}/en", prefix), s.page)
 	router.HandleFunc(fmt.Sprintf("POST %s/{code}/comment", prefix), s.commentAddition)
 	router.HandleFunc(fmt.Sprintf("POST %s/{code}/like", prefix), s.like)
 	router.HandleFunc(fmt.Sprintf("POST %s/{code}/dislike", prefix), s.dislike)
@@ -19,7 +21,12 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
-	course, err := s.Data.Course(code)
+	lang := DBLang(path.Base(r.URL.Path))
+	if lang != "en" {
+		lang = cs
+	}
+	course, err := s.Data.Course(code, lang)
+	log.Printf("Course: %v", course)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", code, err)
 		PageNotFound(code).Render(r.Context(), w)

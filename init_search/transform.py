@@ -13,6 +13,7 @@ df = pd.merge(courses, teachers, how="left", left_on="VUCIT1", right_on="KOD").r
 df = pd.merge(df, teachers, how="left", left_on="VUCIT2", right_on="KOD").rename(columns={"KOD": "VUCIT2_KOD", "JMENO": "VUCIT2_JMENO", "PRIJMENI": "VUCIT2_PRIJMENI"})
 df = pd.merge(df, teachers, how="left", left_on="VUCIT3", right_on="KOD").rename(columns={"KOD": "VUCIT3_KOD", "JMENO": "VUCIT3_JMENO", "PRIJMENI": "VUCIT3_PRIJMENI"})
 df = df.drop(columns=["VUCIT1", "VUCIT2", "VUCIT3"])
+df = df[df["VROZSAHPR1"].notna()]
 
 texts = pd.pivot_table(texts, index=["POVINN", "JAZYK"], columns=["TYP"], values=["MEMO"], aggfunc=lambda x: x)
 texts = texts.reset_index().droplevel(0, axis=1)

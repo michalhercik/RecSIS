@@ -128,3 +128,8 @@ VALUES
 
 INSERT INTO sessions(id, user_id, expires_at)
 VALUES ('977e69df-0b48-4790-a409-b86656ff86bc', 81411247, '2200-01-01 00:00:00-00'::timestamptz);
+
+COPY bla_courses(title,code,valid_from,valid_to,guarantor,taught,start_semester,semester_count,taught_lang,lecture_range1,seminar_range1,lecture_range2,seminar_range2,range_unit,exam_type,credits,min_number,capacity,lang,guarantors,annotation,aim,requirements,syllabus,teachers,faculty)
+FROM '/docker-entrypoint-initdb.d/courses_transformed.csv'
+DELIMITER ','
+CSV HEADER;

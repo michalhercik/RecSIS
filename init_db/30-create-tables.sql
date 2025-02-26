@@ -53,6 +53,36 @@ CREATE TABLE courses(
     ) STORED
 );
 
+CREATE TABLE bla_courses(
+    -- id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    code VARCHAR(10) NOT NULL,
+    lang CHAR(2) NOT NULL,
+    title VARCHAR(250),
+    valid_from INT NOT NULL,
+    valid_to INT NOT NULL,
+    faculty VARCHAR(150), -- INT REFERENCES faculties(id),
+    guarantor VARCHAR(10), -- INT REFERENCES departments(id),
+    taught CHAR(1) NOT NULL,
+    start_semester VARCHAR(6), -- NOT NULL,
+    semester_count INT, -- NOT NULL,
+    taught_lang CHAR(3), -- change to CHAR(2) NOT NULL (cs, en),
+    lecture_range1 INT, -- NOT NULL,
+    seminar_range1 INT, -- NOT NULL,
+    lecture_range2 INT,
+    seminar_range2 INT,
+    range_unit CHAR(2),
+    exam_type VARCHAR(2), -- NOT NULL,
+    credits INT, -- NOT NULL,
+    guarantors JSONB,
+    teachers JSONB,
+    min_number INT,
+    capacity INT,
+    annotation JSONB,
+    syllabus JSONB,
+    aim JSONB,
+    requirements JSONB
+);
+
 -- search query:
 --
 -- WITH search AS (

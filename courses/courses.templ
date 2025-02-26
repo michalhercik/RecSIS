@@ -3,6 +3,8 @@ package courses
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
+    "fmt"
+    "net/url"
 )
 
 const user = 42
@@ -172,13 +174,18 @@ templ blueprintAssignment(assignments []Assignment, code string) {
     </div>
 }
 
+func coursePath(code string) string {
+    detail := url.PathEscape(fmt.Sprintf("/course/%s", code))
+    return detail
+}
+
 templ courseCard(course *Course) {
     <div
         class="card border-dark custom-card"
         onmouseover="this.classList.add('bg-light')"
         onmouseout="this.classList.remove('hover-color')"
         @click={ `if (!$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('input')) {
-            window.location.href='/course/` + course.code + `';
+            window.location.href='/course/` + url.PathEscape(course.code) + `';
         }` }
         x-data="{ expanded: false, showButton: false }"
         x-init="$nextTick(() => { showButton = $refs.annotation.scrollHeight > 250 })"
