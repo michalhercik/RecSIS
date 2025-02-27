@@ -30,8 +30,12 @@ func examTypeStr(examType string) string {
     }
 }
 
+func hoursString(lecture, seminar int) string {
+    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar)
+}
+
 func hoursExamsString(lecture, seminar int, examType string) string {
-    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examTypeStr(examType)
+    return hoursString(lecture, seminar) + ", " + examTypeStr(examType)
 }
 
 func semesterHoursExamsString(course *Course) string {
@@ -53,10 +57,10 @@ func semesterHoursExamsString(course *Course) string {
         switch course.start {
         // TODO: this probably wont fit, fix this
         case teachingWinterOnly:
-            result = "Winter: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) + ", Summer: " + hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType)
+            result = "W:" + hoursString(course.lectureRange1, course.seminarRange1) + " S:" + hoursString(course.lectureRange2, course.seminarRange2) + ", " + examTypeStr(course.examType)
         // TODO: this probably wont fit, fix this
         case teachingSummerOnly:
-            result = "Winter: " + hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) + ", Summer: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
+            result = "W:" + hoursString(course.lectureRange2, course.seminarRange2) + " S:" + hoursString(course.lectureRange1, course.seminarRange1) + ", " + examTypeStr(course.examType)
         case teachingBoth:
             result = "unsupported"
         default:
@@ -99,7 +103,7 @@ templ Search(coursesPage *coursesPage) {
         hx-swap="outerHTML"
         hx-include="[name=search],[name=sort],[name=semester]"
         class="pt-3 pb-3"
-        x-data="{ searchInput: '', quickResOpen: true }"
+        x-data={ "{ quickResOpen: false }" }
     >
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-10 col-sm-12">
@@ -108,6 +112,8 @@ templ Search(coursesPage *coursesPage) {
                         <input type="text" name="search" id="search" class="form-control" placeholder="Search..." autocomplete="off"
                             x-model="searchInput"
                             @click="quickResOpen = true"
+                            @keydown="quickResOpen = true"
+                            @keydown.escape="quickResOpen = false"
                             hx-get="/courses/quicksearch"
                             hx-trigger="input changed"
                             hx-target="#quick-search-results"
@@ -148,18 +154,7 @@ templ Search(coursesPage *coursesPage) {
 }
 
 templ blueprintAssignment(assignments []Assignment, code string) {
-    <div class="mt-auto">
-        if len(assignments) > 0 {
-            <dl>
-                <dt>Blueprint assignment:</dt>
-                for _, assignment := range assignments {
-                // TODO: this string is broken, year and semester is swapped
-                <dd>{ assignment.String() }</dd>
-                }
-            </dl>
-        }
-    </div>
-    <div class="d-flex justify-content-end mt-0">
+    <div class="d-flex justify-content-end mt-auto pt-3">
         <div class="btn-group">
             <button type="button" class="btn btn-outline-dark"
                 hx-post={ "/blueprint/course/" + code }
@@ -173,8 +168,18 @@ templ blueprintAssignment(assignments []Assignment, code string) {
             </button>
             <ul class="dropdown-menu">
                 for year := 1; year <= 3; year++ {
-                    <li><a class="dropdown-item" href="#">Year { strconv.Itoa(year) } Winter</a></li>
-                    <li><a class="dropdown-item" href="#">Year { strconv.Itoa(year) } Summer</a></li>
+                    <li><button class="dropdown-item"
+                        hx-post={ "/blueprint/course/" + code }  
+                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1` } 
+                    >
+                        Year { strconv.Itoa(year) } Winter
+                    </button></li>
+                    <li><button class="dropdown-item"
+                        hx-post={ "/blueprint/course/" + code }  
+                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2` } 
+                    >
+                        Year { strconv.Itoa(year) } Summer
+                    </button></li>
                 }
             </ul>
         </div>
@@ -197,7 +202,12 @@ templ courseCard(course *Course) {
             <small>{ semesterHoursExamsString(course) }</small>
             <small>{ "Credits: " + strconv.Itoa(course.credits) }</small>
         </div>
-        <div class="card-body text-dark d-flex flex-column">
+        <div class="card-body text-dark d-flex flex-column position-relative">
+            if len(course.blueprintAssignments) > 0 {
+                <div class="ribbon">
+                    <span>{ course.blueprintAssignments.String() }</span>
+                </div>
+            }
             <div :class="{ 'expanded': expanded, 'annotation-container': showButton }">
                 <h5 class="card-title "><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL("/course/" + course.code ) }>{ course.name }</a></h5>
                 <h6 class="card-subtitle mb-2 text-muted">{ "Teacher(s): " + course.teachers.string() }</h6>
@@ -249,7 +259,7 @@ templ pagination(coursesPage *coursesPage) {
 }
 
 templ Courses(coursesPage *coursesPage) {
-    <div id="courses">
+    <div id="courses" x-init={ "searchInput = '" + coursesPage.search + "'" }>
         <h2>{ coursesPage.sortedBy.String() + ":" }</h2>
         <div class="grid">
             if coursesPage.totalPages == 0 {
@@ -271,7 +281,7 @@ templ Courses(coursesPage *coursesPage) {
 
 templ Content(coursesPage *coursesPage) {
     <div class="custom-container">
-        <div>
+        <div x-data="{ searchInput: '' }">
             @Search(coursesPage)
             @Courses(coursesPage)
         </div>

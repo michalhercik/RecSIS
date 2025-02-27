@@ -3,22 +3,112 @@ package degreeplan
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
+    "strings"
 )
+
+func capitalizeFirstLetter(s string) string {
+    if len(s) == 0 {
+        return s
+    }
+    return strings.ToUpper(string(s[0])) + s[1:]
+}
+
+func examTypeStr(examType string) string {
+    // to add: STEX, thesis, ...
+    switch examType {
+    case "Z":
+        return "C" // Z
+    case "1":
+        return "??" // do not know
+    case "F":
+        return "MC" // KZ
+    case "D":
+        return "??" // do not know
+    case "K":
+        return "Ex" // Zk
+    case "*":
+        return "C+Ex" // Z+Zk
+    default:
+        return "unknown"
+    }
+}
+
+func hoursExamsString(lecture, seminar int, examType string) string {
+    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examTypeStr(examType)
+}
+
+templ winterSummer(course *Course) {
+    switch course.SemesterCount {
+    case 1:
+        switch course.Start {
+        case 1:
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
+            <td>---</td>
+        case 2:
+            <td>---</td>
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
+        case 3:
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
+        default:
+            <td>unsupported</td>
+            <td>unsupported</td>
+        }
+    case 2:
+        switch course.Start {
+        case 1:
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
+            <td>{ hoursExamsString(course.LectureRange2, course.SeminarRange2, course.ExamType) }</td>
+        case 2:
+            <td>{ hoursExamsString(course.LectureRange2, course.SeminarRange2, course.ExamType) }</td>
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
+        case 3:
+            <td>unsupported</td>
+            <td>unsupported</td>
+        default:
+            <td>unsupported</td>
+            <td>unsupported</td>
+        }
+    default:
+        <td>unsupported</td>
+        <td>unsupported</td>
+    }
+}
 
 templ Page(dp *DegreePlan) {
     @utils.Page("Degree plan") {
-        @Content(dp)
+        <div class="container">
+            @Content(dp)
+        </div>
     }
 }
 
 templ Content(dp *DegreePlan) {
-    <h1>Degree plan</h1>
     for _, bloc := range dp.blocs {
-        <h2>{ bloc.Name } ({ strconv.Itoa(bloc.Limit) })</h2>
-        <ul>
-        for _, course := range bloc.Courses {
-            <li>{ course.Code } { course.Name } { course.Note }</li>
-        }
-        </ul>
+        <div class="d-flex justify-content-between align-items-center">
+            <h5>{ capitalizeFirstLetter(bloc.Name) }</h5>
+            <p>{ "Blueprint: 0/" + strconv.Itoa(bloc.Limit) + " Completed: 0/" + strconv.Itoa(bloc.Limit) }</p>
+        </div>
+        <table class="table degree-plan-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Title</th>
+                    <th>Credits</th>
+                    <th>Winter</th>
+                    <th>Summer</th>
+                </tr>
+            </thead>
+            <tbody>
+            for _, course := range bloc.Courses {
+                <tr>
+                    <td>@utils.CourseLink(course.Code)</td>
+                    <td>{ course.Name }</td>
+                    <td>{ strconv.Itoa(course.Credits) }</td>
+                    @winterSummer(&course)
+                </tr>
+            }
+            </tbody>
+        </table>
     }
 }

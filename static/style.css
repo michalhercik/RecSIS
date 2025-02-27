@@ -21,7 +21,7 @@ body {
     overflow-y: scroll;
 }
 
-/* Credits div box styles */
+/* Blueprint credits div box styles */
 .credits-box {
     position: absolute;
     background: white;
@@ -34,8 +34,6 @@ body {
 /* Option menu styles */
 .option-menu {
     padding: .25rem .25rem;
-    /* space on left and right - if not good delete */
-    width: 98% !important;
     margin-left: auto;
     margin-right: auto;
 }
@@ -56,8 +54,6 @@ body {
 /* TODO: For small screens, the font should be smaller */
 .blueprint-table {
     margin-bottom: 0 !important;
-    /* space on left and right - if not good delete */
-    width: 98% !important;
     table-layout: fixed;
     margin-left: auto;
     margin-right: auto;
@@ -168,4 +164,55 @@ body {
 .annotation-text {
     text-align: justify;
     font-size: 0.9em;
+}
+
+/* Course card blueprint assignment ribbon styles */
+.ribbon {
+    width: 80px;
+    height: 80px;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.ribbon span {
+    position: absolute;
+    display: block;
+    width: 120px;
+    padding: 5px 0;
+    background: rgb(4, 108, 181);
+    color: white;
+    text-align: center;
+    font-size: 10px;
+    font-weight: bold;
+    transform: rotate(45deg);
+    top: 10px;
+    right: -40px;
+}
+
+/* Degree plan table columns width styles */
+.degree-plan-table th:nth-child(1),
+.degree-plan-table td:nth-child(1) {
+    width: 88px;
+}
+
+.degree-plan-table th:nth-child(2),
+.degree-plan-table td:nth-child(2) {
+    width: auto;
+}
+
+.degree-plan-table th:nth-child(3),
+.degree-plan-table td:nth-child(3) {
+    width: 70px;
+}
+
+.degree-plan-table th:nth-child(4),
+.degree-plan-table td:nth-child(4) {
+    width: 100px;
+}
+
+.degree-plan-table th:nth-child(5),
+.degree-plan-table td:nth-child(5) {
+    width: 100px;
 }

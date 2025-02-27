@@ -13,7 +13,7 @@ templ optionMenu(data *Blueprint) {
         yearCount := len(data.years) - 1
         anyYears := len(data.years) > 1
     }}
-    <div class="option-menu sticky-top bg-light p-2" x-data="{ showCredits: false, openAssign: false,  tooltipEnabled: true }">
+    <div class="option-menu sticky-top p-2" x-data="{ showCredits: false, openAssign: false,  tooltipEnabled: true }">
         // change number of years
         Number of years:
         <button
@@ -46,6 +46,18 @@ templ optionMenu(data *Blueprint) {
         </div>
 
         // take care of checked courses
+        // unassign
+        <button
+            x-show="checkedNumber > 0"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title="Unassign all checked courses"
+            class="btn btn-outline-dark btn-sm bi bi-dash-circle"
+            hx-patch="/blueprint/courses"
+            hx-vals={ `"type": "selected", "year": 0, "semester": 0, "position": -1` }
+            hx-include="input[type=checkbox]:checked" 
+            hx-target="main">
+        </button>
         // assign
         <div style="position: relative; display: inline-block;">
             <button
@@ -175,7 +187,7 @@ templ winterSummer(course *Course) {
 templ renderUnassigned(unassigned AcademicYear, yearCount int) {
     // tables header for the whole page
     <table class="table table-sm blueprint-table">
-        <thead class="table-secondary">
+        <thead>
             <tr>
                 <th></th>
                 <th>Code</th>
@@ -426,11 +438,11 @@ templ unassignedHeadline() {
                     x-data="{ hover: false }"
                     @mouseover="hover = true"
                     @mouseleave="hover = false"
+                    @click="if (!$event.target.closest('button')) { showUnassigned = !showUnassigned }"
                 >
                     <td class="short">
                         <i
-                            :class="showUnassigned ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'"
-                            @click="showUnassigned = !showUnassigned">
+                            :class="showUnassigned ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'">
                         </i>
                     </td>
                     <td class={ "short yeartext" }>{ "Unassigned" }</td>
@@ -466,11 +478,11 @@ templ yearHeadline(yearNum, credits int) {
                     x-data="{ hover: false }"
                     @mouseover="hover = true"
                     @mouseleave="hover = false"
+                    @click={ "if (!$event.target.closest('button')) { " + "Year" + strconv.Itoa(yearNum) + " = !" + "Year" + strconv.Itoa(yearNum) + " }" }
                 >
                     <td class="short">
                         <i
-                            :class={ "Year" + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }
-                            @click={ "Year" + strconv.Itoa(yearNum) + " = !" + "Year" + strconv.Itoa(yearNum) }>
+                            :class={ "Year" + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }>
                         </i>
                     </td>
                     <td class="short yeartext">{ "Year " + strconv.Itoa(yearNum) }</td>
@@ -528,11 +540,11 @@ templ semesterHeadline(semesterNum, yearNum, credits int) {
                     x-data="{ hover: false }"
                     @mouseover="hover = true"
                     @mouseleave="hover = false"
+                    @click={ "if (!$event.target.closest('button')) { " + semesterText + strconv.Itoa(yearNum) + " = !" + semesterText + strconv.Itoa(yearNum) + " }" }
                 >
                     <td class="short">
                         <i
-                            :class={ semesterText + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }
-                            @click={ semesterText + strconv.Itoa(yearNum) + " = !" + semesterText + strconv.Itoa(yearNum) }>
+                            :class={ semesterText + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }>
                         </i>
                     </td>
                     <td class="short semtext">{ semesterText }</td>
@@ -705,7 +717,9 @@ templ Content(data *Blueprint) {
 
 templ Page(data *Blueprint) {
     @utils.Page("Blueprint") {
-        @Content(data)
+        <div class="container"> // TODO: if too narrow than delete this div
+            @Content(data)
+        </div>
     }
 }
 
