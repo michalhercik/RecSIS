@@ -31,14 +31,6 @@ type coursesPage struct {
 	sortedBy   sortType
 }
 
-// type query struct {
-// 	user       int
-// 	startIndex int
-// 	maxCount   int
-// 	search     string
-// 	sorted     sortType
-// }
-
 const (
 	relevance = iota
 	recommended
@@ -115,20 +107,33 @@ func (a Assignment) String() string {
 	semester := ""
 	switch a.semester {
 	case assignmentNone:
-		semester = "None"
+		semester = "N"
 	case assignmentWinter:
-		semester = "Winter"
+		semester = "W"
 	case assignmentSummer:
-		semester = "Summer"
+		semester = "S"
 	default:
-		semester = "unsupported"
+		semester = "ER"
 	}
 
-	result := fmt.Sprintf("Year %d, %s semester", a.year, semester)
+	result := fmt.Sprintf("%d%s", a.year, semester)
 	if a.year == 0 {
-		result = "Unassigned"
+		result = "UN"
 	}
 	return result
+}
+
+type Assignments []Assignment
+
+func (a Assignments) String() string {
+    assignments := []string{}
+    for _, assignment := range a {
+        assignments = append(assignments, assignment.String())
+    }
+    if len(assignments) == 0 {
+        return ""
+    }
+    return strings.Join(assignments, " ")
 }
 
 type Course struct {
@@ -147,7 +152,7 @@ type Course struct {
 	credits              int
 	teachers             Teachers // TODO: delete after transition to teacher1, teacher2, teaacher3
 	rating               int
-	blueprintAssignments []Assignment
+	blueprintAssignments Assignments
 }
 
 func (c *Course) UnmarshalJSON(data []byte) error {
