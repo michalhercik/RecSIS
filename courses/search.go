@@ -7,13 +7,6 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 )
 
-type Language int
-
-const (
-	czech Language = iota
-	english
-)
-
 type Request struct {
 	query       string
 	indexUID    string
@@ -135,12 +128,12 @@ func buildSearchRequest(r *Request) (*meilisearch.SearchRequest, error) {
 		},
 	}
 	switch r.lang {
-	case czech:
+	case cs:
 		searchReq.AttributesToRetrieve = append(searchReq.AttributesToRetrieve, []string{
 			"nameCs",
 			"annotationCs",
 		}...)
-	case english:
+	case en:
 		searchReq.AttributesToRetrieve = append(searchReq.AttributesToRetrieve, []string{
 			"nameEn",
 			"annotationEn",
@@ -160,9 +153,9 @@ func buildQuickSearchRequest(r *QuickRequest) (*meilisearch.SearchRequest, error
 		},
 	}
 	switch r.lang {
-	case czech:
+	case cs:
 		searchReq.AttributesToRetrieve = append(searchReq.AttributesToRetrieve, "nameCs")
-	case english:
+	case en:
 		searchReq.AttributesToRetrieve = append(searchReq.AttributesToRetrieve, "nameEn")
 	default:
 		return searchReq, fmt.Errorf("SearchRequest: unsupported language: %d", r.lang)

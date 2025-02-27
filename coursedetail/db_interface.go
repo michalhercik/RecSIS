@@ -140,7 +140,7 @@ type Course struct {
 	Guarantors               TeacherSlice `db:"guarantors"`
 	Teachers                 TeacherSlice `db:"teachers"`
 	MinEnrollment            int          `db:"min_number"` // -1 means no limit
-	Capacity                 int          `db:"capacity"`   // -1 means no limit
+	Capacity                 string       `db:"capacity"`   // -1 means no limit
 	Annotation               Description  `db:"annotation"`
 	CompletitionRequirements Description  `db:"aim"`
 	ExamRequirements         Description  `db:"requirements"`

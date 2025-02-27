@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path"
 	"strconv"
 )
 
@@ -16,9 +17,12 @@ type Server struct {
 
 func (s Server) Register(router *http.ServeMux, prefix string) {
 	router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page)
+	router.HandleFunc(fmt.Sprintf("GET %s/en", prefix), s.page)
 	// router.HandleFunc(fmt.Sprintf("GET %s/page", prefix), s.paging)
 	router.HandleFunc(fmt.Sprintf("GET %s/search", prefix), s.content)
+	router.HandleFunc(fmt.Sprintf("GET %s/search/en", prefix), s.content)
 	router.HandleFunc(fmt.Sprintf("GET %s/quicksearch", prefix), s.quickSearch)
+	router.HandleFunc(fmt.Sprintf("GET %s/quicksearch/en", prefix), s.quickSearch)
 }
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
@@ -47,12 +51,16 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.FormValue("search")
+	lang := Language(path.Base(r.URL.Path))
+	if lang != "en" {
+		lang = cs
+	}
 	req := QuickRequest{
 		query:    query,
 		indexUID: courseIndex,
 		limit:    5,
 		offset:   0,
-		lang:     czech,
+		lang:     lang,
 	}
 	res, err := s.Search.QuickSearch(&req)
 	if err != nil {
@@ -73,6 +81,10 @@ func parseQueryRequest(r *http.Request) Request {
 	if err != nil {
 		hitsPerPage = coursesPerPage
 	}
+	lang := Language(path.Base(r.URL.Path))
+	if lang != "en" {
+		lang = cs
+	}
 	sorted, err := strconv.ParseInt(r.FormValue("sort"), 10, 32)
 	if err != nil {
 		sorted = 0
@@ -84,7 +96,7 @@ func parseQueryRequest(r *http.Request) Request {
 		indexUID:    courseIndex,
 		page:        page,
 		hitsPerPage: hitsPerPage,
-		lang:        czech,
+		lang:        lang,
 		sortedBy:    sortedBy,
 	}
 	return req

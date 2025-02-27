@@ -78,17 +78,17 @@ templ hoursExams(course *Course) {
     if semCount == 1 {
     <tr>
         <td>Scope, examination:</td>
-        <td>{ itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
+        <td>{ itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + course.ExamType}</td>
     </tr>
     }
     if semCount == 2 {
     <tr>
         <td rowspan="2">Scope, examination:</td>
-        <td>{ "winter s.:" + itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
+        <td>{ "winter s.:" + itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + course.ExamType}</td>
     </tr>
     <tr>
         <td></td>
-        <td>{ "summer s.:" + itos(course.LectureRange2) + "/" + itos(course.SeminarRange2) + ", " + examTypeStr(course.ExamType)}</td>
+        <td>{ "summer s.:" + itos(course.LectureRange2) + "/" + itos(course.SeminarRange2) + ", " + course.ExamType}</td>
     </tr>
     }
 }
@@ -134,10 +134,10 @@ templ BasicInfo(course *Course) {
             </tr>
             @hoursExams(course)
             <tr>
-                <td>Capacity:</td><td>{ capacityStr(course.Capacity) }</td>
+                <td>Capacity:</td><td>{ course.Capacity }</td>
             </tr>
             <tr>
-                <td>State of the course:</td><td>{ stateStr(course.State) }</td>
+                <td>State of the course:</td><td>{ course.State }</td>
             </tr>
             <tr>
                 <td>Language:</td><td>{ course.Language }</td>

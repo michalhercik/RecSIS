@@ -1,11 +1,12 @@
 import pandas as pd
+import numpy as np
 import json
 
 courses = pd.read_csv('init_db/courses.csv', dtype={
     "VUCIT1": str,
     "VUCIT2": str,
     "VUCIT3": str,
-    "VSEMZAC": pd.Int32Dtype,
+    "VSEMZAC": str,
     "VSEMPOC": pd.Int32Dtype,
     "VROZSAHPR1": pd.Int32Dtype,
     "VROZSAHCV1": pd.Int32Dtype,
@@ -13,7 +14,7 @@ courses = pd.read_csv('init_db/courses.csv', dtype={
     "VROZSAHCV2": pd.Int32Dtype,
     "VEBODY": pd.Int32Dtype,
     "PPOCMIN": pd.Int32Dtype,
-    "PPOCMAX": pd.Int32Dtype,
+    "PPOCMAX": str,
     "PFAKULTA": str,
     })
 texts = pd.read_csv('init_db/course_texts.csv', usecols=["POVINN", "JAZYK", "TITLE", "MEMO", "TYP"])
@@ -63,11 +64,19 @@ common = ["POVINN", "VPLATIOD", "VPLATIDO", "PFAKULTA",
        "VROZSAHCV1", "VROZSAHPR2", "VROZSAHCV2", "VRVCEM", "VTYP", "VEBODY",
        "PPOCMIN", "PPOCMAX"]
 courses_cs = courses[["PNAZEV"] + common].rename(columns={"PNAZEV": "NAME"})
+courses_cs["PPOCMAX"] = courses_cs["PPOCMAX"].replace({np.nan: "Neomezená"})
+courses_cs["VTYP"] = courses_cs["VTYP"].replace({"Z": "Z", "F": "KZ", "K": "Zk", "*": "Z+Zk"})
 courses_cs["LANG"] = "cs"
-courses_cs["VSEMZAC"] = courses_cs["VSEMZAC"].map({1: "Zimní", 2: "Letní", 3: "Oba"})
+courses_cs["VSEMZAC"] = courses_cs["VSEMZAC"].replace({"1": "Zimní", "2": "Letní", "3": "Oba"})
+courses_cs["PVYJAZYK"] = courses_cs["PVYJAZYK"].replace({"CZE": "Čeština", "ENG": "Angličtina", np.nan: "Neznámý"})
+courses_cs["PVYUCOVAN"] = courses_cs["PVYUCOVAN"].replace({"V": "Vyučován", "N": "Nevyučován", "Z": "Zrušen"})
 courses_en = courses[["PANAZEV"] + common].rename(columns={"PANAZEV": "NAME"})
-courses_en["VSEMZAC"] = courses_en["VSEMZAC"].map({1: "Winter", 2: "Summer", 3: "Both"})
+courses_en["PPOCMAX"] = courses_en["PPOCMAX"].replace({np.nan: "Unlimited"})
+courses_en["VTYP"] = courses_en["VTYP"].replace({"Z": "C", "F": "MC", "K": "Ex", "*": "C+Ex"})
 courses_en["LANG"] = "en"
+courses_en["VSEMZAC"] = courses_en["VSEMZAC"].replace({"1": "Winter", "2": "Summer", "3": "Both"})
+courses_en["PVYJAZYK"] = courses_en["PVYJAZYK"].replace({"CZE": "Czech", "ENG": "English", np.nan: "Unknown"})
+courses_en["PVYUCOVAN"] = courses_en["PVYUCOVAN"].replace({"V": "Taught", "N": "Not taught", "Z": "Cancelled"})
 cou = pd.concat([courses_cs, courses_en])
 cou = pd.merge(cou, gua, on="POVINN", how="left")
 cou = pd.merge(cou, tex, on=["POVINN", "LANG"], how="left")
