@@ -58,16 +58,25 @@ func (c *CourseStatus) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+type TeachingSemester int
+
+const (
+	teachingWinterOnly TeachingSemester = iota + 1
+	teachingSummerOnly
+	teachingBoth
+)
+
 type Course struct {
-	Code            string `json:"CODE"`
-	Name            string `json:"NAME"`
-	Note            string `json:"NOTE"`
-	Credits         int    `json:"CREDITS"`
-	LectureRange1   int    `json:"WORKLOAD_PRIMARY1"`
-	SeminarRange1   int    `json:"WORKLOAD_SECONDARY1"`
-	LectureRange2   int    `json:"WORKLOAD_PRIMARY2"`
-	SeminarRange2   int    `json:"WORKLOAD_SECONDARY2"`
-	SemesterCount   int    `json:"SEMESTER_COUNT"`
-	SubjectType     string `json:"SUBJECT_TYPE"`
+	Code            string 			 `json:"CODE"`
+	Name            string 			 `json:"NAME"`
+	Note            string 			 `json:"NOTE"`
+	Credits         int    			 `json:"CREDITS"`
+	Start           TeachingSemester `json:"SEMESTER_PRIMARY"`
+	LectureRange1   int    			 `json:"WORKLOAD_PRIMARY1"`
+	SeminarRange1   int    			 `json:"WORKLOAD_SECONDARY1"`
+	LectureRange2   int    			 `json:"WORKLOAD_PRIMARY2"`
+	SeminarRange2   int    			 `json:"WORKLOAD_SECONDARY2"`
+	SemesterCount   int    			 `json:"SEMESTER_COUNT"`
+	ExamType 	    string 			 `json:"SUBJECT_TYPE"`
 	BlueprintStatus BlueprintStatus
 }
