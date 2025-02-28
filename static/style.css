@@ -217,3 +217,9 @@ body {
 .degree-plan-table td:nth-child(5) {
     width: 100px;
 }
+
+/* Degree plan credit column styles */
+.credits-column::after {
+    content: ".00";
+    visibility: hidden;
+}
