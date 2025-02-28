@@ -29,6 +29,7 @@ type coursesPage struct {
 	totalPages int
 	search     string
 	sortedBy   sortType
+	semester   TeachingSemester
 }
 
 const (

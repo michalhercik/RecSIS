@@ -72,11 +72,16 @@ func parseQueryRequest(r *http.Request) Request {
 	if err != nil {
 		hitsPerPage = coursesPerPage
 	}
-	sorted, err := strconv.ParseInt(r.FormValue("sort"), 10, 32)
+	sorted, err := strconv.ParseInt(r.FormValue("sort"), 10, 64)
 	if err != nil {
-		sorted = 0
+		sorted = int64(relevance)
 	}
 	sortedBy := sortType(sorted)
+	semesterInt, err := strconv.ParseInt(r.FormValue("semester"), 10, 64)
+	if err != nil {
+		semesterInt = int64(teachingBoth)
+	}
+	semester := TeachingSemester(semesterInt)
 
 	req := Request{
 		query:       query,
@@ -85,6 +90,7 @@ func parseQueryRequest(r *http.Request) Request {
 		hitsPerPage: hitsPerPage,
 		lang:        czech,
 		sortedBy:    sortedBy,
+		semester:    semester,
 	}
 	return req
 }
@@ -97,6 +103,7 @@ func createPageContent(res *Response, req Request) coursesPage {
 		totalPages: int(res.totalPages),
 		search:     req.query,
 		sortedBy:   req.sortedBy,
+		semester:   req.semester,
 	}
 }
 

@@ -100,6 +100,7 @@ templ Search(coursesPage *coursesPage) {
         hx-target="#courses"
         hx-swap="outerHTML"
         hx-include="[name=search],[name=sort],[name=semester]"
+        :hx-push-url={ "`/courses?user=" + strconv.Itoa(user) + "&search=${searchInput}&sort=${searchSort}&semester=${searchSemester}`" }
         class="pt-3 pb-3"
         x-data={ "{ quickResOpen: false }" }
     >
@@ -112,10 +113,12 @@ templ Search(coursesPage *coursesPage) {
                             @click="quickResOpen = true"
                             @keydown="quickResOpen = true"
                             @keydown.escape="quickResOpen = false"
+                            @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
                             hx-get="/courses/quicksearch"
-                            hx-trigger="input changed"
+                            hx-trigger="input changed, triggerSearch from:body" 
                             hx-target="#quick-search-results"
                             hx-swap="outerHTML"
+                            hx-push-url="false"
                         />
                         <button type="submit" class="btn btn-primary" @click="quickResOpen = false">Search</button>
                     </div>
@@ -131,7 +134,7 @@ templ Search(coursesPage *coursesPage) {
         <div class="row justify-content-center mt-3">
             <div class="col-lg-3 col-md-5 col-sm-12">
                 <label for="sort">Sort by:</label>
-                <select name="sort" id="sort" class="form-select">
+                <select name="sort" id="sort" class="form-select" x-model="searchSort">
                     <option value={ strconv.Itoa(relevance) }>Relevance</option>
                     <option value={ strconv.Itoa(recommended) }>Recommended</option>
                     <option value={ strconv.Itoa(rating) }>Rating</option>
@@ -141,7 +144,7 @@ templ Search(coursesPage *coursesPage) {
             </div>
             <div class="col-lg-3 col-md-5 col-sm-12">
                 <label for="semester">Semester:</label>
-                <select name="semester" id="semester" class="form-select">
+                <select name="semester" id="semester" class="form-select" x-model="searchSemester">
                     <option value={ strconv.Itoa(int(teachingBoth)) }>Both</option>
                     <option value={ strconv.Itoa(int(teachingWinterOnly)) }>Winter</option>
                     <option value={ strconv.Itoa(int(teachingSummerOnly)) }>Summer</option>
@@ -212,27 +215,29 @@ templ courseCard(course *Course) {
     </div>
 }
 
-templ paginationButton(text string, page, hitsPerPage int) {
+templ paginationButton(text string, pageToGo int, cp *coursesPage) {
     <button
         class="btn btn-outline-dark"
         hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
         hx-target="#courses"
         hx-swap="outerHTML show:top"
-        hx-include="[name=search],[name=sort]"
-        hx-vals={ `"page": ` + strconv.Itoa(page) + `, "hitsPerPage": ` + strconv.Itoa(hitsPerPage) }
+        hx-include="[name=search],[name=sort],[name=semester]"
+        hx-vals={ `"page": ` + strconv.Itoa(pageToGo) + `, "hitsPerPage": ` + strconv.Itoa(cp.pageSize) }
+        hx-push-url={ "/courses?user=" + strconv.Itoa(user) + "&search=" + cp.search + "&sort=" + strconv.Itoa(int(cp.sortedBy)) + "&semester=" + strconv.Itoa(int(cp.semester)) + "&page=" + strconv.Itoa(pageToGo) + "&hitsPerPage=" + strconv.Itoa(cp.pageSize) }
     >
         { text }
     </button>
 }
 
-templ loadMoreButton(page, hitsPerPage int) {
+templ loadMoreButton(newPageSize int, cp *coursesPage) {
     <button
         class="btn btn-outline-dark"
         hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
         hx-target="#courses"
         hx-swap="outerHTML"
-        hx-include="[name=search],[name=sort]"
-        hx-vals={ `"page": ` + strconv.Itoa(page) + `, "hitsPerPage": ` + strconv.Itoa(hitsPerPage) }
+        hx-include="[name=search],[name=sort],[name=semester]"
+        hx-vals={ `"page": ` + strconv.Itoa(cp.page) + `, "hitsPerPage": ` + strconv.Itoa(newPageSize) }
+        hx-push-url={ "/courses?user=" + strconv.Itoa(user) + "&search=" + cp.search + "&sort=" + strconv.Itoa(int(cp.sortedBy)) + "&semester=" + strconv.Itoa(int(cp.semester)) + "&page=" + strconv.Itoa(cp.page) + "&hitsPerPage=" + strconv.Itoa(newPageSize) }
     >
         Load More
     </button>
@@ -242,17 +247,17 @@ templ pagination(coursesPage *coursesPage) {
     <p>Page { strconv.Itoa(coursesPage.page) } of { strconv.Itoa(coursesPage.totalPages) }</p>
     <div>
         if coursesPage.page > 1 {
-            @paginationButton("Previous Page", coursesPage.page - 1, coursesPage.pageSize)
+            @paginationButton("Previous Page", coursesPage.page - 1, coursesPage)
         }
         if coursesPage.page < coursesPage.totalPages {
-            @paginationButton("Next Page", coursesPage.page + 1, coursesPage.pageSize)
-            @loadMoreButton(coursesPage.page, coursesPage.pageSize + coursesPerPage)
+            @paginationButton("Next Page", coursesPage.page + 1, coursesPage)
+            @loadMoreButton(coursesPage.pageSize + coursesPerPage, coursesPage)
         }
     </div>
 }
 
 templ Courses(coursesPage *coursesPage) {
-    <div id="courses" x-init={ "searchInput = '" + coursesPage.search + "'" }>
+    <div id="courses" x-init={ "searchInput = '" + coursesPage.search + "'; searchSort = " + strconv.Itoa(int(coursesPage.sortedBy)) + "; searchSemester = " + strconv.Itoa(int(coursesPage.semester)) }>
         <h2>{ coursesPage.sortedBy.String() + ":" }</h2>
         <div class="grid">
             if coursesPage.totalPages == 0 {
@@ -274,7 +279,7 @@ templ Courses(coursesPage *coursesPage) {
 
 templ Content(coursesPage *coursesPage) {
     <div class="custom-container">
-        <div x-data="{ searchInput: '' }">
+        <div x-data="{ searchInput: '', searchSort: 0, searchSemester: 3 }">
             @Search(coursesPage)
             @Courses(coursesPage)
         </div>
