@@ -34,6 +34,7 @@ body {
 /* Option menu styles */
 .option-menu {
     padding: .25rem .25rem;
+    background: white;
     margin-left: auto;
     margin-right: auto;
 }
@@ -85,7 +86,7 @@ body {
 
 .blueprint-table th:nth-child(2),
 .blueprint-table td:nth-child(2) {
-    width: 88px;
+    width: 85px;
 }
 
 .blueprint-table th:nth-child(3),
@@ -215,4 +216,10 @@ body {
 .degree-plan-table th:nth-child(5),
 .degree-plan-table td:nth-child(5) {
     width: 100px;
+}
+
+/* Degree plan credit column styles */
+.credits-column::after {
+    content: ".00";
+    visibility: hidden;
 }

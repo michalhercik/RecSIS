@@ -94,7 +94,7 @@ templ Content(dp *DegreePlan) {
                 <tr>
                     <th>Code</th>
                     <th>Title</th>
-                    <th>Credits</th>
+                    <th class="text-end">Credits</th>
                     <th>Winter</th>
                     <th>Summer</th>
                 </tr>
@@ -104,7 +104,7 @@ templ Content(dp *DegreePlan) {
                 <tr>
                     <td>@utils.CourseLink(course.Code)</td>
                     <td>{ course.Name }</td>
-                    <td>{ strconv.Itoa(course.Credits) }</td>
+                    <td class="credits-column text-end">{ strconv.Itoa(course.Credits) }</td>
                     @winterSummer(&course)
                 </tr>
             }
