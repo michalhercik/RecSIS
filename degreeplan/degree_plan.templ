@@ -3,15 +3,7 @@ package degreeplan
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
-    "strings"
 )
-
-func capitalizeFirstLetter(s string) string {
-    if len(s) == 0 {
-        return s
-    }
-    return strings.ToUpper(string(s[0])) + s[1:]
-}
 
 func examTypeStr(examType string) string {
     // to add: STEX, thesis, ...
@@ -75,37 +67,50 @@ templ winterSummer(course *Course) {
     }
 }
 
-templ Page(dp *DegreePlan) {
-    @utils.Page("Degree plan") {
+templ Page(dp *DegreePlan, t text) {
+    @utils.Page(t.Utils.DegreePlan, t.Utils) {
         <div class="container">
-            @Content(dp)
+            @Content(dp, t)
         </div>
     }
 }
 
-templ Content(dp *DegreePlan) {
+templ Content(dp *DegreePlan, t text) {
     for _, bloc := range dp.blocs {
         <div class="d-flex justify-content-between align-items-center">
-            <h5>{ capitalizeFirstLetter(bloc.Name) }</h5>
-            <p>{ "Blueprint: 0/" + strconv.Itoa(bloc.Limit) + " Completed: 0/" + strconv.Itoa(bloc.Limit) }</p>
+            <h5>{ utils.CapitalizeFirstLetter(bloc.Name) }</h5>
+            <div>
+                <p
+                    class="me-2"
+                    style="color: rgb(4, 108, 181); display: inline-block;">
+                    { "0/" + strconv.Itoa(bloc.Limit) }
+                </p>
+                <p
+                    class="me-2"
+                    style="color: rgb(19, 92, 4); display: inline-block;">
+                    { "0/" + strconv.Itoa(bloc.Limit) }
+                </p>
+            </div>
         </div>
         <table class="table degree-plan-table">
             <thead>
                 <tr>
-                    <th>Code</th>
-                    <th>Title</th>
-                    <th class="text-end">Credits</th>
-                    <th>Winter</th>
-                    <th>Summer</th>
+                    <th>{ t.Code }</th>
+                    <th>{ t.Title }</th>
+                    <th class="text-end">{ t.Credits }</th>
+                    <th>{ t.Winter }</th>
+                    <th>{ t.Summer }</th>
+                    <th>{ t.Blueprint }</th>
                 </tr>
             </thead>
             <tbody>
             for _, course := range bloc.Courses {
                 <tr>
-                    <td>@utils.CourseLink(course.Code)</td>
+                    <td>@utils.CourseLink(course.Code, t.Utils)</td>
                     <td>{ course.Name }</td>
                     <td class="credits-column text-end">{ strconv.Itoa(course.Credits) }</td>
                     @winterSummer(&course)
+                    <td><button class="btn btn-sm btn-outline-dark">TODO</button></td>
                 </tr>
             }
             </tbody>

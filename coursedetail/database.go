@@ -28,12 +28,12 @@ type DBManager struct {
 }
 
 func selectCourse(tx *sql.Tx, code string, lang DBLang) (*Course, error) {
-	row := tx.QueryRow(sqlquery.Course, code, en.String())
+	row := tx.QueryRow(sqlquery.Course, code, lang.String())
 	course := &Course{
 		Faculty:                  Faculty{},
 		Guarantors:               []Teacher{{}, {}, {}},
 		Annotation:               Description{},
-		CompletitionRequirements: Description{},
+		CompletionRequirements:   Description{},
 		ExamRequirements:         Description{},
 		Sylabus:                  Description{},
 	}
@@ -74,8 +74,8 @@ func selectCourse(tx *sql.Tx, code string, lang DBLang) (*Course, error) {
 		&course.Capacity,
 		&course.Annotation.title,
 		&course.Annotation.content,
-		&course.CompletitionRequirements.title,
-		&course.CompletitionRequirements.content,
+		&course.CompletionRequirements.title,
+		&course.CompletionRequirements.content,
 		&course.ExamRequirements.title,
 		&course.ExamRequirements.content,
 		&course.Sylabus.title,
@@ -110,13 +110,13 @@ func selectTeachers(tx *sql.Tx, course *Course) error {
 	return nil
 }
 
-func (reader DBManager) Course(code string) (*Course, error) {
+func (reader DBManager) Course(code string, lang DBLang) (*Course, error) {
 	tx, err := reader.DB.Begin()
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
-	course, err := selectCourse(tx, code, en)
+	course, err := selectCourse(tx, code, lang)
 	if err != nil {
 		return nil, err
 	}
@@ -154,22 +154,7 @@ func (reader DBManager) GetComments(code string) ([]Comment, error) {
 		{ID: 1, UserID: 1, Content: "This is a comment"},
 		{ID: 2, UserID: 2, Content: "This is another comment"},
 		{ID: 3, UserID: 3, Content: "This is yet another comment"},
-		{ID: 4, UserID: 4, Content: "I think that Michal is great name"},
+		{ID: 4, UserID: 4, Content: "I think that Michal is a great name"},
 	}
 	return comments, nil
-}
-
-func (m DBManager) AddCourseToBlueprint(user int, code string) ([]Assignment, error) {
-	// TODO: Implement this method
-	// year=0, semester=course.semester, position=-1
-	// this must be done in a transaction, must return the all assignments
-	return nil, nil
-}
-
-func (m DBManager) RemoveCourseFromBlueprint(user int, code string) error {
-	// TODO: Implement this method
-	// it is expected that there is only one course with the given code
-	// if not return an error
-	// by that we do not have to return the assignments - there should be none after the removal
-	return nil
 }

@@ -218,8 +218,31 @@ body {
     width: 100px;
 }
 
+.degree-plan-table th:nth-child(6),
+.degree-plan-table td:nth-child(6) {
+    width: 80px;
+}
+
 /* Degree plan credit column styles */
 .credits-column::after {
     content: ".00";
     visibility: hidden;
+}
+
+/* Utils language flags styles */
+.flag-button {
+    width: 100%; /* Adjusts based on content */
+    height: 3rem; /* Adjusts based on content */
+    background-size: 100% 100%; /* Stretch flag to fill button */
+    background-position: center;
+    background-repeat: no-repeat;
+    aspect-ratio: 3 / 2; /* 3:2 aspect ratio */
+}
+
+.cs-flag {
+    background-image: url('cs_flag.png');
+}
+
+.en-flag {
+    background-image: url('en_flag.png');
 }

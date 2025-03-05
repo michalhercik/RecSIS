@@ -5,6 +5,7 @@ import (
     "strconv"
 	"strings"
     "fmt"
+    // TODO should use this for sanitizing? might use own policy
     "github.com/microcosm-cc/bluemonday"
 )
 
@@ -24,6 +25,7 @@ templ Ratings(ratings []Rating, courseCode string) {
         }
     }}
     <div id="rating">
+        <p class="text-warning">Under construction</p> // TODO: remove
         Rating: { itos(sum) }
         <button hx-post={ fmt.Sprintf("/course/%s/like", courseCode) } hx-target="#rating" hx-swap="outerHTML">Like</button>
         <button hx-post={ fmt.Sprintf("/course/%s/dislike", courseCode) } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
@@ -32,6 +34,7 @@ templ Ratings(ratings []Rating, courseCode string) {
 
 templ BlueprintAssignment(assignments []Assignment, code string) {
     <div id="bpassignment">
+        <p class="text-warning">Under construction</p> // TODO: remove
         Blueprint assignment:
         for _, assignment := range assignments {
             <p>{ assignment.String() }</p>
@@ -73,17 +76,17 @@ func examTypeStr(examType string) string {
     }
 }
 
-templ hoursExams(course *Course) {
+templ hoursExams(course *Course, t text) {
     {{ semCount := course.SemesterCount }}
     if semCount == 1 {
     <tr>
-        <td>Scope, examination:</td>
+        <td>{ t.ScopeExam }:</td>
         <td>{ itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
     </tr>
     }
     if semCount == 2 {
     <tr>
-        <td rowspan="2">Scope, examination:</td>
+        <td rowspan="2">{ t.ScopeExam }:</td>
         <td>{ "winter s.:" + itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
     </tr>
     <tr>
@@ -91,13 +94,6 @@ templ hoursExams(course *Course) {
         <td>{ "summer s.:" + itos(course.LectureRange2) + "/" + itos(course.SeminarRange2) + ", " + examTypeStr(course.ExamType)}</td>
     </tr>
     }
-}
-
-func capacityStr(capacity int) string {
-    if capacity == -1 {
-        return "unlimited"
-    }
-    return itos(capacity)
 }
 
 func stateStr(state string) string {
@@ -111,42 +107,47 @@ func stateStr(state string) string {
     }
 }
 
-func courseSISLink(code string) string {
-    // /eng/ for English version, nothing for Czech version
-    return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
+func courseSISLink(code string, t text) string {
+    if t.Language == "cs" {
+        return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
+    } else if t.Language == "en" {
+        return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
+    }
+    return "unsupported language"
 }
 
-templ BasicInfo(course *Course) {
+templ BasicInfo(course *Course, t text) {
     // TODO only if not empty/nil/...
-    <div id="basicinfo" class="courseinfobox">
-        <table>
+    <div id="basicinfo">
+        <table class="table table-borderless">
+            // TODO: this should be the name but in the other language (Czech/English)
+            // <tr>
+            //     <td>Czech title:</td><td>{ course.Name }</td>
+            // </tr>
             <tr>
-                <td>Czech title:</td><td>{ course.Name }</td>
+                <td>{ t.Faculty }:</td><td>{ course.Faculty.Name }</td>
             </tr>
             <tr>
-                <td>Faculty:</td><td>{ course.Faculty.Name }</td>
+                <td>{ t.Semester }:</td><td>{ course.Start.String(t.Language) }</td>
             </tr>
             <tr>
-                <td>Semester:</td><td>{ course.Start.String() }</td>
+                <td>{ t.ECredits }:</td><td>{ itos(course.Credits) }</td>
+            </tr>
+            @hoursExams(course, t)
+            <tr>
+                <td>{ t.Capacity }:</td><td>{ course.Capacity.String(t.Language) }</td>
             </tr>
             <tr>
-                <td>E-Credits:</td><td>{ itos(course.Credits) }</td>
-            </tr>
-            @hoursExams(course)
-            <tr>
-                <td>Capacity:</td><td>{ capacityStr(course.Capacity) }</td>
+                <td>{ t.StateOfCourse }:</td><td>{ stateStr(course.State) }</td>
             </tr>
             <tr>
-                <td>State of the course:</td><td>{ stateStr(course.State) }</td>
+                <td>{ t.LanguageOfCourse }:</td><td>{ course.Language }</td>
             </tr>
             <tr>
-                <td>Language:</td><td>{ course.Language }</td>
+                <td>{ t.AdditionalInfo }:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
             </tr>
             <tr>
-                <td>Additional information:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
-            </tr>
-            <tr>
-                <td>Guarantor(s):</td><td>{ course.Guarantors[0].String() }</td>
+                <td>{ t.Guarantors }:</td><td>{ course.Guarantors[0].String() }</td>
             </tr>
             for _, teacher := range course.Guarantors[1:] {
             <tr>
@@ -154,7 +155,7 @@ templ BasicInfo(course *Course) {
             </tr>
             }
             <tr>
-                <td>Teacher(s):</td><td>{ course.Teachers[0].String() }</td>
+                <td>{ t.Teachers }:</td><td>{ course.Teachers[0].String() }</td>
             </tr>
             for _, teacher := range course.Teachers[1:] {
             <tr>
@@ -162,7 +163,7 @@ templ BasicInfo(course *Course) {
             </tr>
             }
             <tr>
-                <td>SIS link:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code)) }>{ courseSISLink(course.Code) }</a></td>
+                <td>{ t.SISLink }:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code, t)) }>{ courseSISLink(course.Code, t) }</a></td>
             </tr>
         </table>
         // TODO may add extend button for more info
@@ -183,45 +184,20 @@ templ renderSafeContent(content string) {
     }
 }
 
-templ Annotation(annotation string) {
-    if annotation != "" {
-    <div id="annotation" class="courseinfobox">
-        <h2>Annotation</h2>
-        @renderSafeContent(annotation)
+templ DetailField(desc Description) {
+    if desc.content != "" {
+    <div>
+        <h2>{ utils.CapitalizeFirstLetter(desc.title) }</h2>
+        <p style="text-align: justify">@renderSafeContent(desc.content)</p>
     </div>
     }
 }
 
-templ CompletionRequirements(completion string) {
-    if completion != "" {
-    <div id="completion" class="courseinfobox">
-        <h2>Completion requirements</h2>
-        @renderSafeContent(completion)
-    </div>
-    }
-}
 
-templ Literature(literature string) {
-    if literature != "" {
-    <div id="literature" class="courseinfobox">
-        <h2>Literature</h2>
-        @renderSafeContent(literature)
-    </div>
-    }
-}
-
-templ Sylabus(sylabus string) {
-    if sylabus != "" {
-    <div id="sylabus" class="courseinfobox">
-        <h2>Sylabus</h2>
-        @renderSafeContent(sylabus)
-    </div>
-    }
-}
-
-templ Comments(comments []Comment, courseCode string) {
-    <div id="comments" class="courseinfobox">
-        <h2>Comments</h2>
+templ Comments(comments []Comment, courseCode string, t text) {
+    <div id="comments">
+        <h2>{ t.Comments }</h2>
+        <p class="text-warning">Under construction</p> // TODO: remove
         <ul>
             for _, comment := range comments {
             <li>
@@ -249,32 +225,34 @@ templ Comments(comments []Comment, courseCode string) {
     </div>
 }
 
-templ Content(course *Course) {
+templ Content(course *Course, t text) {
     {{ p = bluemonday.UGCPolicy() }}
-    <h1>{ course.Code + " - " + course.Name }</h1>
+    <h1 class="text-center">{ course.Code + " - " + course.Name }</h1>
     @Ratings(course.Ratings, course.Code)
     @BlueprintAssignment(course.BlueprintAssignments, course.Code)
-    @BasicInfo(course)
+    @BasicInfo(course, t)
     // TODO add links to parts of the page
-    @Annotation(course.Annotation.content)
-    @CompletionRequirements("") // TODO get data
-    @Literature("") // TODO get data
-    @Sylabus(course.Sylabus.content)
-    @Comments(course.Comments, course.Code)
+    @DetailField(course.Annotation)
+    @DetailField(course.CompletionRequirements)
+    @DetailField(course.ExamRequirements)
+    @DetailField(course.Sylabus)
+    @Comments(course.Comments, course.Code, t)
 }
 
-templ Page(course *Course) {
-    @utils.Page(course.Code + " - " + course.Name) {
-        @Content(course)
+templ Page(course *Course, t text) {
+    @utils.Page(course.Code + " - " + course.Name, t.Utils) {
+        <div class="container">
+            @Content(course, t)
+        </div>
     }
 }
 
-templ PageNotFound(code string) {
-    @utils.Page("Course not found") {
-        @ContentNotFound(code)
+templ PageNotFound(code string, t text) {
+    @utils.Page("Course not found", t.Utils) {
+        @ContentNotFound(code, t)
     }
 }
 
-templ ContentNotFound(code string) {
-    <h1>Course with code { code } not found</h1>
+templ ContentNotFound(code string, t text) {
+    <h1>{ t.CourseWithCode + code + t.NotFound }</h1>
 }

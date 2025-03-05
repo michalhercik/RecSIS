@@ -1,5 +1,9 @@
 package utils
 
+import (
+    "strings"
+)
+
 templ watermark() {
     <div class="watermark" style="
         position:fixed;
@@ -15,12 +19,12 @@ templ watermark() {
     </div>
 }
 
-templ Page(title string) {
+templ Page(title string, t Text) {
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang={ t.Language }>
         <head>
             <meta charset="UTF-8">
-            <title>{ title }</title>
+            <title>{ title }</title> // TODO: translate
             // css
             <link rel="stylesheet" href="/style.css">
             // bootstrap
@@ -36,17 +40,17 @@ templ Page(title string) {
         </head>
         <body hx-boost="true">
             // @watermark()
-            @Header(title)
+            @Header(title, t) 
             <main>
                 { children... }
             </main>
             <hr/>
-            @Footer()
+            @Footer(t)
         </body>
     </html>
 }
 
-templ navItem(url string, text string, active bool) {
+templ navItem(url, text string, active bool) {
     {{
         class := "fs-4 nav-link"
         if active {
@@ -56,27 +60,43 @@ templ navItem(url string, text string, active bool) {
     <li class="nav-item"><a class={ class } href={ templ.URL(url) }>{ text }</a></li>
 }
 
-templ Header(title string) {
-    <header>
+templ langButton(lang string) {
+    <button
+        class={ "btn " + lang + "-flag flag-button" }
+        @click={ "changeLanguage('" + lang + "')" }>
+    </button>
+}
+
+templ Header(title string, t Text) {
+    <header x-data="{
+        changeLanguage(lang) {
+            let currentUrl = window.location.pathname;
+            let queryParams = window.location.search;
+            let newUrl = currentUrl.replace(/^\/(cs|en)/, '') || '';
+            newUrl = '/' + lang + newUrl + queryParams;
+            window.location.href = newUrl;
+        }
+    }">
         <nav class="navbar navbar-expand-md navbar-light bg-light">
             <div class="container-fluid">
-                <a class="navbar-brand fs-3" href="/">RecSIS</a>
+                <a class="navbar-brand fs-3" href={ templ.URL(t.LangLink("")) }>RecSIS</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav mx-auto">
-                        @navItem("/", "Home", title == "Home")
-                        @navItem("/courses", "Courses", title == "Courses")
-                        @navItem("/blueprint", "Blueprint", title == "Blueprint")
-                        @navItem("/degreeplan", "Degree plan", title == "Degree plan")
+                        @navItem(t.LangLink("/home"), t.Home, title == t.Home)
+                        @navItem(t.LangLink("/courses"), t.Courses, title == t.Courses)
+                        @navItem(t.LangLink("/blueprint"), t.Blueprint, title == t.Blueprint)
+                        @navItem(t.LangLink("/degreeplan"), t.DegreePlan, title == t.DegreePlan)
                     </ul>
                     <div class="d-flex">
-                        <button class="btn btn-outline-primary me-2">Login</button>
-                        <select class="form-select" name="chooseLanguage" style="max-width: 150px;">
-                            <option value="en">English</option>
-                            <option value="cz">Czech</option>
-                        </select>
+                        <button class="btn btn-outline-success me-2">{ t.Login }</button>
+                        if t.Language == "cs" {
+                            @langButton("en")
+                        } else {
+                            @langButton("cs")
+                        }
                     </div>
                 </div>
             </div>
@@ -84,13 +104,20 @@ templ Header(title string) {
     </header>
 }
 
-templ Footer() {
-    <footer>
-        In case of any issues, please contact the RecSIS team.
+templ Footer(t Text) {
+    <footer class="text-center my-3">
+        { t.Contact }
         <a href="mailto:TODO@TODO.com">TODO@TODO.com</a>
     </footer>
 }
 
-templ CourseLink(Code string) {
-    <a class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover" href={ templ.URL("/course/" + Code) }>{ Code }</a>
+templ CourseLink(Code string, t Text) {
+    <a class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover" href={ templ.URL(t.LangLink("/course/" + Code)) }>{ Code }</a>
+}
+
+func CapitalizeFirstLetter(s string) string {
+    if len(s) == 0 {
+        return s
+    }
+    return strings.ToUpper(string(s[0])) + s[1:]
 }

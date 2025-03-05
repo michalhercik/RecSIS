@@ -36,18 +36,18 @@ func hoursExamsString(lecture, seminar int, examType string) string {
     return hoursString(lecture, seminar) + ", " + examTypeStr(examType)
 }
 
-func semesterHoursExamsString(course *Course) string {
+func semesterHoursExamsString(course *Course, t text) string {
     semCount := course.semesterCount
     result := ""
     switch semCount {
     case 1:
         switch course.start {
         case teachingWinterOnly:
-            result = "Winter: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
+            result = t.WinterAssign + " " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
         case teachingSummerOnly:
-            result = "Summer: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
+            result = t.SummerAssign + " " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
         case teachingBoth:
-            result = "Both: " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
+            result = t.Both + " " + hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType)
         default:
             result = "unsupported"
         }
@@ -55,10 +55,10 @@ func semesterHoursExamsString(course *Course) string {
         switch course.start {
         // TODO: this probably wont fit, fix this
         case teachingWinterOnly:
-            result = "W:" + hoursString(course.lectureRange1, course.seminarRange1) + " S:" + hoursString(course.lectureRange2, course.seminarRange2) + ", " + examTypeStr(course.examType)
+            result = t.W + ":" + hoursString(course.lectureRange1, course.seminarRange1) + " " + t.S + ":" + hoursString(course.lectureRange2, course.seminarRange2) + ", " + examTypeStr(course.examType)
         // TODO: this probably wont fit, fix this
         case teachingSummerOnly:
-            result = "W:" + hoursString(course.lectureRange2, course.seminarRange2) + " S:" + hoursString(course.lectureRange1, course.seminarRange1) + ", " + examTypeStr(course.examType)
+            result = t.W + ":" + hoursString(course.lectureRange2, course.seminarRange2) + " " + t.S + ":" + hoursString(course.lectureRange1, course.seminarRange1) + ", " + examTypeStr(course.examType)
         case teachingBoth:
             result = "unsupported"
         default:
@@ -70,7 +70,7 @@ func semesterHoursExamsString(course *Course) string {
     return result
 }
 
-templ QuickResults(res *QuickResponse) {
+templ QuickResults(res *QuickResponse, t text) {
     <div
         id="quick-search-results"
         x-cloak
@@ -79,11 +79,11 @@ templ QuickResults(res *QuickResponse) {
         if res.approxHits == -1 {
             // Don't render anything if approxHits is -1
         } else if len(res.courses) == 0 {
-            <div class="dropdown-item text-muted">No results found</div>
+            <div class="dropdown-item text-muted">{ t.NoCoursesFound }</div>
         } else {
             for _, course := range res.courses {
                 <a
-                    href={ templ.URL("/course/" + course.code) }
+                    href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }
                     class="dropdown-item text-truncate"
                     hx-boost="false"
                 >
@@ -94,13 +94,13 @@ templ QuickResults(res *QuickResponse) {
     </div>
 }
 
-templ Search(coursesPage *coursesPage) {
+templ Search(coursesPage *coursesPage, t text) {
     <form
-        hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
+        hx-get={ t.Utils.LangLink("/courses/search?user=" + strconv.Itoa(user)) }
         hx-target="#courses"
         hx-swap="outerHTML"
         hx-include="[name=search],[name=sort],[name=semester]"
-        :hx-push-url={ "`/courses?user=" + strconv.Itoa(user) + "&search=${searchInput}&sort=${searchSort}&semester=${searchSemester}`" }
+        :hx-push-url={ "`" + t.Utils.LangLink("/courses?user=" + strconv.Itoa(user) + "&search=${searchInput}&sort=${searchSort}&semester=${searchSemester}") + "`" }
         class="pt-3 pb-3"
         x-data={ "{ quickResOpen: false }" }
     >
@@ -108,78 +108,78 @@ templ Search(coursesPage *coursesPage) {
             <div class="col-lg-6 col-md-10 col-sm-12">
                 <div class="dropdown" @click.away="quickResOpen = false">
                     <div class="input-group">
-                        <input type="text" name="search" id="search" class="form-control" placeholder="Search..." autocomplete="off"
+                        <input type="text" name="search" id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
                             x-model="searchInput"
                             @click="quickResOpen = true"
                             @keydown="quickResOpen = true"
                             @keydown.escape="quickResOpen = false"
                             @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
-                            hx-get="/courses/quicksearch"
+                            hx-get={ t.Utils.LangLink("/courses/quicksearch") }
                             hx-trigger="input changed, triggerSearch from:body" 
                             hx-target="#quick-search-results"
                             hx-swap="outerHTML"
                             hx-push-url="false"
                         />
-                        <button type="submit" class="btn btn-primary" @click="quickResOpen = false">Search</button>
+                        <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
                     </div>
                     <div x-show="quickResOpen && searchInput.length > 0">
                         @QuickResults(&QuickResponse{
                             approxHits: -1,
                             courses: []Course{},
-                        })
+                        }, t)
                     </div>
                 </div>
             </div>
         </div>
         <div class="row justify-content-center mt-3">
             <div class="col-lg-3 col-md-5 col-sm-12">
-                <label for="sort">Sort by:</label>
+                <label for="sort">{ t.SortByFilter + ":" }</label>
                 <select name="sort" id="sort" class="form-select" x-model="searchSort">
-                    <option value={ strconv.Itoa(relevance) }>Relevance</option>
-                    <option value={ strconv.Itoa(recommended) }>Recommended</option>
-                    <option value={ strconv.Itoa(rating) }>Rating</option>
-                    <option value={ strconv.Itoa(mostPopular) }>Most Popular</option>
-                    <option value={ strconv.Itoa(newest) }>Newest</option>
+                    <option value={ strconv.Itoa(relevance) }>{ t.Relevance }</option>
+                    <option value={ strconv.Itoa(recommended) }>{ t.Recommended }</option>
+                    <option value={ strconv.Itoa(rating) }>{ t.Rating }</option>
+                    <option value={ strconv.Itoa(mostPopular) }>{ t.MostPopular }</option>
+                    <option value={ strconv.Itoa(newest) }>{ t.Newest }</option>
                 </select>
             </div>
             <div class="col-lg-3 col-md-5 col-sm-12">
-                <label for="semester">Semester:</label>
+                <label for="semester">{ t.SemesterFilter + ":" }</label>
                 <select name="semester" id="semester" class="form-select" x-model="searchSemester">
-                    <option value={ strconv.Itoa(int(teachingBoth)) }>Both</option>
-                    <option value={ strconv.Itoa(int(teachingWinterOnly)) }>Winter</option>
-                    <option value={ strconv.Itoa(int(teachingSummerOnly)) }>Summer</option>
+                    <option value={ strconv.Itoa(int(teachingBoth)) }>{ t.Both }</option>
+                    <option value={ strconv.Itoa(int(teachingWinterOnly)) }>{ t.Winter }</option>
+                    <option value={ strconv.Itoa(int(teachingSummerOnly)) }>{ t.Summer }</option>
                 </select>
             </div>
         </div>
     </form>
 }
 
-templ blueprintAssignment(assignments []Assignment, code string) {
+templ blueprintAssignment(assignments []Assignment, code string, t text) {
     <div class="d-flex justify-content-end mt-auto pt-3">
         <div class="btn-group">
             <button type="button" class="btn btn-outline-dark"
-                hx-post={ "/blueprint/course/" + code }  
+                hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }  
                 hx-vals={ `"year": 0, "semester": 0` } 
             >
-                Assign
+                { t.Assign }
             </button>
             <button type="button" class="btn btn-outline-dark dropdown-toggle dropdown-toggle-split"
                 data-bs-toggle="dropdown" aria-expanded="false">
-                <span class="visually-hidden">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu">
+            // TODO make dynamic, NOT 3 years
                 for year := 1; year <= 3; year++ {
-                    <li><button class="dropdown-item"
-                        hx-post={ "/blueprint/course/" + code }  
+                    <li class="mx-3"><button class="dropdown-item text-center"
+                        hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }  
                         hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1` } 
                     >
-                        Year { strconv.Itoa(year) } Winter
+                    { t.YearStr(year) + " " + t.WinterAssign }
                     </button></li>
-                    <li><button class="dropdown-item"
-                        hx-post={ "/blueprint/course/" + code }  
+                    <li class="mx-3"><button class="dropdown-item text-center"
+                        hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }  
                         hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2` } 
                     >
-                        Year { strconv.Itoa(year) } Summer
+                    { t.YearStr(year) + " " + t.SummerAssign }
                     </button></li>
                 }
             </ul>
@@ -187,7 +187,7 @@ templ blueprintAssignment(assignments []Assignment, code string) {
     </div>
 }
 
-templ courseCard(course *Course) {
+templ courseCard(course *Course, t text) {
     <div
         class="card custom-card rounded-0"
         x-data="{ expanded: false, showButton: false }"
@@ -195,76 +195,76 @@ templ courseCard(course *Course) {
     >
         <div class="card-header d-flex justify-content-between align-items-center">
             <h6 class="mb-0">{ course.code }</h6>
-            <small>{ semesterHoursExamsString(course) }</small>
-            <small>{ "Credits: " + strconv.Itoa(course.credits) }</small>
+            <small>{ semesterHoursExamsString(course, t) }</small>
+            <small>{ t.Credits + ": " + strconv.Itoa(course.credits) }</small>
         </div>
         <div class="card-body text-dark d-flex flex-column position-relative">
             if len(course.blueprintAssignments) > 0 {
                 <div class="ribbon">
-                    <span>{ course.blueprintAssignments.String() }</span>
+                    <span>{ course.blueprintAssignments.String(t.Language) }</span>
                 </div>
             }
             <div :class="{ 'expanded': expanded, 'annotation-container': showButton }">
-                <h5 class="card-title "><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL("/course/" + course.code ) }>{ course.name }</a></h5>
-                <h6 class="card-subtitle mb-2 text-muted">{ "Teacher(s): " + course.teachers.string() }</h6>
+                <h5 class="card-title "><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }>{ course.name }</a></h5>
+                <h6 class="card-subtitle mb-2 text-muted">{ t.Teachers + ": " + course.teachers.string() }</h6>
                 <p class="card-text annotation-text" x-ref="annotation">{ course.annotation }</p>
             </div>
-            <button class="btn btn-link text-secondary" @click="expanded = !expanded" x-show="showButton" x-text="expanded ? 'Read less' : 'Read more'"></button>
-            @blueprintAssignment(course.blueprintAssignments, course.code)
+            <button class="btn btn-link text-secondary" @click="expanded = !expanded" x-show="showButton" x-text={ "expanded ? '" + t.ReadLess + "' : '" + t.ReadMore + "'" }></button>
+            @blueprintAssignment(course.blueprintAssignments, course.code, t)
         </div>
     </div>
 }
 
-templ paginationButton(text string, pageToGo int, cp *coursesPage) {
+templ paginationButton(text string, pageToGo int, cp *coursesPage, t text) {
     <button
         class="btn btn-outline-dark"
-        hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
+        hx-get={ t.Utils.LangLink("/courses/search?user=" + strconv.Itoa(user)) }
         hx-target="#courses"
         hx-swap="outerHTML show:top"
         hx-include="[name=search],[name=sort],[name=semester]"
         hx-vals={ `"page": ` + strconv.Itoa(pageToGo) + `, "hitsPerPage": ` + strconv.Itoa(cp.pageSize) }
-        hx-push-url={ "/courses?user=" + strconv.Itoa(user) + "&search=" + cp.search + "&sort=" + strconv.Itoa(int(cp.sortedBy)) + "&semester=" + strconv.Itoa(int(cp.semester)) + "&page=" + strconv.Itoa(pageToGo) + "&hitsPerPage=" + strconv.Itoa(cp.pageSize) }
+        hx-push-url={ t.Utils.LangLink("/courses?user=" + strconv.Itoa(user) + "&search=" + cp.search + "&sort=" + strconv.Itoa(int(cp.sortedBy)) + "&semester=" + strconv.Itoa(int(cp.semester)) + "&page=" + strconv.Itoa(pageToGo) + "&hitsPerPage=" + strconv.Itoa(cp.pageSize)) }
     >
         { text }
     </button>
 }
 
-templ loadMoreButton(newPageSize int, cp *coursesPage) {
+templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
     <button
         class="btn btn-outline-dark"
-        hx-get={ "/courses/search?user=" + strconv.Itoa(user) }
+        hx-get={ t.Utils.LangLink("/courses/search?user=" + strconv.Itoa(user)) }
         hx-target="#courses"
         hx-swap="outerHTML"
         hx-include="[name=search],[name=sort],[name=semester]"
         hx-vals={ `"page": ` + strconv.Itoa(cp.page) + `, "hitsPerPage": ` + strconv.Itoa(newPageSize) }
-        hx-push-url={ "/courses?user=" + strconv.Itoa(user) + "&search=" + cp.search + "&sort=" + strconv.Itoa(int(cp.sortedBy)) + "&semester=" + strconv.Itoa(int(cp.semester)) + "&page=" + strconv.Itoa(cp.page) + "&hitsPerPage=" + strconv.Itoa(newPageSize) }
+        hx-push-url={ t.Utils.LangLink("/courses?user=" + strconv.Itoa(user) + "&search=" + cp.search + "&sort=" + strconv.Itoa(int(cp.sortedBy)) + "&semester=" + strconv.Itoa(int(cp.semester)) + "&page=" + strconv.Itoa(cp.page) + "&hitsPerPage=" + strconv.Itoa(newPageSize)) }
     >
-        Load More
+        { t.LoadMore }
     </button>
 }
 
-templ pagination(coursesPage *coursesPage) {
-    <p>Page { strconv.Itoa(coursesPage.page) } of { strconv.Itoa(coursesPage.totalPages) }</p>
+templ pagination(coursesPage *coursesPage, t text) {
+    <p>{ t.Page + " " + strconv.Itoa(coursesPage.page) + " " + t.Of + " " + strconv.Itoa(coursesPage.totalPages) }</p>
     <div>
         if coursesPage.page > 1 {
-            @paginationButton("Previous Page", coursesPage.page - 1, coursesPage)
+            @paginationButton(t.PreviousPage, coursesPage.page - 1, coursesPage, t)
         }
         if coursesPage.page < coursesPage.totalPages {
-            @paginationButton("Next Page", coursesPage.page + 1, coursesPage)
-            @loadMoreButton(coursesPage.pageSize + coursesPerPage, coursesPage)
+            @paginationButton(t.NextPage, coursesPage.page + 1, coursesPage, t)
+            @loadMoreButton(coursesPage.pageSize + coursesPerPage, coursesPage, t)
         }
     </div>
 }
 
-templ Courses(coursesPage *coursesPage) {
+templ Courses(coursesPage *coursesPage, t text) {
     <div id="courses" x-init={ "searchInput = '" + coursesPage.search + "'; searchSort = " + strconv.Itoa(int(coursesPage.sortedBy)) + "; searchSemester = " + strconv.Itoa(int(coursesPage.semester)) }>
-        <h2>{ coursesPage.sortedBy.String() + ":" }</h2>
+        <h2>{ coursesPage.sortedBy.String(t.Language) + ":" }</h2>
         <div class="grid">
             if coursesPage.totalPages == 0 {
-                <p>No courses found</p>
+                <p>{ t.NoCoursesFound }</p>
             } else {
                 for _, course := range coursesPage.courses {
-                    @courseCard(&course)
+                    @courseCard(&course, t)
                 }
             }
             for i := 0; i < 10; i++ {
@@ -272,22 +272,22 @@ templ Courses(coursesPage *coursesPage) {
             }
         </div>
         if coursesPage.totalPages > 0 {
-            @pagination(coursesPage)
+            @pagination(coursesPage, t)
         }
     </div>
 }
 
-templ Content(coursesPage *coursesPage) {
+templ Content(coursesPage *coursesPage, t text) {
     <div class="custom-container">
         <div x-data="{ searchInput: '', searchSort: 0, searchSemester: 3 }">
-            @Search(coursesPage)
-            @Courses(coursesPage)
+            @Search(coursesPage, t)
+            @Courses(coursesPage, t)
         </div>
     </div>
 }
 
-templ Page(coursesPage *coursesPage) {
-    @utils.Page("Courses") {
-        @Content(coursesPage)
+templ Page(coursesPage *coursesPage, t text) {
+    @utils.Page(t.Utils.Courses, t.Utils) {
+        @Content(coursesPage, t)
     }
 }

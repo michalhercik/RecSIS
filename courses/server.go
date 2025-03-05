@@ -15,43 +15,73 @@ type Server struct {
 }
 
 func (s Server) Register(router *http.ServeMux, prefix string) {
-	router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page)
-	router.HandleFunc(fmt.Sprintf("GET %s/search", prefix), s.content)
-	router.HandleFunc(fmt.Sprintf("GET %s/quicksearch", prefix), s.quickSearch)
+	//router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page) // TODO get language from http header
+	router.HandleFunc(fmt.Sprintf("GET /cs%s", prefix), s.csPage)
+	router.HandleFunc(fmt.Sprintf("GET /en%s", prefix), s.enPage)
+	//router.HandleFunc(fmt.Sprintf("GET %s/search", prefix), s.content) // TODO get language from http header 
+	router.HandleFunc(fmt.Sprintf("GET /cs%s/search", prefix), s.csContent)
+	router.HandleFunc(fmt.Sprintf("GET /en%s/search", prefix), s.enContent)
+	//router.HandleFunc(fmt.Sprintf("GET %s/quicksearch", prefix), s.quickSearch) // TODO get language from http header
+	router.HandleFunc(fmt.Sprintf("GET /cs%s/quicksearch", prefix), s.csQuickSearch)
+	router.HandleFunc(fmt.Sprintf("GET /en%s/quicksearch", prefix), s.enQuickSearch)
 }
 
-func (s Server) page(w http.ResponseWriter, r *http.Request) {
-	req := parseQueryRequest(r)
+func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
+	s.page(w, r, czech, texts["cs"])
+}
+
+func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
+	s.page(w, r, english, texts["en"])
+}
+
+func (s Server) page(w http.ResponseWriter, r *http.Request, lang Language, t text) {
+	req := parseQueryRequest(r, lang)
 	res, err := s.search(req)
 	if err != nil {
-		log.Printf("quickSearch: %v", err)
+		log.Printf("search: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	coursesPage := createPageContent(res, req)
-	Page(&coursesPage).Render(r.Context(), w)
+	Page(&coursesPage, t).Render(r.Context(), w)
 }
 
-func (s Server) content(w http.ResponseWriter, r *http.Request) {
-	req := parseQueryRequest(r)
+func (s Server) csContent(w http.ResponseWriter, r *http.Request) {
+	s.content(w, r, czech, texts["cs"])
+}
+
+func (s Server) enContent(w http.ResponseWriter, r *http.Request) {
+	s.content(w, r, english, texts["en"])
+}
+
+func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t text) {
+	req := parseQueryRequest(r, lang)
 	res, err := s.search(req)
 	if err != nil {
-		log.Printf("quickSearch: %v", err)
+		log.Printf("search: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	coursesPage := createPageContent(res, req)
-	Courses(&coursesPage).Render(r.Context(), w)
+	Courses(&coursesPage, t).Render(r.Context(), w)
 }
 
-func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
+func (s Server) csQuickSearch(w http.ResponseWriter, r *http.Request) {
+	s.quickSearch(w, r, czech, texts["cs"])
+}
+
+func (s Server) enQuickSearch(w http.ResponseWriter, r *http.Request) {
+	s.quickSearch(w, r, english, texts["en"])
+}
+
+func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang Language, t text) {
 	query := r.FormValue("search")
 	req := QuickRequest{
 		query:    query,
 		indexUID: courseIndex,
 		limit:    5,
 		offset:   0,
-		lang:     czech,
+		lang:     lang,
 	}
 	res, err := s.Search.QuickSearch(&req)
 	if err != nil {
@@ -59,10 +89,10 @@ func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	QuickResults(res).Render(r.Context(), w)
+	QuickResults(res, t).Render(r.Context(), w)
 }
 
-func parseQueryRequest(r *http.Request) Request {
+func parseQueryRequest(r *http.Request, lang Language) Request {
 	query := r.FormValue("search")
 	page, err := strconv.ParseInt(r.FormValue("page"), 10, 64)
 	if err != nil {
@@ -83,12 +113,13 @@ func parseQueryRequest(r *http.Request) Request {
 	}
 	semester := TeachingSemester(semesterInt)
 
+	// TODO change language based on URL
 	req := Request{
 		query:       query,
 		indexUID:    courseIndex,
 		page:        page,
 		hitsPerPage: hitsPerPage,
-		lang:        czech,
+		lang:        lang,
 		sortedBy:    sortedBy,
 		semester:    semester,
 	}

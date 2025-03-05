@@ -24,7 +24,10 @@ type Server struct {
 }
 
 func (s Server) Register(router *http.ServeMux, prefix string) {
-	router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page)
+	//router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page) //TODO get language from http header
+	router.HandleFunc(fmt.Sprintf("GET /cs%s", prefix), s.csPage)
+	router.HandleFunc(fmt.Sprintf("GET /en%s", prefix), s.enPage)
+	// TODO: should we differentiate between languages for rest of the endpoints?
 	router.HandleFunc(fmt.Sprintf("POST %s/year", prefix), s.yearAddition)
 	router.HandleFunc(fmt.Sprintf("DELETE %s/year", prefix), s.yearRemoval)
 	router.HandleFunc(fmt.Sprintf("POST %s/course/{code}", prefix), s.courseAddition)
@@ -94,24 +97,33 @@ func atoiSlice(s []string) ([]int, error) {
 
 func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request) {
 	var result templ.Component
+	t := texts["cs"] // TODO this should be based on the language of the request
 	data, err := s.Data.BluePrint(user)
 	if err != nil {
 		log.Println(err)
-		result = InternalServerErrorContent()
+		result = InternalServerErrorContent(t)
 	} else {
-		result = Content(data)
+		result = Content(data, t)
 	}
 	result.Render(r.Context(), w)
 }
 
-func (s Server) page(w http.ResponseWriter, r *http.Request) {
+func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
+	s.page(w, r, texts["cs"])
+}
+
+func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
+	s.page(w, r, texts["en"])
+}
+
+func (s Server) page(w http.ResponseWriter, r *http.Request, t text) {
 	var result templ.Component
 	data, err := s.Data.BluePrint(user)
 	if err != nil {
 		log.Println(err)
-		result = InternalServerErrorPage()
+		result = InternalServerErrorPage(t)
 	} else {
-		result = Page(data)
+		result = Page(data, t)
 	}
 	result.Render(r.Context(), w)
 }

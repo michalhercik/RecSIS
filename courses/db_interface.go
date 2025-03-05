@@ -42,16 +42,22 @@ const (
 
 type sortType int
 
-var sortTypeName = map[sortType]string{
-	relevance:   "Relevant",
-	recommended: "Recommended",
-	rating:      "By rating",
-	mostPopular: "Most popular",
-	newest:      "Newest",
-}
 
-func (st sortType) String() string {
-	return sortTypeName[st]
+func (st sortType) String(lang string) string {
+    switch st {
+    case relevance:
+        return texts[lang].Relevance
+    case recommended:
+        return texts[lang].Recommended
+    case rating:
+        return texts[lang].Rating
+    case mostPopular:
+        return texts[lang].MostPopular
+    case newest:
+        return texts[lang].Newest
+    default:
+		return "unknown"
+    }
 }
 
 type Teacher struct {
@@ -104,32 +110,32 @@ type Assignment struct {
 }
 
 // TODO: this string is broken, year and semester is swapped
-func (a Assignment) String() string {
+func (a Assignment) String(lang string) string {
 	semester := ""
 	switch a.semester {
 	case assignmentNone:
-		semester = "N"
+		semester = texts[lang].N
 	case assignmentWinter:
-		semester = "W"
+		semester = texts[lang].W
 	case assignmentSummer:
-		semester = "S"
+		semester = texts[lang].S
 	default:
-		semester = "ER"
+		semester = texts[lang].ER
 	}
 
 	result := fmt.Sprintf("%d%s", a.year, semester)
 	if a.year == 0 {
-		result = "UN"
+		result = texts[lang].UN
 	}
 	return result
 }
 
 type Assignments []Assignment
 
-func (a Assignments) String() string {
+func (a Assignments) String(lang string) string {
     assignments := []string{}
     for _, assignment := range a {
-        assignments = append(assignments, assignment.String())
+        assignments = append(assignments, assignment.String(lang))
     }
     if len(assignments) == 0 {
         return ""

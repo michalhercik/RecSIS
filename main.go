@@ -82,6 +82,8 @@ func main() {
 	static := http.FileServer(http.Dir("static"))
 	router.Handle("/favicon.ico", static)
 	router.Handle("GET /style.css", static)
+	router.Handle("GET /cs_flag.png", static)
+	router.Handle("GET /en_flag.png", static)
 
 	//////////////////////////////////////////
 	// Server setup
