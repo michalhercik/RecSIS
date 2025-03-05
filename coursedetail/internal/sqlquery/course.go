@@ -20,7 +20,7 @@ SELECT
     faculty,
     guarantor,
     taught,
-    start_semester,
+    semester_description,
     semester_count,
     taught_lang,
     lecture_range1,
@@ -37,6 +37,7 @@ SELECT
     COALESCE(aim, '{}') AS aim,
     COALESCE(requirements, '{}') AS requirements,
     COALESCE(requirements, '{}') AS syllabus
-FROM bla_courses
-WHERE code = $1 AND lang = $2;
+FROM bla_courses c
+LEFT JOIN start_semester_to_desc sd ON c.start_semester = sd.id AND c.lang = sd.lang
+WHERE code = $1 AND c.lang = $2;
 `

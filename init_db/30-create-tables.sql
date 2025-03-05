@@ -47,10 +47,13 @@ CREATE TABLE courses(
     teacher2 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
     teacher3 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
     min_number INT,
-    capacity INT,
-    search_vector tsvector GENERATED ALWAYS AS (
-        to_tsvector('simple', code) || ' ' || to_tsvector('english', name_en) || ' ' || to_tsvector('simple', name_en)
-    ) STORED
+    capacity INT
+);
+
+CREATE TABLE start_semester_to_desc(
+    id INT,
+    lang CHAR(2),
+    semester_description VARCHAR(7)
 );
 
 CREATE TABLE bla_courses(
@@ -63,7 +66,7 @@ CREATE TABLE bla_courses(
     faculty VARCHAR(150), -- INT REFERENCES faculties(id),
     guarantor VARCHAR(10), -- INT REFERENCES departments(id),
     taught VARCHAR(10) NOT NULL,
-    start_semester VARCHAR(6), -- NOT NULL,
+    start_semester INT, -- NOT NULL,
     semester_count INT, -- NOT NULL,
     taught_lang VARCHAR(10), -- change to CHAR(2) NOT NULL (cs, en),
     lecture_range1 INT, -- NOT NULL,
@@ -82,19 +85,6 @@ CREATE TABLE bla_courses(
     aim JSONB,
     requirements JSONB
 );
-
--- search query:
---
--- WITH search AS (
---     SELECT to_tsquery(string_agg(lexeme || ':*', ' & ' order by positions)) AS query
---     FROM unnest(to_tsvector('programming'))
--- )
--- SELECT code, name_cs, name_en, search_vector, ts_rank(search_vector, search.query) AS rank
--- FROM courses, search
--- WHERE (search_vector @@ search.query)
--- ORDER BY rank DESC
-
-CREATE INDEX courses_search_vector_idx ON courses USING gin(search_vector);
 
 CREATE TABLE classifications(
     course VARCHAR(10),
@@ -173,22 +163,34 @@ CREATE TABLE studies(
     degree_plan VARCHAR(15) --INT REFERENCES degree_plans(id) NOT NULL
 );
 
+CREATE TABLE users (
+    id INT PRIMARY KEY
+);
+
 CREATE TABLE blueprint_years(
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    student INT NOT NULL,
-    position INT NOT NULL,
-    UNIQUE (student, position)
+    user_id INT NOT NULL REFERENCES users(id),
+    academic_year INT NOT NULL,
+    UNIQUE (user_id, academic_year)
 );
 
 CREATE TABLE blueprint_semesters(
     id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    blueprint_year INT REFERENCES blueprint_years(id) NOT NULL,
-    course INT REFERENCES courses(id) NOT NULL,
+    blueprint_year_id INT NOT NULL,
     semester INT NOT NULL,
+    FOREIGN KEY (blueprint_year_id) REFERENCES blueprint_years(id) ON DELETE CASCADE,
+    UNIQUE (blueprint_year_id, semester)
+);
+
+CREATE TABLE blueprint_courses(
+    id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    blueprint_semester_id INT NOT NULL,
+    course INT REFERENCES courses(id) NOT NULL,
     position INT NOT NULL,
     secondary_position INT NOT NULL DEFAULT 2,
-    UNIQUE (blueprint_year, semester, course),
-    UNIQUE (blueprint_year, semester, position) DEFERRABLE INITIALLY DEFERRED
+    FOREIGN KEY (blueprint_semester_id) REFERENCES blueprint_semesters(id) ON DELETE CASCADE,
+    UNIQUE (blueprint_semester_id, course),
+    UNIQUE (blueprint_semester_id, position) DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE OR REPLACE FUNCTION blueprint_course_reordering()
@@ -196,23 +198,23 @@ CREATE OR REPLACE FUNCTION blueprint_course_reordering()
 AS
 $$
 BEGIN
-    UPDATE blueprint_semesters
+    UPDATE blueprint_courses
     SET position = new_position, secondary_position = 2
     FROM (
         SELECT
             id as sub_id,
             position,
             ROW_NUMBER() OVER (
-                PARTITION BY blueprint_year, semester
+                PARTITION BY blueprint_semester_id
                 ORDER BY position, secondary_position
             ) AS new_position
-        FROM blueprint_semesters
+        FROM blueprint_courses
         WHERE (
             CASE
                 WHEN NEW IS NULL THEN false
-                ELSE (blueprint_year = NEW.blueprint_year AND semester = NEW.semester)
+                ELSE (blueprint_semester_id = NEW.blueprint_semester_id)
             END
-            OR (blueprint_year = OLD.blueprint_year AND semester = OLD.semester)
+            OR (blueprint_semester_id = OLD.blueprint_semester_id)
         )
     )
     WHERE id=sub_id;
@@ -224,13 +226,15 @@ END;
 $$ LANGUAGE PLPGSQL;
 
 CREATE TRIGGER blueprint_course_reordering_trigger
-AFTER UPDATE OR DELETE ON blueprint_semesters
+AFTER UPDATE OR DELETE ON blueprint_courses
 FOR EACH ROW
 WHEN (pg_trigger_depth() = 0)
 EXECUTE FUNCTION blueprint_course_reordering();
 
-CREATE TABLE users (
-    id INT PRIMARY KEY
+CREATE TABLE bla_blueprints (
+    user_id INT REFERENCES users(id),
+    lang CHAR(2) NOT NULL,
+    blueprint JSONB NOT NULL
 );
 
 -- TODO: rename

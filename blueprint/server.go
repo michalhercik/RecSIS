@@ -17,8 +17,6 @@ TODO:
 	- document functions
 */
 
-const user = 42 // TODO get user from session
-
 type Server struct {
 	Data DataManager
 }
@@ -94,7 +92,13 @@ func atoiSlice(s []string) ([]int, error) {
 
 func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request) {
 	var result templ.Component
-	data, err := s.Data.BluePrint(user)
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		http.Error(w, "unknown student", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
+	data, err := s.Data.BluePrint(sessionCookie.Value)
 	if err != nil {
 		log.Println(err)
 		result = InternalServerErrorContent()
@@ -106,7 +110,13 @@ func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	var result templ.Component
-	data, err := s.Data.BluePrint(user)
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		http.Error(w, "unknown student", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
+	data, err := s.Data.BluePrint(sessionCookie.Value)
 	if err != nil {
 		log.Println(err)
 		result = InternalServerErrorPage()
@@ -120,25 +130,25 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 // Move Courses
 // ===============================================================================================================================
 
-func (s Server) unassignYear(r *http.Request) error {
+func (s Server) unassignYear(r *http.Request, userSession string) error {
 	year, err := parseYear(r)
 	if err != nil {
 		return err
 	}
-	err = s.Data.UnassignYear(user, year)
+	err = s.Data.UnassignYear(userSession, year)
 	return err
 }
 
-func (s Server) unassignSemester(r *http.Request) error {
+func (s Server) unassignSemester(r *http.Request, userSession string) error {
 	year, semester, err := parseYearSemester(r)
 	if err != nil {
 		return err
 	}
-	err = s.Data.UnassignSemester(user, year, semester)
+	err = s.Data.UnassignSemester(userSession, year, semester)
 	return err
 }
 
-func (s Server) moveCourses(r *http.Request) error {
+func (s Server) moveCourses(r *http.Request, userSession string) error {
 	year, semester, position, err := parseYearSemesterPosition(r)
 	if err != nil {
 		return err
@@ -148,9 +158,9 @@ func (s Server) moveCourses(r *http.Request) error {
 		return err
 	}
 	if position == lastPosition {
-		err = s.Data.AppendCourses(user, year, semester, courses...)
+		err = s.Data.AppendCourses(userSession, year, semester, courses...)
 	} else if position > 0 {
-		err = s.Data.InsertCourses(user, year, semester, position, courses...)
+		err = s.Data.InsertCourses(userSession, year, semester, position, courses...)
 	} else {
 		err = fmt.Errorf("invalid position %d", position)
 	}
@@ -159,13 +169,19 @@ func (s Server) moveCourses(r *http.Request) error {
 
 func (s Server) coursesMovement(w http.ResponseWriter, r *http.Request) {
 	var err error
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		http.Error(w, "unknown student", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
 	switch r.FormValue("type") {
 	case "year-unassign":
-		err = s.unassignYear(r)
+		err = s.unassignYear(r, sessionCookie.Value)
 	case "semester-unassign":
-		err = s.unassignSemester(r)
+		err = s.unassignSemester(r, sessionCookie.Value)
 	case "selected":
-		err = s.moveCourses(r)
+		err = s.moveCourses(r, sessionCookie.Value)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
@@ -178,6 +194,12 @@ func (s Server) coursesMovement(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		http.Error(w, "unknown student", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
 	course, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.Error(w, "Unable to parse course ID", http.StatusBadRequest)
@@ -189,9 +211,9 @@ func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if position == -1 {
-		err = s.Data.AppendCourses(user, year, semester, course)
+		err = s.Data.AppendCourses(sessionCookie.Value, year, semester, course)
 	} else if position >= 0 {
-		err = s.Data.InsertCourses(user, year, semester, position, course)
+		err = s.Data.InsertCourses(sessionCookie.Value, year, semester, position, course)
 	} else {
 		http.Error(w, "Invalid position", http.StatusBadRequest)
 		return
@@ -209,44 +231,48 @@ func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
 // Remove Courses
 // ===============================================================================================================================
 
-func (s Server) removeCoursesByYear(r *http.Request) error {
+func (s Server) removeCoursesByYear(r *http.Request, session string) error {
 	year, err := parseYear(r)
 	if err != nil {
 		return err
 	}
-	err = s.Data.RemoveCoursesByYear(user, year)
+	err = s.Data.RemoveCoursesByYear(session, year)
 	return err
 }
 
-func (s Server) removeCoursesBySemester(r *http.Request) error {
+func (s Server) removeCoursesBySemester(r *http.Request, session string) error {
 	year, semester, err := parseYearSemester(r)
 	if err != nil {
 		return err
 	}
-	err = s.Data.RemoveCoursesBySemester(user, year, semester)
+	err = s.Data.RemoveCoursesBySemester(session, year, semester)
 	return err
 }
 
-func (s Server) removeCourses(r *http.Request) error {
+func (s Server) removeCourses(r *http.Request, session string) error {
 	r.ParseForm()
 	courses, err := atoiSlice(r.Form["selected"])
 	if err != nil {
 		return err
 	}
-	log.Println("Removing selected courses", courses)
-	err = s.Data.RemoveCourses(user, courses...)
+	err = s.Data.RemoveCourses(session, courses...)
 	return err
 }
 
 func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
-	var err error
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		http.Error(w, "unknown student", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
 	switch r.FormValue("type") {
 	case "year":
-		err = s.removeCoursesByYear(r)
+		err = s.removeCoursesByYear(r, sessionCookie.Value)
 	case "semester":
-		err = s.removeCoursesBySemester(r)
+		err = s.removeCoursesBySemester(r, sessionCookie.Value)
 	case "selected":
-		err = s.removeCourses(r)
+		err = s.removeCourses(r, sessionCookie.Value)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
@@ -259,13 +285,19 @@ func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		http.Error(w, "unknown student", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
 	course, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Unable to parse course ID", http.StatusBadRequest)
 		return
 	}
-	err = s.Data.RemoveCourses(user, course)
+	err = s.Data.RemoveCourses(sessionCookie.Value, course)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -280,13 +312,19 @@ func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 // ===============================================================================================================================
 
 func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		http.Error(w, "unknown student", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
 	course := r.PathValue("code")
 	year, semester, err := parseYearSemester(r)
 	if err != nil {
 		http.Error(w, "Unable to parse parameters", http.StatusBadRequest)
 		return
 	}
-	courseID, err := s.Data.NewCourse(user, course, year, semester)
+	courseID, err := s.Data.NewCourse(sessionCookie.Value, course, year, semester)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "", http.StatusBadRequest)
@@ -302,7 +340,13 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 // ===============================================================================================================================
 
 func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
-	if err := s.Data.RemoveYear(user); err != nil {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		http.Error(w, "unknown student", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
+	if err := s.Data.RemoveYear(sessionCookie.Value); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -315,8 +359,13 @@ func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
 // ===============================================================================================================================
 
 func (s Server) yearAddition(w http.ResponseWriter, r *http.Request) {
-	log.Println("Adding year")
-	if err := s.Data.AddYear(user); err != nil {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		http.Error(w, "unknown student", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
+	if err := s.Data.AddYear(sessionCookie.Value); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

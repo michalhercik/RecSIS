@@ -128,7 +128,7 @@ type Course struct {
 	Faculty                  string       `db:"faculty"`
 	GuarantorDepartment      string       `db:"guarantor"`
 	State                    string       `db:"taught"`
-	Start                    string       `db:"start_semester"`
+	Start                    string       `db:"semester_description"`
 	SemesterCount            int          `db:"semester_count"`
 	Language                 string       `db:"taught_lang"`
 	LectureRange1            int          `db:"lecture_range1"`

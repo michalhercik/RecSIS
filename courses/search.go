@@ -8,6 +8,7 @@ import (
 )
 
 type Request struct {
+	sessionID   string
 	query       string
 	indexUID    string
 	page        int64

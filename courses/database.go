@@ -12,8 +12,8 @@ type DBManager struct {
 	DB *sqlx.DB
 }
 
-func (m DBManager) Blueprint(user int, courses []string) (map[string][]Assignment, error) {
-	rows, err := m.DB.Query(sqlquery.Blueprint, user, pq.Array(courses))
+func (m DBManager) Blueprint(sessionID string, courses []string) (map[string][]Assignment, error) {
+	rows, err := m.DB.Query(sqlquery.Blueprint, sessionID, pq.Array(courses))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch blueprint: %w", err)
 	}

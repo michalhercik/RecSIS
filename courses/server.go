@@ -25,7 +25,13 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 }
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
-	req := parseQueryRequest(r)
+	req, err := parseQueryRequest(r)
+	if err != nil {
+		// TODO: handle error
+		log.Printf("quickSearch: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	res, err := s.search(req)
 	if err != nil {
 		log.Printf("quickSearch: %v", err)
@@ -37,7 +43,13 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) content(w http.ResponseWriter, r *http.Request) {
-	req := parseQueryRequest(r)
+	req, err := parseQueryRequest(r)
+	if err != nil {
+		// TODO: handle error
+		log.Printf("quickSearch: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	res, err := s.search(req)
 	if err != nil {
 		log.Printf("quickSearch: %v", err)
@@ -70,7 +82,11 @@ func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
 	QuickResults(res).Render(r.Context(), w)
 }
 
-func parseQueryRequest(r *http.Request) Request {
+func parseQueryRequest(r *http.Request) (*Request, error) {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		return nil, err
+	}
 	query := r.FormValue("search")
 	page, err := strconv.ParseInt(r.FormValue("page"), 10, 64)
 	if err != nil {
@@ -96,6 +112,7 @@ func parseQueryRequest(r *http.Request) Request {
 	semester := TeachingSemester(semesterInt)
 
 	req := Request{
+		sessionID:   sessionCookie.Value,
 		query:       query,
 		indexUID:    courseIndex,
 		page:        page,
@@ -104,10 +121,10 @@ func parseQueryRequest(r *http.Request) Request {
 		sortedBy:    sortedBy,
 		semester:    semester,
 	}
-	return req
+	return &req, nil
 }
 
-func createPageContent(res *Response, req Request) coursesPage {
+func createPageContent(res *Response, req *Request) coursesPage {
 	return coursesPage{
 		courses:    res.courses,
 		page:       int(req.page),
@@ -119,9 +136,9 @@ func createPageContent(res *Response, req Request) coursesPage {
 	}
 }
 
-func (s Server) search(req Request) (*Response, error) {
+func (s Server) search(req *Request) (*Response, error) {
 	// search for courses
-	res, err := s.Search.Search(&req)
+	res, err := s.Search.Search(req)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +147,7 @@ func (s Server) search(req Request) (*Response, error) {
 	for _, course := range res.courses {
 		codes = append(codes, course.code)
 	}
-	assignments, err := s.Data.Blueprint(user, codes)
+	assignments, err := s.Data.Blueprint(req.sessionID, codes)
 	if err != nil {
 		return nil, err
 	}

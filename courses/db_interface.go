@@ -8,7 +8,7 @@ import (
 )
 
 type DataManager interface {
-	Blueprint(user int, courses []string) (map[string][]Assignment, error)
+	Blueprint(sessionID string, courses []string) (map[string][]Assignment, error)
 }
 
 type SemesterAssignment int
@@ -131,14 +131,14 @@ func (a Assignment) String() string {
 type Assignments []Assignment
 
 func (a Assignments) String() string {
-    assignments := []string{}
-    for _, assignment := range a {
-        assignments = append(assignments, assignment.String())
-    }
-    if len(assignments) == 0 {
-        return ""
-    }
-    return strings.Join(assignments, " ")
+	assignments := []string{}
+	for _, assignment := range a {
+		assignments = append(assignments, assignment.String())
+	}
+	if len(assignments) == 0 {
+		return ""
+	}
+	return strings.Join(assignments, " ")
 }
 
 type Course struct {

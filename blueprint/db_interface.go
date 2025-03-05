@@ -6,17 +6,17 @@ import (
 )
 
 type DataManager interface {
-	BluePrint(user int) (*Blueprint, error)
-	NewCourse(user int, course string, year int, semester SemesterAssignment) (int, error)
-	AppendCourses(user, year int, semester SemesterAssignment, courses ...int) error
-	InsertCourses(user, year int, semester SemesterAssignment, position int, courses ...int) error
-	UnassignYear(user, year int) error
-	UnassignSemester(user, year int, semester SemesterAssignment) error
-	RemoveCourses(user int, courses ...int) error
-	RemoveCoursesBySemester(user, year int, semester SemesterAssignment) error
-	RemoveCoursesByYear(user, year int) error
-	AddYear(user int) error
-	RemoveYear(user int) error
+	BluePrint(sessionID string) (*Blueprint, error)
+	NewCourse(sessionID string, course string, year int, semester SemesterAssignment) (int, error)
+	AppendCourses(sessionID string, year int, semester SemesterAssignment, courses ...int) error
+	InsertCourses(sessionID string, year int, semester SemesterAssignment, position int, courses ...int) error
+	UnassignYear(sessionID string, year int) error
+	UnassignSemester(sessionID string, year int, semester SemesterAssignment) error
+	RemoveCourses(sessionID string, courses ...int) error
+	RemoveCoursesBySemester(sessionID string, year int, semester SemesterAssignment) error
+	RemoveCoursesByYear(sessionID string, year int) error
+	AddYear(sessionID string) error
+	RemoveYear(sessionID string) error
 }
 
 type Teacher struct {

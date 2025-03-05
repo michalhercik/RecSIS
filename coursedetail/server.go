@@ -26,7 +26,6 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		lang = cs
 	}
 	course, err := s.Data.Course(code, lang)
-	log.Printf("Course: %v", course)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", code, err)
 		PageNotFound(code).Render(r.Context(), w)
