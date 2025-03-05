@@ -1,14 +1,14 @@
 package degreeplan
 
 import (
-	"database/sql"
 	"encoding/json"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/degreeplan/internal/sqlquery"
 )
 
 type DBManager struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 func (m DBManager) DegreePlan(uid string, lang DBLang) (*DegreePlan, error) {

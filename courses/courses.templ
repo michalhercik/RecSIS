@@ -159,7 +159,7 @@ templ blueprintAssignment(assignments []Assignment, code string, t text) {
         <div class="btn-group">
             <button type="button" class="btn btn-outline-dark"
                 hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }  
-                hx-vals={ `"year": 0, "semester": 0` } 
+                hx-vals={ `"year": 0, "semester": 0` }
             >
                 { t.Assign }
             </button>

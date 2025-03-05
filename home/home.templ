@@ -17,6 +17,6 @@ templ Content(t text) {
         <p>{ t.HowToUseText }</p>
         
         <h1>{ t.Authors }</h1>
-        <p> @templ.Raw(t.AuthorsText) </p>
+        <p> @templ.Raw(t.AuthorsText) </p> // TODO make not raw!!!
     </div>
 }

@@ -27,15 +27,21 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 }
 
 func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, czech, texts["cs"])
+	s.page(w, r, cs, texts["cs"])
 }
 
 func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, english, texts["en"])
+	s.page(w, r, en, texts["en"])
 }
 
 func (s Server) page(w http.ResponseWriter, r *http.Request, lang Language, t text) {
-	req := parseQueryRequest(r, lang)
+	req, err := parseQueryRequest(r, lang)
+	if err != nil {
+		// TODO: handle error
+		log.Printf("search: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	res, err := s.search(req)
 	if err != nil {
 		log.Printf("search: %v", err)
@@ -47,15 +53,21 @@ func (s Server) page(w http.ResponseWriter, r *http.Request, lang Language, t te
 }
 
 func (s Server) csContent(w http.ResponseWriter, r *http.Request) {
-	s.content(w, r, czech, texts["cs"])
+	s.content(w, r, cs, texts["cs"])
 }
 
 func (s Server) enContent(w http.ResponseWriter, r *http.Request) {
-	s.content(w, r, english, texts["en"])
+	s.content(w, r, en, texts["en"])
 }
 
 func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t text) {
-	req := parseQueryRequest(r, lang)
+	req, err := parseQueryRequest(r, lang)
+	if err != nil {
+		// TODO: handle error
+		log.Printf("search: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	res, err := s.search(req)
 	if err != nil {
 		log.Printf("search: %v", err)
@@ -67,11 +79,11 @@ func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t
 }
 
 func (s Server) csQuickSearch(w http.ResponseWriter, r *http.Request) {
-	s.quickSearch(w, r, czech, texts["cs"])
+	s.quickSearch(w, r, cs, texts["cs"])
 }
 
 func (s Server) enQuickSearch(w http.ResponseWriter, r *http.Request) {
-	s.quickSearch(w, r, english, texts["en"])
+	s.quickSearch(w, r, en, texts["en"])
 }
 
 func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang Language, t text) {
@@ -92,7 +104,11 @@ func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang Languag
 	QuickResults(res, t).Render(r.Context(), w)
 }
 
-func parseQueryRequest(r *http.Request, lang Language) Request {
+func parseQueryRequest(r *http.Request, lang Language) (*Request, error) {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		return nil, err
+	}
 	query := r.FormValue("search")
 	page, err := strconv.ParseInt(r.FormValue("page"), 10, 64)
 	if err != nil {
@@ -115,6 +131,7 @@ func parseQueryRequest(r *http.Request, lang Language) Request {
 
 	// TODO change language based on URL
 	req := Request{
+		sessionID:   sessionCookie.Value,
 		query:       query,
 		indexUID:    courseIndex,
 		page:        page,
@@ -123,10 +140,10 @@ func parseQueryRequest(r *http.Request, lang Language) Request {
 		sortedBy:    sortedBy,
 		semester:    semester,
 	}
-	return req
+	return &req, nil
 }
 
-func createPageContent(res *Response, req Request) coursesPage {
+func createPageContent(res *Response, req *Request) coursesPage {
 	return coursesPage{
 		courses:    res.courses,
 		page:       int(req.page),
@@ -138,9 +155,9 @@ func createPageContent(res *Response, req Request) coursesPage {
 	}
 }
 
-func (s Server) search(req Request) (*Response, error) {
+func (s Server) search(req *Request) (*Response, error) {
 	// search for courses
-	res, err := s.Search.Search(&req)
+	res, err := s.Search.Search(req)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +166,7 @@ func (s Server) search(req Request) (*Response, error) {
 	for _, course := range res.courses {
 		codes = append(codes, course.code)
 	}
-	assignments, err := s.Data.Blueprint(user, codes)
+	assignments, err := s.Data.Blueprint(req.sessionID, codes)
 	if err != nil {
 		return nil, err
 	}

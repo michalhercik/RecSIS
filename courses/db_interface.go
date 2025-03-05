@@ -8,10 +8,7 @@ import (
 )
 
 type DataManager interface {
-	//Courses(query query) (coursesPage, error)
-	Blueprint(user int, courses []string) (map[string][]Assignment, error)
-	AddCourseToBlueprint(user int, code string) ([]Assignment, error)
-	RemoveCourseFromBlueprint(user int, code string) error
+	Blueprint(sessionID string, courses []string) (map[string][]Assignment, error)
 }
 
 type SemesterAssignment int
@@ -59,6 +56,13 @@ func (st sortType) String(lang string) string {
 		return "unknown"
     }
 }
+
+type Language string
+
+const (
+	cs Language = "cs"
+	en Language = "en"
+)
 
 type Teacher struct {
 	sisId       int

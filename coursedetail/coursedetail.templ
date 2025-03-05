@@ -11,7 +11,7 @@ import (
 
 const user = 42
 
-var p *bluemonday.Policy 
+var p *bluemonday.Policy
 
 func itos(i int) string {
     return strconv.Itoa(i)
@@ -56,54 +56,23 @@ templ BlueprintAssignment(assignments []Assignment, code string) {
     </div>
 }
 
-func examTypeStr(examType string) string {
-    // to add: STEX, thesis, ...
-    switch examType {
-    case "Z":
-        return "C" // Z
-    case "1":
-        return "??" // do not know
-    case "F":
-        return "MC" // KZ
-    case "D":
-        return "??" // do not know
-    case "K":
-        return "Ex" // Zk
-    case "*":
-        return "C+Ex" // Z+Zk
-    default:
-        return "unknown"
-    }
-}
-
 templ hoursExams(course *Course, t text) {
     {{ semCount := course.SemesterCount }}
     if semCount == 1 {
     <tr>
         <td>{ t.ScopeExam }:</td>
-        <td>{ itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
+        <td>{ itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + course.ExamType}</td>
     </tr>
     }
     if semCount == 2 {
     <tr>
         <td rowspan="2">{ t.ScopeExam }:</td>
-        <td>{ "winter s.:" + itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + examTypeStr(course.ExamType)}</td>
+        <td>{ "winter s.:" + itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + course.ExamType}</td>
     </tr>
     <tr>
         <td></td>
-        <td>{ "summer s.:" + itos(course.LectureRange2) + "/" + itos(course.SeminarRange2) + ", " + examTypeStr(course.ExamType)}</td>
+        <td>{ "summer s.:" + itos(course.LectureRange2) + "/" + itos(course.SeminarRange2) + ", " + course.ExamType}</td>
     </tr>
-    }
-}
-
-func stateStr(state string) string {
-    switch state {
-    case "N":
-        return "taught"
-    case "V":
-        return "not taught"
-    default:
-        return "unknown"
     }
 }
 
@@ -125,20 +94,20 @@ templ BasicInfo(course *Course, t text) {
             //     <td>Czech title:</td><td>{ course.Name }</td>
             // </tr>
             <tr>
-                <td>{ t.Faculty }:</td><td>{ course.Faculty.Name }</td>
+                <td>{ t.Faculty }:</td><td>{ course.Faculty }</td>
             </tr>
             <tr>
-                <td>{ t.Semester }:</td><td>{ course.Start.String(t.Language) }</td>
+                <td>{ t.Semester }:</td><td>{ course.Start }</td>
             </tr>
             <tr>
                 <td>{ t.ECredits }:</td><td>{ itos(course.Credits) }</td>
             </tr>
             @hoursExams(course, t)
             <tr>
-                <td>{ t.Capacity }:</td><td>{ course.Capacity.String(t.Language) }</td>
+                <td>{ t.Capacity }:</td><td>{ course.Capacity }</td>
             </tr>
             <tr>
-                <td>{ t.StateOfCourse }:</td><td>{ stateStr(course.State) }</td>
+                <td>{ t.StateOfCourse }:</td><td>{ course.State }</td>
             </tr>
             <tr>
                 <td>{ t.LanguageOfCourse }:</td><td>{ course.Language }</td>
@@ -149,18 +118,24 @@ templ BasicInfo(course *Course, t text) {
             <tr>
                 <td>{ t.Guarantors }:</td><td>{ course.Guarantors[0].String() }</td>
             </tr>
-            for _, teacher := range course.Guarantors[1:] {
-            <tr>
-                <td></td><td>{ teacher.String() }</td>
-            </tr>
+            if len(course.Guarantors) > 1 {
+                for _, teacher := range course.Guarantors[1:] {
+                    <tr>
+                        <td></td><td>{ teacher.String() }</td>
+                    </tr>
+                }
             }
-            <tr>
-                <td>{ t.Teachers }:</td><td>{ course.Teachers[0].String() }</td>
-            </tr>
-            for _, teacher := range course.Teachers[1:] {
-            <tr>
-                <td></td><td>{ teacher.String() }</td>
-            </tr>
+            if len(course.Teachers) > 0 {
+                <tr>
+                    <td>{ t.Teachers }:</td><td>{ course.Teachers[0].String() }</td>
+                </tr>
+            }
+            if len(course.Teachers) > 1 {
+                for _, teacher := range course.Teachers[1:] {
+                    <tr>
+                        <td></td><td>{ teacher.String() }</td>
+                    </tr>
+                }
             }
             <tr>
                 <td>{ t.SISLink }:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code, t)) }>{ courseSISLink(course.Code, t) }</a></td>
@@ -185,10 +160,10 @@ templ renderSafeContent(content string) {
 }
 
 templ DetailField(desc Description) {
-    if desc.content != "" {
+    if desc.Content != "" {
     <div>
-        <h2>{ utils.CapitalizeFirstLetter(desc.title) }</h2>
-        <p style="text-align: justify">@renderSafeContent(desc.content)</p>
+        <h2>{ utils.CapitalizeFirstLetter(desc.Title) }</h2>
+        <p style="text-align: justify">@renderSafeContent(desc.Content)</p>
     </div>
     }
 }
@@ -211,9 +186,9 @@ templ Comments(comments []Comment, courseCode string, t text) {
             }
         </ul>
         <form hx-post={ fmt.Sprintf("course/%s/comment", courseCode) } hx-target="#comments" hx-swap="outerHTML">
-            <div x-data="{ adjustTextarea($event) { 
-                $event.target.style.height = 'auto'; 
-                $event.target.style.height = ($event.target.scrollHeight) + 'px'; 
+            <div x-data="{ adjustTextarea($event) {
+                $event.target.style.height = 'auto';
+                $event.target.style.height = ($event.target.scrollHeight) + 'px';
             } }">
                 <label for="comment">Add a comment:</label><br>
                 <textarea id="comment" name="comment" rows="1" cols="50" @input="adjustTextarea" style="overflow:hidden;"></textarea>
