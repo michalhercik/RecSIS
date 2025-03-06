@@ -102,7 +102,7 @@ func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request) {
 		log.Printf("HandlePage error: %v", err)
 		return
 	}
-	data, err := s.Data.BluePrint(sessionCookie.Value)
+	data, err := s.Data.Blueprint(sessionCookie.Value, DBLang(t.Language))
 	if err != nil {
 		log.Println(err)
 		result = InternalServerErrorContent(t)
@@ -128,7 +128,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request, t text) {
 		log.Printf("HandlePage error: %v", err)
 		return
 	}
-	data, err := s.Data.BluePrint(sessionCookie.Value)
+	data, err := s.Data.Blueprint(sessionCookie.Value, DBLang(t.Language))
 	if err != nil {
 		log.Println(err)
 		result = InternalServerErrorPage(t)

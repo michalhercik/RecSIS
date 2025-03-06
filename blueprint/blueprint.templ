@@ -95,7 +95,7 @@ templ optionMenu(data *Blueprint, t text) {
             class="btn btn-outline-dark btn-sm bi bi-dash-circle"
             hx-patch="/blueprint/courses"
             hx-vals={ `"type": "selected", "year": 0, "semester": 0, "position": -1` }
-            hx-include="input[type=checkbox]:checked" 
+            hx-include="input[type=checkbox]:checked"
             hx-target="main">
         </button>
         // assign
@@ -107,11 +107,11 @@ templ optionMenu(data *Blueprint, t text) {
                 data-bs-title={ t.TTAssignChecked }
                 class="btn btn-outline-dark btn-sm bi bi-arrows-move"
                 @click="openAssign = !openAssign;
-                        tooltipEnabled = !tooltipEnabled; 
-                        let tooltip = bootstrap.Tooltip.getInstance($el); 
+                        tooltipEnabled = !tooltipEnabled;
+                        let tooltip = bootstrap.Tooltip.getInstance($el);
                         if (tooltipEnabled) {
                             initializeTooltips();
-                        } else { 
+                        } else {
                             tooltip.disable();
                             tooltip.hide();
                         }">
@@ -124,11 +124,11 @@ templ optionMenu(data *Blueprint, t text) {
                 for i := 1; i <= yearCount; i++ {
                 <button
                     type="button"
-                    class="btn btn-outline-secondary btn-sm text-nowrap" 
+                    class="btn btn-outline-secondary btn-sm text-nowrap"
                     style="--bs-btn-border-color: transparent; min-width: 120px;"
-                    hx-patch="/blueprint/courses" 
+                    hx-patch="/blueprint/courses"
                     hx-vals={ `"type": "selected", "year": ` + strconv.Itoa(i) + `, "semester": 1, "position": -1` }
-                    hx-include="input[type=checkbox]:checked" 
+                    hx-include="input[type=checkbox]:checked"
                     hx-target="main">
                     { t.YearStr(i) + " " + t.Winter }
                 </button>
@@ -138,7 +138,7 @@ templ optionMenu(data *Blueprint, t text) {
                     style="--bs-btn-border-color: transparent; min-width: 120px;"
                     hx-patch="/blueprint/courses"
                     hx-vals={ `"type": "selected", "year": ` + strconv.Itoa(i) + `, "semester": 2, "position": -1` }
-                    hx-include="input[type=checkbox]:checked" 
+                    hx-include="input[type=checkbox]:checked"
                     hx-target="main">
                     { t.YearStr(i) + " " + t.Summer }
                 </button>
@@ -155,7 +155,7 @@ templ optionMenu(data *Blueprint, t text) {
             class="btn btn-outline-dark btn-sm bi bi-trash-fill"
             hx-delete="/blueprint/courses"
             hx-vals={ `"type": "selected"` }
-            hx-include="input[type=checkbox]:checked" 
+            hx-include="input[type=checkbox]:checked"
             hx-target="main">
         </button>
     </div>
@@ -182,35 +182,35 @@ func examTypeStr(examType string) string {
 }
 
 func hoursExamsString(lecture, seminar int, examType string) string {
-    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examTypeStr(examType)
+    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examType
 }
 
 templ winterSummer(course *Course) {
-    {{ semCount := course.semesterCount }}
+    {{ semCount := course.SemesterCount }}
     switch semCount {
     case 1:
-        switch course.start {
+        switch course.Start {
         case teachingWinterOnly:
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
             <td>---</td>
         case teachingSummerOnly:
             <td>---</td>
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
         case teachingBoth:
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
         default:
             <td>unsupported</td>
             <td>unsupported</td>
         }
     case 2:
-        switch course.start {
+        switch course.Start {
         case teachingWinterOnly:
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
-            <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
+            <td>{ hoursExamsString(course.LectureRange2, course.SeminarRange2, course.ExamType) }</td>
         case teachingSummerOnly:
-            <td>{ hoursExamsString(course.lectureRange2, course.seminarRange2, course.examType) }</td>
-            <td>{ hoursExamsString(course.lectureRange1, course.seminarRange1, course.examType) }</td>
+            <td>{ hoursExamsString(course.LectureRange2, course.SeminarRange2, course.ExamType) }</td>
+            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
         case teachingBoth:
             <td>unsupported</td>
             <td>unsupported</td>
@@ -251,7 +251,7 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
             >
                 for _, course := range unassigned.unassigned {
                 <tr
-                    id={ "code" + course.code }
+                    id={ "code" + course.Code }
                     x-data="{ hover: false, hoverOnAssign: false, openAssign: false, tooltipEnabled: true}"
                     @click={ `if (!$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('input')) {
                         const checkbox = document.getElementById('checkbox` + strconv.Itoa(course.ID) + `');
@@ -270,11 +270,11 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
                             value={ strconv.Itoa(course.ID) }
                             @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"/>
                     </td>
-                    <td> @utils.CourseLink(course.code, t.Utils) </td>
-                    <td>{ course.nameEn }</td>
-                    <td>{ strconv.Itoa(course.credits) }</td>
+                    <td> @utils.CourseLink(course.Code, t.Utils) </td>
+                    <td>{ course.Title }</td>
+                    <td>{ strconv.Itoa(course.Credits) }</td>
                     @winterSummer(&course)
-                    <td>{ course.teachers.string() }</td>
+                    <td>{ course.Guarantors.string() }</td>
                     <td class="text-end align-middle short">
                         // move button
                         <div style="position: relative; display: inline-block;">
@@ -285,12 +285,12 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
                                 data-bs-title={ t.TTAssign }
                                 class="btn btn-outline-secondary btn-sm bi bi-arrows-move"
                                 style="--bs-btn-border-color: transparent;"
-                                @click="openAssign = !openAssign; 
-                                        tooltipEnabled = !tooltipEnabled; 
-                                        let tooltip = bootstrap.Tooltip.getInstance($el); 
+                                @click="openAssign = !openAssign;
+                                        tooltipEnabled = !tooltipEnabled;
+                                        let tooltip = bootstrap.Tooltip.getInstance($el);
                                         if (tooltipEnabled) {
                                             initializeTooltips();
-                                        } else { 
+                                        } else {
                                             tooltip.disable();
                                             tooltip.hide();
                                         }">
@@ -313,7 +313,7 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent;"
-                            hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
+                            hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) }
                             hx-target="main">
                         </button>
                         // drag button
@@ -340,9 +340,9 @@ templ assignMenu(yearCount, courseID int, t text) {
     for i := 1; i <= yearCount; i++ {
         <button
             type="button"
-            class="btn btn-outline-secondary btn-sm text-nowrap" 
+            class="btn btn-outline-secondary btn-sm text-nowrap"
             style="--bs-btn-border-color: transparent; min-width: 120px;"
-            hx-patch={ "/blueprint/course/" + strconv.Itoa(courseID) } 
+            hx-patch={ "/blueprint/course/" + strconv.Itoa(courseID) }
             hx-vals={ `"year": ` + strconv.Itoa(i) + `, "semester": 1, "position": -1` }
             hx-target="main">
             { t.YearStr(i) + " " + t.Winter }
@@ -351,7 +351,7 @@ templ assignMenu(yearCount, courseID int, t text) {
             type="button"
             class="btn btn-outline-secondary btn-sm text-nowrap"
             style="--bs-btn-border-color: transparent; min-width: 120px;"
-            hx-patch={ "/blueprint/course/" + strconv.Itoa(courseID) } 
+            hx-patch={ "/blueprint/course/" + strconv.Itoa(courseID) }
             hx-vals={ `"year": ` + strconv.Itoa(i) + `, "semester": 2, "position": -1` }
             hx-target="main">
             { t.YearStr(i) + " " + t.Summer }
@@ -395,11 +395,11 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                             value={ strconv.Itoa(course.ID) }
                             @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"/>
                     </td>
-                    <td> @utils.CourseLink(course.code, t.Utils) </td>
-                    <td>{ course.nameEn }</td>
-                    <td>{ strconv.Itoa(course.credits) }</td>
+                    <td> @utils.CourseLink(course.Code, t.Utils) </td>
+                    <td>{ course.Title }</td>
+                    <td>{ strconv.Itoa(course.Credits) }</td>
                     @winterSummer(&course)
-                    <td> @templ.Raw(course.teachers.string()) </td>
+                    <td> @templ.Raw(course.Guarantors.string()) </td>
                     <td class="text-end align-middle short">
                         // unassign button
                         <button
@@ -410,7 +410,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                             style="--bs-btn-border-color: transparent;"
-                            hx-patch={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
+                            hx-patch={ "/blueprint/course/" + strconv.Itoa(course.ID) }
                             hx-vals={ `"year": 0, "semester": 0, "position": -1` }
                             hx-target="main">
                         </button>
@@ -423,12 +423,12 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                                 data-bs-title={ t.TTReassign }
                                 class="btn btn-outline-secondary btn-sm bi bi-arrows-move"
                                 style="--bs-btn-border-color: transparent;"
-                                @click="openAssign = !openAssign; 
-                                        tooltipEnabled = !tooltipEnabled; 
-                                        let tooltip = bootstrap.Tooltip.getInstance($el); 
+                                @click="openAssign = !openAssign;
+                                        tooltipEnabled = !tooltipEnabled;
+                                        let tooltip = bootstrap.Tooltip.getInstance($el);
                                         if (tooltipEnabled) {
                                             initializeTooltips();
-                                        } else { 
+                                        } else {
                                             tooltip.disable();
                                             tooltip.hide();
                                         }">
@@ -451,7 +451,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent;"
-                            hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
+                            hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) }
                             hx-target="main">
                         </button>
                         // drag button
@@ -614,7 +614,7 @@ templ semesterHeadline(semesterNum, yearNum, credits int, t text) {
                             data-bs-title={ unassignTT }
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
-                            hx-patch={ "/blueprint/courses" } 
+                            hx-patch={ "/blueprint/courses" }
                             hx-vals={ `"type": "semester-unassign", "year": ` + strconv.Itoa(yearNum) + `, "semester": ` + strconv.Itoa(semesterNum) }
                             hx-target="main">
                         </button>
@@ -665,15 +665,15 @@ templ Content(data *Blueprint, t text) {
         }
         xdata := "{ checkedNumber: 0, showUnassigned: true," + winter + summer + year + " "
         // drag&drop (sorting) focus/hover chrome bug (https://alpinejs.dev/plugins/sort#css-hover-bug) solution
-        xdata += ` 
-            isSorting: false, 
+        xdata += `
+            isSorting: false,
             checkSortingClass() { this.isSorting = document.body.classList.contains('sorting') },
             init() {
                 this.checkSortingClass();
                 const observer = new MutationObserver(() => this.checkSortingClass());
                 observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
             },
-        }` 
+        }`
 
     }}
     // bootstrap tooltip initialization
@@ -711,7 +711,7 @@ templ Content(data *Blueprint, t text) {
         // update position of course in database using dynamic htmx patch
         function sortHxPatch(item, year, semester, position) {
             htmx.ajax('PATCH', '/blueprint/course/' + item, {
-                target: 'main', 
+                target: 'main',
                 values: { year: year, semester: semester, position: position + 1 }
             });
         }

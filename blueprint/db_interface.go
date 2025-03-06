@@ -1,12 +1,13 @@
 package blueprint
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
 
 type DataManager interface {
-	BluePrint(sessionID string) (*Blueprint, error)
+	Blueprint(sessionID string, lang DBLang) (*Blueprint, error)
 	NewCourse(sessionID string, course string, year int, semester SemesterAssignment) (int, error)
 	AppendCourses(sessionID string, year int, semester SemesterAssignment, courses ...int) error
 	InsertCourses(sessionID string, year int, semester SemesterAssignment, position int, courses ...int) error
@@ -19,17 +20,27 @@ type DataManager interface {
 	RemoveYear(sessionID string) error
 }
 
+type DBLang string
+
+const (
+	DBLangCS DBLang = "cs"
+	DBLangEN DBLang = "en"
+)
+
 type Teacher struct {
-	sisId       int
-	firstName   string
-	lastName    string
-	titleBefore string
-	titleAfter  string
+	SisId       int    `json:"KOD"`
+	FirstName   string `json:"JMENO"`
+	LastName    string `json:"PRIJMENI"`
+	TitleBefore string `json:"TITULPRED"`
+	TitleAfter  string `json:"TITULZA"`
 }
 
 func (t Teacher) String() string {
-	return fmt.Sprintf("%c. %s",
-		t.firstName[0], t.lastName)
+	var result string
+	if len(t.FirstName) > 0 {
+		result = fmt.Sprintf("%c. %s", t.FirstName[0], t.LastName)
+	}
+	return result
 }
 
 type TeachingSemester int
@@ -42,15 +53,38 @@ const (
 
 type SemesterAssignment int
 
+func (sa *SemesterAssignment) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case int64:
+		*sa = SemesterAssignment(v)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
 const (
 	assignmentNone SemesterAssignment = iota
 	assignmentWinter
 	assignmentSummer
 )
 
-type Teachers []Teacher
+type TeacherSlice []Teacher
 
-func (t Teachers) string() string {
+func (ts *TeacherSlice) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case []byte:
+		json.Unmarshal(v, &ts)
+		return nil
+	case string:
+		json.Unmarshal([]byte(v), &ts)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+func (t TeacherSlice) string() string {
 	names := []string{}
 	for _, teacher := range t {
 		names = append(names, teacher.String())
@@ -61,32 +95,19 @@ func (t Teachers) string() string {
 	return strings.Join(names, ", ")
 }
 
-func (t *Teachers) trim() {
-	result := Teachers{}
-	for _, teacher := range *t {
-		if teacher.sisId != -1 {
-			result = append(result, teacher)
-		}
-	}
-	*t = result
-}
-
 type Course struct {
-	ID               int
-	position         int
-	code             string
-	nameCs           string
-	nameEn           string
-	start            TeachingSemester
-	semesterCount    int
-	semesterPosition SemesterAssignment
-	lectureRange1    int
-	seminarRange1    int
-	lectureRange2    int
-	seminarRange2    int
-	examType         string
-	credits          int
-	teachers         Teachers
+	ID            int              `db:"id"`
+	Code          string           `db:"code"`
+	Title         string           `db:"title"`
+	Start         TeachingSemester `db:"start_semester"`
+	SemesterCount int              `db:"semester_count"`
+	LectureRange1 int              `db:"lecture_range1"`
+	SeminarRange1 int              `db:"seminar_range1"`
+	LectureRange2 int              `db:"lecture_range2"`
+	SeminarRange2 int              `db:"seminar_range2"`
+	ExamType      string           `db:"exam_type"`
+	Credits       int              `db:"credits"`
+	Guarantors    TeacherSlice     `db:"guarantors"`
 }
 
 type AcademicYear struct {
@@ -99,7 +120,7 @@ type AcademicYear struct {
 func sumCredits(courses []Course) int {
 	sum := 0
 	for _, course := range courses {
-		sum += course.credits
+		sum += course.Credits
 	}
 	return sum
 }
@@ -116,19 +137,29 @@ func (ay AcademicYear) credits() int {
 	return ay.winterCredits() + ay.summerCredits()
 }
 
+type BlueprintRecordPosition struct {
+	AcademicYear int                `db:"academic_year"`
+	Semester     SemesterAssignment `db:"semester"`
+}
+
+type BlueprintRecord struct {
+	BlueprintRecordPosition
+	Course
+}
+
 type Blueprint struct {
 	years []AcademicYear
 }
 
-func (b *Blueprint) assign(year int, course *Course) error {
-	if year < 0 {
-		return fmt.Errorf("year must be non-negative %d", year)
+func (b *Blueprint) assign(position BlueprintRecordPosition, course *Course) error {
+	if position.AcademicYear < 0 {
+		return fmt.Errorf("year must be non-negative %d", position.AcademicYear)
 	}
-	if year > len(b.years) {
-		return fmt.Errorf("invalid year %d > %d", year, len(b.years))
+	for position.AcademicYear >= len(b.years) {
+		b.years = append(b.years, AcademicYear{position: position.AcademicYear})
 	}
-	target := &b.years[year]
-	switch course.semesterPosition {
+	target := &b.years[position.AcademicYear]
+	switch position.Semester {
 	case assignmentWinter:
 		target.winter = append(target.winter, *course)
 	case assignmentSummer:
@@ -136,7 +167,7 @@ func (b *Blueprint) assign(year int, course *Course) error {
 	case assignmentNone:
 		target.unassigned = append(target.unassigned, *course)
 	default:
-		return fmt.Errorf("unknown semester assignment %d", course.semesterPosition)
+		return fmt.Errorf("unknown semester assignment %d", position.Semester)
 	}
 	return nil
 }

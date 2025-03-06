@@ -206,45 +206,31 @@ WHERE blueprint_semester_id IN
 `
 
 const SelectCourses = `--sql
+WITH user_session AS (
+	SELECT DISTINCT user_id FROM sessions WHERE id=$1
+)
 SELECT
 	y.academic_year,
 	bc.id,
-	bc.position,
+	-- bc.position,
 	bs.semester,
 	c.code,
-	c.name_cs,
-	c.name_en,
-	COALESCE(c.start_semester, -1),
-	COALESCE(c.semester_count, -1),
-	COALESCE(c.lecture_range1, -1),
-	COALESCE(c.lecture_range2, -1),
-	COALESCE(c.seminar_range1, -1),
-	COALESCE(c.seminar_range2, -1),
-	COALESCE(c.exam_type, ''),
-	COALESCE(c.credits, -1),
-	COALESCE(t1.sis_id, -1),
-	COALESCE(t1.first_name, ''),
-	COALESCE(t1.last_name, ''),
-	COALESCE(t1.title_before, ''),
-	COALESCE(t1.title_after,''),
-	COALESCE(t2.sis_id, -1),
-	COALESCE(t2.first_name, ''),
-	COALESCE(t2.last_name, ''),
-	COALESCE(t2.title_before, ''),
-	COALESCE(t2.title_after, ''),
-	COALESCE(t3.sis_id, -1),
-	COALESCE(t3.first_name, ''),
-	COALESCE(t3.last_name, ''),
-	COALESCE(t3.title_before, ''),
-	COALESCE(t3.title_after, '')
-FROM blueprint_courses bc
-LEFT JOIN blueprint_semesters bs ON bc.blueprint_semester_id = bs.id
-LEFT JOIN blueprint_years y ON bs.blueprint_year_id=y.id
-LEFT JOIN sessions s ON y.user_id=s.user_id
-LEFT JOIN courses c ON bc.course=c.id
-LEFT JOIN teachers t1 ON t1.sis_id = c.teacher1
-LEFT JOIN teachers t2 ON t2.sis_id = c.teacher2
-LEFT JOIN teachers t3 ON t3.sis_id = c.teacher3
-WHERE s.id = $1
-ORDER BY bc.position;
+	c.title,
+	COALESCE(c.start_semester, -1) start_semester,
+	COALESCE(c.semester_count, -1) semester_count,
+	COALESCE(c.lecture_range1, -1) lecture_range1,
+	COALESCE(c.lecture_range2, -1) lecture_range2,
+	COALESCE(c.seminar_range1, -1) seminar_range1,
+	COALESCE(c.seminar_range2, -1) seminar_range2,
+	COALESCE(c.exam_type, '') exam_type,
+	COALESCE(c.credits, -1) credits,
+	c.guarantors
+FROM user_session s
+LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
+LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
+LEFT JOIN courses c ON bc.course_code=c.code AND bc.course_valid_from = c.valid_from
+WHERE c.lang = $2
+ORDER BY y.academic_year, bs.semester, bc.position
+;
 `

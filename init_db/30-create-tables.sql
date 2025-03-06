@@ -23,7 +23,7 @@ CREATE TABLE teachers(
     title_after VARCHAR(20)
 );
 
-CREATE TABLE courses(
+CREATE TABLE old_courses(
     id SERIAL PRIMARY KEY,
     code VARCHAR(10) NOT NULL,
     name_cs VARCHAR(250) NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE start_semester_to_desc(
     semester_description VARCHAR(7)
 );
 
-CREATE TABLE bla_courses(
+CREATE TABLE courses(
     -- id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     code VARCHAR(10) NOT NULL,
     lang CHAR(2) NOT NULL,
@@ -185,11 +185,13 @@ CREATE TABLE blueprint_semesters(
 CREATE TABLE blueprint_courses(
     id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     blueprint_semester_id INT NOT NULL,
-    course INT REFERENCES courses(id) NOT NULL,
+    course_code VARCHAR(10) NOT NULL,
+    course_valid_from INT NOT NULL,
+    -- course INT REFERENCES courses(id) NOT NULL,
     position INT NOT NULL,
     secondary_position INT NOT NULL DEFAULT 2,
     FOREIGN KEY (blueprint_semester_id) REFERENCES blueprint_semesters(id) ON DELETE CASCADE,
-    UNIQUE (blueprint_semester_id, course),
+    UNIQUE (blueprint_semester_id, course_code),
     UNIQUE (blueprint_semester_id, position) DEFERRABLE INITIALLY DEFERRED
 );
 
