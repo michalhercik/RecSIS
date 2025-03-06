@@ -94,6 +94,7 @@ templ optionMenu(data *Blueprint, t text) {
             data-bs-placement="bottom"
             data-bs-title={ t.TTUnassignChecked }
             @click="bootstrap.Tooltip.getInstance($el).dispose();"
+            @mouseleave="initializeTooltips()"
             class="btn btn-outline-dark btn-sm bi bi-dash-circle"
             hx-patch="/blueprint/courses"
             hx-vals={ `"type": "selected", "year": 0, "semester": 0, "position": -1, "lang": "` + t.Language + `"` }
@@ -154,6 +155,7 @@ templ optionMenu(data *Blueprint, t text) {
             data-bs-placement="bottom"
             data-bs-title={ t.TTRemoveChecked }
             @click="bootstrap.Tooltip.getInstance($el).dispose();"
+            @mouseleave="initializeTooltips()"
             class="btn btn-outline-dark btn-sm bi bi-trash-fill"
             hx-delete="/blueprint/courses"
             hx-vals={ `"type": "selected", "lang": "` + t.Language + `"` }
@@ -248,18 +250,13 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
     <div x-show="showUnassigned">
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
             <tbody
-                x-sort={ "sortHxPatch($item, 0, 0, $position, " + t.Language + ")" }
+                x-sort={ `sortHxPatch($item, 0, 0, $position, "` + t.Language + `")` }
                 x-sort:group="courses"
             >
                 for _, course := range unassigned.unassigned {
                 <tr
                     id={ "code" + course.code }
                     x-data="{ hover: false, hoverOnAssign: false, openAssign: false, tooltipEnabled: true}"
-                    @click={ `if (!$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('input')) {
-                        const checkbox = document.getElementById('checkbox` + strconv.Itoa(course.ID) + `');
-                        checkbox.checked = !checkbox.checked;
-                        checkbox.dispatchEvent(new Event('change'));
-                    }` }
                     @mouseover="hover = true"
                     @mouseleave="hover = false, openAssign = false, initializeTooltips()"
                     x-sort:item={ strconv.Itoa(course.ID) }
@@ -270,7 +267,7 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
                             id={ "checkbox" + strconv.Itoa(course.ID) }
                             name="selected"
                             value={ strconv.Itoa(course.ID) }
-                            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"/>
+                            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; console.log('Checked number:', checkedNumber);"/>
                     </td>
                     <td> @utils.CourseLink(course.code, t.Utils) </td>
                     <td>{ course.nameEn }</td>
@@ -313,6 +310,7 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
                             data-bs-placement="bottom"
                             data-bs-title={ t.TTRemove }
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
+                            @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent;"
                             hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) }
@@ -375,17 +373,12 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
     <div x-show={ show }>
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
             <tbody
-                x-sort={ "sortHxPatch($item, " + strconv.Itoa(yearNum) + ", " + strconv.Itoa(semester) + ", $position, " + t.Language + ")" }
+                x-sort={ `sortHxPatch($item, ` + strconv.Itoa(yearNum) + `, ` + strconv.Itoa(semester) + `, $position, "` + t.Language + `")` }
                 x-sort:group="courses"
             >
                 for _, course := range courses {
                 <tr
                     x-data="{ hover: false, hoverOnAssign: false, openAssign: false, tooltipEnabled: true }"
-                    @click={ `if (!$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('input')) {
-                        const checkbox = document.getElementById('checkbox` + strconv.Itoa(course.ID) + `');
-                        checkbox.checked = !checkbox.checked;
-                        checkbox.dispatchEvent(new Event('change'));
-                    }` }
                     @mouseover="hover = true"
                     @mouseleave="hover = false, openAssign = false, initializeTooltips()"
                     x-sort:item={ strconv.Itoa(course.ID) }
@@ -411,6 +404,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                             data-bs-placement="bottom"
                             data-bs-title={ t.TTUnassign }
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
+                            @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                             style="--bs-btn-border-color: transparent;"
                             hx-patch={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
@@ -452,6 +446,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                             data-bs-placement="bottom"
                             data-bs-title={ t.TTRemove }
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
+                            @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent;"
                             hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) }
@@ -546,6 +541,8 @@ templ yearHeadline(yearNum, credits int, t text) {
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title={ t.TTUnassignYear1 + strconv.Itoa(yearNum) + t.TTUnassignYear2 }
+                            @click="bootstrap.Tooltip.getInstance($el).dispose();"
+                            @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
                             hx-patch="/blueprint/courses"
@@ -558,6 +555,8 @@ templ yearHeadline(yearNum, credits int, t text) {
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title={ t.TTRemoveYear1 + strconv.Itoa(yearNum) + t.TTRemoveYear2 }
+                            @click="bootstrap.Tooltip.getInstance($el).dispose();"
+                            @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
                             hx-delete="/blueprint/courses"
@@ -616,6 +615,8 @@ templ semesterHeadline(semester, year, credits int, t text) {
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title={ unassignTT }
+                            @click="bootstrap.Tooltip.getInstance($el).dispose();"
+                            @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
                             hx-patch={ "/blueprint/courses" } 
@@ -628,6 +629,8 @@ templ semesterHeadline(semester, year, credits int, t text) {
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title={ removeTT }
+                            @click="bootstrap.Tooltip.getInstance($el).dispose();"
+                            @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
                             hx-delete="/blueprint/courses"
@@ -662,7 +665,7 @@ templ Content(data *Blueprint, t text) {
         winter := ""
         summer := ""
         year := ""
-        for i := 1; i <= len(data.years); i++ {
+        for i := 1; i < len(data.years); i++ {
             winter += " Winter" + strconv.Itoa(i) + ": true,"
             summer += " Summer" + strconv.Itoa(i) + ": true,"
             year += " Year" + strconv.Itoa(i) + ": true,"
@@ -680,8 +683,8 @@ templ Content(data *Blueprint, t text) {
         }` 
 
     }}
-    // bootstrap tooltip initialization
     <script>
+        // bootstrap tooltip initialization
         function initializeTooltips() {
             // Dispose of existing tooltips
             var tooltipElements = document.querySelectorAll('.tooltip');
@@ -710,13 +713,45 @@ templ Content(data *Blueprint, t text) {
 
         document.addEventListener('DOMContentLoaded', function () {
             initializeTooltips();
+            setupCheckboxShiftClick();
         });
+
+        document.addEventListener('htmx:afterSwap', function (e) {
+            setupCheckboxShiftClick();
+        });
+
+        // shift click for multiple checkboxes
+        function setupCheckboxShiftClick() {
+            let lastChecked = null;
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="selected"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('click', function (e) {
+                    if (lastChecked && lastChecked !== this && e.shiftKey) {
+                        let inBetween = false;
+                        checkboxes.forEach(box => {
+                            if (box === this || box === lastChecked) {
+                                inBetween = !inBetween;
+                            }
+                            else if (inBetween && box.checked !== this.checked) {
+                                box.checked = this.checked;
+                                box.dispatchEvent(new Event('change'));
+                            }
+                        });
+                        if (lastChecked.checked !== this.checked) {
+                            lastChecked.checked = this.checked;
+                            lastChecked.dispatchEvent(new Event('change'));
+                        }
+                    }
+                    lastChecked = this;
+                });
+            });
+        }
 
         // update position of course in database using dynamic htmx patch
         function sortHxPatch(item, year, semester, position, language) {
             htmx.ajax('PATCH', '/blueprint/course/' + item, {
                 target: 'main', 
-                values: { year: year, semester: semester, position: position + 1, language: language }
+                values: { year: year, semester: semester, position: position + 1, lang: language }
             });
         }
     </script>
