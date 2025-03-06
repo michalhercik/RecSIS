@@ -60,10 +60,11 @@ templ navItem(url, text string, active bool) {
     <li class="nav-item"><a class={ class } href={ templ.URL(url) }>{ text }</a></li>
 }
 
-templ langButton(lang string) {
+templ langButton(lang string, text string) {
     <button
-        class={ "btn " + lang + "-flag flag-button" }
+        class="btn btn-outline-dark"
         @click={ "changeLanguage('" + lang + "')" }>
+        <i class="bi bi-globe2"></i> { text }
     </button>
 }
 
@@ -93,9 +94,9 @@ templ Header(title string, t Text) {
                     <div class="d-flex">
                         <button class="btn btn-outline-success me-2">{ t.Login }</button>
                         if t.Language == "cs" {
-                            @langButton("en")
+                            @langButton("en", "English")
                         } else {
-                            @langButton("cs")
+                            @langButton("cs", "Čeština")
                         }
                     </div>
                 </div>

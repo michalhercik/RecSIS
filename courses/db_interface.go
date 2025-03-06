@@ -72,6 +72,9 @@ type Teacher struct {
 	titleAfter  string
 }
 
+// TODO: here should be this ↓ but DB is broken, first name always empty
+// return fmt.Sprintf("%c. %s",
+// 		t.firstName[0], t.lastName)
 func (t Teacher) String() string {
 	return fmt.Sprintf("%s %s %s %s",
 		t.titleBefore, t.firstName, t.lastName, t.titleAfter)
