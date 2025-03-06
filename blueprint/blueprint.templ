@@ -52,12 +52,13 @@ templ optionMenu(data *Blueprint, t text) {
         yearCount := len(data.years) - 1
         anyYears := len(data.years) > 1
     }}
-    <div class="option-menu sticky-top p-2" x-data="{ showCredits: false, openAssign: false,  tooltipEnabled: true }">
+    <div class="option-menu sticky-top p-2" x-data="{ showCredits: false, openAssign: false, tooltipEnabled: true }">
         // change number of years
         { t.NumOfYears + ":" }
         <button
             class="btn btn-sm btn-outline-dark"
             hx-delete="/blueprint/year"
+            hx-vals={ `"lang": "` + t.Language + `"` }
             hx-target="main"
             :disabled={ strconv.Itoa(yearCount) + " <= 0" }>
             <i class="bi bi-dash"></i>
@@ -66,6 +67,7 @@ templ optionMenu(data *Blueprint, t text) {
         <button
             class="btn btn-sm btn-outline-dark"
             hx-post="/blueprint/year"
+            hx-vals={ `"lang": "` + t.Language + `"` }
             hx-target="main">
             <i class="bi bi-plus"></i>
         </button>
@@ -94,7 +96,7 @@ templ optionMenu(data *Blueprint, t text) {
             @click="bootstrap.Tooltip.getInstance($el).dispose();"
             class="btn btn-outline-dark btn-sm bi bi-dash-circle"
             hx-patch="/blueprint/courses"
-            hx-vals={ `"type": "selected", "year": 0, "semester": 0, "position": -1` }
+            hx-vals={ `"type": "selected", "year": 0, "semester": 0, "position": -1, "lang": "` + t.Language + `"` }
             hx-include="input[type=checkbox]:checked" 
             hx-target="main">
         </button>
@@ -127,7 +129,7 @@ templ optionMenu(data *Blueprint, t text) {
                     class="btn btn-outline-secondary btn-sm text-nowrap" 
                     style="--bs-btn-border-color: transparent; min-width: 120px;"
                     hx-patch="/blueprint/courses" 
-                    hx-vals={ `"type": "selected", "year": ` + strconv.Itoa(i) + `, "semester": 1, "position": -1` }
+                    hx-vals={ `"type": "selected", "year": ` + strconv.Itoa(i) + `, "semester": 1, "position": -1, "lang": "` + t.Language + `"` }
                     hx-include="input[type=checkbox]:checked" 
                     hx-target="main">
                     { t.YearStr(i) + " " + t.Winter }
@@ -137,7 +139,7 @@ templ optionMenu(data *Blueprint, t text) {
                     class="btn btn-outline-secondary btn-sm text-nowrap"
                     style="--bs-btn-border-color: transparent; min-width: 120px;"
                     hx-patch="/blueprint/courses"
-                    hx-vals={ `"type": "selected", "year": ` + strconv.Itoa(i) + `, "semester": 2, "position": -1` }
+                    hx-vals={ `"type": "selected", "year": ` + strconv.Itoa(i) + `, "semester": 2, "position": -1, "lang": "` + t.Language + `"` }
                     hx-include="input[type=checkbox]:checked" 
                     hx-target="main">
                     { t.YearStr(i) + " " + t.Summer }
@@ -154,13 +156,14 @@ templ optionMenu(data *Blueprint, t text) {
             @click="bootstrap.Tooltip.getInstance($el).dispose();"
             class="btn btn-outline-dark btn-sm bi bi-trash-fill"
             hx-delete="/blueprint/courses"
-            hx-vals={ `"type": "selected"` }
+            hx-vals={ `"type": "selected", "lang": "` + t.Language + `"` }
             hx-include="input[type=checkbox]:checked" 
             hx-target="main">
         </button>
     </div>
 }
 
+// TODO: get this from DB, this is deprecated
 func examTypeStr(examType string) string {
     // to add: STEX, thesis, ...
     switch examType {
@@ -181,13 +184,13 @@ func examTypeStr(examType string) string {
     }
 }
 
+// TODO: do not use examTypeStr, use examType from DB
 func hoursExamsString(lecture, seminar int, examType string) string {
     return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examTypeStr(examType)
 }
 
 templ winterSummer(course *Course) {
-    {{ semCount := course.semesterCount }}
-    switch semCount {
+    switch course.semesterCount {
     case 1:
         switch course.start {
         case teachingWinterOnly:
@@ -224,7 +227,6 @@ templ winterSummer(course *Course) {
     }
 }
 
-// TODO only if there is at least one
 templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
     // tables header for the whole page
     <table class="table table-sm blueprint-table">
@@ -246,7 +248,7 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
     <div x-show="showUnassigned">
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
             <tbody
-                x-sort={ "sortHxPatch($item, 0, 0, $position)" }
+                x-sort={ "sortHxPatch($item, 0, 0, $position, " + t.Language + ")" }
                 x-sort:group="courses"
             >
                 for _, course := range unassigned.unassigned {
@@ -313,7 +315,8 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent;"
-                            hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
+                            hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) }
+                            hx-vals={ `"lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                         // drag button
@@ -343,7 +346,7 @@ templ assignMenu(yearCount, courseID int, t text) {
             class="btn btn-outline-secondary btn-sm text-nowrap" 
             style="--bs-btn-border-color: transparent; min-width: 120px;"
             hx-patch={ "/blueprint/course/" + strconv.Itoa(courseID) } 
-            hx-vals={ `"year": ` + strconv.Itoa(i) + `, "semester": 1, "position": -1` }
+            hx-vals={ `"year": ` + strconv.Itoa(i) + `, "semester": 1, "position": -1, "lang": "` + t.Language + `"` }
             hx-target="main">
             { t.YearStr(i) + " " + t.Winter }
         </button>
@@ -352,7 +355,7 @@ templ assignMenu(yearCount, courseID int, t text) {
             class="btn btn-outline-secondary btn-sm text-nowrap"
             style="--bs-btn-border-color: transparent; min-width: 120px;"
             hx-patch={ "/blueprint/course/" + strconv.Itoa(courseID) } 
-            hx-vals={ `"year": ` + strconv.Itoa(i) + `, "semester": 2, "position": -1` }
+            hx-vals={ `"year": ` + strconv.Itoa(i) + `, "semester": 2, "position": -1, "lang": "` + t.Language + `"` }
             hx-target="main">
             { t.YearStr(i) + " " + t.Summer }
         </button>
@@ -372,7 +375,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
     <div x-show={ show }>
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
             <tbody
-                x-sort={ "sortHxPatch($item, " + strconv.Itoa(yearNum) + ", " + strconv.Itoa(semester) + ", $position)" }
+                x-sort={ "sortHxPatch($item, " + strconv.Itoa(yearNum) + ", " + strconv.Itoa(semester) + ", $position, " + t.Language + ")" }
                 x-sort:group="courses"
             >
                 for _, course := range courses {
@@ -399,7 +402,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                     <td>{ course.nameEn }</td>
                     <td>{ strconv.Itoa(course.credits) }</td>
                     @winterSummer(&course)
-                    <td> @templ.Raw(course.teachers.string()) </td>
+                    <td>{ course.teachers.string() }</td>
                     <td class="text-end align-middle short">
                         // unassign button
                         <button
@@ -411,7 +414,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                             style="--bs-btn-border-color: transparent;"
                             hx-patch={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
-                            hx-vals={ `"year": 0, "semester": 0, "position": -1` }
+                            hx-vals={ `"year": 0, "semester": 0, "position": -1, "lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                         // move button
@@ -451,7 +454,8 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent;"
-                            hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) } 
+                            hx-delete={ "/blueprint/course/" + strconv.Itoa(course.ID) }
+                            hx-vals={ `"lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                         // drag button
@@ -476,7 +480,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
 
 templ unassignedHeadline(t text) {
     <div>
-        <table class={ "table table-sm table-hover table-light blueprint-table headline" }>
+        <table class="table table-sm table-hover table-light blueprint-table headline">
             <tbody>
                 <tr
                     x-data="{ hover: false }"
@@ -489,7 +493,7 @@ templ unassignedHeadline(t text) {
                             :class="showUnassigned ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'">
                         </i>
                     </td>
-                    <td class={ "short yeartext" }>{ t.Unassigned }</td>
+                    <td class="short yeartext">{ t.Unassigned }</td>
                     for i := 0; i < 5; i++ {
                         <td class="short"></td>
                     }
@@ -503,7 +507,7 @@ templ unassignedHeadline(t text) {
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
                             hx-delete="/blueprint/courses"
-                            hx-vals={ `"type": "year", "year": 0` }
+                            hx-vals={ `"type": "year", "year": 0, "lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                     </td>
@@ -516,7 +520,7 @@ templ unassignedHeadline(t text) {
 
 templ yearHeadline(yearNum, credits int, t text) {
     <div>
-        <table class={ "table table-sm table-hover table-light blueprint-table headline" }>
+        <table class="table table-sm table-hover table-light blueprint-table headline">
             <tbody>
                 <tr
                     x-data="{ hover: false }"
@@ -545,7 +549,7 @@ templ yearHeadline(yearNum, credits int, t text) {
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
                             hx-patch="/blueprint/courses"
-                            hx-vals={ `"type": "year-unassign", "year": ` + strconv.Itoa(yearNum) +`, "semester": 0` }
+                            hx-vals={ `"type": "year-unassign", "year": ` + strconv.Itoa(yearNum) +`, "semester": 0, "lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                         // remove all courses button
@@ -557,7 +561,7 @@ templ yearHeadline(yearNum, credits int, t text) {
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
                             hx-delete="/blueprint/courses"
-                            hx-vals={ `"type": "year", "year": ` + strconv.Itoa(yearNum) }
+                            hx-vals={ `"type": "year", "year": ` + strconv.Itoa(yearNum) + `, "lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                     </td>
@@ -567,36 +571,36 @@ templ yearHeadline(yearNum, credits int, t text) {
     </div>
 }
 
-templ semesterHeadline(semesterNum, yearNum, credits int, t text) {
+templ semesterHeadline(semester, year, credits int, t text) {
     {{
         semesterVar := ""
         semesterText := ""
         unassignTT := ""
         removeTT := ""
-        if semesterNum == 1 {
+        if semester == 1 {
             semesterVar = "Winter"
             semesterText = t.Winter
             unassignTT = t.TTUnassignWinter
             removeTT = t.TTRemoveWinter
-        } else if semesterNum == 2 {
+        } else if semester == 2 {
             semesterVar = "Summer"
             semesterText = t.Summer
             unassignTT = t.TTUnassignSummer
             removeTT = t.TTRemoveSummer
         }
     }}
-    <div x-show={ "Year" + strconv.Itoa(yearNum) }>
+    <div x-show={ "Year" + strconv.Itoa(year) }>
         <table class={ "table table-sm table-hover table-light blueprint-table " }>
             <tbody>
                 <tr
                     x-data="{ hover: false }"
                     @mouseover="hover = true"
                     @mouseleave="hover = false"
-                    @click={ "if (!$event.target.closest('button')) { " + semesterVar + strconv.Itoa(yearNum) + " = !" + semesterVar + strconv.Itoa(yearNum) + " }" }
+                    @click={ "if (!$event.target.closest('button')) { " + semesterVar + strconv.Itoa(year) + " = !" + semesterVar + strconv.Itoa(year) + " }" }
                 >
                     <td class="short">
                         <i
-                            :class={ semesterVar + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }>
+                            :class={ semesterVar + strconv.Itoa(year) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }>
                         </i>
                     </td>
                     <td class="short semtext">{ semesterText }</td>
@@ -615,7 +619,7 @@ templ semesterHeadline(semesterNum, yearNum, credits int, t text) {
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
                             hx-patch={ "/blueprint/courses" } 
-                            hx-vals={ `"type": "semester-unassign", "year": ` + strconv.Itoa(yearNum) + `, "semester": ` + strconv.Itoa(semesterNum) }
+                            hx-vals={ `"type": "semester-unassign", "year": ` + strconv.Itoa(year) + `, "semester": ` + strconv.Itoa(semester) + `, "lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                         // remove all courses button
@@ -627,7 +631,7 @@ templ semesterHeadline(semesterNum, yearNum, credits int, t text) {
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
                             style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
                             hx-delete="/blueprint/courses"
-                            hx-vals={ `"type": "semester", "year": ` + strconv.Itoa(yearNum) + `, "semester": ` + strconv.Itoa(semesterNum) }
+                            hx-vals={ `"type": "semester", "year": ` + strconv.Itoa(year) + `, "semester": ` + strconv.Itoa(semester) + `, "lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                     </td>
@@ -709,10 +713,10 @@ templ Content(data *Blueprint, t text) {
         });
 
         // update position of course in database using dynamic htmx patch
-        function sortHxPatch(item, year, semester, position) {
+        function sortHxPatch(item, year, semester, position, language) {
             htmx.ajax('PATCH', '/blueprint/course/' + item, {
                 target: 'main', 
-                values: { year: year, semester: semester, position: position + 1 }
+                values: { year: year, semester: semester, position: position + 1, language: language }
             });
         }
     </script>
@@ -733,11 +737,13 @@ templ Page(data *Blueprint, t text) {
 }
 
 templ InternalServerErrorContent(t text) {
+    // TODO translate
     <h1>Internal Server Error</h1>
     <p>Something went wrong</p>
 }
 
 templ InternalServerErrorPage(t text) {
+    // TODO translate
     @utils.Page("Internal Server Error", t.Utils) {
         @InternalServerErrorContent(t)
     }

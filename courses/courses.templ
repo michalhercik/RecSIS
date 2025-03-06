@@ -158,8 +158,8 @@ templ blueprintAssignment(assignments []Assignment, code string, t text) {
     <div class="d-flex justify-content-end mt-auto pt-3">
         <div class="btn-group">
             <button type="button" class="btn btn-outline-dark"
-                hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }  
-                hx-vals={ `"year": 0, "semester": 0` }
+                hx-post={ "/blueprint/course/" + code }  
+                hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
             >
                 { t.Assign }
             </button>
@@ -170,14 +170,14 @@ templ blueprintAssignment(assignments []Assignment, code string, t text) {
             // TODO make dynamic, NOT 3 years
                 for year := 1; year <= 3; year++ {
                     <li class="mx-3"><button class="dropdown-item text-center"
-                        hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }  
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1` } 
+                        hx-post={ "/blueprint/course/" + code }  
+                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` } 
                     >
                     { t.YearStr(year) + " " + t.WinterAssign }
                     </button></li>
                     <li class="mx-3"><button class="dropdown-item text-center"
-                        hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }  
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2` } 
+                        hx-post={ "/blueprint/course/" + code }  
+                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` } 
                     >
                     { t.YearStr(year) + " " + t.SummerAssign }
                     </button></li>

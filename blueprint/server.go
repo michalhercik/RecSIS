@@ -25,7 +25,6 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 	//router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page) //TODO get language from http header
 	router.HandleFunc(fmt.Sprintf("GET /cs%s", prefix), s.csPage)
 	router.HandleFunc(fmt.Sprintf("GET /en%s", prefix), s.enPage)
-	// TODO: should we differentiate between languages for rest of the endpoints?
 	router.HandleFunc(fmt.Sprintf("POST %s/year", prefix), s.yearAddition)
 	router.HandleFunc(fmt.Sprintf("DELETE %s/year", prefix), s.yearRemoval)
 	router.HandleFunc(fmt.Sprintf("POST %s/course/{code}", prefix), s.courseAddition)
@@ -77,6 +76,15 @@ func parseYearSemesterPosition(r *http.Request) (int, SemesterAssignment, int, e
 	return year, semester, position, err
 }
 
+func parseLanguage(r *http.Request) (text, error) {
+	lang := r.FormValue("lang")
+	if lang == "cs" || lang == "en" {
+		return texts[lang], nil
+	}
+	// TODO: default return english, might be better to return an error
+	return texts["en"], nil
+}
+
 func atoiSlice(s []string) ([]int, error) {
 	result := make([]int, len(s))
 	for i, elem := range s {
@@ -93,9 +101,8 @@ func atoiSlice(s []string) ([]int, error) {
 // Page
 // ===============================================================================================================================
 
-func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request) {
+func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request, t text) {
 	var result templ.Component
-	t := texts["cs"] // TODO this should be based on the language of the request
 	sessionCookie, err := r.Cookie("recsis_session_key")
 	if err != nil {
 		http.Error(w, "unknown student", http.StatusBadRequest)
@@ -202,7 +209,13 @@ func (s Server) coursesMovement(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	s.renderBlueprint(w, r)
+	text, err := parseLanguage(r)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	s.renderBlueprint(w, r, text)
 }
 
 func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
@@ -235,8 +248,14 @@ func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	text, err := parseLanguage(r)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	// TODO: Render just the necessary for performance
-	s.renderBlueprint(w, r)
+	s.renderBlueprint(w, r, text)
 }
 
 // ===============================================================================================================================
@@ -293,7 +312,13 @@ func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	s.renderBlueprint(w, r)
+	text, err := parseLanguage(r)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	s.renderBlueprint(w, r, text)
 }
 
 func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
@@ -315,8 +340,14 @@ func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	text, err := parseLanguage(r)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	// TODO: Render just credits stats with own sql query for performance
-	s.renderBlueprint(w, r)
+	s.renderBlueprint(w, r, text)
 }
 
 // ===============================================================================================================================
@@ -336,6 +367,13 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse parameters", http.StatusBadRequest)
 		return
 	}
+	// TODO: use this
+	// text, err := parseLanguage(r) 
+	// if err != nil {
+	// 	log.Println(err)
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
 	courseID, err := s.Data.NewCourse(sessionCookie.Value, course, year, semester)
 	if err != nil {
 		log.Println(err)
@@ -362,8 +400,14 @@ func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+	text, err := parseLanguage(r)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	// TODO: Render just credits stats with own sql query for performance
-	s.renderBlueprint(w, r)
+	s.renderBlueprint(w, r, text)
 }
 
 // ===============================================================================================================================
@@ -382,6 +426,12 @@ func (s Server) yearAddition(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	text, err := parseLanguage(r)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	// TODO: Render just credits stats with own sql query for performance
-	s.renderBlueprint(w, r)
+	s.renderBlueprint(w, r, text)
 }
