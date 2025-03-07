@@ -165,28 +165,6 @@ templ optionMenu(data *Blueprint, t text) {
     </div>
 }
 
-// TODO: get this from DB, this is deprecated
-func examTypeStr(examType string) string {
-    // to add: STEX, thesis, ...
-    switch examType {
-    case "Z":
-        return "C" // Z
-    case "1":
-        return "??" // do not know
-    case "F":
-        return "MC" // KZ
-    case "D":
-        return "??" // do not know
-    case "K":
-        return "Ex" // Zk
-    case "*":
-        return "C+Ex" // Z+Zk
-    default:
-        return "???"
-    }
-}
-
-// TODO: do not use examTypeStr, use examType from DB
 func hoursExamsString(lecture, seminar int, examType string) string {
     return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examType
 }
@@ -237,7 +215,7 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
                 <th></th>
                 <th>{ t.Code }</th>
                 <th>{ t.Title }</th>
-                <th>{ t.Credits }</th>
+                <th class="text-center">{ t.Credits }</th>
                 <th>{ t.Winter }</th>
                 <th>{ t.Summer }</th>
                 <th>{ t.Teachers }</th>
@@ -262,16 +240,21 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
                     x-sort:item={ strconv.Itoa(course.ID) }
                 >
                     <td>
-                        <input
-                            type="checkbox"
-                            id={ "checkbox" + strconv.Itoa(course.ID) }
-                            name="selected"
-                            value={ strconv.Itoa(course.ID) }
-                            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; console.log('Checked number:', checkedNumber);"/>
+                        <div class="checkbox-container">
+                            <input
+                                type="checkbox"
+                                id={ "checkbox" + strconv.Itoa(course.ID) }
+                                class="form-check-input"
+                                name="selected"
+                                value={ strconv.Itoa(course.ID) }
+                                @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"
+                            />
+                            <div class="circle-overlay" @click="handleCircleClick"></div>
+                        </div>
                     </td>
                     <td> @utils.CourseLink(course.Code, t.Utils) </td>
                     <td>{ course.Title }</td>
-                    <td>{ strconv.Itoa(course.Credits) }</td>
+                    <td class="credits-column text-end">{ strconv.Itoa(course.Credits) }</td>
                     @winterSummer(&course)
                     <td>{ course.Guarantors.string() }</td>
                     <td class="text-end align-middle short">
@@ -384,16 +367,21 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                     x-sort:item={ strconv.Itoa(course.ID) }
                 >
                     <td>
-                        <input
-                            type="checkbox"
-                            id={ "checkbox" + strconv.Itoa(course.ID) }
-                            name="selected"
-                            value={ strconv.Itoa(course.ID) }
-                            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"/>
+                        <div class="checkbox-container">
+                            <input
+                                type="checkbox"
+                                id={ "checkbox" + strconv.Itoa(course.ID) }
+                                class="form-check-input"
+                                name="selected"
+                                value={ strconv.Itoa(course.ID) }
+                                @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"
+                            />
+                            <div class="circle-overlay" @click="handleCircleClick"></div>
+                        </div>
                     </td>
                     <td> @utils.CourseLink(course.Code, t.Utils) </td>
                     <td>{ course.Title }</td>
-                    <td>{ strconv.Itoa(course.Credits) }</td>
+                    <td class="credits-column text-end">{ strconv.Itoa(course.Credits) }</td>
                     @winterSummer(&course)
                     <td>{ course.Guarantors.string() }</td>
                     <td class="text-end align-middle short">
@@ -530,7 +518,7 @@ templ yearHeadline(yearNum, credits int, t text) {
                     </td>
                     <td class="short yeartext">{ t.YearStr(yearNum) }</td>
                     <td class="short"></td>
-                    <td class="short yeartext">{ strconv.Itoa(credits) }</td>
+                    <td class="short yeartext credits-column text-end">{ strconv.Itoa(credits) }</td>
                     <td class="short"></td>
                     <td class="short"></td>
                     <td class="short"></td>
@@ -604,7 +592,7 @@ templ semesterHeadline(semester, year, credits int, t text) {
                     </td>
                     <td class="short semtext">{ semesterText }</td>
                     <td class="short"></td>
-                    <td class="short semtext">{ strconv.Itoa(credits) }</td>
+                    <td class="short semtext credits-column text-end">{ strconv.Itoa(credits) }</td>
                     <td class="short"></td>
                     <td class="short"></td>
                     <td class="short"></td>
@@ -745,6 +733,21 @@ templ Content(data *Blueprint, t text) {
                     lastChecked = this;
                 });
             });
+        }
+
+        // pass through (shift-)click event to checkbox
+        function handleCircleClick(event) {
+            const checkbox = event.target.previousElementSibling;
+            if (checkbox) {
+                // Create a new MouseEvent, preserving shift key and other properties
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    shiftKey: event.shiftKey,
+                });
+
+                checkbox.dispatchEvent(clickEvent);
+            }
         }
 
         // update position of course in database using dynamic htmx patch
