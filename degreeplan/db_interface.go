@@ -9,39 +9,44 @@ type DataManager interface {
 	DegreePlan(uid string, lang DBLang) (*DegreePlan, error)
 }
 
-type DBLang int
+type DBLang string
 
 const (
-	cs DBLang = iota
-	en
+	cs DBLang = "cs"
+	en DBLang = "en"
 )
-
-var DBLangs = map[DBLang]string{
-	cs: "cs",
-	en: "en",
-}
-
-func (l DBLang) String() string {
-	return DBLangs[l]
-}
 
 type DegreePlan struct {
 	blocs []Bloc
 }
 
-type Bloc struct {
-	Name    string   `json:"BLOC_NAME"`
-	Note    string   `json:"BLOC_NOTE"`
-	Limit   int      `json:"BLOC_LIMIT"`
-	Courses []Course `json:"COURSES"`
+func (dp *DegreePlan) add(record DegreePlanRecord) {
+	blocIndex := -1
+	for i, b := range dp.blocs {
+		if b.Code == record.BlocCode {
+			blocIndex = i
+			break
+		}
+	}
+	if blocIndex == -1 {
+		dp.blocs = append(dp.blocs, Bloc{
+			Name:  record.BlocName,
+			Code:  record.BlocCode,
+			Note:  record.BlocNote,
+			Limit: record.BlocLimit,
+		})
+		blocIndex = len(dp.blocs) - 1
+	}
+	dp.blocs[blocIndex].Courses = append(dp.blocs[blocIndex].Courses, record.Course)
 }
 
-type BlueprintStatus int
-
-const (
-	NotInBlueprint BlueprintStatus = iota
-	InBlueprint
-)
+type Bloc struct {
+	Name    string
+	Code    int
+	Note    string
+	Limit   int
+	Courses []Course
+}
 
 type CourseStatus string
 
@@ -67,16 +72,25 @@ const (
 )
 
 type Course struct {
-	Code            string 			 `json:"CODE"`
-	Name            string 			 `json:"NAME"`
-	Note            string 			 `json:"NOTE"`
-	Credits         int    			 `json:"CREDITS"`
-	Start           TeachingSemester `json:"SEMESTER_PRIMARY"`
-	LectureRange1   int    			 `json:"WORKLOAD_PRIMARY1"`
-	SeminarRange1   int    			 `json:"WORKLOAD_SECONDARY1"`
-	LectureRange2   int    			 `json:"WORKLOAD_PRIMARY2"`
-	SeminarRange2   int    			 `json:"WORKLOAD_SECONDARY2"`
-	SemesterCount   int    			 `json:"SEMESTER_COUNT"`
-	ExamType 	    string 			 `json:"SUBJECT_TYPE"`
-	BlueprintStatus BlueprintStatus
+	Code          string           `db:"code"`
+	Title         string           `db:"title"`
+	Note          string           `db:"note"`
+	Credits       int              `db:"credits"`
+	Start         TeachingSemester `db:"start_semester"`
+	LectureRange1 int              `db:"lecture_range_1"`
+	SeminarRange1 int              `db:"seminar_range_1"`
+	LectureRange2 int              `db:"lecture_range_2"`
+	SeminarRange2 int              `db:"seminar_range_2"`
+	SemesterCount int              `db:"semester_count"`
+	ExamType      string           `db:"exam_type"`
+	InBlueprint   bool             `db:"in_blueprint"`
+}
+
+type DegreePlanRecord struct {
+	BlocCode  int    `db:"bloc_subject_code"`
+	BlocLimit int    `db:"bloc_limit"`
+	BlocName  string `db:"bloc_name"`
+	BlocNote  string `db:"bloc_note"`
+	Note      string `db:"note"`
+	Course
 }

@@ -1,7 +1,7 @@
 package degreeplan
 
 import (
-	"encoding/json"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/degreeplan/internal/sqlquery"
@@ -21,17 +21,16 @@ func (m DBManager) DegreePlan(uid string, lang DBLang) (*DegreePlan, error) {
 
 func (m DBManager) degreePlan(uid string, lang DBLang) (*DegreePlan, error) {
 	// Query Database
-	row := m.DB.QueryRow(sqlquery.DegreePlan, uid, lang.String())
-	var jsonData string
-	err := row.Scan(&jsonData)
-	if err != nil {
-		return nil, err
+	fail := func(err error) (*DegreePlan, error) {
+		return nil, fmt.Errorf("degreePlan: %v", err)
 	}
-	// Parse result
-	result := DegreePlan{}
-	err = json.Unmarshal([]byte(jsonData), &result.blocs)
-	if err != nil {
-		return nil, err
+	var records []DegreePlanRecord
+	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, lang); err != nil {
+		return fail(err)
 	}
-	return &result, nil
+	var dp DegreePlan
+	for _, record := range records {
+		dp.add(record)
+	}
+	return &dp, nil
 }
