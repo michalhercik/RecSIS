@@ -121,17 +121,18 @@ CREATE TABLE course_teachers(
 );
 
 CREATE TABLE degree_plans(
-    -- id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    -- code VARCHAR(15) NOT NULL,
-    -- plan_year INT NOT NULL,
-    -- course VARCHAR(10) NOT NULL,
-    -- bloc_code INT NOT NULL,
-    -- bloc_type CHAR(1) NOT NULL,
-    -- bloc_limit INT --NOT NULL
-    code VARCHAR(15) NOT NULL,
+    plan_code VARCHAR(15) NOT NULL,
     plan_year INT NOT NULL,
     lang CHAR(2) NOT NULL,
-    blocs jsonb
+    course_code VARCHAR(10) NOT NULL,
+    interchangeability VARCHAR(10),
+    bloc_subject_code INT NOT NULL,
+    bloc_type CHAR(1) NOT NULL,
+    bloc_limit INT,
+    bloc_name VARCHAR(250),
+    bloc_note VARCHAR(1000),
+    note VARCHAR(250),
+    seq VARCHAR(50)
 );
 
 CREATE TABLE degree_programmes(

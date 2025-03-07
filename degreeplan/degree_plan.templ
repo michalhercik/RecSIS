@@ -5,28 +5,29 @@ import (
     "strconv"
 )
 
-func examTypeStr(examType string) string {
-    // to add: STEX, thesis, ...
-    switch examType {
-    case "Z":
-        return "C" // Z
-    case "1":
-        return "??" // do not know
-    case "F":
-        return "MC" // KZ
-    case "D":
-        return "??" // do not know
-    case "K":
-        return "Ex" // Zk
-    case "*":
-        return "C+Ex" // Z+Zk
-    default:
-        return "unknown"
-    }
-}
+// TODO: delete - handles database
+// func examTypeStr(examType string) string {
+//     // to add: STEX, thesis, ...
+//     switch examType {
+//     case "Z":
+//         return "C" // Z
+//     case "1":
+//         return "??" // do not know
+//     case "F":
+//         return "MC" // KZ
+//     case "D":
+//         return "??" // do not know
+//     case "K":
+//         return "Ex" // Zk
+//     case "*":
+//         return "C+Ex" // Z+Zk
+//     default:
+//         return "unknown"
+//     }
+// }
 
 func hoursExamsString(lecture, seminar int, examType string) string {
-    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examTypeStr(examType)
+    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examType
 }
 
 templ winterSummer(course *Course) {
@@ -107,7 +108,7 @@ templ Content(dp *DegreePlan, t text) {
             for _, course := range bloc.Courses {
                 <tr>
                     <td>@utils.CourseLink(course.Code, t.Utils)</td>
-                    <td>{ course.Name }</td>
+                    <td>{ course.Title }</td>
                     <td class="credits-column text-end">{ strconv.Itoa(course.Credits) }</td>
                     @winterSummer(&course)
                     <td><button class="btn btn-sm btn-outline-dark">TODO</button></td>

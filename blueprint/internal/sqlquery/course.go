@@ -24,11 +24,15 @@ target_position AS (
 	AND bs.semester=$3
 	ORDER BY bc.position DESC
 	LIMIT 1
+),
+target_course AS (
+	SELECT code, valid_from FROM courses WHERE code=$4 ORDER BY valid_from DESC LIMIT 1
 )
-INSERT INTO blueprint_courses(blueprint_semester_id, course, position)
+INSERT INTO blueprint_courses(blueprint_semester_id, course_code, course_valid_from, position)
 VALUES (
 	(SELECT blueprint_semester_id FROM target_position),
-	(SELECT id FROM courses WHERE code=$4),
+	(SELECT code FROM target_course),
+	(SELECT valid_from FROM target_course),
 	(SELECT position FROM target_position)
 )
 RETURNING id
