@@ -18,7 +18,7 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 	//router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page) // TODO get language from http header
 	router.HandleFunc(fmt.Sprintf("GET /cs%s", prefix), s.csPage)
 	router.HandleFunc(fmt.Sprintf("GET /en%s", prefix), s.enPage)
-	//router.HandleFunc(fmt.Sprintf("GET %s/search", prefix), s.content) // TODO get language from http header 
+	//router.HandleFunc(fmt.Sprintf("GET %s/search", prefix), s.content) // TODO get language from http header
 	router.HandleFunc(fmt.Sprintf("GET /cs%s/search", prefix), s.csContent)
 	router.HandleFunc(fmt.Sprintf("GET /en%s/search", prefix), s.enContent)
 	//router.HandleFunc(fmt.Sprintf("GET %s/quicksearch", prefix), s.quickSearch) // TODO get language from http header
@@ -173,6 +173,7 @@ func (s Server) search(req *Request) (*Response, error) {
 	for i := range res.courses {
 		assignment, ok := assignments[res.courses[i].code]
 		if ok {
+			fmt.Println(assignment)
 			res.courses[i].blueprintAssignments = assignment
 		}
 	}

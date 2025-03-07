@@ -39,22 +39,21 @@ const (
 
 type sortType int
 
-
 func (st sortType) String(lang string) string {
-    switch st {
-    case relevance:
-        return texts[lang].Relevance
-    case recommended:
-        return texts[lang].Recommended
-    case rating:
-        return texts[lang].Rating
-    case mostPopular:
-        return texts[lang].MostPopular
-    case newest:
-        return texts[lang].Newest
-    default:
+	switch st {
+	case relevance:
+		return texts[lang].Relevance
+	case recommended:
+		return texts[lang].Recommended
+	case rating:
+		return texts[lang].Rating
+	case mostPopular:
+		return texts[lang].MostPopular
+	case newest:
+		return texts[lang].Newest
+	default:
 		return "unknown"
-    }
+	}
 }
 
 type Language string
@@ -74,7 +73,8 @@ type Teacher struct {
 
 // TODO: here should be this ↓ but DB is broken, first name always empty
 // return fmt.Sprintf("%c. %s",
-// 		t.firstName[0], t.lastName)
+//
+//	t.firstName[0], t.lastName)
 func (t Teacher) String() string {
 	return fmt.Sprintf("%s %s %s %s",
 		t.titleBefore, t.firstName, t.lastName, t.titleAfter)
@@ -140,22 +140,20 @@ func (a Assignment) String(lang string) string {
 type Assignments []Assignment
 
 func (a Assignments) String(lang string) string {
-    assignments := []string{}
-    for _, assignment := range a {
-        assignments = append(assignments, assignment.String(lang))
-    }
-    if len(assignments) == 0 {
-        return ""
-    }
-    return strings.Join(assignments, " ")
+	assignments := []string{}
+	for _, assignment := range a {
+		assignments = append(assignments, assignment.String(lang))
+	}
+	if len(assignments) == 0 {
+		return ""
+	}
+	return strings.Join(assignments, " ")
 }
 
 type Course struct {
 	code                 string
 	name                 string
 	annotation           string
-	nameCs               string // TODO: delete after transition to name
-	nameEn               string // TODO: delete after transition to name
 	start                TeachingSemester
 	semesterCount        int
 	lectureRange1        int
@@ -164,7 +162,7 @@ type Course struct {
 	seminarRange2        int
 	examType             string
 	credits              int
-	teachers             Teachers // TODO: delete after transition to teacher1, teacher2, teaacher3
+	teachers             Teachers
 	rating               int
 	blueprintAssignments Assignments
 }

@@ -22,7 +22,7 @@ func (m DBManager) Blueprint(sessionID string, courses []string) (map[string][]A
 	for rows.Next() {
 		b := Assignment{}
 		var code string
-		if err := rows.Scan(&code, &b.year, &b.semester); err != nil {
+		if err := rows.Scan(&code, &b.semester, &b.year); err != nil {
 			return nil, fmt.Errorf("failed to scan blueprint: %w", err)
 		}
 		courses, ok := res[code]

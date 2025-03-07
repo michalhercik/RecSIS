@@ -1,7 +1,7 @@
 package sqlquery
 
 const Blueprint = `
-	SELECT c.code, bs.semester, y.academic_year
+	SELECT DISTINCT c.code, bs.semester, y.academic_year
 	FROM sessions s
 	LEFT JOIN blueprint_years y ON y.user_id = s.user_id
 	LEFT JOIN blueprint_semesters bs ON bs.blueprint_year_id = y.id
