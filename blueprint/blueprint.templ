@@ -81,7 +81,7 @@ templ optionMenu(data *Blueprint, t text) {
                 { t.Credits } <i :class="showCredits ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
             </button>
 
-            <div x-show="showCredits" class="credits-box">
+            <div style="display: none" x-show="showCredits" class="credits-box">
                 @renderCreditTable(data.years[1:], t)
             </div>
         </div>
@@ -96,6 +96,7 @@ templ optionMenu(data *Blueprint, t text) {
             @click="bootstrap.Tooltip.getInstance($el).dispose();"
             @mouseleave="initializeTooltips()"
             class="btn btn-outline-dark btn-sm bi bi-dash-circle"
+            style="display: none"
             hx-patch="/blueprint/courses"
             hx-vals={ `"type": "selected", "year": 0, "semester": 0, "position": -1, "lang": "` + t.Language + `"` }
             hx-include="input[type=checkbox]:checked"
@@ -109,6 +110,7 @@ templ optionMenu(data *Blueprint, t text) {
                 data-bs-placement="bottom"
                 data-bs-title={ t.TTAssignChecked }
                 class="btn btn-outline-dark btn-sm bi bi-arrows-move"
+                style="display: none"
                 @click="openAssign = !openAssign;
                         tooltipEnabled = !tooltipEnabled;
                         let tooltip = bootstrap.Tooltip.getInstance($el);
@@ -122,6 +124,7 @@ templ optionMenu(data *Blueprint, t text) {
             <div
                 x-show="openAssign"
                 class="assign-box"
+                style="display: none"
                 @click.outside="openAssign = false"
             >
                 for i := 1; i <= yearCount; i++ {
@@ -157,6 +160,7 @@ templ optionMenu(data *Blueprint, t text) {
             @click="bootstrap.Tooltip.getInstance($el).dispose();"
             @mouseleave="initializeTooltips()"
             class="btn btn-outline-dark btn-sm bi bi-trash-fill"
+            style="display: none"
             hx-delete="/blueprint/courses"
             hx-vals={ `"type": "selected", "lang": "` + t.Language + `"` }
             hx-include="input[type=checkbox]:checked"
@@ -245,6 +249,7 @@ templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
                                 type="checkbox"
                                 id={ "checkbox" + strconv.Itoa(course.ID) }
                                 class="form-check-input"
+                                style="border: 1px solid #2c2c2c !important;"
                                 name="selected"
                                 value={ strconv.Itoa(course.ID) }
                                 @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"
@@ -372,6 +377,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
                                 type="checkbox"
                                 id={ "checkbox" + strconv.Itoa(course.ID) }
                                 class="form-check-input"
+                                style="border: 1px solid #2c2c2c !important;"
                                 name="selected"
                                 value={ strconv.Itoa(course.ID) }
                                 @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1"

@@ -64,7 +64,7 @@ templ langButton(lang string, text string) {
     <button
         class="btn btn-outline-dark"
         @click={ "changeLanguage('" + lang + "')" }>
-        <i class="bi bi-globe2"></i> { text }
+        { text }
     </button>
 }
 
@@ -94,9 +94,9 @@ templ Header(title string, t Text) {
                     <div class="d-flex">
                         <button class="btn btn-outline-success me-2">{ t.Login }</button>
                         if t.Language == "cs" {
-                            @langButton("en", "English")
+                            @langButton("en", "EN")
                         } else {
-                            @langButton("cs", "Čeština")
+                            @langButton("cs", "CS")
                         }
                     </div>
                 </div>

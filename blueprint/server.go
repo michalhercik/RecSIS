@@ -380,6 +380,8 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
+	// TODO remove this
+	// Ribbon.templ()... year,sem..
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]int{"id": courseID})

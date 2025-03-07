@@ -162,6 +162,7 @@ type Course struct {
 	CompletionRequirements   Description  `db:"aim"`
 	// TODO this is Pozadavky ke kontrole studia, is it ok?
 	ExamRequirements         Description  `db:"requirements"`
+	// TODO this must be syllabus - broken
 	Sylabus                  Description  `db:"syllabus"`
 	// TODO what is this
 	Classifications          []string

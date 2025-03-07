@@ -73,7 +73,6 @@ type Teacher struct {
 
 // TODO: here should be this ↓ but DB is broken, first name always empty
 // return fmt.Sprintf("%c. %s",
-//
 //	t.firstName[0], t.lastName)
 func (t Teacher) String() string {
 	return fmt.Sprintf("%s %s %s %s",
@@ -116,7 +115,6 @@ type Assignment struct {
 	semester SemesterAssignment
 }
 
-// TODO: this string is broken, year and semester is swapped
 func (a Assignment) String(lang string) string {
 	semester := ""
 	switch a.semester {
