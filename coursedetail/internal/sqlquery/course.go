@@ -37,7 +37,7 @@ SELECT
     COALESCE(aim, '{}') AS aim,
     COALESCE(requirements, '{}') AS requirements,
     COALESCE(requirements, '{}') AS syllabus
-FROM bla_courses c
+FROM courses c
 LEFT JOIN start_semester_to_desc sd ON c.start_semester = sd.id AND c.lang = sd.lang
 WHERE code = $1 AND c.lang = $2;
 `
