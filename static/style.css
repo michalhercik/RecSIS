@@ -251,3 +251,9 @@ body {
 .checkbox-container .circle-overlay:hover {
     display: block;
 }
+
+/* Degree plan colored rows */
+.in-blueprint {
+    background-color: rgba(4, 108, 181, 0.2) !important;
+}
+
