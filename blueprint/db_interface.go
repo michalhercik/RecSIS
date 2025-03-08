@@ -137,6 +137,12 @@ func (ay AcademicYear) credits() int {
 	return ay.winterCredits() + ay.summerCredits()
 }
 
+type insertedCourseInfo struct {
+	courseID     int
+	academicYear int
+	semester     SemesterAssignment
+}
+
 type BlueprintRecordPosition struct {
 	AcademicYear int                `db:"academic_year"`
 	Semester     SemesterAssignment `db:"semester"`
@@ -170,4 +176,25 @@ func (b *Blueprint) assign(position BlueprintRecordPosition, course *Course) err
 		return fmt.Errorf("unknown semester assignment %d", position.Semester)
 	}
 	return nil
+}
+
+type courseAdditionRequestSource int
+
+const (
+	sourceBlueprint courseAdditionRequestSource = iota
+	sourceCourseDetail
+	sourceDegreePlan
+)
+
+func (r courseAdditionRequestSource) String() string {
+	switch r {
+	case sourceBlueprint:
+		return "blueprint"
+	case sourceCourseDetail:
+		return "courseDetail"
+	case sourceDegreePlan:
+		return "degreePlan"
+	default:
+		return fmt.Sprintf("unknown %d", r)
+	}
 }

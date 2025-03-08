@@ -1,7 +1,6 @@
 package blueprint
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -354,21 +353,49 @@ func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 // Add Courses
 // ===============================================================================================================================
 
+type courseAdditionPresenter func(insertedCourseInfo) templ.Component
+
 func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 	sessionCookie, err := r.Cookie("recsis_session_key")
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
+		log.Printf("courseAddition error: %v", err)
 		return
 	}
 	course := r.PathValue("code")
 	year, semester, err := parseYearSemester(r)
 	if err != nil {
-		http.Error(w, "Unable to parse parameters", http.StatusBadRequest)
+		log.Printf("courseAddition error: %v", err)
+		return
+	}
+	reqSourceInt, err := strconv.Atoi(r.FormValue("requestSource"))
+	reqSource := courseAdditionRequestSource(reqSourceInt)
+	if err != nil {
+		log.Printf("courseAddition error: %v", err)
+		return
+	}
+	var presenter courseAdditionPresenter = DefaultCourseAdditionPresenter
+	switch reqSource {
+	case sourceBlueprint:
+		// TODO: implement
+		//
+		// Example:
+		//	file: blueprint/blueprint.templ
+		//		templ Ribbon(insertInfo insertedCourseInfo) {
+		//			<div class="ribbon"> {{insertInfo.courseID}} </div>
+		//  	}
+		//
+		//	file: blueprint/blueprint.go
+		//		presenter = Ribbon
+	case sourceCourseDetail:
+		// TODO: implement
+	case sourceDegreePlan:
+		// TODO: implement
+	default:
+		log.Printf("courseAddition error: unknown request source %s", reqSource)
 		return
 	}
 	// TODO: use this
-	// text, err := parseLanguage(r) 
+	// text, err := parseLanguage(r)
 	// if err != nil {
 	// 	log.Println(err)
 	// 	w.WriteHeader(http.StatusInternalServerError)
@@ -377,12 +404,10 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 	courseID, err := s.Data.NewCourse(sessionCookie.Value, course, year, semester)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]int{"id": courseID})
+	insertInfo := insertedCourseInfo{courseID: courseID, academicYear: year, semester: semester}
+	presenter(insertInfo).Render(r.Context(), w)
 }
 
 // ===============================================================================================================================
