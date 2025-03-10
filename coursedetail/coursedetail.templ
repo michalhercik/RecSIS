@@ -13,18 +13,20 @@ const user = 42
 
 var p *bluemonday.Policy
 
-templ Ratings(ratings []Rating, courseCode string) {
-    {{
-        sum := 0
-        for _, rating := range ratings {
-            sum += rating.Rating
-        }
-    }}
+func itos(i int) string {
+    return strconv.Itoa(i)
+}
+
+templ Ratings(ratings CourseRatings, courseCode string) {
     <div id="rating">
         <p class="text-warning">Under construction</p> // TODO: remove
-        Rating: { strconv.Itoa(sum) }
-        <button hx-post={ fmt.Sprintf("/course/%s/like", courseCode) } hx-target="#rating" hx-swap="outerHTML">Like</button>
-        <button hx-post={ fmt.Sprintf("/course/%s/dislike", courseCode) } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
+        Overall Rating: { ratings.Overall.String() }
+        <button hx-post={ fmt.Sprintf("/course/like/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Like</button>
+        <button hx-post={ fmt.Sprintf("/course/dislike/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
+        Difficulty Rating: { ratings.Difficulty.String() }
+        Workload Rating: { ratings.Workload.String() }
+        Usefulness Rating: { ratings.Usefulness.String() }
+        Fun Rating: { ratings.Fun.String() }
     </div>
 }
 
@@ -135,7 +137,7 @@ templ accordion(course *Course, t text) {
 templ Content(course *Course, t text) {
     {{ p = bluemonday.UGCPolicy() }}
     <br>
-    //@Ratings(course.Ratings, course.Code)
+    //@Ratings(course.CourseRatings, course.Code)
     // TODO only if not empty/nil/...
     <div 
         id="basic-info"

@@ -254,3 +254,20 @@ CREATE TABLE sessions (
     user_id INT REFERENCES users(id),
     expires_at TIMESTAMPTZ NOT NULL
 );
+
+CREATE DOMAIN overall_rating_domain AS INT
+CHECK (VALUE IN (0, 1));
+
+CREATE DOMAIN specific_rating_domain AS INT
+CHECK (VALUE IN (1, 2, 3, 4, 5));
+
+CREATE TABLE course_ratings (
+    user_id INT NOT NULL REFERENCES users(id),
+    course_code VARCHAR(10) NOT NULL,
+    overall_rating overall_rating_domain,
+    difficulty_rating specific_rating_domain,
+    workload_rating specific_rating_domain,
+    usefulness_rating specific_rating_domain,
+    fun_rating specific_rating_domain,
+    UNIQUE (user_id, course_code)
+);

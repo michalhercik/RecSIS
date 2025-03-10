@@ -1,19 +1,21 @@
 package sqlquery
 
-const CourseTeachers = `
-SELECT
-    COALESCE(sis_id, -1),
-    COALESCE(first_name, ''),
-    COALESCE(last_name, ''),
-    COALESCE(title_before, ''),
-    COALESCE(title_after, '')
-FROM course_teachers
-LEFT JOIN teachers ON teacher = sis_id
-WHERE course=$1
-ORDER BY last_name, first_name;
+// TODO: valid_from use the date he finished the course???
+const OverallRating = `
+INSERT INTO course_ratings (user_id, course_code, overall_rating)
+VALUES (
+    (SELECT user_id FROM sessions WHERE id=$1),
+    $2, $3
+)
+ON CONFLICT (user_id, course_code) DO
+UPDATE SET overall_rating=$3
+;
 `
 
 const Course = `
+WITH user_session AS (
+	SELECT DISTINCT user_id FROM sessions WHERE id=$1
+)
 SELECT
     code,
     title,
@@ -36,8 +38,14 @@ SELECT
     COALESCE(annotation, '{}') AS annotation,
     COALESCE(aim, '{}') AS aim,
     COALESCE(requirements, '{}') AS requirements,
-    COALESCE(requirements, '{}') AS syllabus
+    COALESCE(requirements, '{}') AS syllabus,
+    cr.overall_rating ,
+    cr.difficulty_rating,
+    cr.workload_rating,
+    cr.usefulness_rating,
+    cr.fun_rating
 FROM courses c
 LEFT JOIN start_semester_to_desc sd ON c.start_semester = sd.id AND c.lang = sd.lang
-WHERE code = $1 AND c.lang = $2;
+LEFT JOIN course_ratings cr ON c.code = cr.course_code AND cr.user_id = (SELECT user_id FROM user_session)
+WHERE code = $2 AND c.lang = $3;
 `

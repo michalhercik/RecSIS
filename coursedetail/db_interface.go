@@ -1,6 +1,7 @@
 package coursedetail
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -8,7 +9,12 @@ import (
 
 // TODO: change interface name if interface changes
 type DataManager interface {
+<<<<<<< HEAD
 	Course(code string, lang DBLang) (*Course, error)
+=======
+	Course(sessionID string, code string, lang DBLang) (*Course, error)
+	OverallRating(sessionID string, code string, value int) error
+>>>>>>> ca50a2bf8c897e9510ce4b641919968e342a9fd9
 }
 
 type DBLang string
@@ -41,15 +47,15 @@ const (
 
 func (s Semester) String(lang string) string {
 	switch s {
-    case winter:
-        return texts[lang].Winter
+	case winter:
+		return texts[lang].Winter
 	case summer:
 		return texts[lang].Summer
 	case both:
 		return texts[lang].Both
-    default:
+	default:
 		return "unknown"
-    }
+	}
 }
 
 type Teacher struct {
@@ -166,44 +172,71 @@ func (d Description) Value() (interface{}, error) {
 type Capacity int
 
 func (c Capacity) String(lang string) string {
-	if c == -1 {  // -1 means no limit
+	if c == -1 { // -1 means no limit
 		return texts[lang].CapacityNoLimit
 	}
 	return fmt.Sprintf("%d", c)
 }
 
+type NullInt64 sql.NullInt64
+
+func (n *NullInt64) Scan(value interface{}) error {
+	var i sql.NullInt64
+	err := i.Scan(value)
+	if err != nil {
+		return err
+	}
+	*n = NullInt64(i)
+	return nil
+}
+
+func (n NullInt64) String() string {
+	if !n.Valid {
+		return "NULL"
+	}
+	return fmt.Sprintf("%d", n.Int64)
+}
+
+type CourseRatings struct {
+	Overall    NullInt64 `db:"overall_rating"`
+	Difficulty NullInt64 `db:"difficulty_rating"`
+	Workload   NullInt64 `db:"workload_rating"`
+	Usefulness NullInt64 `db:"usefulness_rating"`
+	Fun        NullInt64 `db:"fun_rating"`
+}
+
 type Course struct {
-	Code                     string       `db:"code"`
-	Name                     string       `db:"title"`
-	Faculty                  string       `db:"faculty"`
-	GuarantorDepartment      string       `db:"guarantor"`
-	State                    string       `db:"taught"`
-	Start                    string       `db:"semester_description"`
-	SemesterCount            int          `db:"semester_count"`
+	Code                string `db:"code"`
+	Name                string `db:"title"`
+	Faculty             string `db:"faculty"`
+	GuarantorDepartment string `db:"guarantor"`
+	State               string `db:"taught"`
+	Start               string `db:"semester_description"`
+	SemesterCount       int    `db:"semester_count"`
 	// TODO in some cases is both CZ and EN but here is only one
-	Language                 string       `db:"taught_lang"`
-	LectureRange1            int          `db:"lecture_range1"`
-	SeminarRange1            int          `db:"seminar_range1"`
-	LectureRange2            int          `db:"lecture_range2"`
-	SeminarRange2            int          `db:"seminar_range2"`
-	ExamType                 string       `db:"exam_type"`
-	Credits                  int          `db:"credits"`
-	Guarantors               TeacherSlice `db:"guarantors"`
-	Teachers                 TeacherSlice `db:"teachers"`
-	MinEnrollment            Capacity     `db:"min_number"`
-	Capacity                 string       `db:"capacity"`
-	Annotation               Description  `db:"annotation"`
+	Language      string       `db:"taught_lang"`
+	LectureRange1 int          `db:"lecture_range1"`
+	SeminarRange1 int          `db:"seminar_range1"`
+	LectureRange2 int          `db:"lecture_range2"`
+	SeminarRange2 int          `db:"seminar_range2"`
+	ExamType      string       `db:"exam_type"`
+	Credits       int          `db:"credits"`
+	Guarantors    TeacherSlice `db:"guarantors"`
+	Teachers      TeacherSlice `db:"teachers"`
+	MinEnrollment Capacity     `db:"min_number"`
+	Capacity      string       `db:"capacity"`
+	Annotation    Description  `db:"annotation"`
 	// TODO this is Cil predmetu, is it ok?
-	CompletionRequirements   Description  `db:"aim"`
+	CompletionRequirements Description `db:"aim"`
 	// TODO this is Pozadavky ke kontrole studia, is it ok?
-	ExamRequirements         Description  `db:"requirements"`
+	ExamRequirements Description `db:"requirements"`
 	// TODO this must be syllabus - broken
-	Sylabus                  Description  `db:"syllabus"`
+	Sylabus Description `db:"syllabus"`
 	// TODO what is this
-	Classifications          []string
+	Classifications []string
 	// TODO what is this
-	Classes                  []string
-	Link                     string // link to course webpage (not SIS)
-	Ratings                  []Rating
-	BlueprintAssignments     Assignments
+	Classes              []string
+	Link                 string // link to course webpage (not SIS)
+	BlueprintAssignments []Assignment
+	CourseRatings
 }
