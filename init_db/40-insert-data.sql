@@ -325,3 +325,8 @@ SET blueprint = jsonb_build_object('unassigned', '[]', 'assigned', jsonb_build_a
 ))
 WHERE user_id = 81411247
 AND lang = 'en';
+
+INSERT INTO course_ratings(user_id, course_code, overall_rating, difficulty_rating, workload_rating, usefulness_rating, fun_rating)
+VALUES
+    (81411247, 'NDMI002', 1, 3, 4, 5, 2),
+    (81411247, 'NDMI050', 0, 1, 1, 1, 3);

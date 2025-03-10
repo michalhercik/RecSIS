@@ -173,7 +173,6 @@ func (s Server) search(req *Request) (*Response, error) {
 	for i := range res.courses {
 		assignment, ok := assignments[res.courses[i].code]
 		if ok {
-			fmt.Println(assignment)
 			res.courses[i].blueprintAssignments = assignment
 		}
 	}

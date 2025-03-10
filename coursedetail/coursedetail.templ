@@ -17,18 +17,16 @@ func itos(i int) string {
     return strconv.Itoa(i)
 }
 
-templ Ratings(ratings []Rating, courseCode string) {
-    {{
-        sum := 0
-        for _, rating := range ratings {
-            sum += rating.Rating
-        }
-    }}
+templ Ratings(ratings CourseRatings, courseCode string) {
     <div id="rating">
         <p class="text-warning">Under construction</p> // TODO: remove
-        Rating: { itos(sum) }
-        <button hx-post={ fmt.Sprintf("/course/%s/like", courseCode) } hx-target="#rating" hx-swap="outerHTML">Like</button>
-        <button hx-post={ fmt.Sprintf("/course/%s/dislike", courseCode) } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
+        Overall Rating: { ratings.Overall.String() }
+        <button hx-post={ fmt.Sprintf("/course/like/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Like</button>
+        <button hx-post={ fmt.Sprintf("/course/dislike/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
+        Difficulty Rating: { ratings.Difficulty.String() }
+        Workload Rating: { ratings.Workload.String() }
+        Usefulness Rating: { ratings.Usefulness.String() }
+        Fun Rating: { ratings.Fun.String() }
     </div>
 }
 
@@ -203,7 +201,7 @@ templ Comments(comments []Comment, courseCode string, t text) {
 templ Content(course *Course, t text) {
     {{ p = bluemonday.UGCPolicy() }}
     <h1 class="text-center">{ course.Code + " - " + course.Name }</h1>
-    @Ratings(course.Ratings, course.Code)
+    @Ratings(course.CourseRatings, course.Code)
     @BlueprintAssignment(course.BlueprintAssignments, course.Code)
     @BasicInfo(course, t)
     // TODO add links to parts of the page
@@ -211,7 +209,7 @@ templ Content(course *Course, t text) {
     @DetailField(course.CompletionRequirements)
     @DetailField(course.ExamRequirements)
     @DetailField(course.Sylabus)
-    @Comments(course.Comments, course.Code, t)
+    // @Comments(course.Comments, course.Code, t)
 }
 
 templ Page(course *Course, t text) {

@@ -15,9 +15,8 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 	router.HandleFunc(fmt.Sprintf("GET /cs%s/{code}", prefix), s.csPage)
 	router.HandleFunc(fmt.Sprintf("GET /en%s/{code}", prefix), s.enPage)
 	// TODO: should we differentiate between languages for POSTs?
-	router.HandleFunc(fmt.Sprintf("POST %s/{code}/comment", prefix), s.commentAddition)
-	router.HandleFunc(fmt.Sprintf("POST %s/{code}/like", prefix), s.like)
-	router.HandleFunc(fmt.Sprintf("POST %s/{code}/dislike", prefix), s.dislike)
+	router.HandleFunc(fmt.Sprintf("POST %s/like/{code}", prefix), s.like)
+	router.HandleFunc(fmt.Sprintf("POST %s/dislike/{code}", prefix), s.dislike)
 }
 
 func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
@@ -29,8 +28,13 @@ func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) page(w http.ResponseWriter, r *http.Request, t text, lang DBLang) {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		log.Printf("courseDetail error: %v", err)
+		return
+	}
 	code := r.PathValue("code")
-	course, err := s.Data.Course(code, lang)
+	course, err := s.Data.Course(sessionCookie.Value, code, lang)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", code, err)
 		PageNotFound(code, t).Render(r.Context(), w)
@@ -39,46 +43,36 @@ func (s Server) page(w http.ResponseWriter, r *http.Request, t text, lang DBLang
 	}
 }
 
-func (s Server) commentAddition(w http.ResponseWriter, r *http.Request) {
-	// get the course code and comment content from the request
-	code := r.PathValue("code")
-	commentContent := r.FormValue("comment")
-
-	// sanitize the comment
-	// TODO maybe not change the content, but return an error if the content is not valid
-	sanitizedComment := sanitize(commentContent)
-
-	// add the comment to the database
-	err := s.Data.AddComment(code, sanitizedComment)
-	if err != nil {
-		http.Error(w, "Unable to add comment", http.StatusInternalServerError)
-		return
-	}
-
-	// return the page with the updated comments
-	newComments, err := s.Data.GetComments(code)
-	if err != nil {
-		http.Error(w, "Unable to retrieve comments", http.StatusInternalServerError)
-		return
-	}
-	// TODO must put correct language here
-	Comments(newComments, code, texts["en"]).Render(r.Context(), w)
-}
+const (
+	like    = 1
+	dislike = 0
+)
 
 func (s Server) like(w http.ResponseWriter, r *http.Request) {
 	// get the course code from the request
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		log.Printf("like error: %v", err)
+		return
+	}
 	code := r.PathValue("code")
+	if err = s.Data.OverallRating(sessionCookie.Value, code, like); err != nil {
+		log.Printf("like error: %v", err)
+	}
 
-	// TODO implement the like functionality
-
-	Ratings([]Rating{}, code).Render(r.Context(), w)
+	// TODO: should we return the updated ratings?
 }
 
 func (s Server) dislike(w http.ResponseWriter, r *http.Request) {
 	// get the course code from the request
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		log.Printf("like error: %v", err)
+		return
+	}
 	code := r.PathValue("code")
+	if err = s.Data.OverallRating(sessionCookie.Value, code, dislike); err != nil {
+		log.Printf("like error: %v", err)
+	}
 
-	// TODO implement the dislike functionality
-
-	Ratings([]Rating{}, code).Render(r.Context(), w)
 }
