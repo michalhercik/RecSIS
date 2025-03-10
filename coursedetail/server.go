@@ -15,7 +15,6 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 	router.HandleFunc(fmt.Sprintf("GET /cs%s/{code}", prefix), s.csPage)
 	router.HandleFunc(fmt.Sprintf("GET /en%s/{code}", prefix), s.enPage)
 	// TODO: should we differentiate between languages for POSTs?
-	router.HandleFunc(fmt.Sprintf("POST %s/{code}/comment", prefix), s.commentAddition)
 	router.HandleFunc(fmt.Sprintf("POST %s/{code}/like", prefix), s.like)
 	router.HandleFunc(fmt.Sprintf("POST %s/{code}/dislike", prefix), s.dislike)
 }
@@ -37,32 +36,6 @@ func (s Server) page(w http.ResponseWriter, r *http.Request, t text, lang DBLang
 	} else {
 		Page(course, t).Render(r.Context(), w)
 	}
-}
-
-func (s Server) commentAddition(w http.ResponseWriter, r *http.Request) {
-	// get the course code and comment content from the request
-	code := r.PathValue("code")
-	commentContent := r.FormValue("comment")
-
-	// sanitize the comment
-	// TODO maybe not change the content, but return an error if the content is not valid
-	sanitizedComment := sanitize(commentContent)
-
-	// add the comment to the database
-	err := s.Data.AddComment(code, sanitizedComment)
-	if err != nil {
-		http.Error(w, "Unable to add comment", http.StatusInternalServerError)
-		return
-	}
-
-	// return the page with the updated comments
-	newComments, err := s.Data.GetComments(code)
-	if err != nil {
-		http.Error(w, "Unable to retrieve comments", http.StatusInternalServerError)
-		return
-	}
-	// TODO must put correct language here
-	Comments(newComments, code, texts["en"]).Render(r.Context(), w)
 }
 
 func (s Server) like(w http.ResponseWriter, r *http.Request) {

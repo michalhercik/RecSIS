@@ -18,7 +18,7 @@ var Texts = map[string]Text{
 	"cs": {
 		Language: "cs",
 		Home: "Domů",
-		Courses: "Hledat",
+		Courses: "Hledání",
 		Blueprint: "Blueprint",
 		DegreePlan: "Studijní plán",
 		Login: "Přihlášení",

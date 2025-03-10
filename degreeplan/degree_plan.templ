@@ -37,35 +37,6 @@ func summerString(course *Course) string {
     return summerText
 }
 
-templ winterSummer(course *Course) {
-    switch course.SemesterCount {
-    case 1:
-        switch course.Start {
-        case 1:
-            <td>---</td>
-        case 2:
-            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
-        case 3:
-            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
-        default:
-            <td>unsupported</td>
-        }
-    case 2:
-        switch course.Start {
-        case 1:
-            <td>{ hoursExamsString(course.LectureRange2, course.SeminarRange2, course.ExamType) }</td>
-        case 2:
-            <td>{ hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType) }</td>
-        case 3:
-            <td>unsupported</td>
-        default:
-            <td>unsupported</td>
-        }
-    default:
-        <td>unsupported</td>
-    }
-}
-
 templ Page(dp *DegreePlan, t text) {
     @utils.Page(t.Utils.DegreePlan, t.Utils) {
         <div class="container">
@@ -111,32 +82,26 @@ templ Content(dp *DegreePlan, t text) {
                     <th>{ t.Blueprint }</th>
                 </tr>
             </thead>
-            <tbody> // x-data is necessary for x-bind:class
+            <tbody x-data> // x-data is necessary for x-bind:class
             for _, course := range bloc.Courses {
-                <tr x-data={ "{ inBlueprint: " + strconv.FormatBool(course.InBlueprint) + " }" }>
-                    <td
-                        :class="inBlueprint && 'in-blueprint'">
+                <tr :class={ strconv.FormatBool(course.InBlueprint) + " && 'in-blueprint'" }> 
+                    <td>
                         @utils.CourseLink(course.Code, t.Utils)
                     </td>
-                    <td
-                        :class="inBlueprint && 'in-blueprint'">
+                    <td>
                         { course.Title }
                     </td>
                     <td
-                        class="credits-column text-end"
-                        :class="inBlueprint && 'in-blueprint'">
+                        class="credits-column text-end">
                         { strconv.Itoa(course.Credits) }
                     </td>
-                    <td
-                        :class="inBlueprint && 'in-blueprint'">
+                    <td>
                         { winterString(&course) }
                     </td>
-                    <td
-                        :class="inBlueprint && 'in-blueprint'">
+                    <td>
                         { summerString(&course) }
                     </td>
-                    <td
-                        :class="inBlueprint && 'in-blueprint'">
+                    <td>
                         <button class="btn btn-sm btn-outline-dark">TODO</button>
                     </td>
                 </tr>

@@ -9,6 +9,7 @@ import (
 const user = 42
 const coursesPerPage = 24
 
+// TODO: do not use this, use DB, this is deprecated
 func examTypeStr(examType string) string {
     // to add: STEX, thesis, ...
     switch examType {
@@ -33,6 +34,7 @@ func hoursString(lecture, seminar int) string {
     return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar)
 }
 
+// TODO: use just examType
 func hoursExamsString(lecture, seminar int, examType string) string {
     return hoursString(lecture, seminar) + ", " + examTypeStr(examType)
 }
@@ -155,20 +157,28 @@ templ Search(coursesPage *coursesPage, t text) {
     </form>
 }
 
-templ blueprintAssignment(assignments []Assignment, code string, t text) {
+templ ribbon(ba Assignments, t text) {
+    if len(ba) > 0 {
+        <div class="ribbon">
+            <span>{ ba.String(t.Language) }</span>
+        </div>
+    }
+}
+
+templ blueprintAssignment(code string, t text) {
     <div class="d-flex justify-content-end mt-auto pt-3">
         <div class="btn-group">
-            <button type="button" class="btn btn-outline-dark"
+            <button type="button" class="btn btn-blueprint"
                 hx-post={ "/blueprint/course/" + code }  
                 hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
             >
                 { t.Assign }
             </button>
-            <button type="button" class="btn btn-outline-dark dropdown-toggle dropdown-toggle-split"
+            <button type="button" class="btn btn-blueprint dropdown-toggle dropdown-toggle-split"
                 data-bs-toggle="dropdown" aria-expanded="false">
             </button>
             <ul class="dropdown-menu">
-            // TODO make dynamic, NOT 3 years
+            // TODO: make dynamic, NOT 3 fixed years
                 for year := 1; year <= 3; year++ {
                     <li class="mx-3"><button class="dropdown-item text-center"
                         hx-post={ "/blueprint/course/" + code }  
@@ -191,7 +201,7 @@ templ blueprintAssignment(assignments []Assignment, code string, t text) {
 templ courseCard(course *Course, t text) {
     <div
         class="card custom-card rounded-0"
-        x-data="{ expanded: false, showButton: false }"
+        x-data="{ expanded: false, showButton: false, isHovered: false }"
         x-init="$nextTick(() => { showButton = $refs.annotation.scrollHeight > 250 })"
     >
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -199,19 +209,15 @@ templ courseCard(course *Course, t text) {
             <small>{ semesterHoursExamsString(course, t) }</small>
             <small>{ t.Credits + ": " + strconv.Itoa(course.credits) }</small>
         </div>
-        <div class="card-body text-dark d-flex flex-column position-relative">
-            if len(course.blueprintAssignments) > 0 {
-                <div class="ribbon">
-                    <span>{ course.blueprintAssignments.String(t.Language) }</span>
-                </div>
-            }
-            <div :class="{ 'expanded': expanded, 'annotation-container': showButton }">
-                <h5 class="card-title "><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }>{ course.name }</a></h5>
+        <div class="card-body d-flex flex-column position-relative">
+            @ribbon(course.blueprintAssignments, t)
+            <div :class="{ 'expanded': expanded, 'annotation-container': showButton }" :style="isHovered && { 'z-index': '100' }">
+                <h5 class="card-title" @mouseenter="isHovered = true" @mouseleave="isHovered = false"><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }>{ course.name }</a></h5>
                 <h6 class="card-subtitle mb-2 text-muted">{ course.teachers.string() }</h6>
                 <p class="card-text annotation-text" x-ref="annotation">{ course.annotation }</p>
             </div>
             <button class="btn btn-link text-secondary" @click="expanded = !expanded" x-show="showButton" x-text={ "expanded ? '" + t.ReadLess + "' : '" + t.ReadMore + "'" }></button>
-            @blueprintAssignment(course.blueprintAssignments, course.code, t)
+            @blueprintAssignment(course.code, t)
         </div>
     </div>
 }
@@ -262,23 +268,29 @@ templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
 templ pagination(cp *coursesPage, t text) {
     <nav class="mt-3" x-data=""> // x-data is needed for x-bind:class
         <ul class="pagination justify-content-center">
-            <li class="page-item">
-                @paginationIconButton(1, "bi bi-chevron-double-left", cp, t)
-            </li>
-            <li class="page-item">
-                @paginationIconButton(cp.page - 1, "bi bi-chevron-left", cp, t)
-            </li>
-            for i := 1; i <= cp.totalPages; i++ {
+            if cp.totalPages >= 3 {
                 <li class="page-item">
-                    @paginationNumberButton(i, cp, t)
+                    @paginationIconButton(1, "bi bi-chevron-double-left", cp, t)
                 </li>
             }
-            <li class="page-item">
-                @paginationIconButton(cp.page + 1, "bi bi-chevron-right", cp, t)
-            </li>
-            <li class="page-item">
-                @paginationIconButton(cp.totalPages, "bi bi-chevron-double-right", cp, t)
-            </li>
+            if cp.totalPages >= 2 {
+                <li class="page-item">
+                    @paginationIconButton(cp.page - 1, "bi bi-chevron-left", cp, t)
+                </li>
+                for i := 1; i <= cp.totalPages; i++ {
+                    <li class="page-item">
+                        @paginationNumberButton(i, cp, t)
+                    </li>
+                }
+                <li class="page-item">
+                    @paginationIconButton(cp.page + 1, "bi bi-chevron-right", cp, t)
+                </li>
+            }
+            if cp.totalPages >= 3 {
+                <li class="page-item">
+                    @paginationIconButton(cp.totalPages, "bi bi-chevron-double-right", cp, t)
+                </li>
+            }
         </ul>
     </nav>
     // TODO: FIX this will not work if on page 7/8 and you double the page size to 48, there will only be 4 pages, but you want page no7 with 48 courses

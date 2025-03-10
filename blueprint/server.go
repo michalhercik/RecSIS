@@ -367,33 +367,33 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 		log.Printf("courseAddition error: %v", err)
 		return
 	}
-	reqSourceInt, err := strconv.Atoi(r.FormValue("requestSource"))
-	reqSource := courseAdditionRequestSource(reqSourceInt)
-	if err != nil {
-		log.Printf("courseAddition error: %v", err)
-		return
-	}
-	var presenter courseAdditionPresenter = DefaultCourseAdditionPresenter
-	switch reqSource {
-	case sourceBlueprint:
-		// TODO: implement
-		//
-		// Example:
-		//	file: blueprint/blueprint.templ
-		//		templ Ribbon(insertInfo insertedCourseInfo) {
-		//			<div class="ribbon"> {{insertInfo.courseID}} </div>
-		//  	}
-		//
-		//	file: blueprint/blueprint.go
-		//		presenter = Ribbon
-	case sourceCourseDetail:
-		// TODO: implement
-	case sourceDegreePlan:
-		// TODO: implement
-	default:
-		log.Printf("courseAddition error: unknown request source %s", reqSource)
-		return
-	}
+	// reqSourceInt, err := strconv.Atoi(r.FormValue("requestSource"))
+	// reqSource := courseAdditionRequestSource(reqSourceInt)
+	// if err != nil {
+	// 	log.Printf("courseAddition error: %v", err)
+	// 	return
+	// }
+	// var presenter courseAdditionPresenter = DefaultCourseAdditionPresenter
+	// switch reqSource {
+	// case sourceBlueprint:
+	// 	// TODO: implement
+	// 	//
+	// 	// Example:
+	// 	//	file: blueprint/blueprint.templ
+	// 	//		templ Ribbon(insertInfo insertedCourseInfo) {
+	// 	//			<div class="ribbon"> {{insertInfo.courseID}} </div>
+	// 	//  	}
+	// 	//
+	// 	//	file: blueprint/blueprint.go
+	// 	//		presenter = Ribbon
+	// case sourceCourseDetail:
+	// 	// TODO: implement
+	// case sourceDegreePlan:
+	// 	// TODO: implement
+	// default:
+	// 	log.Printf("courseAddition error: unknown request source %s", reqSource)
+	// 	return
+	// }
 	// TODO: use this
 	// text, err := parseLanguage(r)
 	// if err != nil {
@@ -407,7 +407,8 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	insertInfo := insertedCourseInfo{courseID: courseID, academicYear: year, semester: semester}
-	presenter(insertInfo).Render(r.Context(), w)
+	log.Printf("courseAddition: %v", insertInfo) // TODO remove
+	//presenter(insertInfo).Render(r.Context(), w)
 }
 
 // ===============================================================================================================================

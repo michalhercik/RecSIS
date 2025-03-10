@@ -2,6 +2,7 @@ package coursedetail
 
 import (
 	"github.com/michalhercik/RecSIS/utils"
+	"strconv"
 )
 
 type text struct {
@@ -11,6 +12,8 @@ type text struct {
 	Winter string
 	Summer string
 	Both string
+	Year string
+	Assign string
 	ECredits string
 	Capacity string
 	CapacityNoLimit string
@@ -28,14 +31,25 @@ type text struct {
 	Utils utils.Text
 }
 
+func (t text) YearStr(year int) string {
+	if t.Language == "cs" {
+		return strconv.Itoa(year) + ". " + t.Year
+	} else if t.Language == "en" {
+		return t.Year + " " + strconv.Itoa(year)
+	}
+	return ""
+}
+
 var texts = map[string]text{
 	"cs": {
 		Language: "cs",
 		Faculty: "Fakulta",
 		Semester: "Semestr",
-		Winter: "zimní",
-		Summer: "letní",
+		Winter: "ZS",
+		Summer: "LS",
 		Both: "oba",
+		Year: "ročník",
+		Assign: "Přiřadit",
 		ECredits: "E-Kredity",
 		Capacity: "Kapacita",
 		CapacityNoLimit: "bez omezení",
@@ -59,6 +73,8 @@ var texts = map[string]text{
 		Winter: "Winter",
 		Summer: "Summer",
 		Both: "Both",
+		Year: "Year",
+		Assign: "Assign",
 		ECredits: "E-Credits",
 		Capacity: "Capacity",
 		CapacityNoLimit: "No limit",
