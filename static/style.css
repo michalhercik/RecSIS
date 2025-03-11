@@ -235,12 +235,12 @@ body {
 
 .degree-plan-table th:nth-child(3),
 .degree-plan-table td:nth-child(3) {
-    width: 70px;
+    width: 120px;
 }
 
 .degree-plan-table th:nth-child(4),
 .degree-plan-table td:nth-child(4) {
-    width: 100px;
+    width: 70px;
 }
 
 .degree-plan-table th:nth-child(5),
@@ -250,6 +250,11 @@ body {
 
 .degree-plan-table th:nth-child(6),
 .degree-plan-table td:nth-child(6) {
+    width: 100px;
+}
+
+.degree-plan-table th:nth-child(7),
+.degree-plan-table td:nth-child(7) {
     width: 80px;
 }
 
@@ -282,11 +287,6 @@ body {
     display: block;
 }
 
-/* Degree plan colored rows */
-.in-blueprint td {
-    background-color: rgba(4, 108, 181, 0.2) !important;
-}
-
 /* Blueprint colored button */
 .btn-outline-blueprint {
     color: rgb(4, 54, 90) !important;
@@ -309,5 +309,11 @@ body {
     color: #fff !important;
     background-color: rgb(4, 54, 90) !important;
     border-color: rgb(3, 87, 146) !important;
+}
+
+/* Blueprint colored badge */
+.bg-blueprint {
+    background-color: rgb(4, 108, 181); /* Custom blueprint color */
+    color: white;
 }
 

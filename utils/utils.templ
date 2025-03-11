@@ -78,7 +78,7 @@ templ Header(title string, t Text) {
             window.location.href = newUrl;
         }
     }">
-        <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <nav class="navbar navbar-expand-md navbar-light bg-light py-0"> // TODO: if too narrow, change py-?
             <div class="container-fluid">
                 <a class="navbar-brand fs-3" href={ templ.URL(t.LangLink("")) }>RecSIS</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

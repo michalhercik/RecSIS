@@ -125,6 +125,24 @@ templ ribbon(ba Assignments, t text) {
     //}
 }
 
+templ guarantors(guarantors []Teacher) {
+    <p
+        class="card-subtitle mb-2 text-muted text-center">
+        for _, g := range guarantors {
+            if g.TitleBefore != "" {
+                <small style="font-size: 0.75rem;">{ g.TitleBefore + " " }</small>
+            }
+            if g.TitleAfter != "" {
+                <span class="fs-5 text-dark fw-semibold">{ g.FirstName + " " + g.LastName }</span><small style="font-size: 0.75rem;">{ ", " + g.TitleAfter }</small>
+            } else {
+                <span class="fs-5 text-dark fw-semibold">{ g.FirstName + " " + g.LastName }</span>
+            }
+            // space between guarantors
+            &emsp;
+        }
+    </p>
+}
+
 templ accordion(course *Course, t text) {
     <div class="accordion accordion-flush">
         @accordionItem(course.Annotation, "annotation")
@@ -136,7 +154,6 @@ templ accordion(course *Course, t text) {
 
 templ Content(course *Course, t text) {
     {{ p = bluemonday.UGCPolicy() }}
-    <br>
     //@Ratings(course.CourseRatings, course.Code)
     // TODO only if not empty/nil/...
     <div 
@@ -152,59 +169,39 @@ templ Content(course *Course, t text) {
         <div class="card-body d-flex flex-column align-items-center position-relative">
             @ribbon(course.BlueprintAssignments, t)
             <h1 class="card-title text-center" style="width: 80%">{ course.Name }</h1>
-            <p
-                class="card-subtitle mb-2 text-muted text-center">
-                for _, g := range course.Guarantors {
-                    if g.TitleBefore != "" {
-                        <small style="font-size: 0.75rem;">{ g.TitleBefore + " " }</small>
-                    }
-                    if g.TitleAfter != "" {
-                        <span class="fs-5 text-dark fw-semibold">{ g.FirstName + " " + g.LastName }</span><small style="font-size: 0.75rem;">{ ", " + g.TitleAfter }</small>
-                    } else {
-                        <span class="fs-5 text-dark fw-semibold">{ g.FirstName + " " + g.LastName }</span>
-                    }
-                    &emsp;
-                }
-            </p>
+            @guarantors(course.Guarantors)
         </div>
         <div class="card-body">
-            <table class="table table-borderless">
-                <tr>
-                    <td>{ t.Faculty }:</td><td>{ course.Faculty }</td>
-                </tr>
-                <tr>
-                    <td>{ t.Capacity }:</td><td>{ course.Capacity }</td>
-                </tr>
-                <tr>
-                    <td>{ t.StateOfCourse }:</td><td>{ course.State }</td>
-                </tr>
-                <tr>
-                    <td>{ t.LanguageOfCourse }:</td><td>{ course.Language }</td>
-                </tr>
-                if course.Link != "" {
-                    <tr>
-                        <td>{ t.AdditionalInfo }:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
-                    </tr>
-                }
-                if len(course.Teachers) > 0 {
-                    <tr>
-                        <td>{ t.Teachers }:</td><td>{ course.Teachers[0].String() }</td>
-                    </tr>
-                }
-                if len(course.Teachers) > 1 {
-                    for _, teacher := range course.Teachers[1:] {
-                        <tr>
-                            <td></td><td>{ teacher.String() }</td>
-                        </tr>
+            <div class="d-flex justify-content-between" style="padding: 0 5%;">
+                <div class="flex-grow-1 d-flex flex-column me-3" style="flex: 1;">
+                    <p class="mb-1"><strong>{ t.Faculty }</strong></p>
+                    <p class="mb-2">{ course.Faculty }</p>
+                    <p class="mb-1"><strong>{ t.Capacity }</strong></p>
+                    <p class="mb-2">{ course.Capacity }</p>
+                    <p class="mb-1"><strong>{ t.StateOfCourse }</strong></p>
+                    <p class="mb-2">{ course.State }</p>
+                    <p class="mb-1"><strong>{ t.LanguageOfCourse }</strong></p>
+                    <p class="mb-2">{ course.Language }</p>
+                    if course.Link != "" {
+                        <p class="mb-1"><strong>{ t.AdditionalInfo }</strong></p>
+                        <p class="mb-2"><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></p>
                     }
-                }
-                <tr>
-                    <td>{ t.SISLink }:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code, t)) }>{ courseSISLink(course.Code, t) }</a></td>
-                </tr>
-            </table>
-            // TODO may add extend button for more info
-        </div>
-        <div class="card-body">
+                </div>
+                <div class="flex-grow-1 d-flex flex-column ms-3" style="flex: 1;">
+                    if len(course.Teachers) > 0 {
+                        <p class="mb-1"><strong>{ t.Teachers }</strong></p>
+                        <p class="mb-2">{ course.Teachers[0].String() }</p>
+                    }
+                    if len(course.Teachers) > 1 {
+                        for _, teacher := range course.Teachers[1:] {
+                            <p class="mb-2">{ teacher.String() }</p>
+                        }
+                    }
+                </div>
+            </div>
+            <div class="mt-3 text-center">
+                <p><strong>{ t.SISLink + ": " }</strong><a href={ templ.SafeURL(courseSISLink(course.Code, t)) }>{ courseSISLink(course.Code, t) }</a></p>
+            </div>
             @blueprintAssignment(course.Code, t)
         </div>
         @accordion(course, t)
@@ -213,7 +210,7 @@ templ Content(course *Course, t text) {
 
 templ Page(course *Course, t text) {
     @utils.Page(course.Code + " - " + course.Name, t.Utils) {
-        <div class="container">
+        <div class="container pt-2">
             @Content(course, t)
         </div>
     }

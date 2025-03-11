@@ -76,20 +76,31 @@ templ Content(dp *DegreePlan, t text) {
                 <tr>
                     <th>{ t.Code }</th>
                     <th>{ t.Title }</th>
+                    <th>/*{ t.Status }*/</th> // TODO: headline or not?
                     <th class="text-end">{ t.Credits }</th>
                     <th>{ t.Winter }</th>
                     <th>{ t.Summer }</th>
                     <th>{ t.Blueprint }</th>
                 </tr>
             </thead>
-            <tbody x-data> // x-data is necessary for x-bind:class
+            <tbody>
             for _, course := range bloc.Courses {
-                <tr :class={ strconv.FormatBool(course.InBlueprint) + " && 'in-blueprint'" }> 
+                <tr> 
                     <td>
                         @utils.CourseLink(course.Code, t.Utils)
                     </td>
                     <td>
                         { course.Title }
+                    </td>
+                    <td>
+                    // TODO: add course completion status -> change false to course.Completed
+                    if false {
+                        <span class="badge bg-success">{ t.Completed }</span>
+                    } else if course.InBlueprint {
+                        <span class="badge bg-blueprint">{ t.InBlueprint }</span>
+                    } else {
+                        <span class="badge bg-danger">{ t.NotCompleted }</span>
+                    }
                     </td>
                     <td
                         class="credits-column text-end">
