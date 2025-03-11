@@ -9,12 +9,8 @@ import (
 
 // TODO: change interface name if interface changes
 type DataManager interface {
-<<<<<<< HEAD
-	Course(code string, lang DBLang) (*Course, error)
-=======
 	Course(sessionID string, code string, lang DBLang) (*Course, error)
 	OverallRating(sessionID string, code string, value int) error
->>>>>>> ca50a2bf8c897e9510ce4b641919968e342a9fd9
 }
 
 type DBLang string
