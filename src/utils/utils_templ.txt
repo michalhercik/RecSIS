@@ -1,0 +1,25 @@
+<div class=\"watermark\" style=\"\n        position:fixed;\n        bottom:50%;\n        left:15%;\n        opacity:0.3;\n        z-index:99;\n        color: black;\n        pointer-events:none;\n    \"><span style=\"font-size:60px\">For demonstration purposes only!</span><br><span style=\"font-size:30px\">The state is global</span></div>
+<!doctype html><html lang=\"
+\"><head><meta charset=\"UTF-8\"><title>
+</title><link rel=\"stylesheet\" href=\"/style.css\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH\" crossorigin=\"anonymous\"><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css\"><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz\" crossorigin=\"anonymous\"></script><script src=\"https://unpkg.com/htmx.org@2.0.3\" integrity=\"sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq\" crossorigin=\"anonymous\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script></head><body hx-boost=\"true\">
+<main>
+</main><hr>
+</body></html>
+<li class=\"nav-item\">
+<a class=\"
+\" href=\"
+\">
+</a></li>
+<button class=\"btn btn-outline-dark\" @click=\"
+\">
+</button>
+<header x-data=\"{\n        changeLanguage(lang) {\n            let currentUrl = window.location.pathname;\n            let queryParams = window.location.search;\n            let newUrl = currentUrl.replace(/^\\/(cs|en)/, &#39;&#39;) || &#39;&#39;;\n            newUrl = &#39;/&#39; + lang + newUrl + queryParams;\n            window.location.href = newUrl;\n        }\n    }\"><nav class=\"navbar navbar-expand-md navbar-light bg-light\"><div class=\"container-fluid\"><a class=\"navbar-brand fs-3\" href=\"
+\">RecSIS</a> <button class=\"navbar-toggler\" type=\"button\" data-bs-toggle=\"collapse\" data-bs-target=\"#navbarNav\" aria-controls=\"navbarNav\" aria-expanded=\"false\" aria-label=\"Toggle navigation\"><span class=\"navbar-toggler-icon\"></span></button><div class=\"collapse navbar-collapse\" id=\"navbarNav\"><ul class=\"navbar-nav mx-auto\">
+</ul><div class=\"d-flex\"><button class=\"btn btn-outline-success me-2\">
+</button> 
+</div></div></div></nav></header>
+<footer class=\"text-center my-3\">
+ <a href=\"mailto:TODO@TODO.com\">TODO@TODO.com</a></footer>
+<a class=\"link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover\" href=\"
+\">
+</a>

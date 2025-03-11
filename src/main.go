@@ -39,7 +39,7 @@ func main() {
 
 	// Postgres
 	const (
-		host     = "localhost" // DOCKER, PRODUCTION: when run as docker container change to network name
+		host     = "postgres" // DOCKER, PRODUCTION: when run as docker container change to network name
 		port     = 5432
 		user     = "recsis"
 		password = "recsis"
@@ -55,10 +55,10 @@ func main() {
 
 	// MeiliSearch
 	const (
-		hostMeili = "http://localhost:7700"
+		hostMeili = "http://meilisearch:7700"
 		searchKey = "MASTER_KEY"
 	)
-	meiliClient := meilisearch.New("http://localhost:7700", meilisearch.WithAPIKey(searchKey))
+	meiliClient := meilisearch.New(hostMeili, meilisearch.WithAPIKey(searchKey))
 
 	//////////////////////////////////////////
 	// Handlers
@@ -87,7 +87,7 @@ func main() {
 	// Server setup
 	//////////////////////////////////////////
 	server := http.Server{
-		Addr:    "localhost:8000", // DOCKER, PRODUCTION: when run as docker container remove localhost
+		Addr:    ":8000", // DOCKER, PRODUCTION: when run as docker container remove localhost
 		Handler: logging(router),
 	}
 

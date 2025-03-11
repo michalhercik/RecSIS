@@ -1,0 +1,142 @@
+<table id=\"CreditsSum\" class=\"table table-striped\"><thead><tr><th>
+</th><th class=\"text-center\">
+</th><th class=\"text-end\">
+</th></tr></thead> <tbody>
+<tr id=\"
+\"><td>
+</td><td class=\"text-center\">
+</td><td class=\"text-end credits-column\">
+</td></tr><tr id=\"
+\"><td></td><td class=\"text-center\">
+</td><td class=\"text-end credits-column\">
+</td></tr>
+</tbody><tfoot class=\"table-group-divider\"><tr><td colspan=\"2\">
+</td><td class=\"text-end credits-column\">
+</td></tr></tfoot></table>
+<div class=\"option-menu sticky-top p-2\" x-data=\"{ showCredits: false, openAssign: false, tooltipEnabled: true }\">
+ <button class=\"btn btn-sm btn-outline-dark\" hx-delete=\"/blueprint/year\" hx-vals=\"
+\" hx-target=\"main\" :disabled=\"
+\"><i class=\"bi bi-dash\"></i></button> 
+ <button class=\"btn btn-sm btn-outline-dark\" hx-post=\"/blueprint/year\" hx-vals=\"
+\" hx-target=\"main\"><i class=\"bi bi-plus\"></i></button><div style=\"position: relative; display: inline-block;\"><button @click=\"showCredits = !showCredits\" :disabled=\"
+\" class=\"btn btn-sm btn-outline-dark\">
+ <i :class=\"showCredits ? &#39;bi bi-caret-up-fill&#39; : &#39;bi bi-caret-down-fill&#39;\"></i></button><div style=\"display: none\" x-show=\"showCredits\" class=\"credits-box\">
+</div></div><button x-show=\"checkedNumber &gt; 0\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-dark btn-sm bi bi-dash-circle\" style=\"display: none\" hx-patch=\"/blueprint/courses\" hx-vals=\"
+\" hx-include=\"input[type=checkbox]:checked\" hx-target=\"main\"></button><div style=\"position: relative; display: inline-block;\"><button x-show=\"checkedNumber &gt; 0\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" class=\"btn btn-outline-dark btn-sm bi bi-arrows-move\" style=\"display: none\" @click=\"openAssign = !openAssign;\n                        tooltipEnabled = !tooltipEnabled;\n                        let tooltip = bootstrap.Tooltip.getInstance($el);\n                        if (tooltipEnabled) {\n                            initializeTooltips();\n                        } else {\n                            tooltip.disable();\n                            tooltip.hide();\n                        }\"></button><div x-show=\"openAssign\" class=\"assign-box\" style=\"display: none\" @click.outside=\"openAssign = false\">
+<button type=\"button\" class=\"btn btn-outline-secondary btn-sm text-nowrap\" style=\"--bs-btn-border-color: transparent; min-width: 120px;\" hx-patch=\"/blueprint/courses\" hx-vals=\"
+\" hx-include=\"input[type=checkbox]:checked\" hx-target=\"main\">
+</button> <button type=\"button\" class=\"btn btn-outline-secondary btn-sm text-nowrap\" style=\"--bs-btn-border-color: transparent; min-width: 120px;\" hx-patch=\"/blueprint/courses\" hx-vals=\"
+\" hx-include=\"input[type=checkbox]:checked\" hx-target=\"main\">
+</button>
+</div></div><button x-show=\"checkedNumber &gt; 0\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-dark btn-sm bi bi-trash-fill\" style=\"display: none\" hx-delete=\"/blueprint/courses\" hx-vals=\"
+\" hx-include=\"input[type=checkbox]:checked\" hx-target=\"main\"></button></div>
+<td>
+</td><td>---</td>
+<td>---</td><td>
+</td>
+<td>
+</td><td>
+</td>
+<td>unsupported</td><td>unsupported</td>
+<td>
+</td><td>
+</td>
+<td>
+</td><td>
+</td>
+<td>unsupported</td><td>unsupported</td>
+<td>unsupported</td><td>unsupported</td>
+<td>unsupported</td><td>unsupported</td>
+<table class=\"table table-sm blueprint-table\"><thead><tr><th></th><th>
+</th><th>
+</th><th class=\"text-center\">
+</th><th>
+</th><th>
+</th><th>
+</th><th></th></tr></thead></table>
+<div x-show=\"showUnassigned\"><table class=\"table table-sm blueprint-table\" :class=\" isSorting || &#39;table-hover&#39; \"><tbody x-sort=\"
+\" x-sort:group=\"courses\">
+<tr id=\"
+\" x-data=\"{ hover: false, hoverOnAssign: false, openAssign: false, tooltipEnabled: true}\" @mouseover=\"hover = true\" @mouseleave=\"hover = false, openAssign = false, initializeTooltips()\" x-sort:item=\"
+\"><td><div class=\"checkbox-container\"><input type=\"checkbox\" id=\"
+\" class=\"form-check-input\" style=\"border: 1px solid #2c2c2c !important;\" name=\"selected\" value=\"
+\" @change=\"checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1\"><div class=\"circle-overlay\" @click=\"handleCircleClick\"></div></div></td><td>
+</td><td>
+</td><td class=\"credits-column text-end\">
+</td>
+<td>
+</td><td class=\"text-end align-middle short\"><div style=\"position: relative; display: inline-block;\"><button x-show=\"(hover || hoverOnAssign) &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" class=\"btn btn-outline-secondary btn-sm bi bi-arrows-move\" style=\"--bs-btn-border-color: transparent;\" @click=\"openAssign = !openAssign;\n                                        tooltipEnabled = !tooltipEnabled;\n                                        let tooltip = bootstrap.Tooltip.getInstance($el);\n                                        if (tooltipEnabled) {\n                                            initializeTooltips();\n                                        } else {\n                                            tooltip.disable();\n                                            tooltip.hide();\n                                        }\"></button><div x-show=\"openAssign &amp;&amp; hover &amp;&amp; !isSorting\" class=\"assign-box\" @mouseover=\"hoverOnAssign = true\" @mouseleave=\"hoverOnAssign = false\">
+</div></div><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent;\" hx-delete=\"
+\" hx-vals=\"
+\" hx-target=\"main\"></button><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" class=\"btn btn-sm bi bi-grip-horizontal\" style=\"--bs-btn-active-border-color: transparent;\" x-sort:handle></button></td></tr>
+<tr class=\"dummy-row\" x-sort:item style=\"display: none;\"></tr></tbody></table></div>
+<button type=\"button\" class=\"btn btn-outline-secondary btn-sm text-nowrap\" style=\"--bs-btn-border-color: transparent; min-width: 120px;\" hx-patch=\"
+\" hx-vals=\"
+\" hx-target=\"main\">
+</button> <button type=\"button\" class=\"btn btn-outline-secondary btn-sm text-nowrap\" style=\"--bs-btn-border-color: transparent; min-width: 120px;\" hx-patch=\"
+\" hx-vals=\"
+\" hx-target=\"main\">
+</button>
+<div x-show=\"
+\"><table class=\"table table-sm blueprint-table\" :class=\" isSorting || &#39;table-hover&#39; \"><tbody x-sort=\"
+\" x-sort:group=\"courses\">
+<tr x-data=\"{ hover: false, hoverOnAssign: false, openAssign: false, tooltipEnabled: true }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false, openAssign = false, initializeTooltips()\" x-sort:item=\"
+\"><td><div class=\"checkbox-container\"><input type=\"checkbox\" id=\"
+\" class=\"form-check-input\" style=\"border: 1px solid #2c2c2c !important;\" name=\"selected\" value=\"
+\" @change=\"checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1\"><div class=\"circle-overlay\" @click=\"handleCircleClick\"></div></div></td><td>
+</td><td>
+</td><td class=\"credits-column text-end\">
+</td>
+<td>
+</td><td class=\"text-end align-middle short\"><button x-show=\"(hover || hoverOnAssign) &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-dash-circle\" style=\"--bs-btn-border-color: transparent;\" hx-patch=\"
+\" hx-vals=\"
+\" hx-target=\"main\"></button><div style=\"position: relative; display: inline-block;\"><button x-show=\"(hover || hoverOnAssign) &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" class=\"btn btn-outline-secondary btn-sm bi bi-arrows-move\" style=\"--bs-btn-border-color: transparent;\" @click=\"openAssign = !openAssign;\n                                        tooltipEnabled = !tooltipEnabled;\n                                        let tooltip = bootstrap.Tooltip.getInstance($el);\n                                        if (tooltipEnabled) {\n                                            initializeTooltips();\n                                        } else {\n                                            tooltip.disable();\n                                            tooltip.hide();\n                                        }\"></button><div x-show=\"openAssign &amp;&amp; hover &amp;&amp; !isSorting\" class=\"assign-box\" @mouseover=\"hoverOnAssign = true\" @mouseleave=\"hoverOnAssign = false\">
+</div></div><button x-show=\"(hover || hoverOnAssign) &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent;\" hx-delete=\"
+\" hx-vals=\"
+\" hx-target=\"main\"></button><button x-show=\"(hover || hoverOnAssign) &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" class=\"btn btn-sm bi bi-grip-horizontal\" style=\"--bs-btn-active-border-color: transparent;\" x-sort:handle></button></td></tr>
+<tr class=\"dummy-row\" x-sort:item style=\"display: none;\"></tr></tbody></table></div>
+<div><table class=\"table table-sm table-hover table-light blueprint-table headline\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"if (!$event.target.closest(&#39;button&#39;)) { showUnassigned = !showUnassigned }\"><td class=\"short\"><i :class=\"showUnassigned ? &#39;bi bi-caret-down-fill&#39; : &#39;bi bi-caret-up-fill&#39;\"></i></td><td class=\"short yeartext\">
+</td>
+<td class=\"short\"></td>
+<td class=\"short text-end align-middle\" style=\"line-height: 1;\"><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
+\" hx-target=\"main\"></button></td></tr></tbody></table></div>
+<div><table class=\"table table-sm table-hover table-light blueprint-table headline\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"
+\"><td class=\"short\"><i :class=\"
+\"></i></td><td class=\"short yeartext\">
+</td><td class=\"short\"></td><td class=\"short yeartext credits-column text-end\">
+</td><td class=\"short\"></td><td class=\"short\"></td><td class=\"short\"></td><td class=\"short text-end align-middle\" style=\"line-height: 1;\"><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-dash-circle\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-patch=\"/blueprint/courses\" hx-vals=\"
+\" hx-target=\"main\"></button><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
+\" hx-target=\"main\"></button></td></tr></tbody></table></div>
+<div x-show=\"
+\">
+<table class=\"
+\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"
+\"><td class=\"short\"><i :class=\"
+\"></i></td><td class=\"short semtext\">
+</td><td class=\"short\"></td><td class=\"short semtext credits-column text-end\">
+</td><td class=\"short\"></td><td class=\"short\"></td><td class=\"short\"></td><td class=\"short text-end align-middle\" style=\"line-height: 1;\"><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-dash-circle\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-patch=\"
+\" hx-vals=\"
+\" hx-target=\"main\"></button><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
+\" hx-target=\"main\"></button></td></tr></tbody></table></div>
+<div id=\"
+\">
+</div>
+<script>\n        // bootstrap tooltip initialization\n        function initializeTooltips() {\n            // Dispose of existing tooltips\n            var tooltipElements = document.querySelectorAll('.tooltip');\n            tooltipElements.forEach(function (tooltipEl) {\n                tooltipEl.remove();\n            });\n\n            // Initialize new tooltips\n            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle=\"tooltip\"]'));\n            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {\n                var tooltip = new bootstrap.Tooltip(tooltipTriggerEl, {\n                    delay: { show: 750 } // define delay for tooltip show\n                });\n\n                // Override the show method to check for visibility\n                var originalShow = tooltip.show;\n                tooltip.show = function () {\n                    if (tooltipTriggerEl.offsetParent !== null) {\n                        originalShow.call(tooltip);\n                    }\n                };\n\n                return tooltip;\n            });\n        };\n\n        document.addEventListener('DOMContentLoaded', function () {\n            initializeTooltips();\n            setupCheckboxShiftClick();\n        });\n\n        document.addEventListener('htmx:afterSwap', function (e) {\n            setupCheckboxShiftClick();\n        });\n\n        // shift click for multiple checkboxes\n        function setupCheckboxShiftClick() {\n            let lastChecked = null;\n            const checkboxes = document.querySelectorAll('input[type=\"checkbox\"][name=\"selected\"]');\n            checkboxes.forEach(checkbox => {\n                checkbox.addEventListener('click', function (e) {\n                    if (lastChecked && lastChecked !== this && e.shiftKey) {\n                        let inBetween = false;\n                        checkboxes.forEach(box => {\n                            if (box === this || box === lastChecked) {\n                                inBetween = !inBetween;\n                            }\n                            else if (inBetween && box.checked !== this.checked) {\n                                box.checked = this.checked;\n                                box.dispatchEvent(new Event('change'));\n                            }\n                        });\n                        if (lastChecked.checked !== this.checked) {\n                            lastChecked.checked = this.checked;\n                            lastChecked.dispatchEvent(new Event('change'));\n                        }\n                    }\n                    lastChecked = this;\n                });\n            });\n        }\n\n        // pass through (shift-)click event to checkbox\n        function handleCircleClick(event) {\n            const checkbox = event.target.previousElementSibling;\n            if (checkbox) {\n                // Create a new MouseEvent, preserving shift key and other properties\n                const clickEvent = new MouseEvent('click', {\n                    bubbles: true,\n                    cancelable: true,\n                    shiftKey: event.shiftKey,\n                });\n\n                checkbox.dispatchEvent(clickEvent);\n            }\n        }\n\n        // update position of course in database using dynamic htmx patch\n        function sortHxPatch(item, year, semester, position, language) {\n            htmx.ajax('PATCH', '/blueprint/course/' + item, {\n                target: 'main',\n                values: { year: year, semester: semester, position: position + 1, lang: language }\n            });\n        }\n    </script><div x-data=\"
+\" x-init=\"init()\" class=\"mx-3\">
+</div>
+<h1>Internal Server Error</h1><p>Something went wrong</p>

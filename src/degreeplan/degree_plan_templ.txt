@@ -1,0 +1,34 @@
+<td>---</td>
+<td>
+</td>
+<td>
+</td>
+<td>unsupported</td>
+<td>
+</td>
+<td>
+</td>
+<td>unsupported</td>
+<td>unsupported</td>
+<td>unsupported</td>
+<div class=\"container\">
+</div>
+<br>
+<div class=\"d-flex justify-content-between align-items-center\"><h5>
+</h5><div><p class=\"me-2\" style=\"color: rgb(4, 108, 181); display: inline-block;\">
+</p><p class=\"me-2\" style=\"color: rgb(19, 92, 4); display: inline-block;\">
+</p></div></div><table class=\"table degree-plan-table\"><thead><tr><th>
+</th><th>
+</th><th class=\"text-end\">
+</th><th>
+</th><th>
+</th><th>
+</th></tr></thead> <tbody>
+<tr x-data=\"
+\"><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
+</td><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
+</td><td class=\"credits-column text-end\" :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
+</td><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
+</td><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
+</td><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\"><button class=\"btn btn-sm btn-outline-dark\">TODO</button></td></tr>
+</tbody></table>

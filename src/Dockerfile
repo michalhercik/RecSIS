@@ -7,7 +7,7 @@ FROM golang:1.23 AS build-stage
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
-RUN go install github.com/a-h/templ/cmd/templ@latest
+RUN go install github.com/a-h/templ/cmd/templ@v0.2.793
 COPY ./ ./
 RUN templ generate
 RUN CGO_ENABLED=0 GOOS=linux go build -o /recsis
@@ -18,7 +18,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /recsis
 FROM alpine AS dev-stage
 WORKDIR /app
 COPY --from=build-stage /recsis /recsis
-COPY --from=build-stage /app/*templ.go /app
+COPY ./static ./static
 EXPOSE 8000
 ENTRYPOINT ["/recsis"]
 
@@ -28,6 +28,7 @@ ENTRYPOINT ["/recsis"]
 FROM gcr.io/distroless/base-debian11 AS deploy-stage
 WORKDIR /app
 COPY --from=build-stage /recsis /recsis
+COPY ./static ./static
 EXPOSE 8000
 USER nonroot:nonroot
 ENTRYPOINT ["/recsis"]
