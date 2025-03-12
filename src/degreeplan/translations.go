@@ -8,6 +8,10 @@ type text struct {
 	Language string
 	Code string
 	Title string
+	Status string
+	Completed string
+	InBlueprint string
+	NotCompleted string
 	Credits string
 	Winter string
 	Summer string
@@ -21,6 +25,10 @@ var texts = map[string]text{
 		Language: "cs",
 		Code: "Kód",
 		Title: "Název",
+		Status: "Stav",
+		Completed: "Splněno",
+		InBlueprint: "V blueprintu",
+		NotCompleted: "Nesplněno",
 		Credits: "Kredity",
 		Winter: "ZS",
 		Summer: "LS",
@@ -32,6 +40,10 @@ var texts = map[string]text{
 		Language: "en",
 		Code: "Code",
 		Title: "Title",
+		Status: "Status",
+		Completed: "Completed",
+		InBlueprint: "In blueprint",
+		NotCompleted: "Not completed",
 		Credits: "Credits",
 		Winter: "Winter",
 		Summer: "Summer",

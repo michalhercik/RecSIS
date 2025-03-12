@@ -471,7 +471,7 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
 
 templ unassignedHeadline(t text) {
     <div>
-        <table class="table table-sm table-hover table-light blueprint-table headline">
+        <table class="table table-sm table-hover blueprint-background blueprint-table headline">
             <tbody>
                 <tr
                     x-data="{ hover: false }"
@@ -511,7 +511,7 @@ templ unassignedHeadline(t text) {
 
 templ yearHeadline(yearNum, credits int, t text) {
     <div>
-        <table class="table table-sm table-hover table-light blueprint-table headline">
+        <table class="table table-sm table-hover blueprint-background blueprint-table headline">
             <tbody>
                 <tr
                     x-data="{ hover: false }"
@@ -585,7 +585,7 @@ templ semesterHeadline(semester, year, credits int, t text) {
         }
     }}
     <div x-show={ "Year" + strconv.Itoa(year) }>
-        <table class={ "table table-sm table-hover table-light blueprint-table " }>
+        <table class="table table-sm table-hover blueprint-background blueprint-table">
             <tbody>
                 <tr
                     x-data="{ hover: false }"

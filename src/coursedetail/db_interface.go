@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 // TODO: change interface name if interface changes
@@ -24,13 +25,6 @@ type Rating struct {
 	ID     int
 	UserID int
 	Rating int // 1..like -1..dislike
-}
-
-// TODO add more fields
-type Comment struct {
-	ID      int
-	UserID  int
-	Content string
 }
 
 type Faculty struct {
@@ -69,6 +63,13 @@ type Teacher struct {
 }
 
 func (t Teacher) String() string {
+	if t.TitleBefore == "" && t.TitleAfter == "" {
+		return fmt.Sprintf("%s %s", t.FirstName, t.LastName)
+	}
+	if t.TitleBefore == "" {
+		return fmt.Sprintf("%s %s, %s",
+			t.FirstName, t.LastName, t.TitleAfter)
+	}
 	if t.TitleAfter == "" {
 		return fmt.Sprintf("%s %s %s",
 			t.TitleBefore, t.FirstName, t.LastName)
@@ -78,6 +79,17 @@ func (t Teacher) String() string {
 }
 
 type TeacherSlice []Teacher
+
+func (t TeacherSlice) string() string {
+	names := []string{}
+	for _, teacher := range t {
+		names = append(names, teacher.String())
+	}
+	if len(names) == 0 {
+		return "---"
+	}
+	return strings.Join(names, ", ")
+}
 
 func (ts *TeacherSlice) Scan(val interface{}) error {
 	switch v := val.(type) {
@@ -97,12 +109,38 @@ type Assignment struct {
 	semester Semester
 }
 
-func (a Assignment) String() string {
-	result := fmt.Sprintf("Year %d, semester %s", a.year, a.semester)
-	if a.year == 0 {
-		result = "Not assigned"
+func (a Assignment) String(lang string) string {
+	// semester := ""
+	// switch a.semester {
+	// case assignmentNone:
+	// 	semester = texts[lang].N
+	// case assignmentWinter:
+	// 	semester = texts[lang].W
+	// case assignmentSummer:
+	// 	semester = texts[lang].S
+	// default:
+	// 	semester = texts[lang].ER
+	// }
+
+	// result := fmt.Sprintf("%d%s", a.year, semester)
+	// if a.year == 0 {
+	// 	result = texts[lang].UN
+	// }
+	// return result
+	return "TODO" // TODO NOT IMPLEMENTED
+}
+
+type Assignments []Assignment
+
+func (a Assignments) String(lang string) string {
+	assignments := []string{}
+	for _, assignment := range a {
+		assignments = append(assignments, assignment.String(lang))
 	}
-	return result
+	if len(assignments) == 0 {
+		return "TODO"
+	}
+	return strings.Join(assignments, " ")
 }
 
 type Description struct {

@@ -30,48 +30,51 @@ templ Ratings(ratings CourseRatings, courseCode string) {
     </div>
 }
 
-templ BlueprintAssignment(assignments []Assignment, code string) {
-    <div id="bpassignment">
-        <p class="text-warning">Under construction</p> // TODO: remove
-        Blueprint assignment:
-        for _, assignment := range assignments {
-            <p>{ assignment.String() }</p>
-        }
-        <button
-            hx-post={ "/course/" + code + "/blueprint" }
-            hx-target="#bpassignment"
-            hx-swap="outerHTML">
-            Add
-        </button>
-        if len(assignments) == 1 {
-        <button
-            hx-delete={ "/course/" + code + "/blueprint" }
-            hx-target="#bpassignment"
-            hx-swap="outerHTML">
-            Remove
-        </button>
-        }
+templ blueprintAssignment(code string, t text) {
+    <div class="d-flex justify-content-center">
+        <div class="btn-group">
+            <button type="button" class="btn btn-lg btn-blueprint"
+                hx-post={ "/blueprint/course/" + code }  
+                hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
+            >
+                { t.Assign }
+            </button>
+            <button type="button" class="btn btn-blueprint dropdown-toggle dropdown-toggle-split"
+                data-bs-toggle="dropdown" aria-expanded="false">
+            </button>
+            <ul class="dropdown-menu">
+            // TODO: make dynamic, NOT 3 fixed years
+                for year := 1; year <= 3; year++ {
+                    <li class="mx-3"><button class="dropdown-item text-center"
+                        hx-post={ "/blueprint/course/" + code }  
+                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` } 
+                    >
+                    { t.YearStr(year) + " " + t.Winter }
+                    </button></li>
+                    <li class="mx-3"><button class="dropdown-item text-center"
+                        hx-post={ "/blueprint/course/" + code }  
+                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` } 
+                    >
+                    { t.YearStr(year) + " " + t.Summer }
+                    </button></li>
+                }
+            </ul>
+        </div>
     </div>
 }
 
-templ hoursExams(course *Course, t text) {
-    {{ semCount := course.SemesterCount }}
-    if semCount == 1 {
-    <tr>
-        <td>{ t.ScopeExam }:</td>
-        <td>{ itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + course.ExamType}</td>
-    </tr>
+func semesterHoursExamsString(course *Course, t text) string {
+    result := ""
+    if course.SemesterCount == 1 {
+        result = course.Start + " " + strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1) + ", " + course.ExamType
+    } else if course.SemesterCount == 2 {
+        // TODO: either implement this logic
+        //      A) here, switch starting semester and add language support
+        //      B) in db meaning LectureRange1 is for winter semester and LectureRange2 for summer semester - THIS OK
+    } else {
+        result = "unsupported"
     }
-    if semCount == 2 {
-    <tr>
-        <td rowspan="2">{ t.ScopeExam }:</td>
-        <td>{ "winter s.:" + itos(course.LectureRange1) + "/" + itos(course.SeminarRange1) + ", " + course.ExamType}</td>
-    </tr>
-    <tr>
-        <td></td>
-        <td>{ "summer s.:" + itos(course.LectureRange2) + "/" + itos(course.SeminarRange2) + ", " + course.ExamType}</td>
-    </tr>
-    }
+    return result
 }
 
 func courseSISLink(code string, t text) string {
@@ -81,66 +84,6 @@ func courseSISLink(code string, t text) string {
         return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
     }
     return "unsupported language"
-}
-
-templ BasicInfo(course *Course, t text) {
-    // TODO only if not empty/nil/...
-    <div id="basicinfo">
-        <table class="table table-borderless">
-            // TODO: this should be the name but in the other language (Czech/English)
-            // <tr>
-            //     <td>Czech title:</td><td>{ course.Name }</td>
-            // </tr>
-            <tr>
-                <td>{ t.Faculty }:</td><td>{ course.Faculty }</td>
-            </tr>
-            <tr>
-                <td>{ t.Semester }:</td><td>{ course.Start }</td>
-            </tr>
-            <tr>
-                <td>{ t.ECredits }:</td><td>{ itos(course.Credits) }</td>
-            </tr>
-            @hoursExams(course, t)
-            <tr>
-                <td>{ t.Capacity }:</td><td>{ course.Capacity }</td>
-            </tr>
-            <tr>
-                <td>{ t.StateOfCourse }:</td><td>{ course.State }</td>
-            </tr>
-            <tr>
-                <td>{ t.LanguageOfCourse }:</td><td>{ course.Language }</td>
-            </tr>
-            <tr>
-                <td>{ t.AdditionalInfo }:</td><td><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></td>
-            </tr>
-            <tr>
-                <td>{ t.Guarantors }:</td><td>{ course.Guarantors[0].String() }</td>
-            </tr>
-            if len(course.Guarantors) > 1 {
-                for _, teacher := range course.Guarantors[1:] {
-                    <tr>
-                        <td></td><td>{ teacher.String() }</td>
-                    </tr>
-                }
-            }
-            if len(course.Teachers) > 0 {
-                <tr>
-                    <td>{ t.Teachers }:</td><td>{ course.Teachers[0].String() }</td>
-                </tr>
-            }
-            if len(course.Teachers) > 1 {
-                for _, teacher := range course.Teachers[1:] {
-                    <tr>
-                        <td></td><td>{ teacher.String() }</td>
-                    </tr>
-                }
-            }
-            <tr>
-                <td>{ t.SISLink }:</td><td><a href={ templ.SafeURL(courseSISLink(course.Code, t)) }>{ courseSISLink(course.Code, t) }</a></td>
-            </tr>
-        </table>
-        // TODO may add extend button for more info
-    </div>
 }
 
 templ renderSafeContent(content string) {
@@ -157,64 +100,117 @@ templ renderSafeContent(content string) {
     }
 }
 
-templ DetailField(desc Description) {
+templ accordionItem(desc Description, id string) {
     if desc.Content != "" {
-    <div>
-        <h2>{ utils.CapitalizeFirstLetter(desc.Title) }</h2>
-        <p style="text-align: justify">@renderSafeContent(desc.Content)</p>
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button fs-4" type="button" data-bs-toggle="collapse" data-bs-target={ "#panel-" + id } aria-expanded="true" aria-controls={ "panel-" + id }>
+                { utils.CapitalizeFirstLetter(desc.Title) }
+            </button>
+        </h2>
+        <div id={ "panel-" + id } class="accordion-collapse collapse show">
+            <div class="accordion-body">
+                <p style="text-align: justify">@renderSafeContent(desc.Content)</p>
+            </div>
+        </div>
     </div>
     }
 }
 
+templ ribbon(ba Assignments, t text) {
+    //if len(ba) > 0 {
+        <div class="ribbon-detail">
+            <span>{ ba.String(t.Language) }</span>
+        </div>
+    //}
+}
 
-templ Comments(comments []Comment, courseCode string, t text) {
-    <div id="comments">
-        <h2>{ t.Comments }</h2>
-        <p class="text-warning">Under construction</p> // TODO: remove
-        <ul>
-            for _, comment := range comments {
-            <li>
-                <div>
-                    <span>{ itos(comment.ID) }</span>
-                </div>
-                <div>
-                    { comment.Content }
-                </div>
-            </li>
+templ guarantors(guarantors []Teacher) {
+    <p
+        class="card-subtitle mb-2 text-muted text-center">
+        for _, g := range guarantors {
+            if g.TitleBefore != "" {
+                <small style="font-size: 0.75rem;">{ g.TitleBefore + " " }</small>
             }
-        </ul>
-        <form hx-post={ fmt.Sprintf("course/%s/comment", courseCode) } hx-target="#comments" hx-swap="outerHTML">
-            <div x-data="{ adjustTextarea($event) {
-                $event.target.style.height = 'auto';
-                $event.target.style.height = ($event.target.scrollHeight) + 'px';
-            } }">
-                <label for="comment">Add a comment:</label><br>
-                <textarea id="comment" name="comment" rows="1" cols="50" @input="adjustTextarea" style="overflow:hidden;"></textarea>
-            </div>
-            <div>
-                <button type="submit">Submit</button>
-            </div>
-        </form>
+            if g.TitleAfter != "" {
+                <span class="fs-5 text-dark fw-semibold">{ g.FirstName + " " + g.LastName }</span><small style="font-size: 0.75rem;">{ ", " + g.TitleAfter }</small>
+            } else {
+                <span class="fs-5 text-dark fw-semibold">{ g.FirstName + " " + g.LastName }</span>
+            }
+            // space between guarantors
+            &emsp;
+        }
+    </p>
+}
+
+templ accordion(course *Course, t text) {
+    <div class="accordion accordion-flush">
+        @accordionItem(course.Annotation, "annotation")
+        @accordionItem(course.CompletionRequirements, "completion-requirements")
+        @accordionItem(course.ExamRequirements, "exam-requirements")
+        @accordionItem(course.Sylabus, "sylabus")
     </div>
 }
 
 templ Content(course *Course, t text) {
     {{ p = bluemonday.UGCPolicy() }}
-    <h1 class="text-center">{ course.Code + " - " + course.Name }</h1>
-    @Ratings(course.CourseRatings, course.Code)
-    @BlueprintAssignment(course.BlueprintAssignments, course.Code)
-    @BasicInfo(course, t)
-    // TODO add links to parts of the page
-    @DetailField(course.Annotation)
-    @DetailField(course.CompletionRequirements)
-    @DetailField(course.ExamRequirements)
-    @DetailField(course.Sylabus)
-    // @Comments(course.Comments, course.Code, t)
+    //@Ratings(course.CourseRatings, course.Code)
+    // TODO only if not empty/nil/...
+    <div 
+        id="basic-info"
+        class="card"
+        style="width: 100%;"
+    >
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fs-4">{ course.Code }</h6>
+            <p class="mb-0 fs-4">{ semesterHoursExamsString(course, t) }</p>
+            <p class="mb-0 fs-4">{ t.ECredits + ": " + strconv.Itoa(course.Credits) }</p>
+        </div>
+        <div class="card-body d-flex flex-column align-items-center position-relative">
+            @ribbon(course.BlueprintAssignments, t)
+            <h1 class="card-title text-center" style="width: 80%">{ course.Name }</h1>
+            @guarantors(course.Guarantors)
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between" style="padding: 0 5%;">
+                <div class="flex-grow-1 d-flex flex-column me-3" style="flex: 1;">
+                    <p class="mb-1"><strong>{ t.Faculty }</strong></p>
+                    <p class="mb-2">{ course.Faculty }</p>
+                    <p class="mb-1"><strong>{ t.Capacity }</strong></p>
+                    <p class="mb-2">{ course.Capacity }</p>
+                    <p class="mb-1"><strong>{ t.StateOfCourse }</strong></p>
+                    <p class="mb-2">{ course.State }</p>
+                    <p class="mb-1"><strong>{ t.LanguageOfCourse }</strong></p>
+                    <p class="mb-2">{ course.Language }</p>
+                    if course.Link != "" {
+                        <p class="mb-1"><strong>{ t.AdditionalInfo }</strong></p>
+                        <p class="mb-2"><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></p>
+                    }
+                </div>
+                <div class="flex-grow-1 d-flex flex-column ms-3" style="flex: 1;">
+                    if len(course.Teachers) > 0 {
+                        <p class="mb-1"><strong>{ t.Teachers }</strong></p>
+                        <p class="mb-2">{ course.Teachers[0].String() }</p>
+                    }
+                    if len(course.Teachers) > 1 {
+                        for _, teacher := range course.Teachers[1:] {
+                            <p class="mb-2">{ teacher.String() }</p>
+                        }
+                    }
+                </div>
+            </div>
+            <div class="mt-3 text-center">
+                <p><strong>{ t.SISLink + ": " }</strong><a href={ templ.SafeURL(courseSISLink(course.Code, t)) }>{ courseSISLink(course.Code, t) }</a></p>
+            </div>
+            @blueprintAssignment(course.Code, t)
+        </div>
+        @accordion(course, t)
+    </div>
 }
 
 templ Page(course *Course, t text) {
     @utils.Page(course.Code + " - " + course.Name, t.Utils) {
-        <div class="container">
+        <div class="container pt-2">
             @Content(course, t)
         </div>
     }
