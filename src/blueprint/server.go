@@ -368,11 +368,11 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	reqSourceInt, err := strconv.Atoi(r.FormValue("requestSource"))
-	reqSource := courseAdditionRequestSource(reqSourceInt)
 	if err != nil {
-		log.Printf("courseAddition error: %v", err)
-		return
+		reqSourceInt = int(sourceNone)
+		log.Printf("courseAddition warning: %v", err)
 	}
+	reqSource := courseAdditionRequestSource(reqSourceInt)
 	var presenter courseAdditionPresenter = DefaultCourseAdditionPresenter
 	switch reqSource {
 	case sourceBlueprint:
@@ -390,9 +390,6 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 		// TODO: implement
 	case sourceDegreePlan:
 		// TODO: implement
-	default:
-		log.Printf("courseAddition error: unknown request source %s", reqSource)
-		return
 	}
 	// TODO: use this
 	// text, err := parseLanguage(r)

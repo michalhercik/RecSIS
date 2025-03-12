@@ -181,7 +181,8 @@ func (b *Blueprint) assign(position BlueprintRecordPosition, course *Course) err
 type courseAdditionRequestSource int
 
 const (
-	sourceBlueprint courseAdditionRequestSource = iota
+	sourceNone courseAdditionRequestSource = iota
+	sourceBlueprint
 	sourceCourseDetail
 	sourceDegreePlan
 )
