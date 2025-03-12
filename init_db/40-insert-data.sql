@@ -326,7 +326,33 @@ SET blueprint = jsonb_build_object('unassigned', '[]', 'assigned', jsonb_build_a
 WHERE user_id = 81411247
 AND lang = 'en';
 
-INSERT INTO course_ratings(user_id, course_code, overall_rating, difficulty_rating, workload_rating, usefulness_rating, fun_rating)
+INSERT INTO course_overall_ratings(user_id, course_code, rating)
 VALUES
-    (81411247, 'NDMI002', 1, 3, 4, 5, 2),
-    (81411247, 'NDMI050', 0, 1, 1, 1, 3);
+    (81411247, 'NDMI002', 1),
+    (81411247, 'NDMI050', 0);
+
+INSERT INTO course_rating_categories(code, lang, title)
+VALUES
+    (1, 'cs', 'Náročnost'),
+    (2, 'cs', 'Přínosnost'),
+    (3, 'cs', 'Zajímavost'),
+    (4, 'cs', 'Zábava'),
+    (5, 'cs', 'Zátěž'),
+    (1, 'en', 'Difficulty'),
+    (2, 'en', 'Usefulness'),
+    (3, 'en', 'Interest'),
+    (4, 'en', 'Fun'),
+    (5, 'en', 'Workload');
+
+INSERT INTO course_ratings(user_id, course_code, category_code, rating)
+VALUES
+    (81411247, 'NDMI002', 1, 1),
+    (81411247, 'NDMI002', 2, 4),
+    (81411247, 'NDMI002', 3, 3),
+    (81411247, 'NDMI002', 4, 2),
+    (81411247, 'NDMI002', 5, 1),
+    (81411247, 'NDMI050', 1, 0),
+    (81411247, 'NDMI050', 2, 1),
+    (81411247, 'NDMI050', 3, 5),
+    (81411247, 'NDMI050', 4, 4),
+    (81411247, 'NDMI050', 5, 3);

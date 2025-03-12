@@ -255,19 +255,29 @@ CREATE TABLE sessions (
     expires_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE DOMAIN overall_rating_domain AS INT
-CHECK (VALUE IN (0, 1));
+CREATE TABLE course_rating_categories (
+    code INT NOT NULL,
+    lang CHAR(2) NOT NULL,
+    title VARCHAR(50) NOT NULL
+);
 
-CREATE DOMAIN specific_rating_domain AS INT
-CHECK (VALUE IN (1, 2, 3, 4, 5));
+CREATE DOMAIN course_overall_rating_domain AS INT CHECK (VALUE = 0 OR VALUE = 1);
+
+CREATE TABLE course_overall_ratings (
+    user_id INT NOT NULL REFERENCES users(id),
+    course_code VARCHAR(10) NOT NULL,
+    rating course_overall_rating_domain NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (user_id, course_code)
+);
+
+CREATE DOMAIN course_rating_domain AS INT CHECK (VALUE > 0 OR VALUE <= 5);
 
 CREATE TABLE course_ratings (
     user_id INT NOT NULL REFERENCES users(id),
     course_code VARCHAR(10) NOT NULL,
-    overall_rating overall_rating_domain,
-    difficulty_rating specific_rating_domain,
-    workload_rating specific_rating_domain,
-    usefulness_rating specific_rating_domain,
-    fun_rating specific_rating_domain,
-    UNIQUE (user_id, course_code)
+    category_code INT NOT NULL,
+    rating course_rating_domain NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (user_id, category_code, course_code)
 );

@@ -10,7 +10,10 @@ import (
 // TODO: change interface name if interface changes
 type DataManager interface {
 	Course(sessionID string, code string, lang DBLang) (*Course, error)
-	OverallRating(sessionID string, code string, value int) error
+	RateCategory(sessionID string, code string, category string, rating int) error
+	DeleteCategoryRating(sessionID string, code string, category string) error
+	Rate(sessionID string, code string, value int) error
+	DeleteRating(sessionID string, code string) error
 }
 
 type DBLang string
@@ -193,15 +196,13 @@ func (n NullInt64) String() string {
 	return fmt.Sprintf("%d", n.Int64)
 }
 
-type CourseRatings struct {
-	Overall    NullInt64 `db:"overall_rating"`
-	Difficulty NullInt64 `db:"difficulty_rating"`
-	Workload   NullInt64 `db:"workload_rating"`
-	Usefulness NullInt64 `db:"usefulness_rating"`
-	Fun        NullInt64 `db:"fun_rating"`
+type CourseCategoryRating struct {
+	Code   int    `db:"category_code"`
+	Title  string `db:"rating_title"`
+	Rating int    `db:"rating"`
 }
 
-type Course struct {
+type CourseInfo struct {
 	Code                string `db:"code"`
 	Name                string `db:"title"`
 	Faculty             string `db:"faculty"`
@@ -228,11 +229,16 @@ type Course struct {
 	ExamRequirements Description `db:"requirements"`
 	// TODO this must be syllabus - broken
 	Sylabus Description `db:"syllabus"`
+}
+
+type Course struct {
+	CourseInfo
 	// TODO what is this
 	Classifications []string
 	// TODO what is this
 	Classes              []string
 	Link                 string // link to course webpage (not SIS)
 	BlueprintAssignments []Assignment
-	CourseRatings
+	OverallRating        NullInt64
+	CategoryRatings      []CourseCategoryRating
 }
