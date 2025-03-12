@@ -54,7 +54,7 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	code := r.PathValue("code")
-	rating, err := strconv.Atoi(r.FormValue("value"))
+	rating, err := strconv.Atoi(r.FormValue("rating"))
 	if err != nil && (rating == 1 || rating == 0) {
 		log.Printf("rate error: %v", err)
 		return
@@ -85,7 +85,7 @@ func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
 	}
 	code := r.PathValue("code")
 	category := r.PathValue("category")
-	rating, err := strconv.Atoi(r.FormValue("value"))
+	rating, err := strconv.Atoi(r.FormValue("rating"))
 	if err != nil {
 		log.Printf("rateCategory error: %v", err)
 		return
