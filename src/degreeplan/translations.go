@@ -2,6 +2,7 @@ package degreeplan
 
 import (
 	"github.com/michalhercik/RecSIS/utils"
+	"strconv"
 )
 
 type text struct {
@@ -16,8 +17,21 @@ type text struct {
 	Winter string
 	Summer string
 	Blueprint string
+	Assign string
+	Year string
+	WinterAssign string
+	SummerAssign string
 	// utils
 	Utils utils.Text
+}
+
+func (t text) YearStr(year int) string {
+	if t.Language == "cs" {
+		return strconv.Itoa(year) + ". " + t.Year
+	} else if t.Language == "en" {
+		return t.Year + " " + strconv.Itoa(year)
+	}
+	return ""
 }
 
 var texts = map[string]text{
@@ -27,12 +41,16 @@ var texts = map[string]text{
 		Title: "Název",
 		Status: "Stav",
 		Completed: "Splněno",
-		InBlueprint: "V blueprintu",
+		InBlueprint: "Blueprint",
 		NotCompleted: "Nesplněno",
 		Credits: "Kredity",
 		Winter: "ZS",
 		Summer: "LS",
 		Blueprint: "Blueprint",
+		Assign: "Přiřadit",
+		Year: "ročník",
+		WinterAssign: "ZS",
+		SummerAssign: "LS",
 		// utils
 		Utils: utils.Texts["cs"],
 	},
@@ -42,12 +60,16 @@ var texts = map[string]text{
 		Title: "Title",
 		Status: "Status",
 		Completed: "Completed",
-		InBlueprint: "In blueprint",
+		InBlueprint: "Blueprint",
 		NotCompleted: "Not completed",
 		Credits: "Credits",
 		Winter: "Winter",
 		Summer: "Summer",
 		Blueprint: "Blueprint",
+		Assign: "Assign",
+		Year: "Year",
+		WinterAssign: "Winter",
+		SummerAssign: "Summer",
 		// utils
 		Utils: utils.Texts["en"],
 	},

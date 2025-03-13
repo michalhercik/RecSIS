@@ -129,7 +129,6 @@ func parseQueryRequest(r *http.Request, lang Language) (*Request, error) {
 	}
 	semester := TeachingSemester(semesterInt)
 
-	// TODO change language based on URL
 	req := Request{
 		sessionID:   sessionCookie.Value,
 		query:       query,

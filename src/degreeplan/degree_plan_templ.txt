@@ -1,34 +1,40 @@
-<td>---</td>
-<td>
-</td>
-<td>
-</td>
-<td>unsupported</td>
-<td>
-</td>
-<td>
-</td>
-<td>unsupported</td>
-<td>unsupported</td>
-<td>unsupported</td>
-<div class=\"container\">
-</div>
+<div class=\"btn-group\"><button type=\"button\" class=\"btn btn-sm btn-outline-blueprint\" hx-post=\"
+\" hx-vals=\"
+\">
+</button> <button type=\"button\" class=\"btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\"></button><ul class=\"dropdown-menu\">
+<li class=\"mx-3\"><button class=\"dropdown-item text-center\" hx-post=\"
+\" hx-vals=\"
+\">
+</button></li><li class=\"mx-3\"><button class=\"dropdown-item text-center\" hx-post=\"
+\" hx-vals=\"
+\">
+</button></li>
+</ul></div>
 <br>
 <div class=\"d-flex justify-content-between align-items-center\"><h5>
 </h5><div><p class=\"me-2\" style=\"color: rgb(4, 108, 181); display: inline-block;\">
 </p><p class=\"me-2\" style=\"color: rgb(19, 92, 4); display: inline-block;\">
 </p></div></div><table class=\"table degree-plan-table\"><thead><tr><th>
 </th><th>
-</th><th class=\"text-end\">
+</th><th></th><th class=\"text-end\">
 </th><th>
 </th><th>
 </th><th>
 </th></tr></thead> <tbody>
-<tr x-data=\"
-\"><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
-</td><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
-</td><td class=\"credits-column text-end\" :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
-</td><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
-</td><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\">
-</td><td :class=\"inBlueprint &amp;&amp; &#39;in-blueprint&#39;\"><button class=\"btn btn-sm btn-outline-dark\">TODO</button></td></tr>
+<tr><td>
+</td><td>
+</td><td>
+<span class=\"badge bg-success\">
+</span>
+<span class=\"badge bg-blueprint\">
+</span>
+<span class=\"badge bg-danger\">
+</span>
+</td><td class=\"credits-column text-end\">
+</td><td>
+</td><td>
+</td><td>
+</td></tr>
 </tbody></table>
+<div class=\"container\">
+</div>

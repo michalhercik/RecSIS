@@ -105,13 +105,13 @@
 \" hx-target=\"main\"></button><button x-show=\"(hover || hoverOnAssign) &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
 \" class=\"btn btn-sm bi bi-grip-horizontal\" style=\"--bs-btn-active-border-color: transparent;\" x-sort:handle></button></td></tr>
 <tr class=\"dummy-row\" x-sort:item style=\"display: none;\"></tr></tbody></table></div>
-<div><table class=\"table table-sm table-hover table-light blueprint-table headline\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"if (!$event.target.closest(&#39;button&#39;)) { showUnassigned = !showUnassigned }\"><td class=\"short\"><i :class=\"showUnassigned ? &#39;bi bi-caret-down-fill&#39; : &#39;bi bi-caret-up-fill&#39;\"></i></td><td class=\"short yeartext\">
+<div><table class=\"table table-sm table-hover blueprint-background blueprint-table headline\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"if (!$event.target.closest(&#39;button&#39;)) { showUnassigned = !showUnassigned }\"><td class=\"short\"><i :class=\"showUnassigned ? &#39;bi bi-caret-down-fill&#39; : &#39;bi bi-caret-up-fill&#39;\"></i></td><td class=\"short yeartext\">
 </td>
 <td class=\"short\"></td>
 <td class=\"short text-end align-middle\" style=\"line-height: 1;\"><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
 \" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
 \" hx-target=\"main\"></button></td></tr></tbody></table></div>
-<div><table class=\"table table-sm table-hover table-light blueprint-table headline\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"
+<div><table class=\"table table-sm table-hover blueprint-background blueprint-table headline\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"
 \"><td class=\"short\"><i :class=\"
 \"></i></td><td class=\"short yeartext\">
 </td><td class=\"short\"></td><td class=\"short yeartext credits-column text-end\">
@@ -121,9 +121,7 @@
 \" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
 \" hx-target=\"main\"></button></td></tr></tbody></table></div>
 <div x-show=\"
-\">
-<table class=\"
-\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"
+\"><table class=\"table table-sm table-hover blueprint-background blueprint-table\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"
 \"><td class=\"short\"><i :class=\"
 \"></i></td><td class=\"short semtext\">
 </td><td class=\"short\"></td><td class=\"short semtext credits-column text-end\">

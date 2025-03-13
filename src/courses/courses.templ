@@ -7,7 +7,7 @@ import (
 
 // TODO: is user needed?
 const user = 42
-const coursesPerPage = 24
+const coursesPerPage = 30
 
 // TODO: do not use this, use DB, this is deprecated
 func examTypeStr(examType string) string {
@@ -97,7 +97,7 @@ templ QuickResults(res *QuickResponse, t text) {
     </div>
 }
 
-templ Search(coursesPage *coursesPage, t text) {
+templ search(coursesPage *coursesPage, t text) {
     <form
         hx-get={ t.Utils.LangLink("/courses/search?user=" + strconv.Itoa(user)) }
         hx-target="#courses"
@@ -107,35 +107,38 @@ templ Search(coursesPage *coursesPage, t text) {
         class="pt-3 pb-3"
         x-data={ "{ quickResOpen: false }" }
     >
-        <div class="row justify-content-center">
-            <div class="col-lg-6 col-md-10 col-sm-12">
-                <div class="dropdown" @click.away="quickResOpen = false">
-                    <div class="input-group">
-                        <input type="text" name="search" id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
-                            x-model="searchInput"
-                            @click="quickResOpen = true"
-                            @keydown="quickResOpen = true"
-                            @keydown.escape="quickResOpen = false"
-                            @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
-                            hx-get={ t.Utils.LangLink("/courses/quicksearch") }
-                            hx-trigger="input changed, triggerSearch from:body" 
-                            hx-target="#quick-search-results"
-                            hx-swap="outerHTML"
-                            hx-push-url="false"
-                        />
-                        <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
-                    </div>
-                    <div x-show="quickResOpen && searchInput.length > 0">
-                        @QuickResults(&QuickResponse{
-                            approxHits: -1,
-                            courses: []Course{},
-                        }, t)
-                    </div>
+        <div class="justify-content-center mx-5">
+            <div class="dropdown" @click.away="quickResOpen = false">
+                <div class="input-group">
+                    <input type="text" name="search" id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
+                        x-model="searchInput"
+                        @click="quickResOpen = true"
+                        @keydown="quickResOpen = true"
+                        @keydown.escape="quickResOpen = false"
+                        @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
+                        hx-get={ t.Utils.LangLink("/courses/quicksearch") }
+                        hx-trigger="input changed, triggerSearch from:body" 
+                        hx-target="#quick-search-results"
+                        hx-swap="outerHTML"
+                        hx-push-url="false"
+                    />
+                    <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
+                </div>
+                <div x-show="quickResOpen && searchInput.length > 0">
+                    @QuickResults(&QuickResponse{
+                        approxHits: -1,
+                        courses: []Course{},
+                    }, t)
                 </div>
             </div>
         </div>
-        <div class="row justify-content-center mt-3">
-            <div class="col-lg-3 col-md-5 col-sm-12">
+    </form>
+}
+
+templ filter(coursesPage *coursesPage, t text) {
+    <div>
+        <div>
+            <div>
                 <label for="sort">{ t.SortByFilter + ":" }</label>
                 <select name="sort" id="sort" class="form-select" x-model="searchSort">
                     <option value={ strconv.Itoa(relevance) }>{ t.Relevance }</option>
@@ -145,7 +148,7 @@ templ Search(coursesPage *coursesPage, t text) {
                     <option value={ strconv.Itoa(newest) }>{ t.Newest }</option>
                 </select>
             </div>
-            <div class="col-lg-3 col-md-5 col-sm-12">
+            <div>
                 <label for="semester">{ t.SemesterFilter + ":" }</label>
                 <select name="semester" id="semester" class="form-select" x-model="searchSemester">
                     <option value={ strconv.Itoa(int(teachingBoth)) }>{ t.Both }</option>
@@ -154,7 +157,7 @@ templ Search(coursesPage *coursesPage, t text) {
                 </select>
             </div>
         </div>
-    </form>
+    </div>
 }
 
 templ ribbon(ba Assignments, t text) {
@@ -168,13 +171,13 @@ templ ribbon(ba Assignments, t text) {
 templ blueprintAssignment(code string, t text) {
     <div class="d-flex justify-content-end mt-auto pt-3">
         <div class="btn-group">
-            <button type="button" class="btn btn-blueprint"
+            <button type="button" class="btn btn-outline-blueprint"
                 hx-post={ "/blueprint/course/" + code }  
                 hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
             >
                 { t.Assign }
             </button>
-            <button type="button" class="btn btn-blueprint dropdown-toggle dropdown-toggle-split"
+            <button type="button" class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
                 data-bs-toggle="dropdown" aria-expanded="false">
             </button>
             <ul class="dropdown-menu">
@@ -224,7 +227,7 @@ templ courseCard(course *Course, t text) {
 
 templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
     <button
-        class="btn btn-outline-dark"
+        class="btn btn-outline-dark m-0"
         hx-get={ t.Utils.LangLink("/courses/search?user=" + strconv.Itoa(user)) }
         hx-target="#courses"
         hx-swap="outerHTML show:top"
@@ -238,7 +241,7 @@ templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
 
 templ paginationNumberButton(page int, cp *coursesPage, t text) {
     <button
-        class="btn"
+        class="btn m-0"
         :class={ strconv.FormatBool(page == cp.page) + " ? 'btn-dark' : 'btn-outline-dark'" }
         hx-get={ t.Utils.LangLink("/courses/search?user=" + strconv.Itoa(user)) }
         hx-target="#courses"
@@ -266,45 +269,35 @@ templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
 }
 
 templ pagination(cp *coursesPage, t text) {
-    <nav class="mt-3" x-data=""> // x-data is needed for x-bind:class
-        <ul class="pagination justify-content-center">
+    <div class="mt-3 d-flex justify-content-center" x-data=""> // x-data is needed for x-bind:class
+        <div class="btn-group">
             if cp.totalPages >= 3 {
-                <li class="page-item">
-                    @paginationIconButton(1, "bi bi-chevron-double-left", cp, t)
-                </li>
+                @paginationIconButton(1, "bi bi-chevron-double-left", cp, t)
             }
-            if cp.totalPages >= 2 {
-                <li class="page-item">
-                    @paginationIconButton(cp.page - 1, "bi bi-chevron-left", cp, t)
-                </li>
-                for i := 1; i <= cp.totalPages; i++ {
-                    <li class="page-item">
-                        @paginationNumberButton(i, cp, t)
-                    </li>
-                }
-                <li class="page-item">
-                    @paginationIconButton(cp.page + 1, "bi bi-chevron-right", cp, t)
-                </li>
+            @paginationIconButton(cp.page - 1, "bi bi-chevron-left", cp, t)
+            for i := 1; i <= cp.totalPages; i++ {
+                @paginationNumberButton(i, cp, t)
             }
+            @paginationIconButton(cp.page + 1, "bi bi-chevron-right", cp, t)
             if cp.totalPages >= 3 {
-                <li class="page-item">
-                    @paginationIconButton(cp.totalPages, "bi bi-chevron-double-right", cp, t)
-                </li>
+                @paginationIconButton(cp.totalPages, "bi bi-chevron-double-right", cp, t)
             }
-        </ul>
-    </nav>
+        </div>
+    </div>
     // TODO: FIX this will not work if on page 7/8 and you double the page size to 48, there will only be 4 pages, but you want page no7 with 48 courses
     if cp.page < cp.totalPages {
-        <div class="d-flex justify-content-center">
+        <div class="mt-2 d-flex justify-content-center">
             @loadMoreButton(cp.pageSize + coursesPerPage, cp, t)
         </div>
     }
 }
 
 templ Courses(coursesPage *coursesPage, t text) {
-    <div id="courses" x-init={ "searchInput = '" + coursesPage.search + "'; searchSort = " + strconv.Itoa(int(coursesPage.sortedBy)) + "; searchSemester = " + strconv.Itoa(int(coursesPage.semester)) }>
-        <h2>{ coursesPage.sortedBy.String(t.Language) + ":" }</h2>
-        <div class="grid">
+    <div
+        id="courses"
+        x-init={ "searchInput = '" + coursesPage.search + "'; searchSort = " + strconv.Itoa(int(coursesPage.sortedBy)) + "; searchSemester = " + strconv.Itoa(int(coursesPage.semester)) }
+    >
+        <div class="grid-cards">
             if coursesPage.totalPages == 0 {
                 <p>{ t.NoCoursesFound }</p>
             } else {
@@ -312,20 +305,24 @@ templ Courses(coursesPage *coursesPage, t text) {
                     @courseCard(&course, t)
                 }
             }
+            // dummy cards for alignment
             for i := 0; i < 10; i++ {
                 <div class="card custom-card border-0"></div>
             }
         </div>
-        if coursesPage.totalPages > 0 {
+        if coursesPage.totalPages > 1 {
             @pagination(coursesPage, t)
         }
     </div>
 }
 
 templ Content(coursesPage *coursesPage, t text) {
-    <div class="custom-container">
-        <div x-data="{ searchInput: '', searchSort: 0, searchSemester: 3 }">
-            @Search(coursesPage, t)
+    <div class="grid-page">
+        <div class="filter">
+            @filter(coursesPage, t)
+        </div>
+        <div class="main-content" x-data="{ searchInput: '', searchSort: 0, searchSemester: 3 }">
+            @search(coursesPage, t)
             @Courses(coursesPage, t)
         </div>
     </div>

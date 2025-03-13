@@ -37,12 +37,35 @@ func summerString(course *Course) string {
     return summerText
 }
 
-templ Page(dp *DegreePlan, t text) {
-    @utils.Page(t.Utils.DegreePlan, t.Utils) {
-        <div class="container">
-            @Content(dp, t)
-        </div>
-    }
+templ blueprintAssignment(code string, t text) {
+    <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-outline-blueprint"
+            hx-post={ "/blueprint/course/" + code }  
+            hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
+        >
+            { t.Assign }
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+            data-bs-toggle="dropdown" aria-expanded="false">
+        </button>
+        <ul class="dropdown-menu">
+        // TODO: make dynamic, NOT 3 fixed years
+            for year := 1; year <= 3; year++ {
+                <li class="mx-3"><button class="dropdown-item text-center"
+                    hx-post={ "/blueprint/course/" + code }  
+                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` } 
+                >
+                { t.YearStr(year) + " " + t.WinterAssign }
+                </button></li>
+                <li class="mx-3"><button class="dropdown-item text-center"
+                    hx-post={ "/blueprint/course/" + code }  
+                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` } 
+                >
+                { t.YearStr(year) + " " + t.SummerAssign }
+                </button></li>
+            }
+        </ul>
+    </div>
 }
 
 templ Content(dp *DegreePlan, t text) {
@@ -93,7 +116,7 @@ templ Content(dp *DegreePlan, t text) {
                         { course.Title }
                     </td>
                     <td>
-                    // TODO: add course completion status -> change false to course.Completed
+                    // TODO: add course completion status -> change `false` to `course.Completed`
                     if false {
                         <span class="badge bg-success">{ t.Completed }</span>
                     } else if course.InBlueprint {
@@ -113,11 +136,19 @@ templ Content(dp *DegreePlan, t text) {
                         { summerString(&course) }
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-outline-dark">TODO</button>
+                        @blueprintAssignment(course.Code, t)
                     </td>
                 </tr>
             }
             </tbody>
         </table>
+    }
+}
+
+templ Page(dp *DegreePlan, t text) {
+    @utils.Page(t.Utils.DegreePlan, t.Utils) {
+        <div class="container">
+            @Content(dp, t)
+        </div>
     }
 }
