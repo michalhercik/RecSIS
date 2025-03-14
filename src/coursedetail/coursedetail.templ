@@ -99,8 +99,8 @@ templ renderSafeContent(content string) {
     }
 }
 
-templ accordionItem(desc Description, id string) {
-    if desc.Content != "" {
+templ accordionItem(desc NullDescription, id string) {
+    if desc.Valid {
     <div class="accordion-item">
         <h2 class="accordion-header">
             <button class="accordion-button fs-4" type="button" data-bs-toggle="collapse" data-bs-target={ "#panel-" + id } aria-expanded="true" aria-controls={ "panel-" + id }>
@@ -145,9 +145,16 @@ templ guarantors(guarantors []Teacher) {
 templ accordion(course *Course, t text) {
     <div class="accordion accordion-flush">
         @accordionItem(course.Annotation, "annotation")
-        @accordionItem(course.CompletionRequirements, "completion-requirements")
-        @accordionItem(course.ExamRequirements, "exam-requirements")
-        @accordionItem(course.Sylabus, "sylabus")
+        @accordionItem(course.Syllabus, "syllabus")
+        @accordionItem(course.PassingTerms, "passing-terms")
+        @accordionItem(course.Literature, "literature")
+        @accordionItem(course.AssesmentRequirements, "assesment-requirements")
+        @accordionItem(course.EntryRequirements, "entry-requirements")
+        @accordionItem(course.Aim, "aim")
+        // @accordionItem(course.Annotation, "annotation")
+        // @accordionItem(course.CompletionRequirements, "completion-requirements")
+        // @accordionItem(course.ExamRequirements, "exam-requirements")
+        // @accordionItem(course.Sylabus, "sylabus")
     </div>
 }
 

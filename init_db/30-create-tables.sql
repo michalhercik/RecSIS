@@ -12,43 +12,43 @@ CREATE TABLE faculties(
 --     sis_id VARCHAR(10) UNIQUE NOT NULL
 -- );
 
-CREATE TABLE teachers(
-    id SERIAL PRIMARY KEY,
-    sis_id INT UNIQUE NOT NULL,
-    department VARCHAR(10), -- INT REFERENCES departments(id),
-    faculty INT REFERENCES faculties(sis_id), -- INT REFERENCES faculties(id),
-    first_name VARCHAR(50),
-    last_name VARCHAR(50) NOT NULL,
-    title_before VARCHAR(20),
-    title_after VARCHAR(20)
-);
+-- CREATE TABLE teachers(
+--     id SERIAL PRIMARY KEY,
+--     sis_id INT UNIQUE NOT NULL,
+--     department VARCHAR(10), -- INT REFERENCES departments(id),
+--     faculty INT REFERENCES faculties(sis_id), -- INT REFERENCES faculties(id),
+--     first_name VARCHAR(50),
+--     last_name VARCHAR(50) NOT NULL,
+--     title_before VARCHAR(20),
+--     title_after VARCHAR(20)
+-- );
 
-CREATE TABLE old_courses(
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(10) NOT NULL,
-    name_cs VARCHAR(250) NOT NULL,
-    name_en VARCHAR(250), -- NOT NULL,
-    valid_from INT NOT NULL,
-    valid_to INT NOT NULL,
-    faculty INT REFERENCES faculties(sis_id), -- INT REFERENCES faculties(id),
-    guarantor VARCHAR(10), -- INT REFERENCES departments(id),
-    taught CHAR(1) NOT NULL,
-    start_semester INT, -- NOT NULL,
-    semester_count INT, -- NOT NULL,
-    taught_lang CHAR(3), -- change to CHAR(2) NOT NULL (cs, en),
-    lecture_range1 INT, -- NOT NULL,
-    seminar_range1 INT, -- NOT NULL,
-    lecture_range2 INT,
-    seminar_range2 INT,
-    range_unit CHAR(2),
-    exam_type VARCHAR(2), -- NOT NULL,
-    credits INT, -- NOT NULL,
-    teacher1 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
-    teacher2 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
-    teacher3 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
-    min_number INT,
-    capacity INT
-);
+-- CREATE TABLE old_courses(
+--     id SERIAL PRIMARY KEY,
+--     code VARCHAR(10) NOT NULL,
+--     name_cs VARCHAR(250) NOT NULL,
+--     name_en VARCHAR(250), -- NOT NULL,
+--     valid_from INT NOT NULL,
+--     valid_to INT NOT NULL,
+--     faculty INT REFERENCES faculties(sis_id), -- INT REFERENCES faculties(id),
+--     guarantor VARCHAR(10), -- INT REFERENCES departments(id),
+--     taught CHAR(1) NOT NULL,
+--     start_semester INT, -- NOT NULL,
+--     semester_count INT, -- NOT NULL,
+--     taught_lang CHAR(3), -- change to CHAR(2) NOT NULL (cs, en),
+--     lecture_range1 INT, -- NOT NULL,
+--     seminar_range1 INT, -- NOT NULL,
+--     lecture_range2 INT,
+--     seminar_range2 INT,
+--     range_unit CHAR(2),
+--     exam_type VARCHAR(2), -- NOT NULL,
+--     credits INT, -- NOT NULL,
+--     teacher1 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
+--     teacher2 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
+--     teacher3 INT, --REFERENCES teachers(sis_id), --REFERENCES teachers(id),
+--     min_number INT,
+--     capacity INT
+-- );
 
 CREATE TABLE start_semester_to_desc(
     id INT,
@@ -68,7 +68,7 @@ CREATE TABLE courses(
     taught VARCHAR(10) NOT NULL,
     start_semester INT, -- NOT NULL,
     semester_count INT, -- NOT NULL,
-    taught_lang VARCHAR(10), -- change to CHAR(2) NOT NULL (cs, en),
+    taught_lang VARCHAR(50),
     lecture_range1 INT, -- NOT NULL,
     seminar_range1 INT, -- NOT NULL,
     lecture_range2 INT,
@@ -82,43 +82,46 @@ CREATE TABLE courses(
     capacity VARCHAR(9),
     annotation JSONB,
     syllabus JSONB,
-    aim JSONB,
-    requirements JSONB
+    terms_of_passing JSONB,
+    literature JSONB,
+    requirements_for_assesment JSONB,
+    entry_requirements JSONB,
+    aim JSONB
 );
 
-CREATE TABLE classifications(
-    course VARCHAR(10),
-    classification VARCHAR(6) NOT NULL
-);
+-- CREATE TABLE classifications(
+--     course VARCHAR(10),
+--     classification VARCHAR(6) NOT NULL
+-- );
 
-CREATE TABLE classes(
-    course VARCHAR(10),
-    class VARCHAR(7) NOT NULL
-);
+-- CREATE TABLE classes(
+--     course VARCHAR(10),
+--     class VARCHAR(7) NOT NULL
+-- );
 
-CREATE TABLE requisites(
-    course VARCHAR(10) NOT NULL,
-    requisite VARCHAR(10) NOT NULL,
-    requisite_type CHAR(1) NOT NULL,
-    from_year INT NOT NULL,
-    to_year INT NOT NULL
-);
+-- CREATE TABLE requisites(
+--     course VARCHAR(10) NOT NULL,
+--     requisite VARCHAR(10) NOT NULL,
+--     requisite_type CHAR(1) NOT NULL,
+--     from_year INT NOT NULL,
+--     to_year INT NOT NULL
+-- );
 
-CREATE TABLE course_texts(
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    course VARCHAR(10) NOT NULL,
-    text_type CHAR(1) NOT NULL,
-    lang CHAR(3) NOT NULL,
-    title VARCHAR(120) NOT NULL,
-    content TEXT NOT NULL,
-    audience VARCHAR(6) NOT NULL,
-    UNIQUE (course, text_type, lang)
-);
+-- CREATE TABLE course_texts(
+--     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     course VARCHAR(10) NOT NULL,
+--     text_type CHAR(1) NOT NULL,
+--     lang CHAR(3) NOT NULL,
+--     title VARCHAR(120) NOT NULL,
+--     content TEXT NOT NULL,
+--     audience VARCHAR(6) NOT NULL,
+--     UNIQUE (course, text_type, lang)
+-- );
 
-CREATE TABLE course_teachers(
-    course VARCHAR(10) NOT NULL,
-    teacher INT NOT NULL -- REFERENCES teachers(sis_id) NOT NULL,
-);
+-- CREATE TABLE course_teachers(
+--     course VARCHAR(10) NOT NULL,
+--     teacher INT NOT NULL -- REFERENCES teachers(sis_id) NOT NULL,
+-- );
 
 CREATE TABLE degree_plans(
     plan_code VARCHAR(15) NOT NULL,

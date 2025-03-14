@@ -1,15 +1,16 @@
 import pandas as pd
 
-courses = pd.read_csv('../init_db/courses.csv', usecols=[
-    "POVINN", "PNAZEV", "PANAZEV",
+courses = pd.read_csv('./init_db/POVINN.csv', usecols=[
+    "POVINN", "PNAZEV", "PANAZEV", "VPLATIDO",
     "VSEMZAC", "VSEMPOC",
     "VROZSAHPR1", "VROZSAHCV1", "VROZSAHPR2", "VROZSAHCV2",
     "VTYP", "VEBODY",
     "VUCIT1", "VUCIT2", "VUCIT3",])
-teachers = pd.read_csv('../init_db/teachers.csv', usecols=["KOD", "JMENO", "PRIJMENI"])
-texts = pd.read_csv('../init_db/course_texts.csv', usecols=["POVINN", "TYP", "JAZYK", "TITLE", "MEMO"])
+teachers = pd.read_csv('./init_db/UCIT.csv', usecols=["KOD", "JMENO", "PRIJMENI"])
+texts = pd.read_csv('./init_db/PAMELA.csv', usecols=["POVINN", "TYP", "JAZYK", "MEMO"])
 
-df = pd.merge(courses, teachers, how="left", left_on="VUCIT1", right_on="KOD").rename(columns={"KOD": "VUCIT1_KOD", "JMENO": "VUCIT1_JMENO", "PRIJMENI": "VUCIT1_PRIJMENI"})
+df = courses[courses["VPLATIDO"] == 9999].drop(columns=["VPLATIDO"])
+df = pd.merge(df, teachers, how="left", left_on="VUCIT1", right_on="KOD").rename(columns={"KOD": "VUCIT1_KOD", "JMENO": "VUCIT1_JMENO", "PRIJMENI": "VUCIT1_PRIJMENI"})
 df = pd.merge(df, teachers, how="left", left_on="VUCIT2", right_on="KOD").rename(columns={"KOD": "VUCIT2_KOD", "JMENO": "VUCIT2_JMENO", "PRIJMENI": "VUCIT2_PRIJMENI"})
 df = pd.merge(df, teachers, how="left", left_on="VUCIT3", right_on="KOD").rename(columns={"KOD": "VUCIT3_KOD", "JMENO": "VUCIT3_JMENO", "PRIJMENI": "VUCIT3_PRIJMENI"})
 df = df.drop(columns=["VUCIT1", "VUCIT2", "VUCIT3"])
@@ -61,4 +62,4 @@ df = df.rename(columns={
 })
 
 df = df.reset_index(drop=False).rename(columns={"index": "id"})
-df.to_json('courses.json', orient='records', lines=True)
+df.to_json('./init_search/courses.json', orient='records', lines=True)

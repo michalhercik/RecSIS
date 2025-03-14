@@ -23,13 +23,6 @@ const (
 	en DBLang = "en"
 )
 
-// TODO add more fields
-type Rating struct {
-	ID     int
-	UserID int
-	Rating int // 1..like -1..dislike
-}
-
 type Faculty struct {
 	SisID int
 	Name  string
@@ -168,6 +161,23 @@ func (d Description) Value() (interface{}, error) {
 	return json.Marshal(d)
 }
 
+type NullDescription struct {
+	Description
+	Valid bool
+}
+
+func (d *NullDescription) Scan(val interface{}) error {
+	if val == nil {
+		d.Valid = false
+		return nil
+	}
+	if err := d.Description.Scan(val); err != nil {
+		return err
+	}
+	d.Valid = true
+	return nil
+}
+
 type Capacity int
 
 func (c Capacity) String(lang string) string {
@@ -211,24 +221,24 @@ type CourseInfo struct {
 	Start               string `db:"semester_description"`
 	SemesterCount       int    `db:"semester_count"`
 	// TODO in some cases is both CZ and EN but here is only one
-	Language      string       `db:"taught_lang"`
-	LectureRange1 int          `db:"lecture_range1"`
-	SeminarRange1 int          `db:"seminar_range1"`
-	LectureRange2 int          `db:"lecture_range2"`
-	SeminarRange2 int          `db:"seminar_range2"`
-	ExamType      string       `db:"exam_type"`
-	Credits       int          `db:"credits"`
-	Guarantors    TeacherSlice `db:"guarantors"`
-	Teachers      TeacherSlice `db:"teachers"`
-	MinEnrollment Capacity     `db:"min_number"`
-	Capacity      string       `db:"capacity"`
-	Annotation    Description  `db:"annotation"`
-	// TODO this is Cil predmetu, is it ok?
-	CompletionRequirements Description `db:"aim"`
-	// TODO this is Pozadavky ke kontrole studia, is it ok?
-	ExamRequirements Description `db:"requirements"`
-	// TODO this must be syllabus - broken
-	Sylabus Description `db:"syllabus"`
+	Language              string          `db:"taught_lang"`
+	LectureRange1         int             `db:"lecture_range1"`
+	SeminarRange1         int             `db:"seminar_range1"`
+	LectureRange2         int             `db:"lecture_range2"`
+	SeminarRange2         int             `db:"seminar_range2"`
+	ExamType              string          `db:"exam_type"`
+	Credits               int             `db:"credits"`
+	Guarantors            TeacherSlice    `db:"guarantors"`
+	Teachers              TeacherSlice    `db:"teachers"`
+	MinEnrollment         Capacity        `db:"min_number"`
+	Capacity              string          `db:"capacity"`
+	Annotation            NullDescription `db:"annotation"`
+	Syllabus              NullDescription `db:"syllabus"`
+	PassingTerms          NullDescription `db:"terms_of_passing"`
+	Literature            NullDescription `db:"literature"`
+	AssesmentRequirements NullDescription `db:"requirements_for_assesment"`
+	EntryRequirements     NullDescription `db:"entry_requirements"`
+	Aim                   NullDescription `db:"aim"`
 }
 
 type Course struct {
