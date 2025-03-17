@@ -4,7 +4,6 @@ import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
 	"strings"
-    "fmt"
     // TODO should use this for sanitizing? might use own policy
     "github.com/microcosm-cc/bluemonday"
 )
@@ -17,17 +16,17 @@ func itos(i int) string {
     return strconv.Itoa(i)
 }
 
-templ Ratings(ratings CourseRatings, courseCode string) {
-    <div id="rating">
-        <p class="text-warning">Under construction</p> // TODO: remove
-        Overall Rating: { ratings.Overall.String() }
-        <button hx-post={ fmt.Sprintf("/course/like/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Like</button>
-        <button hx-post={ fmt.Sprintf("/course/dislike/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
-        Difficulty Rating: { ratings.Difficulty.String() }
-        Workload Rating: { ratings.Workload.String() }
-        Usefulness Rating: { ratings.Usefulness.String() }
-        Fun Rating: { ratings.Fun.String() }
-    </div>
+templ Ratings(course *Course) {
+    // <div id="rating">
+    //     <p class="text-warning">Under construction</p> // TODO: remove
+    //     Overall Rating: { ratings.Overall.String() }
+    //     <button hx-post={ fmt.Sprintf("/course/like/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Like</button>
+    //     <button hx-post={ fmt.Sprintf("/course/dislike/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
+    //     Difficulty Rating: { ratings.Difficulty.String() }
+    //     Workload Rating: { ratings.Workload.String() }
+    //     Usefulness Rating: { ratings.Usefulness.String() }
+    //     Fun Rating: { ratings.Fun.String() }
+    // </div>
 }
 
 templ blueprintAssignment(code string, t text) {
@@ -46,14 +45,14 @@ templ blueprintAssignment(code string, t text) {
             // TODO: make dynamic, NOT 3 fixed years
                 for year := 1; year <= 3; year++ {
                     <li class="mx-3"><button class="dropdown-item text-center"
-                        hx-post={ "/blueprint/course/" + code }  
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` } 
+                        hx-post={ "/blueprint/course/" + code }
+                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` }
                     >
                     { t.YearStr(year) + " " + t.Winter }
                     </button></li>
                     <li class="mx-3"><button class="dropdown-item text-center"
-                        hx-post={ "/blueprint/course/" + code }  
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` } 
+                        hx-post={ "/blueprint/course/" + code }
+                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` }
                     >
                     { t.YearStr(year) + " " + t.Summer }
                     </button></li>
@@ -100,8 +99,8 @@ templ renderSafeContent(content string) {
     }
 }
 
-templ accordionItem(desc Description, id string) {
-    if desc.Content != "" {
+templ accordionItem(desc NullDescription, id string) {
+    if desc.Valid {
     <div class="accordion-item">
         <h2 class="accordion-header">
             <button class="accordion-button fs-4" type="button" data-bs-toggle="collapse" data-bs-target={ "#panel-" + id } aria-expanded="true" aria-controls={ "panel-" + id }>
@@ -146,9 +145,16 @@ templ guarantors(guarantors []Teacher) {
 templ accordion(course *Course, t text) {
     <div class="accordion accordion-flush">
         @accordionItem(course.Annotation, "annotation")
-        @accordionItem(course.CompletionRequirements, "completion-requirements")
-        @accordionItem(course.ExamRequirements, "exam-requirements")
-        @accordionItem(course.Sylabus, "sylabus")
+        @accordionItem(course.Syllabus, "syllabus")
+        @accordionItem(course.PassingTerms, "passing-terms")
+        @accordionItem(course.Literature, "literature")
+        @accordionItem(course.AssesmentRequirements, "assesment-requirements")
+        @accordionItem(course.EntryRequirements, "entry-requirements")
+        @accordionItem(course.Aim, "aim")
+        // @accordionItem(course.Annotation, "annotation")
+        // @accordionItem(course.CompletionRequirements, "completion-requirements")
+        // @accordionItem(course.ExamRequirements, "exam-requirements")
+        // @accordionItem(course.Sylabus, "sylabus")
     </div>
 }
 
@@ -156,7 +162,7 @@ templ Content(course *Course, t text) {
     {{ p = bluemonday.UGCPolicy() }}
     //@Ratings(course.CourseRatings, course.Code)
     // TODO only if not empty/nil/...
-    <div 
+    <div
         id="basic-info"
         class="card"
         style="width: 100%;"

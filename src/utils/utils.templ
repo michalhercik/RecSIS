@@ -9,7 +9,7 @@ templ watermark() {
         position:fixed;
         bottom:50%;
         left:15%;
-        opacity:0.3;
+        opacity:0.1;
         z-index:99;
         color: black;
         pointer-events:none;
@@ -40,7 +40,7 @@ templ Page(title string, t Text) {
         </head>
         <body hx-boost="true">
             // @watermark()
-            @Header(title, t) 
+            @Header(title, t)
             <main>
                 { children... }
             </main>

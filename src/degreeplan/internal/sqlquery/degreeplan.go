@@ -30,6 +30,9 @@ LEFT JOIN courses c ON dp.course_code = c.code
 LEFT JOIN user_blueprint_courses ubc ON ubc.course_code = c.code
 WHERE dp.lang = $2
 AND c.lang = $2
-ORDER BY dp.seq
+AND interchangeability IS NULL
+-- TODO: pick a user selected study or max
+AND bs.start_year = ( SELECT MIN(bs.start_year) FROM user_session s LEFT JOIN bla_studies bs ON s.user_id = bs.user_id )
+ORDER BY dp.bloc_type, dp.seq
 ;
 `

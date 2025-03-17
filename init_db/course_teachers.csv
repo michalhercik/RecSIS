@@ -1,466 +1,347 @@
-"POVINN","UCIT"
-NTIN061,"90906"
-NMAI057,"44027"
-NDMI002,"11098"
-NPRG030,"13270"
-NSWI142,"43653"
-NDBI025,"30014"
-NPRG030,"11369"
-NPRG062,"59496"
-NJAZ091,"58753"
-NJAZ091,"10853"
-NTIN061,"96680"
-NMAI069,"11279"
-NPRG062,"11282"
-NPRG041,"88580"
-NJSF142,"12511"
-NFPL175,"11841"
-NFPL253,"12837"
-NMFP501,"11380"
-NMNM201,"47182"
-NMNM201,"89529"
-NTIN061,"65641"
-NPRG045,"12088"
-NAFY101,"11438"
-NAFY101,"20678"
-NPFL129,"43541"
-NPGR003,"16878"
-NDMI011,"94340"
-NPRG030,"11324"
-NMNM201,"13003"
-NTVY006,"73760"
-NTVY014,"16590"
-NTVY014,"73760"
-NTVY016,"11077"
-NTVY016,"70151"
-NTVY016,"71059"
-NTVY016,"78660"
-NTIN061,"11302"
-NJAZ070,"78657"
-NJAZ072,"58753"
-NJAZ072,"88357"
-NFPL012,"12706"
-NFPL023,"11347"
-NFPL023,"11370"
-NFPL023,"11757"
-NDMI064,"12426"
-NPRG045,"12418"
-NMAI058,"13014"
-NPRG045,"11272"
-NAFY101,"11078"
-NMSA170,"89594"
-NSWI170,"66889"
-NSWI177,"17077"
-NMTD102,"20791"
-NPRG045,"12986"
-NPRG045,"10963"
-NPRG045,"11103"
-NPRG045,"10734"
-NPRG045,"88106"
-NPRG045,"22187"
-NPRG045,"12531"
-NPRG051,"75925"
-NSZZ501,"17187"
-NSZZ501,"17787"
-NTIN060,"12418"
-NTVY015,"70151"
-NTVY017,"11877"
-NFPL188,"10850"
-NSWI170,"65502"
-NTIN061,"12418"
-NPRG041,"11618"
-NMAI057,"13014"
-NTIN061,"11103"
-NFPL011,"11635"
-NJAZ176,"48144"
-NJAZ070,"88357"
-NAFY101,"11620"
-NPGR003,"11804"
-NPRG030,"64406"
-NPRG041,"44325"
-NPRG045,"13027"
-NPRG045,"70580"
-NPRG045,"79287"
-NPRG045,"32286"
-NMAI059,"78699"
-NPRG045,"81948"
-NTVY006,"70151"
-NTVY014,"11077"
-NTVY014,"11671"
-NTVY016,"11152"
-NDMI050,"12406"
-NDMI011,"82348"
-NPRG035,"97996"
-NPRG062,"12406"
-NAIL062,"12948"
-NPRG045,"65502"
-NMAI057,"11306"
-NEVF165,"11320"
-NFPL012,"12988"
-NAST003,"11159"
-NPRG031,"11282"
-NPRG038,"10732"
-NAFY101,"24934"
-NSWI170,"11618"
-NSWI170,"83158"
-NTIN071,"80265"
-NPRG045,"11822"
-NPRG045,"19441"
-NPRG045,"65461"
-NPRG045,"69481"
-NPRG045,"11606"
-NPRG045,"80389"
-NPRG045,"61653"
-NPRG045,"92164"
-NPRG051,"11618"
-NPRG051,"13027"
-NSWI153,"44325"
-NSZZ501,"12731"
-NTIN071,"12418"
-NTVY017,"11239"
-NTIN060,"12406"
-NMAG211,"12324"
-NPRG030,"24426"
-NDMI002,"80381"
-NDMI011,"96762"
-NPRG045,"10876"
-NJAZ091,"23675"
-NJAZ176,"10853"
-NJSF142,"13104"
-NFUF827,"11075"
-NAIL062,"11606"
-NMAI165,"11626"
-NMAI069,"22464"
-NMSA170,"12178"
-NPRG030,"11037"
-NPGR005,"62433"
-NPRG045,"11306"
-NMAI059,"10734"
-NTVY006,"11077"
-NTVY006,"11239"
-NTVY014,"11239"
-NMAI057,"11291"
-NMAI057,"82351"
-NDBI025,"13461"
-NDGF026,"12317"
-NDMI002,"93063"
-NDMI050,"65641"
-NPRG041,"74478"
-NDMI015,"12486"
-NDMI002,"92597"
-NMFP461,"24130"
-NMFP461,"77216"
-NMAG211,"12720"
-NAST003,"11815"
-NAST003,"12149"
-NSWI177,"69479"
-NJAZ074,"11567"
-NMAG211,"11469"
-NJAZ070,"11567"
-NAFY101,"12284"
-NPRG045,"94346"
-NTIN060,"66661"
-NTIN060,"32286"
-NPRG045,"11581"
-NPRG045,"59276"
-NPRG045,"11275"
-NPRG045,"12997"
-NPRG045,"66889"
-NPRG045,"11108"
-NPRG045,"19864"
-NPRG045,"12705"
-NPRG045,"11037"
-NSWI177,"66262"
-NSWI170,"11278"
-NSZZ501,"11765"
-NTIN060,"11302"
-NTIN071,"12442"
-NTVY015,"11239"
-NTVY015,"73760"
-NTVY017,"73760"
-NSWI170,"13027"
-NAIL062,"16584"
-NPRG030,"59496"
-NPRG062,"80265"
-NPRG045,"12755"
-NAIL062,"12755"
-NPRG045,"11040"
-NJAZ091,"12390"
-NJAZ091,"59412"
-NEVF516,"12945"
-NPRG030,"80265"
-NFPL106,"10850"
-NPEP501,"82075"
-NMAI069,"11306"
-NSWI098,"11618"
-NMAI057,"10752"
-NPEP401,"11550"
-NAFY101,"11757"
-NAFY101,"12939"
-NAFY101,"25262"
-NAFY101,"55328"
-NPFL129,"22187"
-NPGR005,"16878"
-NPRG045,"11622"
-NPRG045,"14650"
-NPRG045,"13270"
-NPRG045,"37173"
-NPRG045,"18696"
-NPRG045,"10752"
-NSWI142,"85803"
-NTIN055,"12439"
-NMMB453,"84568"
-NBCM146,"11510"
-NPRG045,"65539"
-NTVY006,"71059"
-NTVY016,"11671"
-NTVY016,"16590"
-NDMI002,"42629"
-NMAI057,"12164"
-NFPL080,"12836"
-NDMI002,"76957"
-NFPL023,"12704"
-NPRG038,"98059"
-NPRG038,"66262"
-NSWI154,"12997"
-NMSA170,"13759"
-NPRG045,"72884"
-NPRG045,"11324"
-NPRG045,"23005"
-NPRG045,"63264"
-NPRG045,"10945"
-NPRG045,"11369"
-NPRG045,"68158"
-NPRG045,"78571"
-NPRG045,"30353"
-NPRG054,"11618"
-NTIN060,"79361"
-NTVY015,"16590"
-NDMI002,"93290"
-NPRG062,"24426"
-NPGR003,"81948"
-NDMI011,"92597"
-NOFY076,"11862"
-NOFY076,"20429"
-NMAI069,"12193"
-NDMI002,"85645"
-NEVF516,"17677"
-NMAT100,"11668"
-NJAZ176,"59412"
-NPEP501,"11811"
-NPRG062,"11037"
-NMAG211,"92814"
-NPRG062,"13270"
-NTIN061,"12948"
-NJAZ074,"59412"
-NMAI042,"62138"
-NAFY101,"17076"
-NPRG036,"19441"
-NPRG045,"32039"
-NPRG045,"11105"
-NPRG045,"23828"
-NPRG045,"83158"
-NPRG045,"75243"
-NPRG045,"24712"
-NPRG045,"10732"
-NDMI011,"82769"
-NSWI141,"13270"
-NTIN061,"66661"
-NDBI025,"12471"
-NTVY006,"11152"
-NTVY006,"11877"
-NTVY006,"16590"
-NTVY014,"78660"
-NPRG045,"10854"
-NDMI002,"96681"
-NPRG045,"11286"
-NJAZ118,"11567"
-NFPL012,"11337"
-NFPL023,"11426"
-NFPL023,"11779"
-NJAZ074,"48144"
-NDMI050,"82769"
-NPRG031,"11324"
-NSWI143,"12087"
-NSWI177,"94223"
-NMAI058,"11291"
-NMAI054,"11105"
-NMNM201,"97188"
-NMAI054,"11279"
-NPRG045,"11278"
-NPRG045,"15807"
-NPRG045,"68318"
-NPRG045,"85843"
-NPRG045,"12423"
-NPRG045,"27386"
-NPRG045,"16878"
-NPRG045,"80619"
-NPRG045,"66262"
-NPRG045,"16394"
-NPRG045,"11433"
-NTIN107,"12439"
-NTVY015,"11077"
-NTVY015,"11877"
-NTVY015,"78660"
-NSWI170,"74478"
-NMAI059,"93290"
-NDMI002,"83709"
-NPRG062,"11369"
-NMAI057,"68975"
-NJAZ091,"11567"
-NJAZ091,"48144"
-NDMI002,"78034"
-NDMI011,"11105"
-NFUF803,"12410"
-NMIN264,"11664"
-NPRG030,"12406"
-NOOE135,"11300"
-NPFL129,"74634"
-NPRG045,"11328"
-NPRG045,"11291"
-NPRG045,"12356"
-NPRG045,"27504"
-NPRG045,"33844"
-NSWI141,"12694"
-NSWI142,"44325"
-NSWI142,"66889"
-NMMB453,"85949"
-NTVY006,"78660"
-NTVY016,"11877"
-NDMI002,"11279"
-NJAZ072,"78657"
-NPRG045,"45589"
-NJAZ040,"11412"
-NEVF165,"11793"
-NTIN060,"65641"
-NPRG043,"12087"
-NSWI170,"24712"
-NPRG031,"64406"
-NPRG045,"11845"
-NMAI054,"79289"
-NJAZ070,"12390"
-NPRG031,"11037"
-NPRG024,"13027"
-NPRG045,"10885"
-NPRG045,"12948"
-NPRG045,"22167"
-NPRG045,"13461"
-NPRG045,"13240"
-NPRG045,"12657"
-NSWI041,"10938"
-NTIN060,"12948"
-NTVY015,"11152"
-NTVY017,"11077"
-NTVY017,"70151"
-NMTP569,"11180"
-NFPL188,"10864"
-NPRG041,"13027"
-NDMI002,"90389"
-NMAI057,"96761"
-NPRG030,"11282"
-NPRG030,"65461"
-NPRG045,"93278"
-NJAZ091,"64280"
-NJAZ091,"88357"
-NMEK603,"11345"
-NPRG041,"24712"
-NAIL062,"14650"
-NJAZ176,"23675"
-NFPL175,"11438"
-NMNM201,"20877"
-NPRG045,"62433"
-NPRG045,"12406"
-NPRG045,"12087"
-NPRG045,"12471"
-NPRG045,"11288"
-NPRG045,"54720"
-NPRG045,"44325"
-NPRG062,"11845"
-NPRG062,"11329"
-NSWI142,"65502"
-NTIN061,"32286"
-NTIN061,"23828"
-NMMB453,"12463"
-NTVY006,"11671"
-NTVY014,"11152"
-NTVY014,"11877"
-NTVY014,"70151"
-NTVY014,"71059"
-NTVY016,"11239"
-NPRG062,"11324"
-NJAZ074,"88357"
-NPRG045,"11618"
-NPRG045,"80246"
-NPRG031,"24426"
-NPRG038,"18696"
-NMAI059,"84593"
-NMAI054,"12193"
-NAFY101,"70426"
-NSWI177,"83603"
-NPRG045,"12117"
-NPRG031,"12406"
-NPRG031,"65461"
-NPRG045,"11063"
-NPRG045,"44350"
-NPRG045,"13860"
-NPRG045,"12672"
-NPRG045,"43541"
-NPRG045,"13037"
-NPRG045,"13232"
-NPRG045,"40505"
-NPRG045,"79494"
-NPRG051,"11278"
-NPRG051,"88580"
-NSWI177,"32039"
-NDMI100,"12406"
-NSZZ501,"11664"
-NSZZ501,"16457"
-NTIN060,"59276"
-NTVY017,"11152"
-NTIN060,"90906"
-NAIL062,"59276"
-NPRG035,"66262"
-NPRG035,"10732"
-NSWI120,"10732"
-NJAZ091,"78657"
-NJAZ091,"68968"
-NPRG062,"65461"
-NMAI057,"12193"
-NJAZ070,"58753"
-NJAZ074,"78657"
-NMAI058,"68975"
-NPRG045,"64406"
-NPRG045,"30014"
-NPRG045,"11282"
-NPRG045,"74478"
-NPRG062,"64406"
-NMNM201,"11668"
-NTVY016,"73760"
-NDMI011,"37173"
-NFPL080,"13439"
-NFPL108,"11303"
-NJAZ072,"12390"
-NBCM154,"10731"
-NMNM201,"60790"
-NPRG045,"92597"
-NPRG031,"59496"
-NTIN060,"82771"
-NSWI170,"10963"
-NTIN071,"12755"
-NPRG045,"11804"
-NPRG045,"75877"
-NPRG045,"60792"
-NPRG045,"11597"
-NPRG045,"74634"
-NPRG045,"16584"
-NPRG045,"78699"
-NSZZ501,"10728"
-NSZZ501,"11914"
-NSZZ501,"20791"
-NTIN071,"16584"
-NTVY015,"71059"
-NTVY017,"16590"
-NTVY017,"71059"
-NTVY017,"78660"
-NTIN071,"11606"
-NTIN060,"80381"
+"KOD","USTAV","FAKULTA","PRIJMENI","JMENO","TITULPRED","TITULZA"
+"59496","32-KSVI","11320",Šefl,Vít,Mgr.,
+"11811","32-KDF","11320",Pavelková,Isabella,doc. PhDr.,CSc.
+"58753","32-KJP","11320",Šafařík,Luděk,RNDr. Mgr.,
+"16590","32-KTV","11320",Kozák,Martin,Mgr.,
+"16457","32-KDM","11320",Moravcová,Vlasta,RNDr.,Ph.D.
+"17076","32-KMF","11320",Kylián,Ondřej,doc. RNDr.,Ph.D.
+"15807","32-UFAL","11320",Popel,Martin,Mgr.,Ph.D.
+"17787","32-KDM","11320",Halas,Zdeněk,Mgr.,"DiS., Ph.D."
+"14650","32-KTIML","11320",Pilát,Martin,doc. Mgr.,Ph.D.
+"13759","32-KPMS","11320",Dvořák,Jiří,doc. RNDr.,Ph.D.
+"16584","32-KTIML","11320",Bulín,Jakub,RNDr.,Ph.D.
+"16878","32-KSVI","11320",Wilkie,Alexander,prof. Dr. techn.,
+"11364","32-KNM","11320",Najzar,Karel,doc. RNDr.,CSc.
+"11369","32-KSVI","11320",Mráz,František,RNDr.,CSc.
+"11370","32-FUUK","11320",Moravec,Pavel,doc. RNDr.,CSc.
+"11380","32-KPMS","11320",Mazurová,Lucie,RNDr.,Ph.D.
+"12480","32-KNM","11320",Kofroň,Josef,doc. RNDr.,CSc.
+"13240","32-KSVI","11320",Blažek,Jan,RNDr.,Ph.D.
+"10875","32-UFAL","11320",Straka,Milan,RNDr.,Ph.D.
+"10876","32-UFAL","11320",Bojar,Ondřej,doc. RNDr.,Ph.D.
+"13003","32-KNM","11320",Kučera,Václav,doc. RNDr.,Ph.D.
+"12149","32-AUUK","11320",Ehlerová,Soňa,RNDr.,Ph.D.
+"12150","32-AUUK","11320",Šubr,Ladislav,doc. RNDr.,Ph.D.
+"12486","32-KAM","11320",Klazar,Martin,doc. RNDr.,Dr.
+"12491","32-KDM","11320",Kašpar,Jan,RNDr.,CSc.
+"13037","32-KDSS","11320",Kára,Jan,RNDr.,Ph.D.
+"11664","32-KDM","11320",Slavík,Antonín,doc. RNDr.,Ph.D.
+"11668","32-KNM","11320",Hnětynková,Iveta,doc. RNDr.,Ph.D.
+"11671","32-KTV","11320",Brož,Jaroslav,Mgr.,
+"11037","32-KSVI","11320",Bílý,Tomáš,Mgr.,
+"12180","32-KFKL","11320",Turek,Ilja,doc. RNDr.,DrSc.
+"12428","32-MUUK","11320",Lávička,Roman,doc. RNDr.,Ph.D.
+"12434","32-KA","11320",Kůrka,Petr,prof. RNDr.,CSc.
+"11040","32-UFAL","11320",Pecina,Pavel,doc. RNDr.,Ph.D.
+"11063","32-IUUK","11320",Koucký,Michal,prof. Mgr.,Ph.D.
+"11067","32-UFAL","11320",Mírovský,Jiří,RNDr.,Ph.D.
+"11075","32-KDF","11320",Koupilová,Zdeňka,RNDr.,Ph.D.
+"12356","32-UFAL","11320",Zeman,Daniel,doc. RNDr.,Ph.D.
+"12437","32-KFPP","11320",Kudrna,Pavel,doc. Mgr.,Dr.
+"12439","32-KAM","11320",Kučera,Luděk,prof. RNDr.,DrSc.
+"12442","32-UFAL","11320",Kuboň,Vladislav,doc. RNDr.,Ph.D.
+"12460","32-KAM","11320",Kratochvíl,Jan,prof. RNDr.,CSc.
+"12463","32-KA","11320",Krajíček,Jan,prof. RNDr.,DrSc.
+"12465","32-MUUK","11320",Kowalski,Oldřich,prof. RNDr.,DrSc.
+"12466","32-KDSS","11320",Koubková,Alena,RNDr.,CSc.
+"12947","32-KDM","11320",Bečvář,Jindřich,doc. RNDr.,CSc.
+"12948","32-KTIML","11320",Hric,Jan,RNDr.,
+"11500","32-KNM","11320",Felcman,Jiří,doc. RNDr.,CSc.
+"11510","32-KVOF","11320",Gabriel,Petr,RNDr.,Ph.D.
+"11518","32-KPMS","11320",Hlávka,Zdeněk,doc. RNDr.,Ph.D.
+"12098","32-KPMS","11320",Kopa,Miloš,doc. RNDr. Ing.,Ph.D.
+"12117","32-KAM","11320",Hubička,Jan,doc. Mgr.,Ph.D.
+"12129","32-KA","11320",Příhoda,Pavel,doc. Mgr.,Ph.D.
+"12130","32-KA","11320",Růžička,Pavel,doc. Mgr.,Ph.D.
+"11567","32-KJP","11320",Hořká,Zuzana,Mgr.,
+"11572","32-KA","11320",Holub,Štěpán,doc. Mgr.,Ph.D.
+"12657","32-KSI","11320",Hoksza,David,doc. RNDr.,Ph.D.
+"11272","32-KSI","11320",Holubová,Irena,doc. RNDr.,Ph.D.
+"11275","32-UFAL","11320",Žabokrtský,Zdeněk,prof. Ing.,Ph.D.
+"11279","32-IUUK","11320",Kantor,Ida,,"M.Sc., Ph.D."
+"11282","32-KSVI","11320",Pergel,Martin,RNDr.,Ph.D.
+"11286","32-IUUK","11320",Dvořák,Zdeněk,prof. Mgr.,Ph.D.
+"11288","32-KDSS","11320",Kofroň,Jan,doc. RNDr.,Ph.D.
+"11291","32-KAM","11320",Hladík,Milan,prof. Mgr.,Ph.D.
+"11293","32-KA","11320",Barto,Libor,prof. Mgr.,Ph.D.
+"11300","32-FUUK","11320",Veis,Martin,RNDr.,Ph.D.
+"11302","32-KTIML","11320",Kučera,Petr,RNDr.,Ph.D.
+"11303","32-FUUK","11320",Lipavský,Pavel,prof.,CSc.
+"11306","32-IUUK","11320",Pangrác,Ondřej,RNDr.,Ph.D.
+"11467","32-MUUK","11320",Souček,Vladimír,prof. RNDr.,DrSc.
+"11469","32-MUUK","11320",Somberg,Petr,doc. RNDr.,Ph.D.
+"11471","32-KFPP","11320",Sobotík,Pavel,doc. RNDr.,CSc.
+"11476","32-KFNT","11320",Skrbek,Ladislav,prof. RNDr.,DrSc.
+"11910","32-KA","11320",Marković,Petar,,
+"13439","32-KFM","11320",Mathis,Kristián,prof. RNDr.,"Ph.D., DrSc."
+"11337","32-KFKL","11320",Kužel,Radomír,prof. RNDr.,CSc.
+"12969","32-KFM","11320",Trojanová,Zuzanka,prof. RNDr.,DrSc.
+"11347","32-KMF","11320",Biederman,Hynek,prof. RNDr.,DrSc.
+"11354","32-IUUK","11320",Sgall,Jiří,prof. RNDr.,DrSc.
+"11412","32-KJP","11320",Vachalovská,Lenka,PhDr.,CSc.
+"11420","32-KA","11320",Tůma,Jiří,doc. RNDr.,DrSc.
+"11422","32-MUUK","11320",Trnková,Věra,prof. RNDr.,DrSc.
+"11239","32-KTV","11320",Jaroš,Tomáš,Mgr.,
+"11426","32-KMF","11320",Toušková,Jana,doc. RNDr.,CSc.
+"12674","32-KMF","11320",Toušek,Jiří,doc. RNDr.,CSc.
+"11438","32-KFNT","11320",Štěpánková,Helena,prof. RNDr.,CSc.
+"11447","32-KFM","11320",Šíma,Vladimír,prof. RNDr.,CSc.
+"11310","32-UFAL","11320",Lopatková,Markéta,doc. RNDr.,Ph.D.
+"12755","32-KTIML","11320",Vomlelová,Marta,Mgr.,Ph.D.
+"11319","32-STUD","11320",Čapková,Pavla,prof. RNDr.,DrSc.
+"11320","32-KFPP","11320",Přech,Lubomír,doc. RNDr.,Dr.
+"11324","32-KSVI","11320",Holan,Tomáš,RNDr.,Ph.D.
+"11327","32-UCJF","11320",Cejnar,Pavel,prof. RNDr.,"Dr., DSc."
+"11328","32-KTIML","11320",Mrázová,Iveta,doc. RNDr.,CSc.
+"11329","32-KSVI","11320",Töpfer,Pavel,doc. RNDr.,CSc.
+"11757","32-KFNT","11320",Rotter,Miloš,doc. RNDr.,CSc.
+"11804","32-KSVI","11320",Pelikán,Josef,RNDr.,
+"11815","32-AUUK","11320",Palouš,Jan,prof. RNDr.,DrSc.
+"11822","32-KTIML","11320",Obdržálek,David,RNDr.,Ph.D.
+"12531","32-UFAL","11320",Straňák,Pavel,Mgr. Bc.,Ph.D.
+"11618","32-KSI","11320",Bednárek,David,RNDr.,Ph.D.
+"11622","32-KTIML","11320",Barták,Roman,prof. RNDr.,Ph.D.
+"11626","32-KPMS","11320",Antoch,Jaromír,prof. RNDr.,CSc.
+"13860","32-KSVI","11320",Gemrot,Jakub,Mgr.,Ph.D.
+"12939","32-KMF","11320",Shukurov,Andrey,prof. Ing.,Ph.D.
+"11152","32-KTV","11320",Vaníčková,Zuzana,Mgr.,
+"11827","32-KNM","11320",Strakoš,Zdeněk,prof. Ing.,DrSc.
+"12694","32-SISAL","11320",Forst,Libor,RNDr.,
+"11765","32-KDM","11320",Robová,Jarmila,doc. RNDr.,CSc.
+"11769","32-MUUK","11320",Rataj,Jan,prof. RNDr.,CSc.
+"11779","32-KMF","11320",Prokeš,Jan,RNDr.,CSc.
+"11635","32-KFKL","11320",Carva,Karel,doc. RNDr.,Ph.D.
+"11793","32-KFPP","11320",Plašil,Radek,doc. RNDr.,Ph.D.
+"13014","32-KAM","11320",Kolman,Petr,doc. Mgr.,Ph.D.
+"12324","32-MUUK","11320",Šír,Zbyněk,doc. RNDr.,Ph.D.
+"11222","32-KPMS","11320",Jurečková,Jana,prof. RNDr.,DrSc.
+"11224","32-KTIML","11320",Koubek,Václav,prof. RNDr.,DrSc.
+"11486","32-AUUK","11320",Wolf,Marek,doc. RNDr.,CSc.
+"12945","32-KFPP","11320",Ošťádal,Ivan,prof. RNDr.,CSc.
+"12511","32-UCJF","11320",Kampf,Karol,prof. RNDr.,Ph.D.
+"12226","32-KPMS","11320",Klebanov,Lev,prof.,DrSc.
+"11547","32-SISAL","11320",Jákl,Vojtěch,RNDr.,
+"11550","32-KDF","11320",Chvál,Martin,doc. PhDr.,Ph.D.
+"12731","32-KDM","11320",Rmoutil,Martin,RNDr.,Ph.D.
+"11581","32-UFAL","11320",Vidová Hladká,Barbora,doc. Mgr.,Ph.D.
+"11597","32-UFAL","11320",Hana,Jiří,RNDr.,Ph.D.
+"12986","32-KSVI","11320",Brom,Cyril,doc. Mgr.,Ph.D.
+"11862","32-UTF","11320",Čížek,Martin,doc. RNDr.,Ph.D.
+"12704","32-KFNT","11320",Čížek,Jakub,prof. Mgr.,Ph.D.
+"12706","32-KFM","11320",Cieslar,Miroslav,doc. RNDr.,CSc.
+"11105","32-IUUK","11320",Jelínek,Vít,doc. RNDr.,Ph.D.
+"11115","32-KAM","11320",Krylová,Naděžda,RNDr.,CSc.
+"10850","32-KFKL","11320",Holý,Václav,prof. RNDr.,CSc.
+"12988","32-KFKL","11320",Daniš,Stanislav,doc. RNDr.,Ph.D.
+"10853","32-KJP","11320",Kashdan,Jay Michael,,BA
+"10854","32-KDSS","11320",Hnětynka,Petr,doc. RNDr.,Ph.D.
+"10863","32-KFKL","11320",Prchal,Jiří,doc. RNDr.,Ph.D.
+"10864","32-KFKL","11320",Dopita,Milan,RNDr.,Ph.D.
+"12087","32-KDSS","11320",Bulej,Lubomír,doc. Ing.,Ph.D.
+"12088","32-KDSS","11320",Bureš,Tomáš,prof. RNDr.,Ph.D.
+"12090","32-KMA","11320",Honzík,Petr,doc. Mgr.,Ph.D.
+"12406","32-KAM","11320",Mareš,Martin,Mgr.,Ph.D.
+"12410","32-KDF","11320",Mandíková,Dana,RNDr.,CSc.
+"12418","32-KTIML","11320",Majerech,Vladan,Mgr.,Dr.
+"11599","32-KFA","11320",Halenka,Tomáš,doc. RNDr.,CSc.
+"11601","32-UFAL","11320",Hajičová,Eva,prof. PhDr.,DrSc.
+"11606","32-KTIML","11320",Gregor,Petr,doc. Mgr.,Ph.D.
+"11610","32-KSI","11320",Bezstarosti,Pavel,Mgr.,
+"10938","32-KSI","11320",Nečaský,Martin,doc. Mgr.,Ph.D.
+"12997","32-KDSS","11320",Parízek,Pavel,doc. RNDr.,Ph.D.
+"10725","32-KFKL","11320",Javorský,Pavel,prof. Mgr.,Dr.
+"10728","32-KDM","11320",Hromadová,Jana,RNDr.,Ph.D.
+"10731","32-KCHFO","11320",Zamastil,Jaroslav,doc. Mgr.,Ph.D.
+"10732","32-KDSS","11320",Ježek,Pavel,Mgr.,Ph.D.
+"10734","32-IUUK","11320",Šámal,Robert,doc. Mgr.,Ph.D.
+"11614","32-KPMS","11320",Beneš,Viktor,prof. RNDr.,DrSc.
+"11845","32-KSVI","11320",Dvořák,Tomáš,doc. RNDr.,CSc.
+"11846","32-KDF","11320",Dvořák,Leoš,doc. RNDr.,CSc.
+"11358","32-IUUK","11320",Nešetřil,Jaroslav,prof. RNDr.,DrSc.
+"18696","32-KDSS","11320",Petříček,Tomáš,Mgr.,Ph.D.
+"23675","32-KJP","11320",Ferner,Dennis,,BA
+"19864","32-UFAL","11320",Novák,Michal,Mgr.,Ph.D.
+"22187","32-UFAL","11320",Musil,Tomáš,Mgr.,
+"24934","32-KFNT","11320",Šoltésová,Mária,RNDr.,Ph.D.
+"24426","32-KSVI","11320",Šejnoha,Jiří,Mgr.,
+"70717","32-KDF","11320",Straková,Jana,doc. RNDr.,Ph.D.
+"25262","32-KFNT","11320",Hruška,Petr,RNDr.,Ph.D.
+"22167","32-KTIML","11320",Ivanová,Marika,Mgr.,Ph.D.
+"23005","32-UFAL","11320",Hajič,Jan,Mgr.,Ph.D.
+"82075","32-KDF","11320",Blaho Vitošková,Veronika,PhDr.,Ph.D.
+"27386","32-UFAL","11320",Dušek,Ondřej,Mgr. et Mgr.,Ph.D.
+"33844","32-KSVI","11320",Hannemann,Tereza,Mgr.,Ph.D.
+"20678","32-KFNT","11320",Matoušek,Jan,Mgr.,Ph.D.
+"11459","32-FUUK","11320",Strunecká,Anna,prof. RNDr.,DrSc.
+"30014","32-KSI","11320",Peška,Ladislav,Mgr.,Ph.D.
+"32286","32-IUUK","11320",Koutecký,Martin,Mgr.,Ph.D.
+"32288","32-KDF","11320",Hruška,Viktor,Mgr. BcA.,
+"12836","32-KFM","11320",Dobroň,Patrik,doc. Ing.,Ph.D.
+"22464","32-IUUK","11320",Goodall,Andrew,,D.Phil.
+"24712","32-KSI","11320",Svoboda,Martin,RNDr.,Ph.D.
+"13461","32-KSI","11320",Lokoč,Jakub,doc. RNDr.,Ph.D.
+"11103","32-KTIML","11320",Fink,Jiří,RNDr.,Ph.D.
+"20791","32-KDM","11320",Škorpilová,Martina,RNDr.,Ph.D.
+"11098","32-KAM","11320",Tancer,Martin,prof. RNDr.,Ph.D.
+"23828","32-IUUK","11320",Veselý,Pavel,Mgr.,Ph.D.
+"28547","32-KPMS","11320",Večeř,Jan,doc. RNDr.,Ph.D.
+"17077","32-KSI","11320",Galgonek,Jakub,RNDr.,Ph.D.
+"10954","32-KMA","11320",Vlasák,Václav,RNDr.,Ph.D.
+"16543","32-KMA","11320",Vejnar,Benjamin,doc. Mgr.,Ph.D.
+"17393","32-KFNT","11320",Římal,Václav,Mgr.,Ph.D.
+"16634","32-KSVI","11320",Šisler,Vít,doc. Mgr.,Ph.D.
+"12178","32-KPMS","11320",Pawlas,Zbyněk,doc. RNDr.,Ph.D.
+"13027","32-KSI","11320",Zavoral,Filip,RNDr.,Ph.D.
+"11345","32-KPMS","11320",Lachout,Petr,doc. RNDr.,CSc.
+"11441","32-FUUK","11320",Štěpánek,Josef,prof. RNDr.,CSc.
+"13359","32-KFA","11320",Huszár,Peter,doc. Mgr.,Ph.D.
+"12720","32-MUUK","11320",Šmíd,Dalibor,Mgr.,Ph.D.
+"12740","32-KNM","11320",Vlasák,Miloslav,RNDr.,Ph.D.
+"12837","32-KFKL","11320",Horák,Lukáš,Mgr.,Ph.D.
+"19441","32-KSI","11320",Klímek,Jakub,doc. RNDr.,Ph.D.
+"43653","32-KSI","11320",Sixtová,Ivana,Mgr.,
+"40505","32-KSVI","11320",Kolek,Lukáš,Mgr.,Ph.D.
+"44027","32-KAM","11320",Garajová,Elif,Mgr.,Ph.D.
+"47182","32-KNM","11320",Balázsová,Monika,RNDr.,Ph.D.
+"48144","32-KJP","11320",Good,Christopher Donald,,BA
+"80619","32-KAM","11320",Sychrovský,David,Mgr.,
+"59276","32-KTIML","11320",Švancara,Jiří,RNDr.,Ph.D.
+"59412","32-KJP","11320",Simpson,Ryan,,BA
+"60792","32-IUUK","11320",Hubáček,Pavel,Mgr.,Ph.D.
+"11841","32-KFNT","11320",Englich,Jiří,prof. RNDr.,DrSc.
+"12390","32-KJP","11320",Bubeníková,Miluša,PhDr.,Ph.D.
+"24130","32-KPMS","11320",Kozmík,Václav,RNDr.,Ph.D.
+"60790","32-KNM","11320",Outrata,Michal,Mgr.,Ph.D.
+"12164","32-KAM","11320",Fiala,Jiří,doc. RNDr.,Ph.D.
+"10885","32-KSI","11320",Skopal,Tomáš,prof. RNDr.,Ph.D.
+"62774","32-KSI","11320",Faltín,Tomáš,Mgr.,Ph.D.
+"12672","32-KDSS","11320",Tůma,Petr,prof. Ing.,Dr.
+"61653","32-KSVI","11320",Schier,Jan,Ing.,Dr.
+"27504","32-UFAL","11320",Rosa,Rudolf,Mgr.,Ph.D.
+"65539","32-UFAL","11320",Macháček,Dominik,Mgr.,Ph.D.
+"62433","32-KSVI","11320",Šikudová,Elena,doc. RNDr.,Ph.D.
+"65502","32-KSI","11320",Stenchlák,Štěpán,Mgr.,
+"66889","32-KSI","11320",Bártík,Jáchym,Mgr.,
+"66661","32-IUUK","11320",Domes,Tomáš,Mgr.,
+"53799","32-KAM","11320",Feldmann,Andreas Emil,doc.,Dr.
+"44350","32-KSVI","11320",Kotera,Jan,RNDr.,Ph.D.
+"65461","32-KDSS","11320",Töpfer,Michal,RNDr.,
+"70151","32-KTV","11320",Pospíšilová,Jana,Mgr.,
+"75877","32-KTIML","11320",Macková,Kateřina,RNDr.,
+"68968","32-KJP","11320",Strouhalová,Dita,Mgr.,
+"70580","32-KSVI","11320",Yaghobová,Anna,Mgr.,
+"67236","32-KSVI","11320",Iser,Tomáš,Mgr.,Ph.D.
+"68975","32-IUUK","11320",Penev,Irena,,Ph.D.
+"71059","32-KTV","11320",Šafr,Milan,Mgr.,
+"70426","32-KFNT","11320",Petrov,Oleg,,Dr.
+"25006","32-KCHFO","11320",Patkóš,Vojtěch,Mgr.,Ph.D.
+"69479","32-KTIML","11320",Ondráček,Lukáš,Mgr.,
+"45589","32-UFAL","11320",Helcl,Jindřich,Mgr.,Ph.D.
+"73760","32-KTV","11320",Šodek,Pavel,Mgr.,
+"13270","32-KSVI","11320",Pešková,Klára,Mgr.,Ph.D.
+"76957","32-IUUK","11320",Hons,Tomáš,Mgr.,
+"12193","32-KAM","11320",Maxová,Jana,RNDr.,Ph.D.
+"12317","32-KG","11320",Holota,Petr,,
+"17677","32-KFPP","11320",Setvín,Martin,doc. Mgr.,Ph.D.
+"11563","32-MUUK","11320",Hron,Jaroslav,RNDr.,Ph.D.
+"75243","32-KSVI","11320",Šimůnek,Petr,Mgr.,
+"30353","32-KSVI","11320",Novozámský,Adam,Ing.,Ph.D.
+"74478","32-KSI","11320",Koupil,Pavel,Ing.,Ph.D.
+"11180","32-KPMS","11320",Kupsa,Michal,Mgr.,
+"20429","32-UTF","11320",Benda,Jakub,Mgr.,Ph.D.
+"74634","32-UFAL","11320",Kasner,Zdeněk,Ing.,Ph.D.
+"32039","32-KDSS","11320",Horký,Vojtěch,Mgr.,Ph.D.
+"11877","32-KTV","11320",Paulík,Marek,PhDr.,
+"11108","32-KAM","11320",Kynčl,Jan,doc. Mgr.,Ph.D.
+"94223","32-KDSS","11320",Fuglík,Viktor,PhDr.,Ph.D.
+"77216","32-KPMS","11320",Teller,Marek,,
+"78657","32-KJP","11320",Krejčová,Ela,Mgr.,Ph.D.
+"78660","32-KTV","11320",Horák,Tomáš,Mgr.,
+"78699","32-KAM","11320",Tyomkyn,Mykhaylo,doc.,Ph.D.
+"12345","32-KA","11320",Žemlička,Jan,doc. Mgr. et Mgr.,Ph.D.
+"43541","32-UFAL","11320",Libovický,Jindřich,Mgr.,Ph.D.
+"78571","32-UFAL","11320",Mayer,Jiří,Mgr.,
+"78034","32-KA","11320",Zindulka,Mikuláš,Mgr.,
+"55328","32-KMF","11320",Nikitin,Daniil,,Ph.D.
+"12284","32-KFNT","11320",Lang,Jan,doc. RNDr.,Ph.D.
+"11849","32-KDF","11320",Drozd,Zdeněk,doc. RNDr.,Ph.D.
+"66262","32-KDSS","11320",Kliber,Filip,Mgr.,
+"65641","32-KAM","11320",Konczycki,Kate,Mgr.,
+"11077","32-KTV","11320",Teplý,Jiří,Mgr.,
+"64406","32-KSVI","11320",Dingle,Adam,,M.Sc.
+"37173","32-KAM","11320",Balko,Martin,doc. RNDr.,Ph.D.
+"12471","32-KSI","11320",Kopecký,Michal,RNDr.,Ph.D.
+"80381","32-IUUK","11320",Bhattacharya,Sudatta,,M.Sc.
+"79287","32-KSVI","11320",Rózsa,Tibor,Ing.,
+"20877","32-KNM","11320",Papež,Jan,RNDr.,Ph.D.
+"42629","32-KAM","11320",Tiwary,Hans Raj,doc.,"M.Sc., Ph.D."
+"11620","32-FUUK","11320",Baumruk,Vladimír,prof. RNDr.,DrSc.
+"11795","32-FUUK","11320",Plášek,Jaromír,prof. RNDr.,CSc.
+"12725","32-UFAL","11320",Zikánová,Šárka,PhDr.,Ph.D.
+"10945","32-IUUK","11320",Hartman,David,doc. Ing. et Ing.,Ph.D. et Ph.D.
+"80246","32-KSVI","11320",Guba,Peter,Mgr.,
+"80389","32-KSVI","11320",Karella,Tomáš,Mgr.,
+"17187","32-KDM","11320",Surynková,Petra,RNDr.,Ph.D.
+"80265","32-KTIML","11320",Mestek,Jakub,Mgr.,
+"68318","32-UFAL","11320",Kvapilíková,Ivana,Mgr.,Ph.D.
+"62138","32-KNM","11320",Pozza,Stefano,,"Dr., Ph.D."
+"83603","32-KDSS","11320",Abdullah,Milad Ashqi,,
+"54720","32-KSVI","11320",Černý,Vojtěch,Mgr.,
+"84568","32-KA","11320",Ježil,Ondřej,Mgr.,
+"84593","32-KAM","11320",Kucheriya,Gaurav Sunil,,M.Sc.
+"83709","32-KAM","11320",Grinerová,Klára,Bc.,
+"68435","32-KPMS","11320",Mizera,Ivan,prof. RNDr.,CSc.
+"83158","32-KSI","11320",Dokoupil,Patrik,RNDr.,
+"82769","32-KAM","11320",Kalvoda,Jiří,Bc.,
+"82771","32-KAM","11320",Káně,Vojtěch,Bc.,
+"82348","32-IUUK","11320",Mikšaník,David,Mgr.,
+"85645","32-KAM","11320",Gaďurek,Vojtěch,Bc.,
+"85949","32-KA","11320",Narusevych,Mykyta,Mgr.,
+"89594","32-KPMS","11320",Procházka,Vít,Ing.,Ph.D.
+"11321","32-KDM","11320",Šarounová,Alena,PhDr.,CSc.
+"89529","32-MUUK","11320",Blechta,Jan,Mgr.,Ph.D.
+"88357","32-KJP","11320",Roupcová,Jana,Mgr.,MBA
+"88580","32-KDSS","11320",Klepl,Jiří,Mgr.,
+"88106","32-KSVI","11320",Knotek,Jaroslav,Mgr.,
+"90906","32-KAM","11320",Glišić,Jelena,Mgr.,
+"92597","32-IUUK","11320",Tkadlec,Josef,Bc.,Ph.D.
+"92814","32-MUUK","11320",Kotrbatý,Jan,Dr. rer. nat. Ing.,
+"93278","32-KSVI","11320",Šosvald,David,Mgr.,
+"90389","32-KAM","11320",Dohnalová,Barbora,Bc.,
+"93290","32-IUUK","11320",Sabater Rojas,Lluís,,
+"10752","32-KAM","11320",Černý,Martin,RNDr.,
+"93063","32-KAM","11320",Antić,Todor,Mgr.,
+"93912","32-KAM","11320",Kotecký,Cyril,Bc.,
+"92164","32-UFAL","11320",Balloccu,Simone,,Ph.D.
+"97188","32-KNM","11320",Hammerbauer,Tomáš,Mgr.,
+"94340","32-IUUK","11320",Zamani,Hadi,,M.Sc.
+"96761","32-KAM","11320",Chudý,Vladimír,Bc.,
+"96762","32-KAM","11320",Lepič,Václav,Bc.,
+"94346","32-KTIML","11320",Edelkamp,Stefan,,Dr. rer. nat.
+"11309","32-KTIML","11320",Neruda,Roman,Mgr.,CSc.
+"96680","32-KAM","11320",Kastl,Filip,Bc.,
+"96681","32-KAM","11320",Martinek,Petr,Bc.,
+"98090","32-KSVI","11320",Bouali,Kassem Anis,,M.Sc.
+"98099","32-KAM","11320",Haluška,Radovan,Mgr.,
+"97996","32-KDSS","11320",Koucký,Jakub,Bc.,
+"98059","32-KDSS","11320",Brabec,Matyáš,Mgr.,
+"55445","32-KNM","11320",Henclová,Kateřina,RNDr.,
+"99472","32-KAM","11320",Oschmann,Florian,,Ph.D.
+"13232","32-UFAL","11320",Týnovský,Miroslav,Mgr.,
+"99426","32-KAM","11320",Turek,Tomáš,Bc.,
+"11078","32-KFNT","11320",Chlan,Vojtěch,doc. RNDr.,Ph.D.
+"11852","32-KNM","11320",Dolejší,Vít,prof. RNDr.,"Ph.D., DSc."
+"16918","32-KAM","11320",Klimošová,Tereza,Mgr.,Ph.D.
+"11278","32-SISAL","11320",Yaghob,Jakub,RNDr.,Ph.D.
+"12426","32-KAM","11320",Loebl,Martin,prof. RNDr.,CSc.
+"64280","32-KJP","11320",Steidlová,Lucie,Mgr.,Ph.D.
+"13104","32-UCJF","11320",Kolesár,Marián,Mgr.,Ph.D.
+"13056","32-KNM","11320",Tůma,Miroslav,prof. Ing.,CSc.
+"10963","32-KDSS","11320",Kruliš,Martin,doc. RNDr.,Ph.D.
+"81948","32-KSVI","11320",Tódová,Lucia,Mgr.,
+"44325","32-KSI","11320",Škoda,Petr,Mgr.,Ph.D.
+"82351","32-KAM","11320",Lorenc,Matyáš,Mgr.,
+"12705","32-KTIML","11320",Čepek,Ondřej,prof. RNDr.,Ph.D.
+"82457","32-KAM","11320",Vokálová,Kateřina,Bc.,
+"11159","32-AUUK","11320",Wünsch,Richard,Mgr.,Ph.D.
+"79289","32-KAM","11320",Havelka,Jonáš,Bc. et Bc.,

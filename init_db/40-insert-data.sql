@@ -3,40 +3,40 @@ FROM '/docker-entrypoint-initdb.d/faculties.csv'
 DELIMITER ','
 CSV HEADER;
 
-COPY teachers(sis_id,department,faculty,last_name,first_name,title_before,title_after)
-FROM '/docker-entrypoint-initdb.d/teachers.csv'
-DELIMITER ','
-CSV HEADER;
+-- COPY teachers(sis_id,department,faculty,last_name,first_name,title_before,title_after)
+-- FROM '/docker-entrypoint-initdb.d/UCIT.csv'
+-- DELIMITER ','
+-- CSV HEADER;
 
-COPY old_courses(code,name_cs,name_en,valid_from,valid_to,faculty,guarantor,taught,start_semester,semester_count,taught_lang,lecture_range1,seminar_range1,lecture_range2,seminar_range2,range_unit,exam_type,credits,teacher1,teacher2,teacher3,min_number,capacity)
-FROM '/docker-entrypoint-initdb.d/courses.csv'
-DELIMITER ','
-CSV HEADER;
+-- COPY old_courses(code,name_cs,name_en,valid_from,valid_to,faculty,guarantor,taught,start_semester,semester_count,taught_lang,lecture_range1,seminar_range1,lecture_range2,seminar_range2,range_unit,exam_type,credits,teacher1,teacher2,teacher3,min_number,capacity)
+-- FROM '/docker-entrypoint-initdb.d/POVINN.csv'
+-- DELIMITER ','
+-- CSV HEADER;
 
-COPY classes(course,class)
-FROM '/docker-entrypoint-initdb.d/classes.csv'
-DELIMITER ','
-CSV HEADER;
+-- COPY classes(course,class)
+-- FROM '/docker-entrypoint-initdb.d/classes.csv'
+-- DELIMITER ','
+-- CSV HEADER;
 
-COPY classifications(course,classification)
-FROM '/docker-entrypoint-initdb.d/classifications.csv'
-DELIMITER ','
-CSV HEADER;
+-- COPY classifications(course,classification)
+-- FROM '/docker-entrypoint-initdb.d/classifications.csv'
+-- DELIMITER ','
+-- CSV HEADER;
 
-COPY requisites(course,requisite_type,requisite,from_year,to_year)
-FROM '/docker-entrypoint-initdb.d/requisities.csv'
-DELIMITER ','
-CSV HEADER;
+-- COPY requisites(course,requisite_type,requisite,from_year,to_year)
+-- FROM '/docker-entrypoint-initdb.d/requisities.csv'
+-- DELIMITER ','
+-- CSV HEADER;
 
-COPY course_texts(course,text_type,lang,title,content,audience)
-FROM '/docker-entrypoint-initdb.d/course_texts.csv'
-DELIMITER ','
-CSV HEADER;
+-- COPY course_texts(course,text_type,lang,title,content,audience)
+-- FROM '/docker-entrypoint-initdb.d/course_texts.csv'
+-- DELIMITER ','
+-- CSV HEADER;
 
-COPY course_teachers(course, teacher)
-FROM '/docker-entrypoint-initdb.d/course_teachers.csv'
-DELIMITER ','
-CSV HEADER;
+-- COPY course_teachers(course, teacher)
+-- FROM '/docker-entrypoint-initdb.d/UCIT_ROZVRH.csv'
+-- DELIMITER ','
+-- CSV HEADER;
 
 -- COPY degree_plans(code, plan_year, course, bloc_code, bloc_type, bloc_limit)
 -- COPY degree_plans(code, plan_year, lang, blocs)
@@ -45,17 +45,17 @@ FROM '/docker-entrypoint-initdb.d/transformed_degree_plan.csv'
 DELIMITER ','
 CSV HEADER;
 
-COPY degree_programmes(code, name_cs, name_en, faculty, program_type, program_form, graduate_profile_cs, graduate_profile_en, lang)
-FROM '/docker-entrypoint-initdb.d/degree_programmes.csv'
-DELIMITER ','
-CSV HEADER;
+-- COPY degree_programmes(code, name_cs, name_en, faculty, program_type, program_form, graduate_profile_cs, graduate_profile_en, lang)
+-- FROM '/docker-entrypoint-initdb.d/degree_programmes.csv'
+-- DELIMITER ','
+-- CSV HEADER;
 
-COPY studies(sis_id, student, faculty1, faculty2, study_type, study_form, study_specialization, enrollment, study_state, study_state_date, study_year, degree_plan)
-FROM '/docker-entrypoint-initdb.d/studies.csv'
-DELIMITER ','
-CSV HEADER;
+-- COPY studies(sis_id, student, faculty1, faculty2, study_type, study_form, study_specialization, enrollment, study_state, study_state_date, study_year, degree_plan)
+-- FROM '/docker-entrypoint-initdb.d/studies.csv'
+-- DELIMITER ','
+-- CSV HEADER;
 
-COPY courses(title,code,valid_from,valid_to,guarantor,taught,start_semester,semester_count,taught_lang,lecture_range1,seminar_range1,lecture_range2,seminar_range2,range_unit,exam_type,credits,min_number,capacity,lang,guarantors,annotation,aim,requirements,syllabus,teachers,faculty)
+COPY courses(title,code,valid_from,valid_to,guarantor,taught,start_semester,semester_count,lecture_range1,seminar_range1,lecture_range2,seminar_range2,range_unit,exam_type,credits,min_number,capacity,lang,taught_lang,guarantors,annotation,aim,terms_of_passing,literature,requirements_for_assesment,syllabus,entry_requirements,teachers,faculty)
 FROM '/docker-entrypoint-initdb.d/courses_transformed.csv'
 DELIMITER ','
 CSV HEADER;
@@ -326,7 +326,33 @@ SET blueprint = jsonb_build_object('unassigned', '[]', 'assigned', jsonb_build_a
 WHERE user_id = 81411247
 AND lang = 'en';
 
-INSERT INTO course_ratings(user_id, course_code, overall_rating, difficulty_rating, workload_rating, usefulness_rating, fun_rating)
+INSERT INTO course_overall_ratings(user_id, course_code, rating)
 VALUES
-    (81411247, 'NDMI002', 1, 3, 4, 5, 2),
-    (81411247, 'NDMI050', 0, 1, 1, 1, 3);
+    (81411247, 'NDMI002', 1),
+    (81411247, 'NDMI050', 0);
+
+INSERT INTO course_rating_categories(code, lang, title)
+VALUES
+    (1, 'cs', 'Náročnost'),
+    (2, 'cs', 'Přínosnost'),
+    (3, 'cs', 'Zajímavost'),
+    (4, 'cs', 'Zábava'),
+    (5, 'cs', 'Zátěž'),
+    (1, 'en', 'Difficulty'),
+    (2, 'en', 'Usefulness'),
+    (3, 'en', 'Interest'),
+    (4, 'en', 'Fun'),
+    (5, 'en', 'Workload');
+
+INSERT INTO course_ratings(user_id, course_code, category_code, rating)
+VALUES
+    (81411247, 'NDMI002', 1, 1),
+    (81411247, 'NDMI002', 2, 4),
+    (81411247, 'NDMI002', 3, 3),
+    (81411247, 'NDMI002', 4, 2),
+    (81411247, 'NDMI002', 5, 1),
+    (81411247, 'NDMI050', 1, 0),
+    (81411247, 'NDMI050', 2, 1),
+    (81411247, 'NDMI050', 3, 5),
+    (81411247, 'NDMI050', 4, 4),
+    (81411247, 'NDMI050', 5, 3);

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type Server struct {
@@ -15,8 +16,10 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 	router.HandleFunc(fmt.Sprintf("GET /cs%s/{code}", prefix), s.csPage)
 	router.HandleFunc(fmt.Sprintf("GET /en%s/{code}", prefix), s.enPage)
 	// TODO: should we differentiate between languages for POSTs?
-	router.HandleFunc(fmt.Sprintf("POST %s/like/{code}", prefix), s.like)
-	router.HandleFunc(fmt.Sprintf("POST %s/dislike/{code}", prefix), s.dislike)
+	router.HandleFunc(fmt.Sprintf("PUT %s/rating/{code}", prefix), s.rate)
+	router.HandleFunc(fmt.Sprintf("DELETE %s/rating/{code}", prefix), s.deleteRating)
+	router.HandleFunc(fmt.Sprintf("PUT %s/rating/{code}/{category}", prefix), s.rateCategory)
+	router.HandleFunc(fmt.Sprintf("DELETE %s/rating/{code}/{category}", prefix), s.deleteCategoryRating)
 }
 
 func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
@@ -43,36 +46,64 @@ func (s Server) page(w http.ResponseWriter, r *http.Request, t text, lang DBLang
 	}
 }
 
-const (
-	like    = 1
-	dislike = 0
-)
-
-func (s Server) like(w http.ResponseWriter, r *http.Request) {
+func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 	// get the course code from the request
 	sessionCookie, err := r.Cookie("recsis_session_key")
 	if err != nil {
-		log.Printf("like error: %v", err)
+		log.Printf("rate error: %v", err)
 		return
 	}
 	code := r.PathValue("code")
-	if err = s.Data.OverallRating(sessionCookie.Value, code, like); err != nil {
-		log.Printf("like error: %v", err)
+	rating, err := strconv.Atoi(r.FormValue("rating"))
+	if err != nil && (rating == 1 || rating == 0) {
+		log.Printf("rate error: %v", err)
+		return
+	}
+	if err = s.Data.Rate(sessionCookie.Value, code, rating); err != nil {
+		log.Printf("rate error: %v", err)
 	}
 
-	// TODO: should we return the updated ratings?
 }
 
-func (s Server) dislike(w http.ResponseWriter, r *http.Request) {
-	// get the course code from the request
+func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 	sessionCookie, err := r.Cookie("recsis_session_key")
 	if err != nil {
-		log.Printf("like error: %v", err)
+		log.Printf("deleteRating error: %v", err)
 		return
 	}
 	code := r.PathValue("code")
-	if err = s.Data.OverallRating(sessionCookie.Value, code, dislike); err != nil {
-		log.Printf("like error: %v", err)
+	if err = s.Data.DeleteRating(sessionCookie.Value, code); err != nil {
+		log.Printf("deleteRating error: %v", err)
 	}
+}
 
+func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		log.Printf("rateCategory error: %v", err)
+		return
+	}
+	code := r.PathValue("code")
+	category := r.PathValue("category")
+	rating, err := strconv.Atoi(r.FormValue("rating"))
+	if err != nil {
+		log.Printf("rateCategory error: %v", err)
+		return
+	}
+	if err = s.Data.RateCategory(sessionCookie.Value, code, category, rating); err != nil {
+		log.Printf("rateCategory error: %v", err)
+	}
+}
+
+func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
+	sessionCookie, err := r.Cookie("recsis_session_key")
+	if err != nil {
+		log.Printf("deleteCategoryRating error: %v", err)
+		return
+	}
+	code := r.PathValue("code")
+	category := r.PathValue("category")
+	if err = s.Data.DeleteCategoryRating(sessionCookie.Value, code, category); err != nil {
+		log.Printf("deleteCategoryRating error: %v", err)
+	}
 }
