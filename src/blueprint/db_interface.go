@@ -38,7 +38,12 @@ type Teacher struct {
 func (t Teacher) String() string {
 	var result string
 	if len(t.FirstName) > 0 {
-		result = fmt.Sprintf("%c. %s", t.FirstName[0], t.LastName)
+		var initial rune
+		for _, r := range t.FirstName {
+			initial = r
+			break
+		}
+		result = fmt.Sprintf("%c. %s", initial, t.LastName)
 	}
 	return result
 }

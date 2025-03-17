@@ -50,14 +50,13 @@
 <td>unsupported</td><td>unsupported</td>
 <td>unsupported</td><td>unsupported</td>
 <td>unsupported</td><td>unsupported</td>
-<table class=\"table table-sm blueprint-table\"><thead><tr><th></th><th>
+<div x-show=\"showUnassigned\"><table class=\"table table-sm blueprint-table\" :class=\" isSorting || &#39;table-hover&#39; \"><thead><tr><th></th><th>
 </th><th>
 </th><th class=\"text-center\">
 </th><th>
 </th><th>
 </th><th>
-</th><th></th></tr></thead></table>
-<div x-show=\"showUnassigned\"><table class=\"table table-sm blueprint-table\" :class=\" isSorting || &#39;table-hover&#39; \"><tbody x-sort=\"
+</th><th></th></tr></thead> <tbody x-sort=\"
 \" x-sort:group=\"courses\">
 <tr id=\"
 \" x-data=\"{ hover: false, hoverOnAssign: false, openAssign: false, tooltipEnabled: true}\" @mouseover=\"hover = true\" @mouseleave=\"hover = false, openAssign = false, initializeTooltips()\" x-sort:item=\"
@@ -84,7 +83,13 @@
 \" hx-target=\"main\">
 </button>
 <div x-show=\"
-\"><table class=\"table table-sm blueprint-table\" :class=\" isSorting || &#39;table-hover&#39; \"><tbody x-sort=\"
+\"><table class=\"table table-sm blueprint-table\" :class=\" isSorting || &#39;table-hover&#39; \"><thead><tr><th></th><th>
+</th><th>
+</th><th class=\"text-center\">
+</th><th>
+</th><th>
+</th><th>
+</th><th></th></tr></thead> <tbody x-sort=\"
 \" x-sort:group=\"courses\">
 <tr x-data=\"{ hover: false, hoverOnAssign: false, openAssign: false, tooltipEnabled: true }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false, openAssign = false, initializeTooltips()\" x-sort:item=\"
 \"><td><div class=\"checkbox-container\"><input type=\"checkbox\" id=\"
@@ -105,31 +110,31 @@
 \" hx-target=\"main\"></button><button x-show=\"(hover || hoverOnAssign) &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
 \" class=\"btn btn-sm bi bi-grip-horizontal\" style=\"--bs-btn-active-border-color: transparent;\" x-sort:handle></button></td></tr>
 <tr class=\"dummy-row\" x-sort:item style=\"display: none;\"></tr></tbody></table></div>
-<div><table class=\"table table-sm table-hover blueprint-background blueprint-table headline\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"if (!$event.target.closest(&#39;button&#39;)) { showUnassigned = !showUnassigned }\"><td class=\"short\"><i :class=\"showUnassigned ? &#39;bi bi-caret-down-fill&#39; : &#39;bi bi-caret-up-fill&#39;\"></i></td><td class=\"short yeartext\">
-</td>
-<td class=\"short\"></td>
-<td class=\"short text-end align-middle\" style=\"line-height: 1;\"><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
-\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
+<div><table class=\"table table-borderless blueprint-table mb-0\"><tbody><tr><td class=\"text-end align-middle p-0\" style=\"line-height: 1;\"><button @click=\"showUnassigned = !showUnassigned\" class=\"btn btn-sm btn-outline-secondary w-100 p-0\" :class=\"showUnassigned ? &#39;bi bi-caret-down-fill&#39; : &#39;bi bi-caret-up-fill&#39;\" style=\"--bs-btn-border-color: transparent; aspect-ratio: 1 / 1;\"></button></td><td><h5 class=\"mb-0\">
+</h5></td>
+<td></td>
+<td class=\"text-end align-middle pt-0 pb-0\" style=\"line-height: 1;\"><button data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
 \" hx-target=\"main\"></button></td></tr></tbody></table></div>
-<div><table class=\"table table-sm table-hover blueprint-background blueprint-table headline\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"
-\"><td class=\"short\"><i :class=\"
-\"></i></td><td class=\"short yeartext\">
-</td><td class=\"short\"></td><td class=\"short yeartext credits-column text-end\">
-</td><td class=\"short\"></td><td class=\"short\"></td><td class=\"short\"></td><td class=\"short text-end align-middle\" style=\"line-height: 1;\"><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
-\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-dash-circle\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-patch=\"/blueprint/courses\" hx-vals=\"
-\" hx-target=\"main\"></button><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
-\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
+<div><table class=\"table table-borderless blueprint-table mb-0\"><tbody><tr><td class=\"text-end align-middle p-0\" style=\"line-height: 1;\"><button @click=\"
+\" class=\"btn btn-sm btn-outline-secondary w-100 p-0\" :class=\"
+\" style=\"--bs-btn-border-color: transparent; aspect-ratio: 1 / 1;\"></button></td><td><h5 class=\"mb-0\">
+</h5></td><td></td><td class=\"credits-column text-end\"><h5 class=\"mb-0\">
+</h5></td><td></td><td></td><td></td><td class=\"text-end align-middle pt-0 pb-0\" style=\"line-height: 1;\"><button data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-dash-circle\" style=\"--bs-btn-border-color: transparent;\" hx-patch=\"/blueprint/courses\" hx-vals=\"
+\" hx-target=\"main\"></button><button data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
 \" hx-target=\"main\"></button></td></tr></tbody></table></div>
 <div x-show=\"
-\"><table class=\"table table-sm table-hover blueprint-background blueprint-table\"><tbody><tr x-data=\"{ hover: false }\" @mouseover=\"hover = true\" @mouseleave=\"hover = false\" @click=\"
-\"><td class=\"short\"><i :class=\"
-\"></i></td><td class=\"short semtext\">
-</td><td class=\"short\"></td><td class=\"short semtext credits-column text-end\">
-</td><td class=\"short\"></td><td class=\"short\"></td><td class=\"short\"></td><td class=\"short text-end align-middle\" style=\"line-height: 1;\"><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
-\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-dash-circle\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-patch=\"
+\"><table class=\"table table-borderless blueprint-table mb-0\"><tbody><tr><td class=\"text-end align-middle p-0\" style=\"line-height: 1;\"><button @click=\"
+\" class=\"btn btn-sm btn-outline-secondary w-100 p-0\" :class=\"
+\" style=\"--bs-btn-border-color: transparent; aspect-ratio: 1 / 1;\"></button></td><td><h6 class=\"mb-0\">
+</h6></td><td></td><td class=\"fst-italic credits-column text-end\"><h6 class=\"mb-0\">
+</h6></td><td></td><td></td><td></td><td class=\"text-end align-middle pt-0 pb-0\" style=\"line-height: 1;\"><button data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-dash-circle\" style=\"--bs-btn-border-color: transparent;\" hx-patch=\"
 \" hx-vals=\"
-\" hx-target=\"main\"></button><button x-show=\"hover &amp;&amp; !isSorting\" data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
-\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
+\" hx-target=\"main\"></button><button data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" data-bs-title=\"
+\" @click=\"bootstrap.Tooltip.getInstance($el).dispose();\" @mouseleave=\"initializeTooltips()\" class=\"btn btn-outline-secondary btn-sm bi bi-trash-fill\" style=\"--bs-btn-border-color: transparent;\" hx-delete=\"/blueprint/courses\" hx-vals=\"
 \" hx-target=\"main\"></button></td></tr></tbody></table></div>
 <div id=\"
 \">

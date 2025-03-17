@@ -175,6 +175,7 @@ func hoursExamsString(lecture, seminar int, examType string) string {
     return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examType
 }
 
+// TODO: refactor DB to 1 = Winter, 2 = Summer, then remove this
 templ winterSummer(course *Course) {
     switch course.SemesterCount {
     case 1:
@@ -214,25 +215,22 @@ templ winterSummer(course *Course) {
 }
 
 templ renderUnassigned(unassigned AcademicYear, yearCount int, t text) {
-    // tables header for the whole page
-    <table class="table table-sm blueprint-table">
-        <thead>
-            <tr>
-                <th></th>
-                <th>{ t.Code }</th>
-                <th>{ t.Title }</th>
-                <th class="text-center">{ t.Credits }</th>
-                <th>{ t.Winter }</th>
-                <th>{ t.Summer }</th>
-                <th>{ t.Teachers }</th>
-                <th></th>
-            </tr>
-        </thead>
-    </table>
     @unassignedHeadline(t)
     // if there are unassigned courses
     <div x-show="showUnassigned">
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>{ t.Code }</th>
+                    <th>{ t.Title }</th>
+                    <th class="text-center">{ t.Credits }</th>
+                    <th>{ t.Winter }</th>
+                    <th>{ t.Summer }</th>
+                    <th>{ t.Teachers }</th>
+                    <th></th>
+                </tr>
+            </thead>
             <tbody
                 x-sort={ `sortHxPatch($item, 0, 0, $position, "` + t.Language + `")` }
                 x-sort:group="courses"
@@ -362,6 +360,18 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
     }}
     <div x-show={ show }>
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>{ t.Code }</th>
+                    <th>{ t.Title }</th>
+                    <th class="text-center">{ t.Credits }</th>
+                    <th>{ t.Winter }</th>
+                    <th>{ t.Summer }</th>
+                    <th>{ t.Teachers }</th>
+                    <th></th>
+                </tr>
+            </thead>
             <tbody
                 x-sort={ `sortHxPatch($item, ` + strconv.Itoa(yearNum) + `, ` + strconv.Itoa(semester) + `, $position, "` + t.Language + `")` }
                 x-sort:group="courses"
@@ -470,33 +480,66 @@ templ renderCourseTable(courses []Course, isWinter bool, yearNum, yearCount int,
 }
 
 templ unassignedHeadline(t text) {
+    // <div>
+    //     <table class="table table-sm table-hover blueprint-background blueprint-table headline">
+    //         <tbody>
+    //             <tr
+    //                 x-data="{ hover: false }"
+    //                 @mouseover="hover = true"
+    //                 @mouseleave="hover = false"
+    //                 @click="if (!$event.target.closest('button')) { showUnassigned = !showUnassigned }"
+    //             >
+    //                 <td class="short">
+    //                     <i
+    //                         :class="showUnassigned ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'">
+    //                     </i>
+    //                 </td>
+    //                 <td class="short yeartext">{ t.Unassigned }</td>
+    //                 for i := 0; i < 5; i++ {
+    //                     <td class="short"></td>
+    //                 }
+    //                 <td class="short text-end align-middle" style="line-height: 1;">
+    //                     // remove all unassigned courses button
+    //                     <button
+    //                         x-show="hover && !isSorting"
+    //                         data-bs-toggle="tooltip"
+    //                         data-bs-placement="bottom"
+    //                         data-bs-title={ t.TTRemoveUnassigned }
+    //                         class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
+    //                         style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+    //                         hx-delete="/blueprint/courses"
+    //                         hx-vals={ `"type": "year", "year": 0, "lang": "` + t.Language + `"` }
+    //                         hx-target="main">
+    //                     </button>
+    //                 </td>
+    //             </tr>
+    //         </tbody>
+    //     </table>
+    // </div>
     <div>
-        <table class="table table-sm table-hover blueprint-background blueprint-table headline">
+        <table class="table table-borderless blueprint-table mb-0">
             <tbody>
-                <tr
-                    x-data="{ hover: false }"
-                    @mouseover="hover = true"
-                    @mouseleave="hover = false"
-                    @click="if (!$event.target.closest('button')) { showUnassigned = !showUnassigned }"
-                >
-                    <td class="short">
-                        <i
-                            :class="showUnassigned ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'">
-                        </i>
+                <tr>
+                    <td class="text-end align-middle p-0" style="line-height: 1;">
+                        <button
+                            @click="showUnassigned = !showUnassigned"
+                            class="btn btn-sm btn-outline-secondary w-100 p-0"
+                            :class="showUnassigned ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'"
+                            style="--bs-btn-border-color: transparent; aspect-ratio: 1 / 1;">
+                        </button>
                     </td>
-                    <td class="short yeartext">{ t.Unassigned }</td>
+                    <td><h5 class="mb-0">{ t.Unassigned }</h5></td>
                     for i := 0; i < 5; i++ {
-                        <td class="short"></td>
+                        <td></td>
                     }
-                    <td class="short text-end align-middle" style="line-height: 1;">
+                    <td class="text-end align-middle pt-0 pb-0" style="line-height: 1;">
                         // remove all unassigned courses button
                         <button
-                            x-show="hover && !isSorting"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title={ t.TTRemoveUnassigned }
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
-                            style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+                            style="--bs-btn-border-color: transparent;"
                             hx-delete="/blueprint/courses"
                             hx-vals={ `"type": "year", "year": 0, "lang": "` + t.Language + `"` }
                             hx-target="main">
@@ -510,51 +553,101 @@ templ unassignedHeadline(t text) {
 
 
 templ yearHeadline(yearNum, credits int, t text) {
+    // <div>
+    //     <table class="table table-sm table-hover blueprint-background blueprint-table headline">
+    //         <tbody>
+    //             <tr
+    //                 x-data="{ hover: false }"
+    //                 @mouseover="hover = true"
+    //                 @mouseleave="hover = false"
+    //                 @click={ "if (!$event.target.closest('button')) { " + "Year" + strconv.Itoa(yearNum) + " = !" + "Year" + strconv.Itoa(yearNum) + " }" }
+    //             >
+    //                 <td class="short">
+    //                     <i
+    //                         :class={ "Year" + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }>
+    //                     </i>
+    //                 </td>
+    //                 <td class="short yeartext">{ t.YearStr(yearNum) }</td>
+    //                 <td class="short"></td>
+    //                 <td class="short yeartext credits-column text-end">{ strconv.Itoa(credits) }</td>
+    //                 <td class="short"></td>
+    //                 <td class="short"></td>
+    //                 <td class="short"></td>
+    //                 <td class="short text-end align-middle" style="line-height: 1;">
+    //                     // unassign all courses button
+    //                     <button
+    //                         x-show="hover && !isSorting"
+    //                         data-bs-toggle="tooltip"
+    //                         data-bs-placement="bottom"
+    //                         data-bs-title={ t.TTUnassignYear1 + strconv.Itoa(yearNum) + t.TTUnassignYear2 }
+    //                         @click="bootstrap.Tooltip.getInstance($el).dispose();"
+    //                         @mouseleave="initializeTooltips()"
+    //                         class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
+    //                         style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+    //                         hx-patch="/blueprint/courses"
+    //                         hx-vals={ `"type": "year-unassign", "year": ` + strconv.Itoa(yearNum) +`, "semester": 0, "lang": "` + t.Language + `"` }
+    //                         hx-target="main">
+    //                     </button>
+    //                     // remove all courses button
+    //                     <button
+    //                         x-show="hover && !isSorting"
+    //                         data-bs-toggle="tooltip"
+    //                         data-bs-placement="bottom"
+    //                         data-bs-title={ t.TTRemoveYear1 + strconv.Itoa(yearNum) + t.TTRemoveYear2 }
+    //                         @click="bootstrap.Tooltip.getInstance($el).dispose();"
+    //                         @mouseleave="initializeTooltips()"
+    //                         class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
+    //                         style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+    //                         hx-delete="/blueprint/courses"
+    //                         hx-vals={ `"type": "year", "year": ` + strconv.Itoa(yearNum) + `, "lang": "` + t.Language + `"` }
+    //                         hx-target="main">
+    //                     </button>
+    //                 </td>
+    //             </tr>
+    //         </tbody>
+    //     </table>
+    // </div>
     <div>
-        <table class="table table-sm table-hover blueprint-background blueprint-table headline">
+        <table class="table table-borderless blueprint-table mb-0">
             <tbody>
-                <tr
-                    x-data="{ hover: false }"
-                    @mouseover="hover = true"
-                    @mouseleave="hover = false"
-                    @click={ "if (!$event.target.closest('button')) { " + "Year" + strconv.Itoa(yearNum) + " = !" + "Year" + strconv.Itoa(yearNum) + " }" }
-                >
-                    <td class="short">
-                        <i
-                            :class={ "Year" + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }>
-                        </i>
+                <tr>
+                    <td class="text-end align-middle p-0" style="line-height: 1;">
+                        <button
+                            @click={ "Year" + strconv.Itoa(yearNum) + " = !" + "Year" + strconv.Itoa(yearNum) }
+                            class="btn btn-sm btn-outline-secondary w-100 p-0"
+                            :class={ "Year" + strconv.Itoa(yearNum) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }
+                            style="--bs-btn-border-color: transparent; aspect-ratio: 1 / 1;">
+                        </button>
                     </td>
-                    <td class="short yeartext">{ t.YearStr(yearNum) }</td>
-                    <td class="short"></td>
-                    <td class="short yeartext credits-column text-end">{ strconv.Itoa(credits) }</td>
-                    <td class="short"></td>
-                    <td class="short"></td>
-                    <td class="short"></td>
-                    <td class="short text-end align-middle" style="line-height: 1;">
+                    <td><h5 class="mb-0">{ t.YearStr(yearNum) }</h5></td>
+                    <td></td>
+                    <td class="credits-column text-end"><h5 class="mb-0">{ strconv.Itoa(credits) }</h5></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-end align-middle pt-0 pb-0" style="line-height: 1;">
                         // unassign all courses button
                         <button
-                            x-show="hover && !isSorting"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title={ t.TTUnassignYear1 + strconv.Itoa(yearNum) + t.TTUnassignYear2 }
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
                             @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
-                            style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+                            style="--bs-btn-border-color: transparent;"
                             hx-patch="/blueprint/courses"
                             hx-vals={ `"type": "year-unassign", "year": ` + strconv.Itoa(yearNum) +`, "semester": 0, "lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                         // remove all courses button
                         <button
-                            x-show="hover && !isSorting"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title={ t.TTRemoveYear1 + strconv.Itoa(yearNum) + t.TTRemoveYear2 }
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
                             @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
-                            style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+                            style="--bs-btn-border-color: transparent;"
                             hx-delete="/blueprint/courses"
                             hx-vals={ `"type": "year", "year": ` + strconv.Itoa(yearNum) + `, "lang": "` + t.Language + `"` }
                             hx-target="main">
@@ -584,51 +677,101 @@ templ semesterHeadline(semester, year, credits int, t text) {
             removeTT = t.TTRemoveSummer
         }
     }}
+    // <div x-show={ "Year" + strconv.Itoa(year) }>
+    //     <table class="table table-sm table-hover blueprint-background blueprint-table">
+    //         <tbody>
+    //             <tr
+    //                 x-data="{ hover: false }"
+    //                 @mouseover="hover = true"
+    //                 @mouseleave="hover = false"
+    //                 @click={ "if (!$event.target.closest('button')) { " + semesterVar + strconv.Itoa(year) + " = !" + semesterVar + strconv.Itoa(year) + " }" }
+    //             >
+    //                 <td class="short">
+    //                     <i
+    //                         :class={ semesterVar + strconv.Itoa(year) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }>
+    //                     </i>
+    //                 </td>
+    //                 <td class="short semtext">{ semesterText }</td>
+    //                 <td class="short"></td>
+    //                 <td class="short semtext credits-column text-end">{ strconv.Itoa(credits) }</td>
+    //                 <td class="short"></td>
+    //                 <td class="short"></td>
+    //                 <td class="short"></td>
+    //                 <td class="short text-end align-middle" style="line-height: 1;">
+    //                     // unassign all courses button
+    //                     <button
+    //                         x-show="hover && !isSorting"
+    //                         data-bs-toggle="tooltip"
+    //                         data-bs-placement="bottom"
+    //                         data-bs-title={ unassignTT }
+    //                         @click="bootstrap.Tooltip.getInstance($el).dispose();"
+    //                         @mouseleave="initializeTooltips()"
+    //                         class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
+    //                         style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+    //                         hx-patch={ "/blueprint/courses" }
+    //                         hx-vals={ `"type": "semester-unassign", "year": ` + strconv.Itoa(year) + `, "semester": ` + strconv.Itoa(semester) + `, "lang": "` + t.Language + `"` }
+    //                         hx-target="main">
+    //                     </button>
+    //                     // remove all courses button
+    //                     <button
+    //                         x-show="hover && !isSorting"
+    //                         data-bs-toggle="tooltip"
+    //                         data-bs-placement="bottom"
+    //                         data-bs-title={ removeTT }
+    //                         @click="bootstrap.Tooltip.getInstance($el).dispose();"
+    //                         @mouseleave="initializeTooltips()"
+    //                         class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
+    //                         style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+    //                         hx-delete="/blueprint/courses"
+    //                         hx-vals={ `"type": "semester", "year": ` + strconv.Itoa(year) + `, "semester": ` + strconv.Itoa(semester) + `, "lang": "` + t.Language + `"` }
+    //                         hx-target="main">
+    //                     </button>
+    //                 </td>
+    //             </tr>
+    //         </tbody>
+    //     </table>
+    // </div>
     <div x-show={ "Year" + strconv.Itoa(year) }>
-        <table class="table table-sm table-hover blueprint-background blueprint-table">
+        <table class="table table-borderless blueprint-table mb-0">
             <tbody>
-                <tr
-                    x-data="{ hover: false }"
-                    @mouseover="hover = true"
-                    @mouseleave="hover = false"
-                    @click={ "if (!$event.target.closest('button')) { " + semesterVar + strconv.Itoa(year) + " = !" + semesterVar + strconv.Itoa(year) + " }" }
-                >
-                    <td class="short">
-                        <i
-                            :class={ semesterVar + strconv.Itoa(year) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }>
-                        </i>
+                <tr>
+                    <td class="text-end align-middle p-0" style="line-height: 1;">
+                        <button
+                            @click={ semesterVar + strconv.Itoa(year) + " = !" + semesterVar + strconv.Itoa(year) }
+                            class="btn btn-sm btn-outline-secondary w-100 p-0"
+                            :class={ semesterVar + strconv.Itoa(year) + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }
+                            style="--bs-btn-border-color: transparent; aspect-ratio: 1 / 1;">
+                        </button>
                     </td>
-                    <td class="short semtext">{ semesterText }</td>
-                    <td class="short"></td>
-                    <td class="short semtext credits-column text-end">{ strconv.Itoa(credits) }</td>
-                    <td class="short"></td>
-                    <td class="short"></td>
-                    <td class="short"></td>
-                    <td class="short text-end align-middle" style="line-height: 1;">
+                    <td><h6 class="mb-0">{ semesterText }</h6></td>
+                    <td></td>
+                    <td class="fst-italic credits-column text-end"><h6 class="mb-0">{ strconv.Itoa(credits) }</h6></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-end align-middle pt-0 pb-0" style="line-height: 1;">
                         // unassign all courses button
                         <button
-                            x-show="hover && !isSorting"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title={ unassignTT }
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
                             @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-dash-circle"
-                            style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+                            style="--bs-btn-border-color: transparent;"
                             hx-patch={ "/blueprint/courses" }
                             hx-vals={ `"type": "semester-unassign", "year": ` + strconv.Itoa(year) + `, "semester": ` + strconv.Itoa(semester) + `, "lang": "` + t.Language + `"` }
                             hx-target="main">
                         </button>
                         // remove all courses button
                         <button
-                            x-show="hover && !isSorting"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title={ removeTT }
                             @click="bootstrap.Tooltip.getInstance($el).dispose();"
                             @mouseleave="initializeTooltips()"
                             class="btn btn-outline-secondary btn-sm bi bi-trash-fill"
-                            style="--bs-btn-border-color: transparent; font-size: 0.75rem; padding: 4px 4px; line-height: 1;"
+                            style="--bs-btn-border-color: transparent;"
                             hx-delete="/blueprint/courses"
                             hx-vals={ `"type": "semester", "year": ` + strconv.Itoa(year) + `, "semester": ` + strconv.Itoa(semester) + `, "lang": "` + t.Language + `"` }
                             hx-target="main">
