@@ -122,12 +122,12 @@ func parseQueryRequest(r *http.Request, lang Language) (*Request, error) {
 	if err != nil {
 		sorted = int64(relevance)
 	}
-	sortedBy := sortType(sorted)
+	sortedBy := sortFilter(sorted)
 	semesterInt, err := strconv.ParseInt(r.FormValue("semester"), 10, 64)
 	if err != nil {
-		semesterInt = int64(teachingBoth)
+		semesterInt = int64(all)
 	}
-	semester := TeachingSemester(semesterInt)
+	semester := semesterFilter(semesterInt)
 
 	req := Request{
 		sessionID:   sessionCookie.Value,

@@ -14,8 +14,8 @@ type Request struct {
 	page        int64
 	hitsPerPage int64
 	lang        Language
-	sortedBy    sortType
-	semester    TeachingSemester
+	sortedBy    sortFilter
+	semester    semesterFilter
 }
 
 type Response struct {
