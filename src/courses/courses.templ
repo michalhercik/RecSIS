@@ -88,7 +88,6 @@ func semesterHoursExamsString(course *Course, t text) string {
 templ QuickResults(res *QuickResponse, t text) {
     <div
         id="quick-search-results"
-        x-cloak
         class="dropdown-menu w-100 shadow-sm show"
     >
         if res.approxHits == -1 {
@@ -115,6 +114,7 @@ templ search(coursesPage *coursesPage, t text) {
         hx-target="#courses"
         hx-swap="outerHTML"
         :hx-vals="generateHxVals()"
+        :hx-push-url="currentUrl"
         class="pt-3 pb-3"
         x-data="{ quickResOpen: false }"
     >
@@ -123,7 +123,6 @@ templ search(coursesPage *coursesPage, t text) {
                 <div class="input-group">
                     <input type="text" name="search" id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
                         x-model="params.search"
-                        @input="updateUrl()"
                         @click="quickResOpen = true"
                         @keydown="quickResOpen = true"
                         @keydown.escape="quickResOpen = false"
@@ -132,10 +131,11 @@ templ search(coursesPage *coursesPage, t text) {
                         hx-trigger="input changed, triggerSearch from:body" 
                         hx-target="#quick-search-results"
                         hx-swap="outerHTML"
+                        hx-push-url="false"
                     />
                     <button type="submit" class="btn btn-primary" @click="quickResOpen = false; params.page='1'; params.hitsPerPage='30'; updateUrl()">{ t.SearchButton }</button>
                 </div>
-                <div x-show="quickResOpen && params.search.length > 0">
+                <div x-cloak x-show="quickResOpen && params.search.length > 0">
                     @QuickResults(&QuickResponse{
                         approxHits: -1,
                         courses: []Course{},
@@ -148,8 +148,8 @@ templ search(coursesPage *coursesPage, t text) {
 
 templ input(id, name, inputType, value, xModel, text string) {
     <div class="form-check">
-        <input class="form-check-input" type={ inputType } name={ name } id={ id }value={ value } x-model={ xModel } @change="updateUrl()">
-        <label class="form-check-label" for={ id }>{ text }</label>
+        <input role="button" class="form-check-input" type={ inputType } name={ name } id={ id }value={ value } x-model={ xModel } @change="updateUrl()" :hx-push-url="currentUrl">
+        <label role="button" class="form-check-label" for={ id }>{ text }</label>
     </div>
 }
 
@@ -162,8 +162,8 @@ templ semesterInput(id, value, text string) {
 }
 
 // TODO: fix x-model for credits
-templ creditsInput(id, value, text string) {
-    @input(id, "credits", "checkbox", value, "params.credits", text)
+templ creditsInput(id, value string) {
+    @input(id, "credits", "checkbox", value, "params.credits", value)
 }
 
 templ filter(coursesPage *coursesPage, t text) {
@@ -184,16 +184,19 @@ templ filter(coursesPage *coursesPage, t text) {
         </div>
         <div>
             <p class="form-label">{ t.CreditsFilter + ":" }</p>
-            @creditsInput("creditsAll", "-1", t.AllCredits)
             for i := 0; i <= 10; i++ {
-                @creditsInput("credits" + strconv.Itoa(i), strconv.Itoa(i), strconv.Itoa(i))
+                @creditsInput("credits" + strconv.Itoa(i), strconv.Itoa(i))
             }
         </div>
         <div class="text-center justify-content-center d-flex mt-3" style="position: sticky; top: 72px;">
-            <a href="#" class="link-primary link-underline-opacity-0">
+            <p
+                role="button"
+                @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                class="link-primary"
+            >
                 <i class="bi bi-chevron-up"></i>
                 { t.TopFilter }
-            </a>
+            </p>
         </div>
     </div>
 }
@@ -245,7 +248,7 @@ templ courseCard(course *Course, t text) {
         x-data="{ expanded: false, showButton: false, isHovered: false }"
         @mouseenter="isHovered = true"
         @mouseleave="isHovered = false"
-        x-init="$nextTick(() => { showButton = $refs.annotation.scrollHeight > 250 })"
+        x-init="$nextTick(() => { showButton = $refs.annotation.scrollHeight > 350 })"
     >
         <div class="card-header d-flex justify-content-between align-items-center">
             <h6 class="mb-0">{ course.code }</h6>
@@ -254,10 +257,13 @@ templ courseCard(course *Course, t text) {
         </div>
         <div class="card-body d-flex flex-column position-relative">
             @ribbon(course.blueprintAssignments, t)
-            <div :class="{ 'expanded': expanded, 'annotation-container': showButton }" :style="isHovered && { 'z-index': '100' }">
+            <div
+                :class="{ 'expanded': expanded, 'annotation-container': showButton }" :style="isHovered && { 'z-index': '100' }"
+                x-ref="annotation"
+            >
                 <h5 class="card-title"><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }>{ course.name }</a></h5>
                 <h6 class="card-subtitle mb-2 text-muted">{ course.teachers.string() }</h6>
-                <p class="card-text annotation-text" x-ref="annotation">{ course.annotation }</p>
+                <p class="card-text annotation-text">{ course.annotation }</p>
             </div>
             <button class="btn btn-link text-secondary" @click="expanded = !expanded" x-show="showButton" x-text={ "expanded ? '" + t.ReadLess + "' : '" + t.ReadMore + "'" }></button>
             @blueprintAssignment(course.code, t)
@@ -274,7 +280,6 @@ templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
             hx-get={ t.Utils.LangLink("/courses/search") }
             hx-target="#courses"
             hx-swap="outerHTML show:window:top"
-            :hx-vals="generateHxVals()"
             hx-trigger="new-page-event"
             @click={ "newPage('" + strconv.Itoa(page) + "', $event)" }
         >
@@ -292,7 +297,6 @@ templ paginationNumberButton(page int, cp *coursesPage, t text) {
             hx-get={ t.Utils.LangLink("/courses/search") }
             hx-target="#courses"
             hx-swap="outerHTML show:window:top"
-            :hx-vals="generateHxVals()"
             hx-trigger="new-page-event"
             @click={ "newPage('" + strconv.Itoa(page) + "', $event)" }
         >
@@ -307,7 +311,6 @@ templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
         hx-get={ t.Utils.LangLink("/courses/search") }
         hx-target="#courses"
         hx-swap="outerHTML"
-        :hx-vals="generateHxVals()"
         hx-trigger="load-more-event"
         @click={ "loadMore('" + strconv.Itoa(newPageSize) + "', $event);" }
     >
@@ -412,10 +415,10 @@ templ Content(coursesPage *coursesPage, t text) {
                         this.params[key] = urlSearchParams.get(key) ?? this.defaults[key];
                     }
                 }
-                this.updateUrl(false); // Ensure URL is correct on load
+                this.updateUrl(); // Ensure URL is correct on load
             },
 
-            updateUrl(pushState = true) {
+            updateUrl(pushState = false) {
                 const newParams = new URLSearchParams();
 
                 // Only keep parameters that differ from default
@@ -447,8 +450,9 @@ templ Content(coursesPage *coursesPage, t text) {
                 this.params.page = page;
                 // update URL with the new parameter
                 this.updateUrl();
-                // update pagination button hx-vals before sending the request
+                // update pagination button hx-vals/hx-push-url before sending the request
                 e.target.setAttribute('hx-vals', this.generateHxVals())
+                e.target.setAttribute('hx-push-url', this.currentUrl);
 
                 // send the request
                 this.$dispatch('new-page-event');
@@ -459,8 +463,9 @@ templ Content(coursesPage *coursesPage, t text) {
                 this.params.hitsPerPage = newPageSize;
                 // update URL with the new parameter
                 this.updateUrl();
-                // update load more button hx-vals before sending the request
+                // update load more button hx-vals/hx-push-url before sending the request
                 e.target.setAttribute('hx-vals', this.generateHxVals())
+                e.target.setAttribute('hx-push-url', this.currentUrl);
 
                 // send the request
                 this.$dispatch('load-more-event');

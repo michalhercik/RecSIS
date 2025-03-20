@@ -93,7 +93,6 @@ templ Header(title string, t Text) {
                         @navItem(t.LangLink("/degreeplan"), t.DegreePlan, title == t.DegreePlan)
                     </ul>
                     <div class="d-flex">
-                        <button class="btn btn-outline-success me-2">{ t.Login }</button>
                         if t.Language == "cs" {
                             @langButton("en")
                         } else {
