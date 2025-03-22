@@ -152,6 +152,7 @@ func (s Server) search(req Request) (coursesPage, error) {
 		return result, err
 	}
 	facets := filter.MakeFacetDistribution(searchResponse.FacetDistribution, paramLabels)
+
 	result = coursesPage{
 		courses:    coursesData,
 		page:       int(req.page),
