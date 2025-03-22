@@ -28,45 +28,8 @@ type coursesPage struct {
 	pageSize   int
 	totalPages int
 	search     string
-	sortedBy   sortFilter
-	semester   semesterFilter
 	facets     filter.FacetDistribution
 }
-
-type sortFilter int
-
-const (
-	relevance sortFilter = iota
-	recommended
-	rating
-	mostPopular
-	newest
-)
-
-func (st sortFilter) String(lang string) string {
-	switch st {
-	case relevance:
-		return texts[lang].Relevance
-	case recommended:
-		return texts[lang].Recommended
-	case rating:
-		return texts[lang].Rating
-	case mostPopular:
-		return texts[lang].MostPopular
-	case newest:
-		return texts[lang].Newest
-	default:
-		return "unknown"
-	}
-}
-
-type semesterFilter int
-
-const (
-	all semesterFilter = iota
-	winter
-	summer
-)
 
 type Language string
 
@@ -83,13 +46,8 @@ type Teacher struct {
 	TitleAfter  string `json:"TITULZA"`
 }
 
-// TODO: here should be this ↓ but DB is broken, first name always empty
-// return fmt.Sprintf("%c. %s",
-//
-//	t.firstName[0], t.lastName)
 func (t Teacher) String() string {
-	return fmt.Sprintf("%s %s %s %s",
-		t.TitleBefore, t.FirstName, t.LastName, t.TitleAfter)
+	return fmt.Sprintf("%c. %s", t.firstName[0], t.lastName)
 }
 
 type TeacherSlice []Teacher

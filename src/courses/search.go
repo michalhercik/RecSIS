@@ -15,8 +15,6 @@ type Request struct {
 	page        int
 	hitsPerPage int
 	lang        Language
-	sortedBy    sortFilter
-	semester    semesterFilter
 	filter      filter.Expression
 }
 

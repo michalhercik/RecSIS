@@ -170,17 +170,17 @@ templ filterSection(coursesPage *coursesPage, t text) {
     <div class="form-group" style="height: 100%;">
         <div>
             <p class="form-label">{ t.SortByFilter + ":" }</p>
-            @sortInput("sortRelevance", strconv.Itoa(int(relevance)), t.Relevance)
-            @sortInput("sortRecommended", strconv.Itoa(int(recommended)), t.Recommended)
-            @sortInput("sortRating", strconv.Itoa(int(rating)), t.Rating)
-            @sortInput("sortMostPopular", strconv.Itoa(int(mostPopular)), t.MostPopular)
-            @sortInput("sortNewest", strconv.Itoa(int(newest)), t.Newest)
+            // @sortInput("sortRelevance", strconv.Itoa(int(relevance)), t.Relevance)
+            // @sortInput("sortRecommended", strconv.Itoa(int(recommended)), t.Recommended)
+            // @sortInput("sortRating", strconv.Itoa(int(rating)), t.Rating)
+            // @sortInput("sortMostPopular", strconv.Itoa(int(mostPopular)), t.MostPopular)
+            // @sortInput("sortNewest", strconv.Itoa(int(newest)), t.Newest)
         </div>
         <div>
             <p class="form-label">{ t.SemesterFilter + ":" }</p>
-            @semesterInput("semesterBoth", strconv.Itoa(int(all)), t.Both)
-            @semesterInput("semesterWinter", strconv.Itoa(int(winter)), t.Winter)
-            @semesterInput("semesterSummer", strconv.Itoa(int(summer)), t.Summer)
+            // @semesterInput("semesterBoth", strconv.Itoa(int(all)), t.Both)
+            // @semesterInput("semesterWinter", strconv.Itoa(int(winter)), t.Winter)
+            // @semesterInput("semesterSummer", strconv.Itoa(int(summer)), t.Summer)
         </div>
         <div>
             <p class="form-label">{ t.CreditsFilter + ":" }</p>
@@ -212,7 +212,7 @@ templ ribbon(ba AssignmentSlice, t text) {
 templ blueprintAssignment(code string, t text) {
     <div class="d-flex justify-content-end mt-auto pt-3">
         <div class="btn-group">
-            <button type="button" class="btn btn-blueprint"
+            <button type="button" class="btn btn-outline-blueprint"
                 hx-post={ "/blueprint/course/" + code }
                 hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
             >
@@ -262,6 +262,7 @@ templ courseCard(course *Course, t text) {
                 x-ref="annotation"
             >
                 <h5 class="card-title"><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.Code)) }>{ course.Name }</a></h5>
+                // TODO take care of no guarantors
                 <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string() }</h6>
                 <p class="card-text annotation-text">{ course.Annotation.string() }</p>
             </div>
