@@ -1,3 +1,3 @@
 #!/bin/bash
 
-wgo -file=".go" -file=".templ" -xfile="_templ.go" templ generate :: go run .
+wgo -file=".go" -file=".templ" -xfile="_templ.go" templ generate :: go build -o recsis :: ./recsis

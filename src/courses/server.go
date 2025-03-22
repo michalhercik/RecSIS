@@ -125,14 +125,14 @@ func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
 	}
 	sorted, err := strconv.Atoi(r.FormValue("sort"))
 	if err != nil {
-		sorted = relevance
+		sorted = int(relevance)
 	}
-	sortedBy := sortType(sorted)
-	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+	sortedBy := sortFilter(sorted)
+	semesterInt, err := strconv.ParseInt(r.FormValue("semester"), 10, 64)
 	if err != nil {
-		semesterInt = int(teachingBoth)
+		semesterInt = int64(all)
 	}
-	semester := TeachingSemester(semesterInt)
+	semester := semesterFilter(semesterInt)
 
 	// TODO change language based on URL
 	req = Request{

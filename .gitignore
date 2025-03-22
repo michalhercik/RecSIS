@@ -1,4 +1,8 @@
 *_templ.go
 venv
 meili_data
+<<<<<<< HEAD
 *.exe
+=======
+src/recsis
+>>>>>>> f39fbca51f6e51271cd95238e4504551e41de7ac

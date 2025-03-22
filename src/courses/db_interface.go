@@ -28,22 +28,22 @@ type coursesPage struct {
 	pageSize   int
 	totalPages int
 	search     string
-	sortedBy   sortType
-	semester   TeachingSemester
+	sortedBy   sortFilter
+	semester   semesterFilter
 	facets     filter.FacetDistribution
 }
 
+type sortFilter int
+
 const (
-	relevance = iota
+	relevance sortFilter = iota
 	recommended
 	rating
 	mostPopular
 	newest
 )
 
-type sortType int
-
-func (st sortType) String(lang string) string {
+func (st sortFilter) String(lang string) string {
 	switch st {
 	case relevance:
 		return texts[lang].Relevance
@@ -59,6 +59,14 @@ func (st sortType) String(lang string) string {
 		return "unknown"
 	}
 }
+
+type semesterFilter int
+
+const (
+	all semesterFilter = iota
+	winter
+	summer
+)
 
 type Language string
 

@@ -60,11 +60,11 @@ templ navItem(url, text string, active bool) {
     <li class="nav-item"><a class={ class } href={ templ.URL(url) }>{ text }</a></li>
 }
 
-templ langButton(lang string, text string) {
+templ langButton(lang string) {
     <button
         class="btn btn-outline-dark"
         @click={ "changeLanguage('" + lang + "')" }>
-        { text }
+        { lang }
     </button>
 }
 
@@ -77,8 +77,9 @@ templ Header(title string, t Text) {
             newUrl = '/' + lang + newUrl + queryParams;
             window.location.href = newUrl;
         }
-    }">
-        <nav class="navbar navbar-expand-md navbar-light bg-light py-0"> // TODO: if too narrow, change py-?
+    }"
+    class="sticky-top">
+        <nav class="navbar navbar-expand-md navbar-light bg-light py-0"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
             <div class="container-fluid">
                 <a class="navbar-brand fs-3" href={ templ.URL(t.LangLink("")) }>RecSIS</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,11 +93,10 @@ templ Header(title string, t Text) {
                         @navItem(t.LangLink("/degreeplan"), t.DegreePlan, title == t.DegreePlan)
                     </ul>
                     <div class="d-flex">
-                        <button class="btn btn-outline-success me-2">{ t.Login }</button>
                         if t.Language == "cs" {
-                            @langButton("en", "EN")
+                            @langButton("en")
                         } else {
-                            @langButton("cs", "CS")
+                            @langButton("cs")
                         }
                     </div>
                 </div>
