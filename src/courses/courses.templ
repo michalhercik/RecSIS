@@ -389,6 +389,15 @@ templ Content(coursesPage *coursesPage, t text) {
     </div>
 
     <script>
+    // Reinitialize Alpine when HTMX swaps in new content
+    document.addEventListener('htmx:afterSwap', (event) => {
+        if (event.detail.target === document.body) {
+            console.log("htmx:afterSwap.body");
+            let initAlpine = new Event('alpine:init');
+            document.dispatchEvent(initAlpine);
+        }
+    });
+
     document.addEventListener('alpine:init', () => {
         Alpine.data('urlParams', () => ({
             // Default values
@@ -418,7 +427,7 @@ templ Content(coursesPage *coursesPage, t text) {
                 this.updateUrl(); // Ensure URL is correct on load
             },
 
-            updateUrl(pushState = false) {
+            updateUrl() {
                 const newParams = new URLSearchParams();
 
                 // Only keep parameters that differ from default
@@ -439,10 +448,6 @@ templ Content(coursesPage *coursesPage, t text) {
 
                 const newUrl = `${window.location.pathname}${newParams.toString() ? '?' + newParams.toString() : ''}`;
                 this.currentUrl = newUrl;
-
-                if (pushState) {
-                    history.pushState(null, '', newUrl);
-                }
             },
 
             newPage(page, e) {
@@ -472,26 +477,14 @@ templ Content(coursesPage *coursesPage, t text) {
             },
 
             generateHxVals() {
-                // Generate the JSON object for hx-vals
-                return JSON.stringify({
-                    search: this.params.search,
-                    sort: this.params.sort,
-                    semester: this.params.semester,
-                    credits: this.params.credits,
-                    page: this.params.page,
-                    hitsPerPage: this.params.hitsPerPage
-                });
-
-                // TODO: if needed, generate only non-default parameters
-                // TODO: this is usable if server and client have both the same defaults, if we do not want to care about defaults on server use the above, if we want to care about defaults on server use this
-                // Create an object with only non-default parameters
-                // const nonDefaultParams = {};
-                // for (const key in this.params) {
-                //     if (this.params[key] !== this.defaults[key]) {
-                //         nonDefaultParams[key] = this.params[key];
-                //     }
-                // }
-                // return JSON.stringify(nonDefaultParams);
+                // Generate the JSON object for hx-vals - only non-default parameters
+                const nonDefaultParams = {};
+                for (const key in this.params) {
+                    if (this.params[key] !== this.defaults[key]) {
+                        nonDefaultParams[key] = this.params[key];
+                    }
+                }
+                return JSON.stringify(nonDefaultParams);
             }
         }));
     });
