@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/michalhercik/RecSIS/courses/internal/filter"
 )
 
 const courseIndex = "courses"
@@ -48,7 +50,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request, lang Language, t te
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	coursesPage := createPageContent(res, req)
+	// coursesPage := createPageContent(res, req)
+	coursesPage := res
 	Page(&coursesPage, t).Render(r.Context(), w)
 }
 
@@ -74,7 +77,8 @@ func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	coursesPage := createPageContent(res, req)
+	// coursesPage := createPageContent(res, req)
+	coursesPage := res
 	Courses(&coursesPage, t).Render(r.Context(), w)
 }
 
@@ -95,42 +99,43 @@ func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang Languag
 		offset:   0,
 		lang:     lang,
 	}
-	res, err := s.Search.QuickSearch(&req)
+	res, err := s.Search.QuickSearch(req)
 	if err != nil {
 		log.Printf("quickSearch: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	QuickResults(res, t).Render(r.Context(), w)
+	QuickResults(&res, t).Render(r.Context(), w)
 }
 
-func parseQueryRequest(r *http.Request, lang Language) (*Request, error) {
+func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
+	var req Request
 	sessionCookie, err := r.Cookie("recsis_session_key")
 	if err != nil {
-		return nil, err
+		return req, err
 	}
 	query := r.FormValue("search")
-	page, err := strconv.ParseInt(r.FormValue("page"), 10, 64)
+	page, err := strconv.Atoi(r.FormValue("page"))
 	if err != nil {
 		page = 1
 	}
-	hitsPerPage, err := strconv.ParseInt(r.FormValue("hitsPerPage"), 10, 64)
+	hitsPerPage, err := strconv.Atoi(r.FormValue("hitsPerPage"))
 	if err != nil {
 		hitsPerPage = coursesPerPage
 	}
-	sorted, err := strconv.ParseInt(r.FormValue("sort"), 10, 64)
+	sorted, err := strconv.Atoi(r.FormValue("sort"))
 	if err != nil {
-		sorted = int64(relevance)
+		sorted = relevance
 	}
 	sortedBy := sortType(sorted)
-	semesterInt, err := strconv.ParseInt(r.FormValue("semester"), 10, 64)
+	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
 	if err != nil {
-		semesterInt = int64(teachingBoth)
+		semesterInt = int(teachingBoth)
 	}
 	semester := TeachingSemester(semesterInt)
 
 	// TODO change language based on URL
-	req := Request{
+	req = Request{
 		sessionID:   sessionCookie.Value,
 		query:       query,
 		indexUID:    courseIndex,
@@ -140,41 +145,34 @@ func parseQueryRequest(r *http.Request, lang Language) (*Request, error) {
 		sortedBy:    sortedBy,
 		semester:    semester,
 	}
-	return &req, nil
+	return req, nil
 }
 
-func createPageContent(res *Response, req *Request) coursesPage {
-	return coursesPage{
-		courses:    res.courses,
+func (s Server) search(req Request) (coursesPage, error) {
+	// search for courses
+	var result coursesPage
+	searchResponse, err := s.Search.Search(req)
+	if err != nil {
+		return result, err
+	}
+	coursesData, err := s.Data.Courses(req.sessionID, searchResponse.Courses, req.lang)
+	if err != nil {
+		return result, err
+	}
+	paramLabels, err := s.Data.ParamLabels(req.lang)
+	if err != nil {
+		return result, err
+	}
+	facets := filter.MakeFacetDistribution(searchResponse.FacetDistribution, paramLabels)
+	result = coursesPage{
+		courses:    coursesData,
 		page:       int(req.page),
 		pageSize:   int(req.hitsPerPage),
-		totalPages: int(res.totalPages),
+		totalPages: searchResponse.TotalPages,
 		search:     req.query,
 		sortedBy:   req.sortedBy,
 		semester:   req.semester,
+		facets:     facets,
 	}
-}
-
-func (s Server) search(req *Request) (*Response, error) {
-	// search for courses
-	res, err := s.Search.Search(req)
-	if err != nil {
-		return nil, err
-	}
-	// retrieve blueprint assignments
-	codes := make([]string, len(res.courses))
-	for _, course := range res.courses {
-		codes = append(codes, course.code)
-	}
-	assignments, err := s.Data.Blueprint(req.sessionID, codes)
-	if err != nil {
-		return nil, err
-	}
-	for i := range res.courses {
-		assignment, ok := assignments[res.courses[i].code]
-		if ok {
-			res.courses[i].blueprintAssignments = assignment
-		}
-	}
-	return res, nil
+	return result, nil
 }

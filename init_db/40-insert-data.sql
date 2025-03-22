@@ -55,7 +55,7 @@ CSV HEADER;
 -- DELIMITER ','
 -- CSV HEADER;
 
-COPY courses(title,code,valid_from,valid_to,guarantor,taught,start_semester,semester_count,lecture_range1,seminar_range1,lecture_range2,seminar_range2,range_unit,exam_type,credits,min_number,capacity,lang,taught_lang,guarantors,annotation,aim,terms_of_passing,literature,requirements_for_assesment,syllabus,entry_requirements,teachers,faculty)
+COPY courses(title,code,valid_from,valid_to,guarantor,taught,start_semester,semester_count,range_unit,exam_type,credits,min_number,capacity,lang,taught_lang,guarantors,annotation,aim,terms_of_passing,literature,requirements_for_assesment,syllabus,entry_requirements,teachers,faculty,lecture_range1,seminar_range1,lecture_range2,seminar_range2)
 FROM '/docker-entrypoint-initdb.d/courses_transformed.csv'
 DELIMITER ','
 CSV HEADER;
@@ -66,6 +66,15 @@ COPY blueprint_years(user_id,academic_year)
 FROM '/docker-entrypoint-initdb.d/blueprint_years.csv'
 DELIMITER ','
 CSV HEADER;
+
+COPY filter_labels(id, lang, label)
+FROM '/docker-entrypoint-initdb.d/filter_values.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY filter_params(param_name, value_id)
+FROM '/docker-entrypoint-initdb.d/filter_params.csv'
+DELIMITER ',';
 
 -- COPY blueprint_semesters(blueprint_year,course,semester,position)
 -- FROM '/docker-entrypoint-initdb.d/blueprint_semesters.csv'

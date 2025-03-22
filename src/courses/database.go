@@ -5,32 +5,33 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/michalhercik/RecSIS/courses/sqlquery"
+	"github.com/michalhercik/RecSIS/courses/internal/filter"
+	"github.com/michalhercik/RecSIS/courses/internal/sqlquery"
 )
 
 type DBManager struct {
 	DB *sqlx.DB
 }
 
-func (m DBManager) Blueprint(sessionID string, courses []string) (map[string][]Assignment, error) {
-	rows, err := m.DB.Query(sqlquery.Blueprint, sessionID, pq.Array(courses))
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch blueprint: %w", err)
+func (m DBManager) Courses(sessionID string, courseCodes []string, lang Language) ([]Course, error) {
+	result := []Course{}
+	if err := m.DB.Select(&result, sqlquery.Courses, sessionID, pq.Array(courseCodes), lang); err != nil {
+		return nil, fmt.Errorf("failed to fetch courses: %w", err)
 	}
-	defer rows.Close()
-	res := map[string][]Assignment{}
-	for rows.Next() {
-		b := Assignment{}
-		var code string
-		if err := rows.Scan(&code, &b.semester, &b.year); err != nil {
-			return nil, fmt.Errorf("failed to scan blueprint: %w", err)
-		}
-		courses, ok := res[code]
-		if ok {
-			res[code] = append(courses, b)
-		} else {
-			res[code] = []Assignment{b}
-		}
+	return result, nil
+}
+
+func (m DBManager) ParamLabels(lang Language) (map[string][]filter.ParamValue, error) {
+	var result map[string][]filter.ParamValue = make(map[string][]filter.ParamValue)
+	var rows []struct {
+		Param string `db:"param_name"`
+		filter.ParamValue
 	}
-	return res, nil
+	if err := m.DB.Select(&rows, sqlquery.ParamLabels, lang); err != nil {
+		return nil, fmt.Errorf("failed to fetch param labels: %w", err)
+	}
+	for _, row := range rows {
+		result[row.Param] = append(result[row.Param], row.ParamValue)
+	}
+	return result, nil
 }

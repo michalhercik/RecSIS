@@ -1,65 +1,102 @@
 import pandas as pd
 
-courses = pd.read_csv('./init_db/POVINN.csv', usecols=[
-    "POVINN", "PNAZEV", "PANAZEV", "VPLATIDO",
-    "VSEMZAC", "VSEMPOC",
-    "VROZSAHPR1", "VROZSAHCV1", "VROZSAHPR2", "VROZSAHCV2",
-    "VTYP", "VEBODY",
-    "VUCIT1", "VUCIT2", "VUCIT3",])
-teachers = pd.read_csv('./init_db/UCIT.csv', usecols=["KOD", "JMENO", "PRIJMENI"])
-texts = pd.read_csv('./init_db/PAMELA.csv', usecols=["POVINN", "TYP", "JAZYK", "MEMO"])
+def converter(data):
+    import json
+    if len(data) == 0:
+        return None
+    return json.loads(data)
 
-df = courses[courses["VPLATIDO"] == 9999].drop(columns=["VPLATIDO"])
-df = pd.merge(df, teachers, how="left", left_on="VUCIT1", right_on="KOD").rename(columns={"KOD": "VUCIT1_KOD", "JMENO": "VUCIT1_JMENO", "PRIJMENI": "VUCIT1_PRIJMENI"})
-df = pd.merge(df, teachers, how="left", left_on="VUCIT2", right_on="KOD").rename(columns={"KOD": "VUCIT2_KOD", "JMENO": "VUCIT2_JMENO", "PRIJMENI": "VUCIT2_PRIJMENI"})
-df = pd.merge(df, teachers, how="left", left_on="VUCIT3", right_on="KOD").rename(columns={"KOD": "VUCIT3_KOD", "JMENO": "VUCIT3_JMENO", "PRIJMENI": "VUCIT3_PRIJMENI"})
-df = df.drop(columns=["VUCIT1", "VUCIT2", "VUCIT3"])
-df = df[df["VROZSAHPR1"].notna()]
 
-texts = pd.pivot_table(texts, index=["POVINN", "JAZYK"], columns=["TYP"], values=["MEMO"], aggfunc=lambda x: x)
-texts = texts.reset_index().droplevel(0, axis=1)
-texts.columns.values[0] = "POVINN"
-texts.columns.values[1] = "JAZYK"
-texts = texts.rename(columns={
-    "A": "ANOTACE",
-    "C": "CIL",
-    "S": "SYLABUS",
-    "P": "POZADAVKY"
-    })
-
-df = pd.merge(df, texts[texts["JAZYK"] == "CZE"], how="left", on="POVINN").drop(columns=["JAZYK"])
-df = pd.merge(df, texts[texts["JAZYK"] == "ENG"], how="left", on="POVINN", suffixes=("_CZE", "_ENG")).drop(columns=["JAZYK"])
-
-df = df.rename(columns={
-    "POVINN": "code",
-    "PNAZEV": "nameCs",
-    "PANAZEV": "nameEn",
-    "VSEMZAC": "start",
-    "VSEMPOC": "semesterCount",
-    "VROZSAHPR1": "lectureRange1",
-    "VROZSAHCV1": "seminarRange1",
-    "VROZSAHPR2": "lectureRange2",
-    "VROZSAHCV2": "seminarRange2",
-    "VTYP": "examType",
-    "VEBODY": "credits",
-    "VUCIT1_KOD": "teacher1Id",
-    "VUCIT1_JMENO": "teacher1Name",
-    "VUCIT1_PRIJMENI": "teacher1Lastname",
-    "VUCIT2_KOD": "teacher2Id",
-    "VUCIT2_JMENO": "teacher2Name",
-    "VUCIT2_PRIJMENI": "teacher2Lastname",
-    "VUCIT3_KOD": "teacher3Id",
-    "VUCIT3_JMENO": "teacher3Name",
-    "VUCIT3_PRIJMENI": "teacher3Lastname",
-    "ANOTACE_CZE": "annotationCs",
-    "CIL_CZE": "aimsCs",
-    "SYLABUS_CZE": "syllabusCs",
-    "POZADAVKY_CZE": "requirementsCs",
-    "ANOTACE_ENG": "annotationEn",
-    "CIL_ENG": "aimsEn",
-    "SYLABUS_ENG": "syllabusEn",
-    "POZADAVKY_ENG": "requirementsEn"
+povinn = pd.read_csv('./init_db/POVINN.csv')
+courses = pd.read_csv('./init_db/courses_transformed.csv', usecols=[
+    "POVINN", "NAME", "LANG", "PGARANT", "PVYUCOVAN", "PPOCMAX", "PPOCMIN",
+    "VYJAZYK", "FACULTY_NAME", "GUARANTORS", "TEACHERS",
+    "A", "C", "E", "L", "S", "V", "P",
+    "VSEMZAC", "VSEMPOC", "VTYP", "VRVCEM", "VEBODY",
+    "LECTURE_RANGE_WINTER", "SEMINAR_RANGE_WINTER", "LECTURE_RANGE_SUMMER", "SEMINAR_RANGE_SUMMER",
+    # "VROZSAHPR1", "VROZSAHCV1", "VROZSAHPR2", "VROZSAHCV2",
+    ], dtype={
+        "VEBODY": pd.Int32Dtype(),
+        "VSEMZAC": pd.Int32Dtype(),
+        "VSEMPOC": pd.Int32Dtype(),
+        "PPOCMIN": pd.Int32Dtype(),
+        "PPOCMAX": str,
+        "LECTURE_RANGE_WINTER": pd.Int32Dtype(),
+        "SEMINAR_RANGE_WINTER": pd.Int32Dtype(),
+        "LECTURE_RANGE_SUMMER": pd.Int32Dtype(),
+        "SEMINAR_RANGE_SUMMER": pd.Int32Dtype(),
+    }, converters={
+    "A": converter,
+    "C": converter,
+    "E": converter,
+    "L": converter,
+    "S": converter,
+    "V": converter,
+    "P": converter,
+    "GUARANTORS": converter,
+    "TEACHERS": converter
 })
+values = pd.read_csv('./init_db/filter_values.csv', usecols=["index", "value"], header=0, dtype={"index": int}).set_index("value")["index"].to_dict()
 
-df = df.reset_index(drop=False).rename(columns={"index": "id"})
-df.to_json('./init_search/courses.json', orient='records', lines=True)
+def memo(data):
+    if data is not None:
+        return data["MEMO"]
+    return None
+
+def select(row, lang):
+    # TODO: exam_type, faculty, taught, taught_lang, lecture/seminar range, range_unit, capacity, min_number,
+    return pd.concat([row[row["LANG"]==lang][["A", "C", "E", "S", "V", "P"]].map(memo), row[row["LANG"]==lang][["NAME"]]], axis=1)
+
+def select_teachers(row):
+    return [{"JMENO": y["JMENO"], "PRIJMENI": y["PRIJMENI"]} for y in row] if row is not None else None
+
+def id(value):
+    if pd.isna(value):
+        return value
+    elif isinstance(value, str):
+        return values[value]
+    return values[value.astype(str)]
+
+def lang_id(value):
+    if pd.isna(value):
+        return value
+    return [values[x] for x in value.split(", ")]
+
+def aggregate(row):
+    data={
+        "code": row.iloc[0]["POVINN"],
+        "start_semester": id(row.iloc[0]["VSEMZAC"]),
+        "semester_count": id(row.iloc[0]["VSEMPOC"]),
+        "lecture_range_winter": id(row.iloc[0]["LECTURE_RANGE_WINTER"]),
+        "seminar_range_winter": id(row.iloc[0]["SEMINAR_RANGE_WINTER"]),
+        "lecture_range_summer": id(row.iloc[0]["LECTURE_RANGE_SUMMER"]),
+        "seminar_range_summer": id(row.iloc[0]["SEMINAR_RANGE_SUMMER"]),
+        "credits": id(row.iloc[0]["VEBODY"]),
+        "faculty_guarantor": id(row.iloc[0]["PGARANT"]),
+        "exam_type": id(row.iloc[0]["VTYP"]),
+        "range_unit": id(row.iloc[0]["VRVCEM"]),
+        "taught": id(row.iloc[0]["PVYUCOVAN"]),
+        "taught_lang": lang_id(row.iloc[0]["VYJAZYK"]),
+        "faculty": id(row.iloc[0]["FACULTY_NAME"]),
+        "capacity": id(row.iloc[0]["PPOCMAX"]),
+        "min_number": id(row.iloc[0]["PPOCMIN"]),
+        "cs": select(row, "cs").to_dict(orient="records")[0],
+        "en": select(row, "en").to_dict(orient="records")[0],
+        "guarantors": select_teachers(row.iloc[0]["GUARANTORS"]),
+        "teachers": select_teachers(row.iloc[0]["TEACHERS"])
+    }
+    return pd.Series(data=data, index=data.keys())
+
+courses = courses[~courses["PVYUCOVAN"].isin(["Zrušen", "Cancelled"])]
+courses_data = courses[pd.notna(courses["VEBODY"])].copy()
+courses_data["POVINNGROUP"] = courses_data["POVINN"]
+courses_data = courses_data.groupby(["POVINNGROUP"]).apply(aggregate, include_groups=False)
+courses_data = courses_data.reset_index(drop=True).reset_index(drop=False).rename(columns={"index": "id"})
+courses_data.to_json('./init_search/courses.json', orient='records', lines=True)
+
+df = courses_data[[
+    "faculty", "faculty_guarantor", "exam_type", "taught", "taught_lang",
+    "lecture_range_winter", "seminar_range_winter", "lecture_range_summer", "seminar_range_summer",
+    "range_unit", "credits", "capacity", "min_number"]]
+df = df.melt().explode(["value"]).dropna().drop_duplicates()
+df.to_csv("./init_db/filter_params.csv", index=False, header=False)

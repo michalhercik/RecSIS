@@ -6,7 +6,7 @@ courses = pd.read_csv('init_db/POVINN.csv', dtype={
     "VUCIT1": str,
     "VUCIT2": str,
     "VUCIT3": str,
-    "VSEMZAC": str,
+    "VSEMZAC": pd.Int32Dtype(),
     "VSEMPOC": pd.Int32Dtype(),
     "VROZSAHPR1": pd.Int32Dtype(),
     "VROZSAHCV1": pd.Int32Dtype(),
@@ -85,7 +85,7 @@ lang_en = lang_en.rename(columns={"ANAZEV": "NAZEV"})
 lang = pd.concat([lang_cs, lang_en])
 lang["NAZEV"] = lang["NAZEV"].apply(lambda x: x.capitalize())
 lang = lang.groupby(["POVINN", "LANG"]).agg(list)
-lang = lang.apply(lambda x: ", ".join(x["NAZEV"]), axis=1).rename("VYJAZYK")
+lang = lang.apply(lambda x: ", ".join(sorted(x["NAZEV"])), axis=1).rename("VYJAZYK")
 
 common = ["POVINN", "VPLATIOD", "VPLATIDO", "PFAKULTA",
        "PGARANT", "PVYUCOVAN", "VSEMZAC", "VSEMPOC", "VROZSAHPR1",
@@ -93,6 +93,7 @@ common = ["POVINN", "VPLATIOD", "VPLATIDO", "PFAKULTA",
        "PPOCMIN", "PPOCMAX"]
 courses_cs = courses[["PNAZEV"] + common].rename(columns={"PNAZEV": "NAME"})
 courses_cs["PPOCMAX"] = courses_cs["PPOCMAX"].replace({np.nan: "Neomezená"})
+# TODO: not complete
 courses_cs["VTYP"] = courses_cs["VTYP"].replace({"Z": "Z", "F": "KZ", "K": "Zk", "*": "Z+Zk"})
 courses_cs["LANG"] = "cs"
 courses_cs["PVYUCOVAN"] = courses_cs["PVYUCOVAN"].replace({"V": "Vyučován", "N": "Nevyučován", "Z": "Zrušen"})
@@ -114,5 +115,17 @@ cou["GUARANTORS"] = cou["GUARANTORS"].replace({pd.NA: None})
 cou["GUARANTORS"] = cou["GUARANTORS"].apply(lambda x: json.dumps(x))
 cou["TEACHERS"] = cou["TEACHERS"].replace({pd.NA: None})
 cou["TEACHERS"] = cou["TEACHERS"].apply(lambda x: json.dumps(x))
+
+def condition(row, first, second):
+    if pd.notna(row["VSEMZAC"]) and row["VSEMZAC"] == 2:
+        return row[second]
+    return row[first]
+
+cou["LECTURE_RANGE_WINTER"] = cou[["VROZSAHPR1", "VROZSAHPR2", "VSEMZAC"]].apply(lambda x: condition(x, "VROZSAHPR1", "VROZSAHPR2"), axis=1)
+cou["SEMINAR_RANGE_WINTER"] = cou[["VROZSAHCV1", "VROZSAHCV2", "VSEMZAC"]].apply(lambda x: condition(x, "VROZSAHCV1", "VROZSAHCV2"), axis=1)
+cou["LECTURE_RANGE_SUMMER"] = cou[["VROZSAHPR1", "VROZSAHPR2", "VSEMZAC"]].apply(lambda x: condition(x, "VROZSAHPR2", "VROZSAHPR1"), axis=1)
+cou["SEMINAR_RANGE_SUMMER"] = cou[["VROZSAHCV1", "VROZSAHCV2", "VSEMZAC"]].apply(lambda x: condition(x, "VROZSAHCV2", "VROZSAHCV1"), axis=1)
+
+cou = cou.drop(columns=["VROZSAHPR1", "VROZSAHPR2", "VROZSAHCV1", "VROZSAHCV2"])
 
 cou.to_csv('init_db/courses_transformed.csv', index=False)
