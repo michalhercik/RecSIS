@@ -170,17 +170,17 @@ templ filterSection(coursesPage *coursesPage, t text) {
     <div class="form-group" style="height: 100%;">
         <div>
             <p class="form-label">{ t.SortByFilter + ":" }</p>
-            @sortInput("sortRelevance", strconv.Itoa(int(relevance)), t.Relevance)
-            @sortInput("sortRecommended", strconv.Itoa(int(recommended)), t.Recommended)
-            @sortInput("sortRating", strconv.Itoa(int(rating)), t.Rating)
-            @sortInput("sortMostPopular", strconv.Itoa(int(mostPopular)), t.MostPopular)
-            @sortInput("sortNewest", strconv.Itoa(int(newest)), t.Newest)
+            // @sortInput("sortRelevance", strconv.Itoa(int(relevance)), t.Relevance)
+            // @sortInput("sortRecommended", strconv.Itoa(int(recommended)), t.Recommended)
+            // @sortInput("sortRating", strconv.Itoa(int(rating)), t.Rating)
+            // @sortInput("sortMostPopular", strconv.Itoa(int(mostPopular)), t.MostPopular)
+            // @sortInput("sortNewest", strconv.Itoa(int(newest)), t.Newest)
         </div>
         <div>
             <p class="form-label">{ t.SemesterFilter + ":" }</p>
-            @semesterInput("semesterBoth", strconv.Itoa(int(all)), t.Both)
-            @semesterInput("semesterWinter", strconv.Itoa(int(winter)), t.Winter)
-            @semesterInput("semesterSummer", strconv.Itoa(int(summer)), t.Summer)
+            // @semesterInput("semesterBoth", strconv.Itoa(int(all)), t.Both)
+            // @semesterInput("semesterWinter", strconv.Itoa(int(winter)), t.Winter)
+            // @semesterInput("semesterSummer", strconv.Itoa(int(summer)), t.Summer)
         </div>
         <div>
             <p class="form-label">{ t.CreditsFilter + ":" }</p>

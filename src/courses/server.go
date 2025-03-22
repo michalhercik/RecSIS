@@ -123,16 +123,6 @@ func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
 	if err != nil {
 		hitsPerPage = coursesPerPage
 	}
-	sorted, err := strconv.Atoi(r.FormValue("sort"))
-	if err != nil {
-		sorted = int(relevance)
-	}
-	sortedBy := sortFilter(sorted)
-	semesterInt, err := strconv.ParseInt(r.FormValue("semester"), 10, 64)
-	if err != nil {
-		semesterInt = int64(all)
-	}
-	semester := semesterFilter(semesterInt)
 
 	// TODO change language based on URL
 	req = Request{
@@ -142,8 +132,6 @@ func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
 		page:        page,
 		hitsPerPage: hitsPerPage,
 		lang:        lang,
-		sortedBy:    sortedBy,
-		semester:    semester,
 	}
 	return req, nil
 }
@@ -164,14 +152,13 @@ func (s Server) search(req Request) (coursesPage, error) {
 		return result, err
 	}
 	facets := filter.MakeFacetDistribution(searchResponse.FacetDistribution, paramLabels)
+
 	result = coursesPage{
 		courses:    coursesData,
 		page:       int(req.page),
 		pageSize:   int(req.hitsPerPage),
 		totalPages: searchResponse.TotalPages,
 		search:     req.query,
-		sortedBy:   req.sortedBy,
-		semester:   req.semester,
 		facets:     facets,
 	}
 	return result, nil
