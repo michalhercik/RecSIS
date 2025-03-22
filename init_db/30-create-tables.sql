@@ -284,3 +284,19 @@ CREATE TABLE course_ratings (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (user_id, category_code, course_code)
 );
+
+-- CREATE TABLE filter_labels (
+--     lang CHAR(2) NOT NULL,
+--     labels VARCHAR(50)[] NOT NULL
+-- )
+
+CREATE TABLE filter_labels (
+    id INT NOT NULL,
+    lang CHAR(2) NOT NULL,
+    label VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE filter_params (
+    param_name VARCHAR(30) NOT NULL,
+    value_id INT NOT NULL
+);

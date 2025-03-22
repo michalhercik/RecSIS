@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/michalhercik/RecSIS/courses/internal/filter"
 	//"log"
 )
 
 type DataManager interface {
-	Blueprint(sessionID string, courses []string) (map[string][]Assignment, error)
+	Courses(sessionID string, courseCodes []string, lang Language) ([]Course, error)
+	ParamLabels(lang Language) (map[string][]filter.ParamValue, error)
 }
 
 type SemesterAssignment int
@@ -27,6 +30,7 @@ type coursesPage struct {
 	search     string
 	sortedBy   sortType
 	semester   TeachingSemester
+	facets     filter.FacetDistribution
 }
 
 const (
@@ -64,24 +68,25 @@ const (
 )
 
 type Teacher struct {
-	sisId       int
-	firstName   string
-	lastName    string
-	titleBefore string
-	titleAfter  string
+	SisID       int    `json:"KOD"`
+	FirstName   string `json:"JMENO"`
+	LastName    string `json:"PRIJMENI"`
+	TitleBefore string `json:"TITULPRED"`
+	TitleAfter  string `json:"TITULZA"`
 }
 
 // TODO: here should be this ↓ but DB is broken, first name always empty
 // return fmt.Sprintf("%c. %s",
+//
 //	t.firstName[0], t.lastName)
 func (t Teacher) String() string {
 	return fmt.Sprintf("%s %s %s %s",
-		t.titleBefore, t.firstName, t.lastName, t.titleAfter)
+		t.TitleBefore, t.FirstName, t.LastName, t.TitleAfter)
 }
 
-type Teachers []Teacher
+type TeacherSlice []Teacher
 
-func (t Teachers) string() string {
+func (t TeacherSlice) string() string {
 	names := []string{}
 	for _, teacher := range t {
 		names = append(names, teacher.String())
@@ -92,14 +97,17 @@ func (t Teachers) string() string {
 	return strings.Join(names, ", ")
 }
 
-func (t *Teachers) trim() {
-	result := Teachers{}
-	for _, teacher := range *t {
-		if teacher.sisId != -1 {
-			result = append(result, teacher)
-		}
+func (ts *TeacherSlice) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case []byte:
+		json.Unmarshal(v, &ts)
+		return nil
+	case string:
+		json.Unmarshal([]byte(v), &ts)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
 	}
-	*t = result
 }
 
 type TeachingSemester int
@@ -111,13 +119,13 @@ const (
 )
 
 type Assignment struct {
-	year     int
-	semester SemesterAssignment
+	Year     int                `json:"year"`
+	Semester SemesterAssignment `json:"semester"`
 }
 
 func (a Assignment) String(lang string) string {
 	semester := ""
-	switch a.semester {
+	switch a.Semester {
 	case assignmentNone:
 		semester = texts[lang].N
 	case assignmentWinter:
@@ -128,16 +136,30 @@ func (a Assignment) String(lang string) string {
 		semester = texts[lang].ER
 	}
 
-	result := fmt.Sprintf("%d%s", a.year, semester)
-	if a.year == 0 {
+	result := fmt.Sprintf("%d%s", a.Year, semester)
+	if a.Year == 0 {
 		result = texts[lang].UN
 	}
 	return result
 }
 
-type Assignments []Assignment
+type AssignmentSlice []Assignment
 
-func (a Assignments) String(lang string) string {
+func (a *AssignmentSlice) Scan(value interface{}) error {
+	switch v := value.(type) {
+	case nil:
+		*a = AssignmentSlice{}
+	case []byte:
+		json.Unmarshal(v, a)
+	case string:
+		json.Unmarshal([]byte(v), a)
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+	return nil
+}
+
+func (a AssignmentSlice) String(lang string) string {
 	assignments := []string{}
 	for _, assignment := range a {
 		assignments = append(assignments, assignment.String(lang))
@@ -148,86 +170,65 @@ func (a Assignments) String(lang string) string {
 	return strings.Join(assignments, " ")
 }
 
-type Course struct {
-	code                 string
-	name                 string
-	annotation           string
-	start                TeachingSemester
-	semesterCount        int
-	lectureRange1        int
-	seminarRange1        int
-	lectureRange2        int
-	seminarRange2        int
-	examType             string
-	credits              int
-	teachers             Teachers
-	rating               int
-	blueprintAssignments Assignments
+type Description struct {
+	Title   string `json:"TITLE"`
+	Content string `json:"MEMO"`
 }
 
-func (c *Course) UnmarshalJSON(data []byte) error {
-	raw := struct {
-		Code              string           `json:"code"`
-		NameCS            string           `json:"nameCs"`
-		NameEN            string           `json:"nameEn"`
-		AnnotationCs      string           `json:"annotationCs"`
-		AnnotationEn      string           `json:"annotationEn"`
-		Start             TeachingSemester `json:"start"`
-		SemesterCount     int              `json:"semesterCount"`
-		LectureRange1     int              `json:"lectureRange1"`
-		SeminarRange1     int              `json:"seminarRange1"`
-		LectureRange2     int              `json:"lectureRange2"`
-		SeminarRange2     int              `json:"seminarRange2"`
-		ExamType          string           `json:"examType"`
-		Credits           int              `json:"credits"`
-		Teacher1Id        int              `json:"teacher1Id"`
-		Teacher1Firstname string           `json:"teacher1Firstname"`
-		Teacher1Lastname  string           `json:"teacher1Lastname"`
-		Teacher2Id        int              `json:"teacher2Id"`
-		Teacher2Firstname string           `json:"teacher2Firstname"`
-		Teacher2Lastname  string           `json:"teacher2Lastname"`
-		Teacher3Id        int              `json:"teacher3Id"`
-		Teacher3Firstname string           `json:"teacher3Firstname"`
-		Teacher3Lastname  string           `json:"teacher3Lastname"`
-		Rating            int              `json:"rating"`
-	}{}
-	err := json.Unmarshal(data, &raw)
-	if err != nil {
+func (d *Description) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case []byte:
+		json.Unmarshal(v, &d)
+		return nil
+	case string:
+		json.Unmarshal([]byte(v), &d)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+func (d Description) Value() (interface{}, error) {
+	return json.Marshal(d)
+}
+
+type NullDescription struct {
+	Description
+	Valid bool
+}
+
+func (d *NullDescription) Scan(val interface{}) error {
+	if val == nil {
+		d.Valid = false
+		return nil
+	}
+	if err := d.Description.Scan(val); err != nil {
 		return err
 	}
-	c.code = raw.Code
-	if raw.NameCS != "" {
-		c.name = raw.NameCS
-		c.annotation = raw.AnnotationCs
-	} else {
-		c.name = raw.NameEN
-		c.annotation = raw.AnnotationEn
-	}
-	c.start = raw.Start
-	c.semesterCount = raw.SemesterCount
-	c.lectureRange1 = raw.LectureRange1
-	c.seminarRange1 = raw.SeminarRange1
-	c.lectureRange2 = raw.LectureRange2
-	c.seminarRange2 = raw.SeminarRange2
-	c.examType = raw.ExamType
-	c.credits = raw.Credits
-	c.teachers = Teachers{
-		Teacher{
-			sisId:     raw.Teacher1Id,
-			firstName: raw.Teacher1Firstname,
-			lastName:  raw.Teacher1Lastname,
-		},
-		Teacher{
-			sisId:     raw.Teacher2Id,
-			firstName: raw.Teacher2Firstname,
-			lastName:  raw.Teacher2Lastname,
-		},
-		Teacher{
-			sisId:     raw.Teacher3Id,
-			firstName: raw.Teacher3Firstname,
-			lastName:  raw.Teacher3Lastname,
-		},
-	}
-	c.rating = raw.Rating
+	d.Valid = true
 	return nil
+}
+
+func (d NullDescription) string() string {
+	if d.Valid {
+		return d.Content
+	}
+	return ""
+}
+
+type Course struct {
+	Code          string           `db:"code"`
+	Name          string           `db:"title"`
+	Annotation    NullDescription  `db:"annotation"`
+	Start         TeachingSemester `db:"start_semester"`
+	SemesterCount int              `db:"semester_count"`
+	LectureRange1 int              `db:"lecture_range1"`
+	SeminarRange1 int              `db:"seminar_range1"`
+	LectureRange2 int              `db:"lecture_range2"`
+	SeminarRange2 int              `db:"seminar_range2"`
+	ExamType      string           `db:"exam_type"`
+	Credits       int              `db:"credits"`
+	Guarantors    TeacherSlice     `db:"guarantors"`
+	// Rating               int
+	BlueprintAssignments AssignmentSlice `db:"assignment"`
 }
