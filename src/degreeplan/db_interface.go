@@ -77,10 +77,10 @@ type Course struct {
 	Note          string           `db:"note"`
 	Credits       int              `db:"credits"`
 	Start         TeachingSemester `db:"start_semester"`
-	LectureRange1 int              `db:"lecture_range_1"`
-	SeminarRange1 int              `db:"seminar_range_1"`
-	LectureRange2 int              `db:"lecture_range_2"`
-	SeminarRange2 int              `db:"seminar_range_2"`
+	LectureRange1 int              `db:"lecture_range1"`
+	SeminarRange1 int              `db:"seminar_range1"`
+	LectureRange2 int              `db:"lecture_range2"`
+	SeminarRange2 int              `db:"seminar_range2"`
 	SemesterCount int              `db:"semester_count"`
 	ExamType      string           `db:"exam_type"`
 	InBlueprint   bool             `db:"in_blueprint"`

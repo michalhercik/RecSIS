@@ -47,7 +47,7 @@ type Teacher struct {
 }
 
 func (t Teacher) String() string {
-	return fmt.Sprintf("%c. %s", t.firstName[0], t.lastName)
+	return fmt.Sprintf("%c. %s", t.FirstName[0], t.LastName)
 }
 
 type TeacherSlice []Teacher
@@ -83,6 +83,21 @@ const (
 	teachingSummerOnly
 	teachingBoth
 )
+
+func (ts *TeachingSemester) String(lang string) string {
+	semester := ""
+	switch *ts {
+	case teachingWinterOnly:
+		semester = texts[lang].WinterAssign
+	case teachingSummerOnly:
+		semester = texts[lang].SummerAssign
+	case teachingBoth:
+		semester = texts[lang].Both
+	default:
+		semester = "unsupported"
+	}
+	return semester
+}
 
 type Assignment struct {
 	Year     int                `json:"year"`

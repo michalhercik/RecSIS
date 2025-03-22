@@ -21,68 +21,33 @@ func min(a, b int) int {
     return b
 }
 
-// TODO: do not use this, use DB, this is deprecated
-func examTypeStr(examType string) string {
-    // to add: STEX, thesis, ...
-    switch examType {
-    case "Z":
-        return "C" // Z
-    case "1":
-        return "??" // do not know
-    case "F":
-        return "MC" // KZ
-    case "D":
-        return "??" // do not know
-    case "K":
-        return "Ex" // Zk
-    case "*":
-        return "C+Ex" // Z+Zk
-    default:
-        return "unknown"
-    }
-}
-
-func hoursString(lecture, seminar int) string {
-    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar)
-}
-
-// TODO: use just examType
-func hoursExamsString(lecture, seminar int, examType string) string {
-    return hoursString(lecture, seminar) + ", " + examTypeStr(examType)
-}
-
 func semesterHoursExamsString(course *Course, t text) string {
-    semCount := course.SemesterCount
-    result := ""
-    switch semCount {
-    case 1:
-        switch course.Start {
-        case teachingWinterOnly:
-            result = t.WinterAssign + " " + hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType)
-        case teachingSummerOnly:
-            result = t.SummerAssign + " " + hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType)
-        case teachingBoth:
-            result = t.Both + " " + hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType)
-        default:
-            result = "unsupported"
-        }
-    case 2:
-        switch course.Start {
-        // TODO: this probably wont fit, fix this
-        case teachingWinterOnly:
-            result = t.W + ":" + hoursString(course.LectureRange1, course.SeminarRange1) + " " + t.S + ":" + hoursString(course.LectureRange2, course.SeminarRange2) + ", " + examTypeStr(course.ExamType)
-        // TODO: this probably wont fit, fix this
-        case teachingSummerOnly:
-            result = t.W + ":" + hoursString(course.LectureRange2, course.SeminarRange2) + " " + t.S + ":" + hoursString(course.LectureRange1, course.SeminarRange1) + ", " + examTypeStr(course.ExamType)
-        case teachingBoth:
-            result = "unsupported"
-        default:
-            result = "unsupported"
-        }
-    default:
-        result = "unsupported"
+    result := course.Start.String(t.Language) + " "
+    both := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
+    winter := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
+    summer := strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2)
+    
+    switch course.Start {
+    case teachingWinterOnly:
+        result += winter
+    case teachingSummerOnly:
+        result += summer
+    case teachingBoth:
+        result += both
     }
-    return result
+
+    if course.SemesterCount == 2 {
+        switch course.Start {
+        case teachingWinterOnly:
+            result += " " + t.SummerAssign + " " + summer
+        case teachingSummerOnly:
+            result += " " + t.WinterAssign + " " + winter
+        case teachingBoth:
+            result = "ERROR" // TODO: what should be done in this case? can it even happen?
+        }
+    }
+
+    return result + ", " + course.ExamType
 }
 
 templ QuickResults(res *QuickResponse, t text) {
