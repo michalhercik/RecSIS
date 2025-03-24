@@ -146,6 +146,9 @@ func (e expression) String() string {
 
 func makeExpression(conditions []condition) expression {
 	var sb strings.Builder
+	if len(conditions) == 0 {
+		return ""
+	}
 	sb.WriteString(string(conditions[0]))
 	for _, c := range conditions[1:] {
 		sb.WriteString(" AND ")

@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/michalhercik/RecSIS/courses/internal/filter"
 )
 
 const courseIndex = "courses"
+const searchParam = "search"
+const pageParam = "page"
+const hitsPerPageParam = "hitsPerPage"
 
 type Server struct {
 	Data   DataManager
@@ -77,6 +81,10 @@ func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	// Set the HX-Push-Url header to update the browser URL without a full reload
+	w.Header().Set("HX-Push-Url", parseUrl(r.URL.Query(), t))
+
 	// coursesPage := createPageContent(res, req)
 	coursesPage := res
 	Courses(&coursesPage, t).Render(r.Context(), w)
@@ -91,7 +99,7 @@ func (s Server) enQuickSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang Language, t text) {
-	query := r.FormValue("search")
+	query := r.FormValue(searchParam)
 	req := QuickRequest{
 		query:    query,
 		indexUID: courseIndex,
@@ -114,17 +122,21 @@ func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
 	if err != nil {
 		return req, err
 	}
-	query := r.FormValue("search")
-	page, err := strconv.Atoi(r.FormValue("page"))
+	query := r.FormValue(searchParam)
+	page, err := strconv.Atoi(r.FormValue(pageParam))
 	if err != nil {
 		page = 1
 	}
-	hitsPerPage, err := strconv.Atoi(r.FormValue("hitsPerPage"))
+	hitsPerPage, err := strconv.Atoi(r.FormValue(hitsPerPageParam))
 	if err != nil {
 		hitsPerPage = coursesPerPage
 	}
+	filter, err := filter.ParseFilters(r.URL.Query())
+	if err != nil {
+		// TODO: handle error
+		log.Printf("search error: %v", err)
+	}
 
-	// TODO change language based on URL
 	req = Request{
 		sessionID:   sessionCookie.Value,
 		query:       query,
@@ -132,6 +144,7 @@ func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
 		page:        page,
 		hitsPerPage: hitsPerPage,
 		lang:        lang,
+		filter:	     filter,
 	}
 	return req, nil
 }
@@ -162,4 +175,17 @@ func (s Server) search(req Request) (coursesPage, error) {
 		facets:     facets,
 	}
 	return result, nil
+}
+
+func parseUrl(queryValues url.Values, t text) string {
+	// exclude default values from the URL
+	if queryValues.Get("search") == "" {
+		queryValues.Del("search")
+	}
+	if queryValues.Get("page") == "1" {
+		queryValues.Del("page")
+	}
+	// TODO: possibly add more defaults to exclude
+
+	return t.Utils.LangLink("/courses?" + queryValues.Encode())
 }
