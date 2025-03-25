@@ -20,6 +20,18 @@ type DataManager interface {
 	RemoveYear(sessionID string) error
 }
 
+const (
+	yearUnassign     string = "year-unassign"
+	semesterUnassign string = "semester-unassign"
+	selectedMove     string = "selected"
+)
+
+const (
+	yearRemove     string = "year"
+	semesterRemove string = "semester"
+	selectedRemove string = "selected"
+)
+
 type DBLang string
 
 const (
