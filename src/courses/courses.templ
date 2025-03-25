@@ -2,6 +2,7 @@ package courses
 
 import (
     "github.com/michalhercik/RecSIS/utils"
+	"github.com/michalhercik/RecSIS/courses/internal/filter"
     "strconv"
 )
 
@@ -21,68 +22,33 @@ func min(a, b int) int {
     return b
 }
 
-// TODO: do not use this, use DB, this is deprecated
-func examTypeStr(examType string) string {
-    // to add: STEX, thesis, ...
-    switch examType {
-    case "Z":
-        return "C" // Z
-    case "1":
-        return "??" // do not know
-    case "F":
-        return "MC" // KZ
-    case "D":
-        return "??" // do not know
-    case "K":
-        return "Ex" // Zk
-    case "*":
-        return "C+Ex" // Z+Zk
-    default:
-        return "unknown"
-    }
-}
-
-func hoursString(lecture, seminar int) string {
-    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar)
-}
-
-// TODO: use just examType
-func hoursExamsString(lecture, seminar int, examType string) string {
-    return hoursString(lecture, seminar) + ", " + examTypeStr(examType)
-}
-
 func semesterHoursExamsString(course *Course, t text) string {
-    semCount := course.SemesterCount
-    result := ""
-    switch semCount {
-    case 1:
-        switch course.Start {
-        case teachingWinterOnly:
-            result = t.WinterAssign + " " + hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType)
-        case teachingSummerOnly:
-            result = t.SummerAssign + " " + hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType)
-        case teachingBoth:
-            result = t.Both + " " + hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType)
-        default:
-            result = "unsupported"
-        }
-    case 2:
-        switch course.Start {
-        // TODO: this probably wont fit, fix this
-        case teachingWinterOnly:
-            result = t.W + ":" + hoursString(course.LectureRange1, course.SeminarRange1) + " " + t.S + ":" + hoursString(course.LectureRange2, course.SeminarRange2) + ", " + examTypeStr(course.ExamType)
-        // TODO: this probably wont fit, fix this
-        case teachingSummerOnly:
-            result = t.W + ":" + hoursString(course.LectureRange2, course.SeminarRange2) + " " + t.S + ":" + hoursString(course.LectureRange1, course.SeminarRange1) + ", " + examTypeStr(course.ExamType)
-        case teachingBoth:
-            result = "unsupported"
-        default:
-            result = "unsupported"
-        }
-    default:
-        result = "unsupported"
+    result := course.Start.String(t.Language) + " "
+    both := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
+    winter := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
+    summer := strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2)
+    
+    switch course.Start {
+    case teachingWinterOnly:
+        result += winter
+    case teachingSummerOnly:
+        result += summer
+    case teachingBoth:
+        result += both
     }
-    return result
+
+    if course.SemesterCount == 2 {
+        switch course.Start {
+        case teachingWinterOnly:
+            result += " " + t.SummerAssign + " " + summer
+        case teachingSummerOnly:
+            result += " " + t.WinterAssign + " " + winter
+        case teachingBoth:
+            result = "ERROR" // TODO: what should be done in this case? can it even happen?
+        }
+    }
+
+    return result + ", " + course.ExamType
 }
 
 templ QuickResults(res *QuickResponse, t text) {
@@ -110,32 +76,32 @@ templ QuickResults(res *QuickResponse, t text) {
 
 templ search(coursesPage *coursesPage, t text) {
     <form
+        id="search-form"
         hx-get={ t.Utils.LangLink("/courses/search") }
         hx-target="#courses"
         hx-swap="outerHTML"
-        :hx-vals="generateHxVals()"
-        :hx-push-url="currentUrl"
+        hx-include="#filter-form"
         class="pt-3 pb-3"
         x-data="{ quickResOpen: false }"
     >
         <div class="justify-content-center mx-5">
             <div class="dropdown" @click.away="quickResOpen = false">
                 <div class="input-group">
-                    <input type="text" name="search" id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
-                        x-model="params.search"
+                    <input type="text" name={ searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
+                        x-model="searchInput"
                         @click="quickResOpen = true"
                         @keydown="quickResOpen = true"
                         @keydown.escape="quickResOpen = false"
-                        @focus="quickResOpen = true; if (params.search !== '') $dispatch('triggerSearch')"
+                        @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
                         hx-get={ t.Utils.LangLink("/courses/quicksearch") }
                         hx-trigger="input changed, triggerSearch from:body"
                         hx-target="#quick-search-results"
                         hx-swap="outerHTML"
                         hx-push-url="false"
                     />
-                    <button type="submit" class="btn btn-primary" @click="quickResOpen = false; params.page='1'; params.hitsPerPage='30'; updateUrl()">{ t.SearchButton }</button>
+                    <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
                 </div>
-                <div x-cloak x-show="quickResOpen && params.search.length > 0">
+                <div x-cloak x-show="quickResOpen && searchInput.length > 0">
                     @QuickResults(&QuickResponse{
                         approxHits: -1,
                         courses: []QuickCourse{},
@@ -146,48 +112,57 @@ templ search(coursesPage *coursesPage, t text) {
     </form>
 }
 
-templ input(id, name, inputType, value, xModel, text string) {
+templ checkboxInput(name, value, label string, count int, t text) {
     <div class="form-check">
-        <input role="button" class="form-check-input" type={ inputType } name={ name } id={ id }value={ value } x-model={ xModel } @change="updateUrl()" :hx-push-url="currentUrl">
-        <label role="button" class="form-check-label" for={ id }>{ text }</label>
+        <input role="button" class="form-check-input" 
+            type="checkbox" name={ name } id={ name + "-" + value } value={ value }>
+        <label role="button" class="form-check-label" for={ name + "-" + value }>
+            { label + " (" + strconv.Itoa(count) + ")" }
+        </label>
     </div>
 }
 
-templ sortInput(id, value, text string) {
-    @input(id, "sort", "radio", value, "params.sort", text)
-}
+// TODO: currently cannot use, because param is not exported
+// templ filterOptions(cp *coursesPage, p filter.param, t text) {
+//     for f := range cp.facets.ParamDistribution(p) {
+//         @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(p)), strconv.Itoa(f.Code), f.Label, f.Count, t)
+//     }
+// }
 
-templ semesterInput(id, value, text string) {
-    @input(id, "semester", "radio", value, "params.semester", text)
-}
 
-// TODO: fix x-model for credits
-templ creditsInput(id, value string) {
-    @input(id, "credits", "checkbox", value, "params.credits", value)
-}
-
-templ filterSection(coursesPage *coursesPage, t text) {
+templ filterSection(cp *coursesPage, t text) {
     <div class="form-group" style="height: 100%;">
-        <div>
-            <p class="form-label">{ t.SortByFilter + ":" }</p>
-            // @sortInput("sortRelevance", strconv.Itoa(int(relevance)), t.Relevance)
-            // @sortInput("sortRecommended", strconv.Itoa(int(recommended)), t.Recommended)
-            // @sortInput("sortRating", strconv.Itoa(int(rating)), t.Rating)
-            // @sortInput("sortMostPopular", strconv.Itoa(int(mostPopular)), t.MostPopular)
-            // @sortInput("sortNewest", strconv.Itoa(int(newest)), t.Newest)
-        </div>
-        <div>
-            <p class="form-label">{ t.SemesterFilter + ":" }</p>
-            // @semesterInput("semesterBoth", strconv.Itoa(int(all)), t.Both)
-            // @semesterInput("semesterWinter", strconv.Itoa(int(winter)), t.Winter)
-            // @semesterInput("semesterSummer", strconv.Itoa(int(summer)), t.Summer)
-        </div>
-        <div>
-            <p class="form-label">{ t.CreditsFilter + ":" }</p>
-            for i := 0; i <= 10; i++ {
-                @creditsInput("credits" + strconv.Itoa(i), strconv.Itoa(i))
-            }
-        </div>
+        <form
+            id="filter-form"
+            hx-get={ t.Utils.LangLink("/courses/search") }
+            hx-target="#courses"
+            hx-swap="outerHTML"
+            hx-include="#search-form"
+            hx-trigger="change"
+        >
+            // semester filter
+            <div>
+                <p class="form-label">{ t.SemesterFilter + ":" }</p>
+                for f := range cp.facets.ParamDistribution(filter.StartSemester) {
+                    @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(filter.StartSemester)), strconv.Itoa(f.Code), f.Label, f.Count, t)
+                }
+            </div>
+            // faculty filter
+            <div>
+                <p class="form-label">{ t.FacultyFilter + ":" }</p>
+                for f := range cp.facets.ParamDistribution(filter.Faculty) {
+                    @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(filter.Faculty)), strconv.Itoa(f.Code), f.Label, f.Count, t)
+                }
+            </div>
+            // credits filter
+            <div>
+                <p class="form-label">{ t.CreditsFilter + ":" }</p>
+                for f := range cp.facets.ParamDistribution(filter.Credits) {
+                    @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(filter.Credits)), strconv.Itoa(f.Code), f.Label, f.Count, t)
+                }
+            </div>
+        </form>
+        // move to the top of the page button
         <div class="text-center justify-content-center d-flex mt-3" style="position: sticky; top: 72px;">
             <p
                 role="button"
@@ -212,7 +187,7 @@ templ ribbon(ba AssignmentSlice, t text) {
 templ blueprintAssignment(code string, t text) {
     <div class="d-flex justify-content-end mt-auto pt-3">
         <div class="btn-group">
-            <button type="button" class="btn btn-blueprint"
+            <button type="button" class="btn btn-outline-blueprint"
                 hx-post={ "/blueprint/course/" + code }
                 hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
             >
@@ -262,6 +237,7 @@ templ courseCard(course *Course, t text) {
                 x-ref="annotation"
             >
                 <h5 class="card-title"><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.Code)) }>{ course.Name }</a></h5>
+                // TODO take care of no guarantors
                 <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string() }</h6>
                 <p class="card-text annotation-text">{ course.Annotation.string() }</p>
             </div>
@@ -278,10 +254,7 @@ templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
             class="page-link"
             :class={ strconv.FormatBool(cp.page == page || page < 1 || page > cp.totalPages) + " && 'disabled'" }
             hx-get={ t.Utils.LangLink("/courses/search") }
-            hx-target="#courses"
-            hx-swap="outerHTML show:window:top"
-            hx-trigger="new-page-event"
-            @click={ "newPage('" + strconv.Itoa(page) + "', $event)" }
+            hx-vals={ `"` + pageParam + `": ` + strconv.Itoa(page) }
         >
             <i class={ icon }></i>
         </div>
@@ -295,10 +268,7 @@ templ paginationNumberButton(page int, cp *coursesPage, t text) {
             class="page-link"
             :class={ strconv.FormatBool(cp.page == page) + " && 'active'" }
             hx-get={ t.Utils.LangLink("/courses/search") }
-            hx-target="#courses"
-            hx-swap="outerHTML show:window:top"
-            hx-trigger="new-page-event"
-            @click={ "newPage('" + strconv.Itoa(page) + "', $event)" }
+            hx-vals={ `"` + pageParam + `": ` + strconv.Itoa(page) }
         >
             { strconv.Itoa(page) }
         </div>
@@ -309,10 +279,10 @@ templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
     <button
         class="btn btn-outline-primary"
         hx-get={ t.Utils.LangLink("/courses/search") }
+        hx-vals={ `"` + hitsPerPageParam + `": ` + strconv.Itoa(newPageSize) }
         hx-target="#courses"
+        hx-include="#filter-form, #search-form"
         hx-swap="outerHTML"
-        hx-trigger="load-more-event"
-        @click={ "loadMore('" + strconv.Itoa(newPageSize) + "', $event);" }
     >
         { t.LoadMore }
     </button>
@@ -330,7 +300,13 @@ templ pagination(cp *coursesPage, t text) {
     // disable pagination if loaded more courses
     if cp.pageSize == coursesPerPage {
         <div class="mt-3 d-flex justify-content-center">
-            <ul class="pagination justify-content-center mt-3">
+            <ul
+                class="pagination justify-content-center mt-3"
+                hx-target="#courses"
+                hx-include="#filter-form, #search-form"
+                hx-swap="outerHTML show:window:top"
+                hx-trigger="click"
+            >
                 @paginationIconButton(cp.page - 1, "bi bi-chevron-left", cp, t)
                 @paginationNumberButton(1, cp, t)
                 if cp.page > 4 {
@@ -377,8 +353,9 @@ templ Courses(cp *coursesPage, t text) {
 }
 
 templ Content(coursesPage *coursesPage, t text) {
-    // x-data is needed for x-bind:class
-    <div id="courses-page" class="grid-page" x-data="urlParams">
+    // TODO: define x-data, x-model and x-init for all filters to survive page reload
+    // x-data is needed for x-bind:class to work
+    <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" }>
         <div class="filter bg-body-secondary">
             @filterSection(coursesPage, t)
         </div>
@@ -387,108 +364,6 @@ templ Content(coursesPage *coursesPage, t text) {
             @Courses(coursesPage, t)
         </div>
     </div>
-
-    <script>
-    // Reinitialize Alpine when HTMX swaps in new content
-    document.addEventListener('htmx:afterSwap', (event) => {
-        if (event.detail.target === document.body) {
-            console.log("htmx:afterSwap.body");
-            let initAlpine = new Event('alpine:init');
-            document.dispatchEvent(initAlpine);
-        }
-    });
-
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('urlParams', () => ({
-            // Default values
-            defaults: {
-                search: "",
-                sort: "0",
-                semester: "0",
-                credits: [],
-                page: "1",
-                hitsPerPage: "30"
-            },
-            params: {},
-            currentUrl: window.location.href,
-
-            init() {
-                // Parse URL parameters and initialize state
-                const urlSearchParams = new URLSearchParams(window.location.search);
-                for (const key in this.defaults) {
-                    let value = urlSearchParams.get(key);
-                    if (key === "credits") {
-                        this.params[key] = value ? value.split(',') : this.defaults[key];
-                    }
-                    else {
-                        this.params[key] = urlSearchParams.get(key) ?? this.defaults[key];
-                    }
-                }
-                this.updateUrl(); // Ensure URL is correct on load
-            },
-
-            updateUrl() {
-                const newParams = new URLSearchParams();
-
-                // Only keep parameters that differ from default
-                for (const key in this.params) {
-                    let value = this.params[key];
-                    if (key === "credits") {
-                        if (value.length > 0) {
-                            newParams.set(key, value);
-                        }
-                    }
-                    else {
-                        if (value !== this.defaults[key]) {
-                            newParams.set(key, value);
-                        }
-                    }
-
-                }
-
-                const newUrl = `${window.location.pathname}${newParams.toString() ? '?' + newParams.toString() : ''}`;
-                this.currentUrl = newUrl;
-            },
-
-            newPage(page, e) {
-                // set new page parameter
-                this.params.page = page;
-                // update URL with the new parameter
-                this.updateUrl();
-                // update pagination button hx-vals/hx-push-url before sending the request
-                e.target.setAttribute('hx-vals', this.generateHxVals())
-                e.target.setAttribute('hx-push-url', this.currentUrl);
-
-                // send the request
-                this.$dispatch('new-page-event');
-            },
-
-            loadMore(newPageSize, e) {
-                // set new hitsPerPage parameter
-                this.params.hitsPerPage = newPageSize;
-                // update URL with the new parameter
-                this.updateUrl();
-                // update load more button hx-vals/hx-push-url before sending the request
-                e.target.setAttribute('hx-vals', this.generateHxVals())
-                e.target.setAttribute('hx-push-url', this.currentUrl);
-
-                // send the request
-                this.$dispatch('load-more-event');
-            },
-
-            generateHxVals() {
-                // Generate the JSON object for hx-vals - only non-default parameters
-                const nonDefaultParams = {};
-                for (const key in this.params) {
-                    if (this.params[key] !== this.defaults[key]) {
-                        nonDefaultParams[key] = this.params[key];
-                    }
-                }
-                return JSON.stringify(nonDefaultParams);
-            }
-        }));
-    });
-    </script>
 }
 
 templ Page(coursesPage *coursesPage, t text) {

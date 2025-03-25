@@ -17,16 +17,10 @@ type text struct {
 	UN string
 	SearchPlaceholder string
 	SearchButton string
-	SortByFilter string
 	CreditsFilter string
-	AllCredits string
-	TopFilter string
-	Relevance string
-	Recommended string
-	Rating string
-	MostPopular string
-	Newest string 
+	FacultyFilter string
 	SemesterFilter string
+	TopFilter string
 	Assign string
 	Year string
 	WinterAssign string
@@ -67,16 +61,10 @@ var texts = map[string]text{
 		UN: "NE",
 		SearchPlaceholder: "Hledej...",
 		SearchButton: "Hledej",
-		SortByFilter: "Seřadit podle",
 		CreditsFilter: "Počet kreditů",
-		AllCredits: "Všechny",
-		TopFilter: "Filtrovat",
-		Relevance: "Relevance",
-		Recommended: "Doporučené",
-		Rating: "Podle hodnocení",
-		MostPopular: "Nejoblíbenější",
-		Newest: "Nejnovější",
+		FacultyFilter: "Fakulta",
 		SemesterFilter: "Semestr",
+		TopFilter: "Filtrovat",
 		Assign: "Přiřadit",
 		Year: "ročník",
 		WinterAssign: "ZS",
@@ -106,16 +94,10 @@ var texts = map[string]text{
 		UN: "UN",
 		SearchPlaceholder: "Search...",
 		SearchButton: "Search",
-		SortByFilter: "Sort by",
 		CreditsFilter: "Credits",
-		AllCredits: "All",
-		TopFilter: "Filter",
-		Relevance: "Relevance",
-		Recommended: "Recommended",
-		Rating: "By rating",
-		MostPopular: "Most popular",
-		Newest: "Newest",
+		FacultyFilter: "Faculty",
 		SemesterFilter: "Semester",
+		TopFilter: "Filter",
 		Assign: "Assign",
 		Year: "Year",
 		WinterAssign: "Winter",

@@ -63,17 +63,32 @@ templ blueprintAssignment(code string, t text) {
 }
 
 func semesterHoursExamsString(course *Course, t text) string {
-    result := ""
-    if course.SemesterCount == 1 {
-        result = course.Start + " " + strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1) + ", " + course.ExamType
-    } else if course.SemesterCount == 2 {
-        // TODO: either implement this logic
-        //      A) here, switch starting semester and add language support
-        //      B) in db meaning LectureRange1 is for winter semester and LectureRange2 for summer semester - THIS OK
-    } else {
-        result = "unsupported"
+    result := course.Start.String(t.Language) + " "
+    both := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
+    winter := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
+    summer := strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2)
+    
+    switch course.Start {
+    case teachingWinterOnly:
+        result += winter
+    case teachingSummerOnly:
+        result += summer
+    case teachingBoth:
+        result += both
     }
-    return result
+
+    if course.SemesterCount == 2 {
+        switch course.Start {
+        case teachingWinterOnly:
+            result += " " + t.SummerAssign + " " + summer
+        case teachingSummerOnly:
+            result += " " + t.WinterAssign + " " + winter
+        case teachingBoth:
+            result = "ERROR" // TODO: what should be done in this case? can it even happen?
+        }
+    }
+
+    return result + ", " + course.ExamType
 }
 
 func courseSISLink(code string, t text) string {

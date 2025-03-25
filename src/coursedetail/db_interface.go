@@ -100,6 +100,29 @@ func (ts *TeacherSlice) Scan(val interface{}) error {
 	}
 }
 
+type TeachingSemester int
+
+const (
+	teachingWinterOnly TeachingSemester = iota + 1
+	teachingSummerOnly
+	teachingBoth
+)
+
+func (ts *TeachingSemester) String(lang string) string {
+	semester := ""
+	switch *ts {
+	case teachingWinterOnly:
+		semester = texts[lang].WinterAssign
+	case teachingSummerOnly:
+		semester = texts[lang].SummerAssign
+	case teachingBoth:
+		semester = texts[lang].BothAssign
+	default:
+		semester = "unsupported"
+	}
+	return semester
+}
+
 type Assignment struct {
 	year     int
 	semester Semester
@@ -213,32 +236,31 @@ type CourseCategoryRating struct {
 }
 
 type CourseInfo struct {
-	Code                string `db:"code"`
-	Name                string `db:"title"`
-	Faculty             string `db:"faculty"`
-	GuarantorDepartment string `db:"guarantor"`
-	State               string `db:"taught"`
-	Start               string `db:"semester_description"`
-	SemesterCount       int    `db:"semester_count"`
-	// TODO in some cases is both CZ and EN but here is only one
-	Language              string          `db:"taught_lang"`
-	LectureRange1         int             `db:"lecture_range1"`
-	SeminarRange1         int             `db:"seminar_range1"`
-	LectureRange2         int             `db:"lecture_range2"`
-	SeminarRange2         int             `db:"seminar_range2"`
-	ExamType              string          `db:"exam_type"`
-	Credits               int             `db:"credits"`
-	Guarantors            TeacherSlice    `db:"guarantors"`
-	Teachers              TeacherSlice    `db:"teachers"`
-	MinEnrollment         Capacity        `db:"min_number"`
-	Capacity              string          `db:"capacity"`
-	Annotation            NullDescription `db:"annotation"`
-	Syllabus              NullDescription `db:"syllabus"`
-	PassingTerms          NullDescription `db:"terms_of_passing"`
-	Literature            NullDescription `db:"literature"`
-	AssesmentRequirements NullDescription `db:"requirements_for_assesment"`
-	EntryRequirements     NullDescription `db:"entry_requirements"`
-	Aim                   NullDescription `db:"aim"`
+	Code                  string 		   `db:"code"`
+	Name                  string 		   `db:"title"`
+	Faculty               string 		   `db:"faculty"`
+	GuarantorDepartment   string 		   `db:"guarantor"`
+	State                 string 		   `db:"taught"`
+	Start                 TeachingSemester `db:"start_semester"`
+	SemesterCount         int    		   `db:"semester_count"`
+	Language              string           `db:"taught_lang"`
+	LectureRange1         int              `db:"lecture_range1"`
+	SeminarRange1         int              `db:"seminar_range1"`
+	LectureRange2         int              `db:"lecture_range2"`
+	SeminarRange2         int              `db:"seminar_range2"`
+	ExamType              string           `db:"exam_type"`
+	Credits               int              `db:"credits"`
+	Guarantors            TeacherSlice     `db:"guarantors"`
+	Teachers              TeacherSlice     `db:"teachers"`
+	MinEnrollment         Capacity         `db:"min_number"`
+	Capacity              string           `db:"capacity"`
+	Annotation            NullDescription  `db:"annotation"`
+	Syllabus              NullDescription  `db:"syllabus"`
+	PassingTerms          NullDescription  `db:"terms_of_passing"`
+	Literature            NullDescription  `db:"literature"`
+	AssesmentRequirements NullDescription  `db:"requirements_for_assesment"`
+	EntryRequirements     NullDescription  `db:"entry_requirements"`
+	Aim                   NullDescription  `db:"aim"`
 }
 
 type Course struct {

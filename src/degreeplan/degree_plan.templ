@@ -11,28 +11,22 @@ func hoursExamsString(lecture, seminar int, examType string) string {
 
 func winterString(course *Course) string {
     winterText := ""
-    if course.Start == teachingWinterOnly || (course.Start == teachingBoth && course.SemesterCount == 1) {
-        winterText = hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType)
-    } else if course.Start == teachingSummerOnly && course.SemesterCount == 1 {
-        winterText =  "---"
-    } else if course.Start == teachingSummerOnly && course.SemesterCount == 2 {
-        winterText =  hoursExamsString(course.LectureRange2, course.SeminarRange2, course.ExamType)
+    if course.Start == teachingWinterOnly || course.Start == teachingBoth {
+        winterText = strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1) + ", " + course.ExamType
     } else {
-        winterText =  "unsupported"
+        winterText = "---"
     }
     return winterText
 }
 
 func summerString(course *Course) string {
     summerText := ""
-    if course.Start == teachingSummerOnly || (course.Start == teachingBoth && course.SemesterCount == 1) {
-        summerText = hoursExamsString(course.LectureRange1, course.SeminarRange1, course.ExamType)
-    } else if course.Start == teachingWinterOnly && course.SemesterCount == 2 {
-        summerText = hoursExamsString(course.LectureRange2, course.SeminarRange2, course.ExamType)
-    } else if course.Start == teachingWinterOnly && course.SemesterCount == 1 {
-        summerText = "---"
+    if course.Start == teachingSummerOnly {
+        summerText = strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2) + ", " + course.ExamType
+    } else if course.Start == teachingBoth {
+        summerText = strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1) + ", " + course.ExamType
     } else {
-        summerText = "unsupported"
+        summerText = "---"
     }
     return summerText
 }

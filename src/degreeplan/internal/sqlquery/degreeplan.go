@@ -20,6 +20,10 @@ SELECT
 	c.title,
 	c.credits,
 	c.start_semester,
+	COALESCE(c.lecture_range1, -1) lecture_range1,
+	COALESCE(c.lecture_range2, -1) lecture_range2,
+	COALESCE(c.seminar_range1, -1) seminar_range1,
+	COALESCE(c.seminar_range2, -1) seminar_range2,
 	c.semester_count,
 	c.exam_type,
 	ubc.course_code IS NOT NULL in_blueprint

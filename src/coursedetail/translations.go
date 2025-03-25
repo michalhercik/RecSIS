@@ -12,6 +12,9 @@ type text struct {
 	Winter string
 	Summer string
 	Both string
+	WinterAssign string
+	SummerAssign string
+	BothAssign string
 	Year string
 	Assign string
 	ECredits string
@@ -48,6 +51,9 @@ var texts = map[string]text{
 		Winter: "ZS",
 		Summer: "LS",
 		Both: "oba",
+		WinterAssign: "ZS",
+		SummerAssign: "LS",
+		BothAssign: "Oba",
 		Year: "ročník",
 		Assign: "Přiřadit",
 		ECredits: "E-Kredity",
@@ -73,6 +79,9 @@ var texts = map[string]text{
 		Winter: "Winter",
 		Summer: "Summer",
 		Both: "Both",
+		WinterAssign: "Winter",
+		SummerAssign: "Summer",
+		BothAssign: "Both",
 		Year: "Year",
 		Assign: "Assign",
 		ECredits: "E-Credits",

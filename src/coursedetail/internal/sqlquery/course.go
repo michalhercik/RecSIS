@@ -53,7 +53,7 @@ SELECT
     c.faculty,
     c.guarantor,
     c.taught,
-    sd.semester_description,
+    c.start_semester,
     c.semester_count,
     c.taught_lang,
     c.lecture_range1,
@@ -78,7 +78,6 @@ SELECT
     ur.title AS rating_title,
     ur.rating
 FROM courses c
-LEFT JOIN start_semester_to_desc sd ON c.start_semester = sd.id AND c.lang = sd.lang
 LEFT JOIN course_overall_ratings cor ON c.code = cor.course_code AND cor.user_id = (SELECT user_id FROM user_session)
 LEFT JOIN user_ratings ur ON c.code = ur.course_code AND ur.lang = c.lang
 WHERE code = $2 AND c.lang = $3;
