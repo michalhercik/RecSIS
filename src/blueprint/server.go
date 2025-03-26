@@ -194,11 +194,11 @@ func (s Server) coursesMovement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch r.FormValue("type") {
-	case "year-unassign":
+	case yearUnassign:
 		err = s.unassignYear(r, sessionCookie.Value)
-	case "semester-unassign":
+	case semesterUnassign:
 		err = s.unassignSemester(r, sessionCookie.Value)
-	case "selected":
+	case selectedMove:
 		err = s.moveCourses(r, sessionCookie.Value)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)
@@ -297,11 +297,11 @@ func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch r.FormValue("type") {
-	case "year":
+	case yearRemove:
 		err = s.removeCoursesByYear(r, sessionCookie.Value)
-	case "semester":
+	case semesterRemove:
 		err = s.removeCoursesBySemester(r, sessionCookie.Value)
-	case "selected":
+	case selectedRemove:
 		err = s.removeCourses(r, sessionCookie.Value)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)

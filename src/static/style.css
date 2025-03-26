@@ -54,84 +54,80 @@ body {
     z-index: 1000;
 }   
 
-/* Blueprint tables styles */
-/* TODO: For small screens, the font should be smaller */
+/* === Blueprint tables styles === */
 .blueprint-table {
     table-layout: fixed;
-    margin-left: auto;
-    margin-right: auto;
 }
 
-.headline {
-    border-top: 2px solid #636363 !important;
-}
-
-.blueprint-background td {
-    background-color: rgba(4, 108, 181, 0.2) !important;
-    border-bottom: 1px solid #636363 !important;
-}
-
-.yeartext {
-    font-weight: bold;
-    font-size: 0.9em;
-}
-
-.semtext {
-    font-style: italic;
-    font-size: 0.9em;
-}
-
-.short {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-}
-
+/* checkbox */
 .blueprint-table th:nth-child(1),
 .blueprint-table td:nth-child(1) {
-    width: 21px;
+    width: 28px;
 }
 
+/* code */
 .blueprint-table th:nth-child(2),
 .blueprint-table td:nth-child(2) {
     width: 85px;
 }
 
+/* title */
 .blueprint-table th:nth-child(3),
 .blueprint-table td:nth-child(3) {
-    width: 35%;
-    min-width: 350px;
+    width: auto;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+/* credits */
 .blueprint-table th:nth-child(4),
 .blueprint-table td:nth-child(4) {
-    width: 70px;
+    width: 42px;
 }
 
+/* winter */
 .blueprint-table th:nth-child(5),
 .blueprint-table td:nth-child(5) {
-    width: 100px;
+    width: 90px;
 }
 
+/* summer */
 .blueprint-table th:nth-child(6),
 .blueprint-table td:nth-child(6) {
-    width: 100px;
+    width: 90px;
 }
 
+/* guarantors */
 .blueprint-table th:nth-child(7),
 .blueprint-table td:nth-child(7) {
-    width: 20%;
+    width: 265px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+/* teachers smaller */
+@media (max-width: 1400px) {
+    .blueprint-table th:nth-child(7),
+    .blueprint-table td:nth-child(7) {
+        width: 200px;
+    }
+}
+
+/* buttons */
 .blueprint-table th:nth-child(8),
 .blueprint-table td:nth-child(8) {
-    width: 120px;
+    /* 4 * button=32 + 2 * padding=4 */
+    width: 136px;
 }
+
+.th-overflow {
+    direction: rtl; 
+    text-align: right;
+    white-space: nowrap;
+}
+/* =============================== */
 
 /* Courses grid styles */
 .grid-page {
