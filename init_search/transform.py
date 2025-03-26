@@ -95,8 +95,9 @@ courses_data = courses_data.reset_index(drop=True).reset_index(drop=False).renam
 courses_data.to_json('./init_search/courses.json', orient='records', lines=True)
 
 df = courses_data[[
-    "faculty", "faculty_guarantor", "exam_type", "taught", "taught_lang",
+    "faculty", "faculty_guarantor", "exam_type", "taught", "taught_lang", "start_semester", "semester_count",
     "lecture_range_winter", "seminar_range_winter", "lecture_range_summer", "seminar_range_summer",
     "range_unit", "credits", "capacity", "min_number"]]
 df = df.melt().explode(["value"]).dropna().drop_duplicates()
+df["value"] = df["value"].astype(pd.Int32Dtype())
 df.to_csv("./init_db/filter_params.csv", index=False, header=False)

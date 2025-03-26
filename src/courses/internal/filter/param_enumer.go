@@ -10,16 +10,16 @@ const _paramName = "start_semestersemester_countlecture_range_winterseminar_rang
 
 var _paramIndex = [...]uint8{0, 14, 28, 48, 68, 88, 108, 115, 132, 141, 151, 157, 168, 175, 183, 193}
 
-func (i param) String() string {
-	if i < 0 || i >= param(len(_paramIndex)-1) {
+func (i Parameter) String() string {
+	if i < 0 || i >= Parameter(len(_paramIndex)-1) {
 		return fmt.Sprintf("param(%d)", i)
 	}
 	return _paramName[_paramIndex[i]:_paramIndex[i+1]]
 }
 
-var _paramValues = []param{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
+var _paramValues = []Parameter{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
 
-var _paramNameToValueMap = map[string]param{
+var _paramNameToValueMap = map[string]Parameter{
 	_paramName[0:14]:    0,
 	_paramName[14:28]:   1,
 	_paramName[28:48]:   2,
@@ -39,7 +39,7 @@ var _paramNameToValueMap = map[string]param{
 
 // paramString retrieves an enum value from the enum constants string name.
 // Throws an error if the param is not part of the enum.
-func paramString(s string) (param, error) {
+func paramString(s string) (Parameter, error) {
 	if val, ok := _paramNameToValueMap[s]; ok {
 		return val, nil
 	}
@@ -47,12 +47,12 @@ func paramString(s string) (param, error) {
 }
 
 // paramValues returns all values of the enum
-func paramValues() []param {
+func paramValues() []Parameter {
 	return _paramValues
 }
 
 // IsAparam returns "true" if the value is listed in the enum definition. "false" otherwise
-func (i param) IsAparam() bool {
+func (i Parameter) IsAparam() bool {
 	for _, v := range _paramValues {
 		if i == v {
 			return true

@@ -40,6 +40,7 @@ JOIN unnest($2::text[]) WITH ORDINALITY t(id, ord) ON t.id = c.code
 LEFT JOIN user_blueprint_courses ubc ON ubc.course_code = c.code
 WHERE c.lang = $3
 AND c.valid_to = 9999
+ORDER BY t.ord
 ;
 `
 

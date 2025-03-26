@@ -15,9 +15,11 @@ type DBManager struct {
 
 func (m DBManager) Courses(sessionID string, courseCodes []string, lang Language) ([]Course, error) {
 	result := []Course{}
+	fmt.Println(courseCodes[0])
 	if err := m.DB.Select(&result, sqlquery.Courses, sessionID, pq.Array(courseCodes), lang); err != nil {
 		return nil, fmt.Errorf("failed to fetch courses: %w", err)
 	}
+	fmt.Println(result[0].Code)
 	return result, nil
 }
 

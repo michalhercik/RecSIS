@@ -73,7 +73,7 @@ func main() {
 	}.Register(router, "/course")
 	courses.Server{
 		Data:   courses.DBManager{DB: db},
-		Search: courses.MeiliSearch{Client: meiliClient},
+		Search: courses.MeiliSearch{Client: meiliClient, Courses: meilisearch.IndexConfig{Uid: "courses"}},
 	}.Register(router, "/courses")
 	degreeplan.Server{
 		Data: degreeplan.DBManager{DB: db},

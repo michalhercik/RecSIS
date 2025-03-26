@@ -144,7 +144,7 @@ func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
 		page:        page,
 		hitsPerPage: hitsPerPage,
 		lang:        lang,
-		filter:	     filter,
+		filter:      filter,
 	}
 	return req, nil
 }
@@ -165,7 +165,6 @@ func (s Server) search(req Request) (coursesPage, error) {
 		return result, err
 	}
 	facets := filter.MakeFacetDistribution(searchResponse.FacetDistribution, paramLabels)
-
 	result = coursesPage{
 		courses:    coursesData,
 		page:       int(req.page),

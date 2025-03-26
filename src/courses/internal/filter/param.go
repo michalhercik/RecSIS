@@ -8,6 +8,8 @@ import (
 
 type Expression interface {
 	String() string
+	Except() func(func(Parameter, string) bool)
+	ConditionsCount() int
 }
 
 type ParamValue struct {
@@ -24,7 +26,7 @@ func MakeFacetDistribution(facets map[string]map[int]int, valueLabels map[string
 	return FacetDistribution{facetDistribution: facets, valueLabels: valueLabels}
 }
 
-func (f FacetDistribution) ParamDistribution(p param) func(func(facet) bool) {
+func (f FacetDistribution) ParamDistribution(p Parameter) func(func(facet) bool) {
 	ps := p.String()
 	paramDist := f.facetDistribution[ps]
 	paramVal := f.valueLabels[ps]
@@ -51,10 +53,10 @@ type facet struct {
 const ParamPrefix = "par"
 
 //go:generate enumer -type=param -transform=snake
-type param int
+type Parameter int
 
 const (
-	StartSemester param = iota
+	StartSemester Parameter = iota
 	SemesterCount
 	LectureRangeWinter
 	SeminarRangeWinter
@@ -71,7 +73,7 @@ const (
 	MinNumber
 )
 
-func (p *param) Scan(value interface{}) error {
+func (p *Parameter) Scan(value interface{}) error {
 	sParam, ok := value.(string)
 	if !ok {
 		return fmt.Errorf("param must be a string")
@@ -106,12 +108,12 @@ func ParseFilters(query map[string][]string) (Expression, error) {
 			conditions = append(conditions, cond)
 		}
 	}
-	result = makeExpression(conditions)
+	result = expression(conditions)
 	return result, nil
 }
 
-func Param(id int) (param, error) {
-	result := param(id)
+func Param(id int) (Parameter, error) {
+	result := Parameter(id)
 	if !result.IsAparam() {
 		return 0, fmt.Errorf("%d does not belong to param values", id)
 	}
@@ -128,31 +130,57 @@ func parseParams(k string, v []string) (condition, error) {
 	if err != nil {
 		return result, err
 	}
-	result = makeCondition(par, v)
+	result = condition{par, v}
 	return result, nil
 }
 
-type condition string
-
-func makeCondition(p param, v []string) condition {
-	return condition(fmt.Sprintf("%s IN [%s]", p, strings.Join(v, ",")))
+type condition struct {
+	param  Parameter
+	values []string
 }
 
-type expression string
+func (c condition) String() string {
+	return fmt.Sprintf("%s IN [%s]", c.param, strings.Join(c.values, ","))
+}
+
+type expression []condition
 
 func (e expression) String() string {
-	return string(e)
-}
-
-func makeExpression(conditions []condition) expression {
 	var sb strings.Builder
-	if len(conditions) == 0 {
+	if len(e) == 0 {
 		return ""
 	}
-	sb.WriteString(string(conditions[0]))
-	for _, c := range conditions[1:] {
+	sb.WriteString(e[0].String())
+	for _, c := range e[1:] {
 		sb.WriteString(" AND ")
-		sb.WriteString(string(c))
+		sb.WriteString(c.String())
 	}
-	return expression(sb.String())
+	return sb.String()
+}
+
+func (e expression) Except() func(func(Parameter, string) bool) {
+	return e.except
+}
+
+func (e expression) except(yield func(Parameter, string) bool) {
+	if len(e) == 0 {
+		return
+	}
+	if len(e) == 1 {
+		yield(e[0].param, "")
+		return
+	}
+	exceptExpr := make(expression, 0, len(e)-1)
+	for i := range e.ConditionsCount() {
+		exceptExpr = append(exceptExpr, e[:i]...)
+		exceptExpr = append(exceptExpr, e[i+1:]...)
+		if !yield(e[i].param, exceptExpr.String()) {
+			return
+		}
+		exceptExpr = exceptExpr[:0]
+	}
+}
+
+func (e expression) ConditionsCount() int {
+	return len(e)
 }

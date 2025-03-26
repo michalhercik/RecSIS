@@ -25,6 +25,10 @@ type Response struct {
 	FacetDistribution map[string]map[int]int
 }
 
+type MultiResponse struct {
+	Results []Response `json:"results"`
+}
+
 func (r *Response) UnmarshalJSON(data []byte) error {
 	var hit struct {
 		TotalHits  int64 `json:"totalHits"`
@@ -100,25 +104,60 @@ type SearchEngine interface {
 }
 
 type MeiliSearch struct {
-	Client meilisearch.ServiceManager
+	Client  meilisearch.ServiceManager
+	Courses meilisearch.IndexConfig
 }
 
-func (s MeiliSearch) Search(r Request) (Response, error) {
-	var result Response
-	index := s.Client.Index(r.indexUID)
-	searchReq := &meilisearch.SearchRequest{
+func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
+	numOfReq := 1 + r.filter.ConditionsCount()
+	result := &meilisearch.MultiSearchRequest{
+		Queries: make([]*meilisearch.SearchRequest, 0, numOfReq),
+	}
+	result.Queries = append(result.Queries, &meilisearch.SearchRequest{
+		IndexUID:             index.Uid,
+		Query:                r.query,
 		Page:                 int64(r.page),
 		HitsPerPage:          int64(r.hitsPerPage),
 		AttributesToRetrieve: []string{"code"},
-		Filter:               r.filter,
+		Filter:               r.filter.String(),
 		Facets:               filter.SliceOfParamStr(),
+	})
+	for param, filter := range r.filter.Except() {
+		_ = param
+		_ = filter
+		result.Queries = append(result.Queries, &meilisearch.SearchRequest{
+			IndexUID:             index.Uid,
+			Query:                r.query,
+			Limit:                0,          // TODO: not working, probably bug in meilisearch-go -> write own client...
+			AttributesToRetrieve: []string{}, // TODO: not working, probably bug in meilisearch-go -> write own client...
+			Filter:               filter,
+			Facets:               []string{param.String()},
+		})
 	}
-	rawResponse, err := index.SearchRaw(r.query, searchReq)
+	return result
+}
+
+// TODO: write own meilisearch client
+func (s MeiliSearch) Search(r Request) (Response, error) {
+	var result Response
+	searchReq := makeMultiSearchRequest(r, s.Courses)
+	response, err := s.Client.MultiSearch(searchReq)
 	if err != nil {
 		return result, err
 	}
-	if err = json.Unmarshal(*rawResponse, &result); err != nil {
+	rawResponse, err := response.MarshalJSON()
+	if err != nil {
 		return result, err
+	}
+	multi := MultiResponse{}
+	if err = json.Unmarshal(rawResponse, &multi); err != nil {
+		return result, err
+	}
+	result = multi.Results[0]
+	for _, res := range multi.Results[1:] {
+		for param, distribution := range res.FacetDistribution {
+			result.FacetDistribution[param] = distribution
+		}
 	}
 	return result, nil
 }
