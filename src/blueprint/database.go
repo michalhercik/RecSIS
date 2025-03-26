@@ -12,117 +12,6 @@ type DBManager struct {
 	DB *sqlx.DB
 }
 
-// func scan(rows *sql.Rows, year *int, course *Course) error {
-// 	err := rows.Scan(
-// 		year,
-// 		&course.ID,
-// 		&course.position,
-// 		&course.semesterPosition,
-// 		&course.code,
-// 		&course.nameCs,
-// 		&course.nameEn,
-// 		&course.start,
-// 		&course.semesterCount,
-// 		&course.lectureRange1,
-// 		&course.lectureRange2,
-// 		&course.seminarRange1,
-// 		&course.seminarRange2,
-// 		&course.examType,
-// 		&course.credits,
-// 		&course.teachers[0].sisId,
-// 		&course.teachers[0].firstName,
-// 		&course.teachers[0].lastName,
-// 		&course.teachers[0].titleBefore,
-// 		&course.teachers[0].titleAfter,
-// 		&course.teachers[1].sisId,
-// 		&course.teachers[1].firstName,
-// 		&course.teachers[1].lastName,
-// 		&course.teachers[1].titleBefore,
-// 		&course.teachers[1].titleAfter,
-// 		&course.teachers[2].sisId,
-// 		&course.teachers[2].firstName,
-// 		&course.teachers[2].lastName,
-// 		&course.teachers[2].titleBefore,
-// 		&course.teachers[2].titleAfter,
-// 	)
-// 	return err
-// }
-
-// func selectYears(tx *sql.Tx, sessionID string) ([]AcademicYear, error) {
-// 	rows, err := tx.Query(sqlquery.SelectYears, sessionID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-// 	years := []AcademicYear{}
-// 	for rows.Next() {
-// 		var year AcademicYear
-// 		if err := rows.Scan(&year.position); err != nil {
-// 			return nil, err
-// 		}
-// 		years = append(years, year)
-// 	}
-// 	if err := rows.Err(); err != nil {
-// 		return nil, err
-// 	}
-// 	return years, nil
-// }
-
-// func trim(teachers []Teacher) Teachers {
-// 	result := Teachers{}
-// 	for _, teacher := range teachers {
-// 		if teacher.sisId != -1 {
-// 			result = append(result, teacher)
-// 		}
-// 	}
-// 	return result
-// }
-
-// func selectCourses(tx *sql.Tx, sessionID string, blueprint *Blueprint) error {
-// 	rows, err := tx.Query(sqlquery.SelectCourses, sessionID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer rows.Close()
-// 	for rows.Next() {
-// 		var year int
-// 		course := &Course{
-// 			teachers: []Teacher{{}, {}, {}},
-// 		}
-// 		if err := scan(rows, &year, course); err != nil {
-// 			return err
-// 		}
-// 		course.teachers = trim(course.teachers)
-// 		if err := blueprint.assign(year, course); err != nil {
-// 			return err
-// 		}
-// 		if err := rows.Err(); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
-
-// func (m DBManager) OldBluePrint(sessionID string) (*Blueprint, error) {
-// 	tx, err := m.DB.Begin()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer tx.Rollback()
-// 	years, err := selectYears(tx, sessionID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	blueprint := &Blueprint{years: years}
-// 	if err = selectCourses(tx, sessionID, blueprint); err != nil {
-// 		return blueprint, err
-// 	}
-// 	if err := tx.Commit(); err != nil {
-// 		return blueprint, err
-// 	}
-// 	return blueprint, nil
-// }
-
 func (m DBManager) Blueprint(sessionID string, lang DBLang) (*Blueprint, error) {
 	var records []BlueprintRecord
 	if err := m.DB.Select(&records, sqlquery.SelectCourses, sessionID, lang); err != nil {
@@ -130,7 +19,7 @@ func (m DBManager) Blueprint(sessionID string, lang DBLang) (*Blueprint, error) 
 	}
 	var bp Blueprint
 	for _, record := range records {
-		if err := bp.assign(record.BlueprintRecordPosition, &record.Course); err != nil {
+		if err := bp.assign(record.BlueprintRecordPosition, record.NullCourse.Course()); err != nil {
 			return nil, err
 		}
 	}

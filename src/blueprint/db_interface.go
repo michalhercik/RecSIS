@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -90,6 +91,8 @@ type TeacherSlice []Teacher
 
 func (ts *TeacherSlice) Scan(val interface{}) error {
 	switch v := val.(type) {
+	case nil:
+		return nil
 	case []byte:
 		json.Unmarshal(v, &ts)
 		return nil
@@ -110,6 +113,41 @@ func (t TeacherSlice) string() string {
 		return "---"
 	}
 	return strings.Join(names, ", ")
+}
+
+type NullCourse struct {
+	ID            sql.NullInt32  `db:"id"`
+	Code          sql.NullString `db:"code"`
+	Title         sql.NullString `db:"title"`
+	Start         sql.NullInt32  `db:"start_semester"`
+	SemesterCount sql.NullInt32  `db:"semester_count"`
+	LectureRange1 sql.NullInt32  `db:"lecture_range1"`
+	SeminarRange1 sql.NullInt32  `db:"seminar_range1"`
+	LectureRange2 sql.NullInt32  `db:"lecture_range2"`
+	SeminarRange2 sql.NullInt32  `db:"seminar_range2"`
+	ExamType      sql.NullString `db:"exam_type"`
+	Credits       sql.NullInt32  `db:"credits"`
+	Guarantors    TeacherSlice   `db:"guarantors"`
+}
+
+func (nc NullCourse) Course() *Course {
+	if !nc.ID.Valid {
+		return nil
+	}
+	return &Course{
+		ID:            int(nc.ID.Int32),
+		Code:          nc.Code.String,
+		Title:         nc.Title.String,
+		Start:         TeachingSemester(nc.Start.Int32),
+		SemesterCount: int(nc.SemesterCount.Int32),
+		LectureRange1: int(nc.LectureRange1.Int32),
+		SeminarRange1: int(nc.SeminarRange1.Int32),
+		LectureRange2: int(nc.LectureRange2.Int32),
+		SeminarRange2: int(nc.SeminarRange2.Int32),
+		ExamType:      nc.ExamType.String,
+		Credits:       int(nc.Credits.Int32),
+		Guarantors:    nc.Guarantors,
+	}
 }
 
 type Course struct {
@@ -167,7 +205,7 @@ type BlueprintRecordPosition struct {
 
 type BlueprintRecord struct {
 	BlueprintRecordPosition
-	Course
+	NullCourse
 }
 
 type Blueprint struct {
@@ -181,16 +219,18 @@ func (b *Blueprint) assign(position BlueprintRecordPosition, course *Course) err
 	for position.AcademicYear >= len(b.years) {
 		b.years = append(b.years, AcademicYear{position: position.AcademicYear})
 	}
-	target := &b.years[position.AcademicYear]
-	switch position.Semester {
-	case assignmentWinter:
-		target.winter = append(target.winter, *course)
-	case assignmentSummer:
-		target.summer = append(target.summer, *course)
-	case assignmentNone:
-		target.unassigned = append(target.unassigned, *course)
-	default:
-		return fmt.Errorf("unknown semester assignment %d", position.Semester)
+	if course != nil {
+		target := &b.years[position.AcademicYear]
+		switch position.Semester {
+		case assignmentWinter:
+			target.winter = append(target.winter, *course)
+		case assignmentSummer:
+			target.summer = append(target.summer, *course)
+		case assignmentNone:
+			target.unassigned = append(target.unassigned, *course)
+		default:
+			return fmt.Errorf("unknown semester assignment %d", position.Semester)
+		}
 	}
 	return nil
 }

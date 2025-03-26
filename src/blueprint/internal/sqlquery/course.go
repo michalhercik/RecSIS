@@ -235,6 +235,7 @@ LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
 LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
 LEFT JOIN courses c ON bc.course_code=c.code AND bc.course_valid_from = c.valid_from
 WHERE c.lang = $2
+OR c.lang IS NULL
 ORDER BY y.academic_year, bs.semester, bc.position
 ;
 `
