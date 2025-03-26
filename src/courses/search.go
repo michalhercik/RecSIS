@@ -101,11 +101,32 @@ func (r *QuickResponse) UnmarshalJSON(data []byte) error {
 type SearchEngine interface {
 	Search(r Request) (Response, error)
 	QuickSearch(r QuickRequest) (QuickResponse, error)
+	FacetDistribution() (map[string]map[int]int, error)
 }
 
 type MeiliSearch struct {
 	Client  meilisearch.ServiceManager
 	Courses meilisearch.IndexConfig
+}
+
+func (s MeiliSearch) FacetDistribution() (map[string]map[int]int, error) {
+	searchReq := &meilisearch.SearchRequest{
+		Limit:  0, // TODO: not working, probably bug in meilisearch-go -> write own client...
+		Facets: filter.SliceOfParamStr(),
+	}
+	response, err := s.Client.Index(s.Courses.Uid).Search("", searchReq)
+	if err != nil {
+		return nil, err
+	}
+	var result map[string]map[int]int
+	marshalRes, err := json.Marshal(response.FacetDistribution)
+	if err != nil {
+		return nil, err
+	}
+	if err = json.Unmarshal(marshalRes, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {

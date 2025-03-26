@@ -48,15 +48,23 @@ func (s Server) page(w http.ResponseWriter, r *http.Request, lang Language, t te
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	res, err := s.search(req)
-	if err != nil {
-		log.Printf("search: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	var result coursesPage
+	if len(req.query) > 0 {
+		result, err = s.search(req)
+		if err != nil {
+			log.Printf("search: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	} else {
+		result, err = s.facetDistribution(lang)
+		if err != nil {
+			log.Printf("facetDistribution: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
-	// coursesPage := createPageContent(res, req)
-	coursesPage := res
-	Page(&coursesPage, t).Render(r.Context(), w)
+	Page(&result, t).Render(r.Context(), w)
 }
 
 func (s Server) csContent(w http.ResponseWriter, r *http.Request) {
@@ -172,6 +180,23 @@ func (s Server) search(req Request) (coursesPage, error) {
 		totalPages: searchResponse.TotalPages,
 		search:     req.query,
 		facets:     facets,
+	}
+	return result, nil
+}
+
+func (s Server) facetDistribution(lang Language) (coursesPage, error) {
+	var result coursesPage
+	f, err := s.Search.FacetDistribution()
+	if err != nil {
+		return result, err
+	}
+	param, err := s.Data.ParamLabels(lang)
+	if err != nil {
+		return result, err
+	}
+	facets := filter.MakeFacetDistribution(f, param)
+	result = coursesPage{
+		facets: facets,
 	}
 	return result, nil
 }
