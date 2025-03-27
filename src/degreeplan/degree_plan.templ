@@ -107,7 +107,7 @@ templ Content(dp *DegreePlan, t text) {
                         @utils.CourseLink(course.Code, t.Utils)
                     </td>
                     <td>
-                        { course.Title }
+                        @utils.TitleCourseLink(course.Code, course.Title, t.Utils)
                     </td>
                     <td>
                     // TODO: add course completion status -> change `false` to `course.Completed`

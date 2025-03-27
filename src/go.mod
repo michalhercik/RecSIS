@@ -19,6 +19,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/pascaldekloe/name v0.0.0-20180628100202-0fd16699aae1 // indirect
+	github.com/yuin/goldmark v1.7.8 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect

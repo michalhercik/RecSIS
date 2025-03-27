@@ -288,7 +288,7 @@ templ coursesBody(courses []Course, canUnassign bool, showCondition, xSortMethod
         >
             <td> @checkbox(course.ID) </td>
             <td> @utils.CourseLink(course.Code, t.Utils) </td>
-            <td>{ course.Title }</td>
+            <td> @utils.TitleCourseLink(course.Code, course.Title, t.Utils) </td>
             <td class="credits-column text-end d-none d-md-table-cell">{ strconv.Itoa(course.Credits) }</td>
             <td class="d-none d-md-table-cell">{ winterString(&course) }</td>
             <td class="d-none d-md-table-cell">{ summerString(&course) }</td>

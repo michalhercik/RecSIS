@@ -3,14 +3,7 @@ package coursedetail
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
-	"strings"
-    // TODO should use this for sanitizing? might use own policy
-    "github.com/microcosm-cc/bluemonday"
 )
-
-const user = 42
-
-var p *bluemonday.Policy
 
 func itos(i int) string {
     return strconv.Itoa(i)
@@ -100,20 +93,6 @@ func courseSISLink(code string, t text) string {
     return "unsupported language"
 }
 
-templ renderSafeContent(content string) {
-    // prefix <HTML> -> probably HTML content
-    if strings.HasPrefix(content, "<HTML>") {
-    // TODO not sure that table is best practice, but it works
-    <table><tr><td>
-    @templ.Raw(p.Sanitize(content))
-    </td></tr></table>
-    } else {
-    // otherwise looks like markdown
-    // TODO add some renderer for "markdown"
-        { content }
-    }
-}
-
 templ accordionItem(desc NullDescription, id string) {
     if desc.Valid {
     <div class="accordion-item">
@@ -123,10 +102,20 @@ templ accordionItem(desc NullDescription, id string) {
             </button>
         </h2>
         <div id={ "panel-" + id } class="accordion-collapse collapse show">
-            <div class="accordion-body">
-                <p style="text-align: justify">@renderSafeContent(desc.Content)</p>
+            <div
+                id={ "content-" + id }
+                class="accordion-body"
+                style="text-align: justify"
+                x-init={ "insertContent('" + id + "', `" + desc.SanitizeContent(id != "annotation") + "`)" }>
             </div>
         </div>
+        // inserting content as shadow DOM
+        <script>
+        function insertContent(id, content) {
+            const shadowRoot = document.getElementById("content-" + id).attachShadow({ mode: 'open' });
+            shadowRoot.innerHTML = content;
+        }
+        </script>
     </div>
     }
 }
@@ -142,7 +131,7 @@ templ ribbon(ba Assignments, t text) {
 templ guarantors(guarantors []Teacher) {
     <p
         class="card-subtitle mb-2 text-muted text-center">
-        for _, g := range guarantors {
+        for i, g := range guarantors {
             if g.TitleBefore != "" {
                 <small style="font-size: 0.75rem;">{ g.TitleBefore + " " }</small>
             }
@@ -151,10 +140,29 @@ templ guarantors(guarantors []Teacher) {
             } else {
                 <span class="fs-5 text-dark fw-semibold">{ g.FirstName + " " + g.LastName }</span>
             }
-            // space between guarantors
-            &emsp;
+            if i < len(guarantors) - 1 {
+                // space between guarantors
+                &emsp; 
+            }
         }
     </p>
+}
+
+templ teacherStyledRow(t Teacher, position int) {
+    <tr x-show={ "showAll || " + strconv.Itoa(position) + " < 10" }>
+        <td class="text-end teachers-first-column">
+            if t.TitleBefore != "" {
+                    <small style="font-size: 0.6rem;">{ t.TitleBefore + " " }</small>
+            }
+        </td>
+        <td>
+            if t.TitleAfter != "" {
+                <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span><small style="font-size: 0.6rem;">{ ", " + t.TitleAfter }</small>
+            } else {
+                <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span>
+            }
+        </td>
+    </tr>
 }
 
 templ accordion(course *Course, t text) {
@@ -170,7 +178,7 @@ templ accordion(course *Course, t text) {
 }
 
 templ Content(course *Course, t text) {
-    {{ p = bluemonday.UGCPolicy() }}
+    // TODO render ratings
     //@Ratings(course.CourseRatings, course.Code)
     // TODO only if not empty/nil/...
     <div
@@ -206,13 +214,29 @@ templ Content(course *Course, t text) {
                 </div>
                 <div class="flex-grow-1 d-flex flex-column ms-3" style="flex: 1;">
                     if len(course.Teachers) > 0 {
-                        <p class="mb-1"><strong>{ t.Teachers }</strong></p>
-                        <p class="mb-2">{ course.Teachers[0].String() }</p>
-                    }
-                    if len(course.Teachers) > 1 {
-                        for _, teacher := range course.Teachers[1:] {
-                            <p class="mb-2">{ teacher.String() }</p>
+                        <p id="teachers-part" class="mb-1"><strong>{ t.Teachers }</strong></p>
+                        <table id="teachers-table" x-data="{ showAll: false }">
+                        for i, teacher := range course.Teachers {
+                            @teacherStyledRow(teacher, i)
                         }
+                        if len(course.Teachers) > 10 {
+                            <tr><td></td><td>
+                            <button
+                                class="btn btn-link text-secondary"
+                                @click="showAll = !showAll; if (!showAll) scrollToTeachers()"
+                                x-text={ "showAll ? '" + t.ShowLess + "' : '" + t.ShowMore + "'" }>
+                            </button>
+                            </td></tr>
+                        }
+                        </table>
+                        <script>
+                        function scrollToTeachers() {
+                            const anchor = document.getElementById('teachers-part');
+                            const offset = -52; // top navbar height
+                            const topPosition = anchor.getBoundingClientRect().top + window.scrollY + offset;
+                            window.scrollTo({ top: topPosition, behavior: 'smooth' });
+                        }
+                        </script>
                     }
                 </div>
             </div>

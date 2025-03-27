@@ -201,7 +201,7 @@ body {
     z-index: 50;
 }
 
-/* Course-detail card blueprint assignment ribbon styles */
+/* Course detail card blueprint assignment ribbon styles */
 .ribbon-detail {
     width: 150px;
     height: 150px;
@@ -224,6 +224,17 @@ body {
     transform: rotate(45deg);
     top: 25px;
     right: -50px;
+}
+
+/* Course detail teachers table styles */
+#teachers-table {
+    table-layout: auto;
+}
+
+.teachers-first-column {
+    white-space: nowrap;
+    width: 1px;
+    max-width: max-content;
 }
 
 /* Degree plan table columns width styles */
