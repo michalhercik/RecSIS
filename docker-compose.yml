@@ -1,4 +1,18 @@
 services:
+  etl:
+    container_name: recsis-etl
+    build:
+      dockerfile: Dockerfile
+      context: ./etl/
+      target: ssh-stage
+    env_file: "./etl/etl.env"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - recsis-network
+    volumes:
+      - ~/.ssh/id_rsa:/root/.ssh/id_rsa
   recsis:
     container_name: recsis-webapp
     build:
