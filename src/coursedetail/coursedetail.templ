@@ -106,7 +106,7 @@ templ accordionItem(desc NullDescription, id string) {
                 id={ "content-" + id }
                 class="accordion-body"
                 style="text-align: justify"
-                x-init={ "insertContent('" + id + "', `" + desc.SanitizeContent(id != "annotation") + "`)" }>
+                x-init={ "insertContent('" + id + "', `" + desc.SanitizeContent(id == "annotation") + "`)" }>
             </div>
         </div>
         // inserting content as shadow DOM

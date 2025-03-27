@@ -14,14 +14,12 @@ import (
 	"golang.org/x/net/html"
 )
 
-func (d *Description) SanitizeContent(softNewLines bool) string {
+func (d *Description) SanitizeContent(keepNewLines bool) string {
 	content := d.Content
-	if softNewLines {
-		// convert "\n" to "  \n" for hard line breaks
-		content = strings.Replace(content, "\n", "\n\n", -1)
-	}
+	// convert "\n" to "\n\n" for hard line breaks, if needed
+	hardNewLines := makeHardLineBreaks(content, keepNewLines)
 	// convert markdown to html
-	htmlContent := markdownToHTML(content)
+	htmlContent := markdownToHTML(hardNewLines)
 	// clean html elements
 	cleanedContent := cleanHTML(htmlContent)
 	// sanitize html
@@ -35,6 +33,40 @@ func (d *Description) SanitizeContent(softNewLines bool) string {
 	// ==========================================================
 
 	return sanitizedContent
+}
+
+func makeHardLineBreaks(content string, keepOriginal bool) string {
+	if keepOriginal {
+		return content
+	}
+
+	// Split the content into lines.
+	lines := strings.Split(content, "\n")
+	var builder strings.Builder
+
+	for i, line := range lines {
+		builder.WriteString(line)
+		// Determine if we should add an extra newline.
+		// Check if we're not at the last line.
+		if i < len(lines)-1 {
+			// If either the current or the next line is a list item,
+			// insert only a single newline.
+			if isListItem(line) || isListItem(lines[i+1]) {
+				builder.WriteString("\n")
+			} else {
+				builder.WriteString("\n\n")
+			}
+		}
+	}
+
+	newContent := builder.String()
+	return newContent
+}
+
+// isListItem checks if a line starts with a common Markdown list marker.
+func isListItem(line string) bool {
+	trimmed := strings.TrimSpace(line)
+	return strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") || strings.HasPrefix(trimmed, "+ ")
 }
 
 // convert markdown to HTML using goldmark
