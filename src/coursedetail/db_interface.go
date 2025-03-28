@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -51,7 +52,7 @@ func (s Semester) String(lang string) string {
 }
 
 type Teacher struct {
-	SisID       int    `json:"KOD"`
+	SisID       string `json:"KOD"`
 	FirstName   string `json:"JMENO"`
 	LastName    string `json:"PRIJMENI"`
 	TitleBefore string `json:"TITULPRED"`
@@ -229,20 +230,40 @@ func (n NullInt64) String() string {
 	return fmt.Sprintf("%d", n.Int64)
 }
 
+type NullFloat64 sql.NullFloat64
+
+func (n *NullFloat64) Scan(value interface{}) error {
+	var i sql.NullFloat64
+	err := i.Scan(value)
+	if err != nil {
+		return err
+	}
+	*n = NullFloat64(i)
+	return nil
+}
+
+func (n NullFloat64) String() string {
+	if !n.Valid {
+		return "NULL"
+	}
+	return fmt.Sprintf("%f", n.Float64)
+}
+
 type CourseCategoryRating struct {
-	Code   int    `db:"category_code"`
-	Title  string `db:"rating_title"`
-	Rating int    `db:"rating"`
+	Code       int     `db:"category_code"`
+	Title      string  `db:"rating_title"`
+	UserRating int     `db:"rating"`
+	AvgRating  float64 `db:"avg_rating"`
 }
 
 type CourseInfo struct {
-	Code                  string 		   `db:"code"`
-	Name                  string 		   `db:"title"`
-	Faculty               string 		   `db:"faculty"`
-	GuarantorDepartment   string 		   `db:"guarantor"`
-	State                 string 		   `db:"taught"`
+	Code                  string           `db:"code"`
+	Name                  string           `db:"title"`
+	Faculty               string           `db:"faculty"`
+	GuarantorDepartment   string           `db:"guarantor"`
+	State                 string           `db:"taught"`
 	Start                 TeachingSemester `db:"start_semester"`
-	SemesterCount         int    		   `db:"semester_count"`
+	SemesterCount         int              `db:"semester_count"`
 	Language              string           `db:"taught_lang"`
 	LectureRange1         int              `db:"lecture_range1"`
 	SeminarRange1         int              `db:"seminar_range1"`
@@ -261,16 +282,108 @@ type CourseInfo struct {
 	AssesmentRequirements NullDescription  `db:"requirements_for_assesment"`
 	EntryRequirements     NullDescription  `db:"entry_requirements"`
 	Aim                   NullDescription  `db:"aim"`
+	Comments              CommentSlice     `db:"comments"`
+	Prereq                JSONStringArray  `db:"preqrequisities"`
+	Coreq                 JSONStringArray  `db:"corequisities"`
+	Incompa               JSONStringArray  `db:"incompatibilities"`
+	Interchange           JSONStringArray  `db:"interchangebilities"`
+	Classes               ClassSlice       `db:"classes"`
+	Classifications       ClassSlice       `db:"classifications"`
+}
+
+type ClassSlice []Class
+
+func (cs *ClassSlice) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case nil:
+		*cs = nil
+		return nil
+	case []byte:
+		*cs = nil
+		err := json.Unmarshal(v, &cs)
+		return err
+	case string:
+		err := json.Unmarshal([]byte(v), &cs)
+		return err
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+type Class struct {
+	Code string `json:"KOD"`
+	Name string `json:"NAZEV"`
+}
+
+type JSONStringArray []string
+
+func (jsa *JSONStringArray) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case nil:
+		jsa = nil
+		return nil
+	case []byte:
+		*jsa = nil
+		err := json.Unmarshal(v, &jsa)
+		return err
+	case string:
+		err := json.Unmarshal([]byte(v), &jsa)
+		return err
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
 }
 
 type Course struct {
 	CourseInfo
-	// TODO what is this
-	Classifications []string
-	// TODO what is this
-	Classes              []string
 	Link                 string // link to course webpage (not SIS)
 	BlueprintAssignments []Assignment
-	OverallRating        NullInt64
+	UserOverallRating    NullInt64
+	AvgOverallRating     NullFloat64
 	CategoryRatings      []CourseCategoryRating
+}
+
+type CommentSlice []Comment
+
+func (cs *CommentSlice) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case nil:
+		*cs = nil
+		return nil
+	case []byte:
+		*cs = nil
+		err := json.Unmarshal(v, &cs)
+		return err
+	case string:
+		err := json.Unmarshal([]byte(v), &cs)
+		return err
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+type Comment struct {
+	StudiesType   string  `json:"NAZEV"`
+	StudiesYear   int     `json:"SROC"`
+	StudiesField  string  `json:"SOBOR"`
+	AcademicYear  int     `json:"SSKR"`
+	TargetType    string  `json:"PRDMTYP"`
+	TargetTeacher Teacher `json:"TEACHER"`
+	Content       string  `json:"MEMO"`
+}
+
+func (c Comment) AcademicYearString() string {
+	return strconv.Itoa(c.AcademicYear)
+}
+
+func (c Comment) StudiesYearString() string {
+	return strconv.Itoa(c.StudiesYear)
+}
+
+func (c Comment) TargetTeacherString() string {
+	if len(c.TargetTeacher.SisID) > 0 {
+		return c.TargetTeacher.String()
+	} else {
+		return "Global"
+	}
 }

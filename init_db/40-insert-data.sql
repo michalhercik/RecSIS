@@ -55,12 +55,12 @@ CSV HEADER;
 -- DELIMITER ','
 -- CSV HEADER;
 
-COPY courses(title,code,valid_from,valid_to,guarantor,taught,start_semester,semester_count,range_unit,exam_type,credits,min_number,capacity,lang,taught_lang,guarantors,annotation,aim,terms_of_passing,literature,requirements_for_assesment,syllabus,entry_requirements,teachers,faculty,lecture_range1,seminar_range1,lecture_range2,seminar_range2)
+COPY courses(title,code,valid_from,valid_to,guarantor,taught,start_semester,semester_count,range_unit,exam_type,credits,min_number,capacity,lang,taught_lang,guarantors,annotation,aim,terms_of_passing,literature,requirements_for_assesment,syllabus,entry_requirements,teachers,faculty,comments,preqrequisities,corequisities,incompatibilities,interchangebilities,classes,classifications,lecture_range1,seminar_range1,lecture_range2,seminar_range2)
 FROM '/docker-entrypoint-initdb.d/courses_transformed.csv'
 DELIMITER ','
 CSV HEADER;
 
-INSERT INTO users (id) VALUES (81411247);
+INSERT INTO users (id) VALUES (81411247), (73291111);
 
 COPY blueprint_years(user_id,academic_year)
 FROM '/docker-entrypoint-initdb.d/blueprint_years.csv'
@@ -155,10 +155,13 @@ VALUES
 INSERT INTO bla_studies(user_id, degree_plan_code, start_year)
 VALUES
     (81411247, 'NIPVS19B', 2020),
-    (81411247, 'NISD23N', 2023);
+    (81411247, 'NISD23N', 2023),
+    (73291111, 'NIPVS19B', 2020);
 
 INSERT INTO sessions(id, user_id, expires_at)
-VALUES ('977e69df-0b48-4790-a409-b86656ff86bc', 81411247, '2200-01-01 00:00:00-00'::timestamptz);
+VALUES
+    ('977e69df-0b48-4790-a409-b86656ff86bc', 81411247, '2200-01-01 00:00:00-00'::timestamptz),
+    ('17924537-c555-4fc7-b83c-f1e839cfee61', 73291111, '2200-01-01 00:00:00-00'::timestamptz);
 
 INSERT INTO start_semester_to_desc(id, lang, semester_description) VALUES
     (1, 'cs', 'Zimní'),
@@ -168,177 +171,12 @@ INSERT INTO start_semester_to_desc(id, lang, semester_description) VALUES
     (2, 'en', 'Summer'),
     (3, 'en', 'Both');
 
-
-INSERT INTO bla_blueprints(user_id, lang, blueprint) VALUES
-    (81411247, 'cs' , '{"unassigned": [], "assigned": [{"year": 1, "winter": [], "summer": []},{"year": 2, "winter": [], "summer": []},{"year": 3, "winter": [], "summer": []}]}'),
-    (81411247, 'en' , '{"unassigned": [], "assigned": [{"year": 1, "winter": [], "summer": []},{"year": 2, "winter": [], "summer": []},{"year": 3, "winter": [], "summer": []}]}');
-
-WITH blueprint_record AS (
-    SELECT code, title, valid_from, start_semester, semester_count, lecture_range1, seminar_range1, lecture_range2, seminar_range2, exam_type, credits, guarantors
-    FROM courses
-    WHERE lang='cs'
-)
-UPDATE bla_blueprints
-SET blueprint = jsonb_build_object('unassigned', '[]', 'assigned', jsonb_build_array(
-    (SELECT * from jsonb_build_object('year', 1,
-        'winter', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NDMI002') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NDMI050') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ070') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI057') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI069') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAT100') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG030') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG062') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI120') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI141') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY006') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY014') r)
-        )),
-        'summer', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ072') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI054') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI058') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG031') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI170') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI177') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTIN060') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTIN107') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY015') r)
-        ))
-    )),
-    (SELECT * from jsonb_build_object('year', 2,
-        'winter', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NAIL062') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NDBI025') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NDMI011') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ074') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG041') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI142') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTIN061') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY016') r)
-        )),
-        'summer', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ091') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ176') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI059') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG024') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG036') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG045') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG051') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI143') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI153') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTIN071') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY017') r)
-        ))
-    )),
-    (SELECT * from jsonb_build_object('year', 3,
-        'winter', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPFL129') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPGR003') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG035') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG073') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI004') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI098') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI154') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG038') r)
-        )),
-        'summer', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG043') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG074') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI041') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSZZ031') r)
-        ))
-    ))
-))
-WHERE user_id = 81411247
-AND lang = 'cs';
-
-WITH blueprint_record AS (
-    SELECT code, title, valid_from, start_semester, lecture_range1, seminar_range1, lecture_range2, seminar_range2, exam_type, credits, guarantors
-    FROM courses
-    WHERE lang='en'
-)
-UPDATE bla_blueprints
-SET blueprint = jsonb_build_object('unassigned', '[]', 'assigned', jsonb_build_array(
-    (SELECT * from jsonb_build_object('year', 1,
-        'winter', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NDMI002') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NDMI050') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ070') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI057') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI069') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAT100') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG030') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG062') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI120') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI141') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY006') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY014') r)
-        )),
-        'summer', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ072') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI054') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI058') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG031') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI170') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI177') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTIN060') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTIN107') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY015') r)
-        ))
-    )),
-    (SELECT * from jsonb_build_object('year', 2,
-        'winter', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NAIL062') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NDBI025') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NDMI011') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ074') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG041') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI142') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTIN061') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY016') r)
-        )),
-        'summer', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ091') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NJAZ176') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NMAI059') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG024') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG036') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG045') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG051') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI143') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI153') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTIN071') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NTVY017') r)
-        ))
-    )),
-    (SELECT * from jsonb_build_object('year', 3,
-        'winter', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPFL129') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPGR003') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG035') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG073') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI004') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI098') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI154') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG038') r)
-        )),
-        'summer', (SELECT * FROM jsonb_build_array(
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG043') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NPRG074') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSWI041') r),
-            (SELECT row_to_json(r) FROM (SELECT * FROM blueprint_record WHERE code = 'NSZZ031') r)
-        ))
-    ))
-))
-WHERE user_id = 81411247
-AND lang = 'en';
-
 INSERT INTO course_overall_ratings(user_id, course_code, rating)
 VALUES
     (81411247, 'NDMI002', 1),
-    (81411247, 'NDMI050', 0);
+    (81411247, 'NDMI050', 0),
+    (73291111, 'NDMI002', 1),
+    (73291111, 'NDMI050', 0);
 
 INSERT INTO course_rating_categories(code, lang, title)
 VALUES
@@ -364,4 +202,14 @@ VALUES
     (81411247, 'NDMI050', 2, 1),
     (81411247, 'NDMI050', 3, 5),
     (81411247, 'NDMI050', 4, 4),
-    (81411247, 'NDMI050', 5, 3);
+    (81411247, 'NDMI050', 5, 3),
+    (73291111, 'NDMI002', 1, 1),
+    (73291111, 'NDMI002', 2, 4),
+    (73291111, 'NDMI002', 3, 3),
+    (73291111, 'NDMI002', 4, 2),
+    (73291111, 'NDMI002', 5, 1),
+    (73291111, 'NDMI050', 1, 0),
+    (73291111, 'NDMI050', 2, 1),
+    (73291111, 'NDMI050', 3, 5),
+    (73291111, 'NDMI050', 4, 4),
+    (73291111, 'NDMI050', 5, 3);

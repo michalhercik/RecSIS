@@ -1,0 +1,381 @@
+"KOD","FAKULTA","NAZEV"
+V,"11320",Všeobecné
+VM,"11320",Výpočetní matematika
+AP,"11320",Algebra v přírodních vědách
+B,"11320",Fyzikální předmět pro bakaláře
+BA,"11320",Business administration
+B1,"11320",První ročník bak. studia M
+AI,"11320",Algebra v informatice
+B2,"11320",Předměty spol. základu 2. roč. bak. stud
+DM,"11320",DM
+DR,"11320",Diferenciální rovnice
+DYN,"11320",Dynamika
+EK,"11320",Ekonometrie
+F,"11320",Fyzika
+FB,"11320",Finanční matematika
+FPM,"11320",Finanční a pojistná matematika
+HA,"11320",Harmonická analýza
+IM1,"11320",Informatika Mgr. - Teoretická informatika
+IM2,"11320",Informatika Mgr. - Softwarové systémy
+IM3,"11320",Informatika Mgr. - Matematická lingvistika
+IM4,"11320",Informatika Mgr. - Diskrétní modely a algoritmy
+IMU,"11320",Informatika Mgr. - učitelské studium informatiky
+IM,"11320",Informatika Mgr. - volitelný
+KG,"11320",Kombinatorická geometrie a geom. algorit
+M,"11320",Matematika
+MA,"11320",Mat. analýza
+MAPO,"11320",Matematika a počítače
+MDG,"11320",Matematika a deskriptivní geometrie
+ME,"11320",Matematika a ekonomie
+MI,"11320",Matematika a informatika
+ML,"11320",Mat. logika a teorie množin
+MMN,"11320",Matematika a management
+MOD,"11320",Mat. modelování
+MS,"11320",Mat. statistika
+M1,"11320",První ročník M
+M2,"11320",Předměty bloku A
+NF,"11320",Nelineární funkcionální analýza
+NT,"11320",NT
+PAF,"11320",PAF
+PB,"11320",Pojistná matematika
+POJ,"11320",POJ
+RG,"11320",Riemannova geometrie
+STR,"11320","Mat. struktury, povinné předměty (blok B)"
+TF,"11320","Teorie funkcí, funkc. analýza a teorie potenciálu"
+TG,"11320",Teorie grafů a kombin. algoritmy
+TP,"11320",Teorie pravděpodobnosti
+TTK,"11320",Obecná topologie a teorie kategorií
+UL,"11320",Universální algebra a mat. logika
+UM,"11320",Učitelství matematiky
+DF12,"11320","DS, obecné otázky fyziky"
+DF1,"11320","DS, teoretická fyzika, astronomie a astrofyzika"
+DF2,"11320","DS, fyzika plazmatu a ionizovaných prostředí"
+DF3,"11320","DS, fyzika kondenz. látek a materiálový výzkum"
+DF4,"11320","DS, biofyzika, chemická a makromolekulární fyzika"
+DF5,"11320","DS, fyzika povrchů a rozhraní"
+DF6,"11320","DS, kvantová optika a optoelektronika"
+DF7,"11320","DS, geofyzika"
+DF8,"11320","DS, meteorologie a klimatologie"
+DF9,"11320","DS, subjaderná fyzika"
+DF10,"11320","DS, jaderná fyzika"
+DF11,"11320","DS, matematické a počítačové modelování"
+DM1,"11320","DS, algebra, teorie čísel a matematická logika"
+DM2,"11320","DS, geom. a topologie, gl. analýza a ob. struktury"
+DM3,"11320","DS, matematická analýza"
+DM4,"11320","DS, pravděpodobnost a matematická statistika"
+DM5,"11320","DS, ekonometrie a operační výzkum"
+DM6,"11320","DS, vědecko - technické výpočty"
+DM7,"11320","DS, finanční a pojistná matematika"
+DM8,"11320","DS, obecné otázky matematiky a informatiky"
+DI1,"11320","DS, teoretická informatika"
+DI2,"11320","DS, softwarové systémy"
+DI3,"11320","DS, matematická lingvistika"
+DI4,"11320","DS, diskrétní modely a algoritmy"
+MIB,"11320",Matematické metody informační bezpečnosti
+IB,"11320",Informatika Bc.
+AJM,"11410",Předměty v angličtině - mgr.
+AJB,"11410",Předměty v angličtině - bc.
+AJD,"11410",Předměty v angličtině - PhD.
+A-B,"11120",A. Bakalářské
+A-M,"11120",A. Magisterské
+A-D,"11120",A. Doktorské
+B-VZK_1,"11120",B. Veřejné zdravotnictví kombinované 1. ročník
+B-VL__1,"11120",B. Všeobecné lékařství 1. ročník
+B-VL__2,"11120",B. Všeobecné lékařství 2. ročník
+B-VL__3,"11120",B. Všeobecné lékařství 3. ročník
+B-VL__4,"11120",B. Všobecné lékařství 4. ročník
+B_VL__5,"11120",B. Všeobecné lékařství 5. ročník
+B-VL__6,"11120",B. Všeobecné lékařství 6. ročník
+B-VZK_2,"11120",B. Veřejné zdravotnictví kombinované 2. ročník
+B-VZK_3,"11120",B. Veřejné zdravotnictví kombinované 3. ročník
+B-VZ__1,"11120",B. Veřejné zdravotnictví 1. ročník
+B-VZ__2,"11120",B. Veřejné zdravotnictví 2. ročník
+B-VZ__3,"11120",B. Veřejné zdravotnictví 3. ročník
+B-VS__1,"11120",B. Všeobecná sestra 1. ročník
+B-VS__2,"11120",B. Všeobecná sestra 2. ročník
+B-VS__3,"11120",B. Všeobecná sestra 3. ročník
+B-VSK_1,"11120",B. Všeobecná sestra kombinovaná 1. ročník
+B-VSK_2,"11120",B. Všeobecná sestra kombinovaná 2. ročník
+B-VSK_3,"11120",B. Všeobecná sestra kombinovaná 3. ročník
+B-DH__1,"11120",B. Dentální hygienistka 1. ročník
+B_DH__2,"11120",B. Dentální hygienistka 2. ročník
+B-DH__3,"11120",B. Dentální hygienistka 3. ročník
+B-F___1,"11120",B. Fyzioterapie 1. ročník
+B-F___2,"11120",B. Fyzioterapie 2. ročník
+B-F___3,"11120",B. Fyzioterapie 3. ročník
+C-PP,"11120",C. Povinný předmět
+C-PV,"11120",C. Volitelný předmět
+C-PVK,"11120",C. Povinně volitelný kurz
+C-SVA,"11120",C. Studentská vědecká aktivita
+D-1A1,"11120",D. Modul IA (CSFBXX41)
+D-1B1,"11120",D. Modul IB (CCBGXX21)
+D-1C1,"11120",D. Modul IC (CBPIXX21)
+D-1D1,"11120",D. Modul ID (CNPAXX41)
+D-1A2,"11120",D. Modul IA (CSFBXX42)
+D-1D2,"11120",D. Modul ID (CNPAX42)
+C-SZZ,"11120",C. Státní závěrečná zkouška
+C-MZ,"11120",C. Zkouška modulu
+D-1E2,"11120",D. Modul IE (CMEDXX12)
+D-2A3,"11120",D. Modul IIA (CTBSXX13)
+D-2B3,"11120",D. Modul IIB (CMPRXX23)
+D-2C3,"11120",D. Modul IIC (CMCPXX33)
+D-2D3,"11120",D. Modul IID (C-PVK a C-SVA)
+D-2C4,"11120",D. Modul IIC (CMCPXX34)
+D-2D4,"11120",D. Modul IID (C-PVK a C-SVA)
+D-MVL5,"11120",D. Modul MVL (obory vnitřního lékařství)
+D-MCH5,"11120",D. Modul MCH (chirurgické obory)
+D-MNV5,"11120",D. Modul MNV (neurobehaviorální vědy)
+D-MGP5,"11120",D. Modul MGP (gynekologie a porodnictví)
+D-MDL5,"11120",D. Modul MDL (dětské lékařství)
+VOL1,"11220",volitelné předměty pro 1. ročník
+VOL2,"11220",volitelné předměty pro 2. ročník
+VOL3,"11220",volitelné předměty pro 3. ročník
+VOL4,"11220",volitelné předměty pro 4. ročník
+VOL5,"11220",volitelné předměty pro 5. ročník
+P1,"11220",povinné předměty společného základu - 1. sem.
+P2,"11220",povinné předměty společného základu - 2. sem.
+P3,"11220",povinné předměty společného základu - 3. sem.
+P4,"11220",povinné předměty společného základu - 4. sem.
+P5,"11220",povinné předměty společného základu - 5. sem.
+P6,"11220",povinné předměty společného základu - 6. sem.
+P7,"11220",povinné předměty společného základu - 7. sem.
+P8,"11220",povinné předměty společného základu - 8. sem.
+P9,"11220",povinné předměty společného základu - 9. sem.
+LAWROM,"11220",římské právo
+LAWTHE,"11220",teorie práva
+LAWINT,"11220",mezinárodní právo veřejné
+LAWCIV,"11220",občanské právo
+LAWBUS,"11220",obchodní právo
+LAWCRI,"11220",trestní právo
+LAWADM,"11220",správní právo
+LAWLAB,"11220",pracovní právo a právo sociálního zabezpečení
+LAWEUR,"11220",evropské právo
+LAWFIN,"11220",finanční právo
+LAWENV,"11220",právo životního prostředí
+LAWECO,"11220",teorie národního hospodářství
+LAWLAN,"11220",cizí jazyky pro právníky
+LAWIPR,"11220",mezinárodní právo soukromé
+LAWHIS,"11220",právní dějiny
+LAWCON,"11220",ústavní právo
+V1,"11220",povinně volitelné předměty pro 1. ročník
+V2,"11220",povinně volitelné předměty pro 2. ročník
+V3,"11220",výběrové předměty pro 3. ročník
+V4,"11220",výběrové předměty pro 4. ročník
+V5,"11220",výběrové předměty pro 5. ročník
+MAT1,"11410",Matematika 1. cyklus - povinné
+PSY1,"11410",Psychologie a spec. ped. 1. cyklus - povinné
+PSY1V,"11410",Psych. a spec. ped. 1. cyklus - povinně volitelné
+*,"11270",Mg víceletý cyklus nebo ob rok
+BC,"11270",Mg vhodné pro studenty bakalářských programů
+F,"11270",Mg nepovinně volitelné
+E,"11270",Mg pro všechny ročníky
+DE,"11270","Mg povinně volitelné, 4.+5. ročník"
+D,"11270","Mg k 2. odborné zkoušce, 4.+5. ročník"
+CE,"11270","Mg povinně volitelné, 2.+3. ročník"
+C,"11270","Mg k 1. odborné zkoušce, 2.+3. ročník"
+B,"11270","Mg k průpravné zkoušce, 2.+3. ročník"
+A,"11270",Mg pro 1. ročník
+DR,"11270",též pro doktorandy
+VOLIT,"11410",Volitelné předměty UZ
+VOLPS,"11410",Volitelné předměty pro PS
+VOLKS,"11410",Volitelné předměty pro KS
+KOMB,"11410",Předměty kombinovaného stuida
+C-SM,"11120",C. Samostatný kurz
+MBMO,"11320",M Bc. MOD
+AZO156,"11210","Exchange - 15.6 Museum Studies, Conservation"
+AZO000,"11210",Exchange - 00.0 Thematic Modules
+AZO032,"11210",Exchange - 03.2 Music and Musicology
+AZO034,"11210","Exchange - 03.4 Photography, Cinematography"
+AZO036,"11210",Exchange - 03.6 History of Art
+AZO051,"11210",Exchange - 05.1 Teacher Training
+AZO055,"11210",Exchange - 05.5 Adult Education
+AZO057,"11210","Exchange - 05.7 Educ. Science, Comparative Educ."
+AZO058,"11210",Exchange - 05.8 Educational Psychology
+AZO059,"11210","Exchange - 05.9 Others-Education, Teacher Training"
+AZO081,"11210",Exchange - 08.1 Philosophy
+AZO083,"11210",Exchange - 08.3 History
+AZO084,"11210",Exchange - 08.4 Archaelogy
+AZO089,"11210",Exchange - 08.9 Others-Humanities
+AZO091,"11210",Exchange - 09.1 Modern EC Languages
+AZO092,"11210",Exchange - 09.2 General and Comparative Literature
+AZO093,"11210",Exchange - 09.3 Linguistics
+AZO094,"11210","Exchange - 09.4 Translation, Interpretation"
+AZO095,"11210",Exchange - 09.5 Classical Philology
+AZO096,"11210",Exchange - 09.6 Non-EC Languages
+AZO097,"11210",Exchange - 09.7 Less Widely Taught Languages
+AZO098,"11210",Exchange - 09.8 Regional and Minority Languages
+AZO099,"11210",Exchange - 09.9 Others-Lang. & Philolog. Sciences
+AZO141,"11210",Exchange - 14.1 Political Sciences
+AZO142,"11210",Exchange - 14.2 Sociology
+AZO144,"11210",Exchange - 14.4 Psychology and Behav. Sciences
+AZO145,"11210",Exchange - 14.5 Social Work
+AZO147,"11210",Exchange - 14.7 Anthropology
+AZO149,"11210",Exchange - 14.9 Others-Social Sciences
+AZO154,"11210",Exchange - 15.4 Library Science
+AZO155,"11210","Exchange - 15.5 Documentation, Archiving"
+MBOM,"11320",M Bc. OM
+AZO159,"11210",Exchange - 15.9 Others-Commun. & Inform. Sciences
+MBOMP,"11320",M Bc. OM > Povinné
+MBOMPV,"11320",M Bc. OM > Povinně volitelné
+MBOMV,"11320",M Bc. OM > Doporučené volitelné
+MBOMMA,"11320",M Bc. OM > Zaměření MA
+MBOMNM,"11320",M Bc. OM > Zaměření NUMMOD
+MBOMMS,"11320",M Bc. OM > Zaměření MSTR
+MBOMSO,"11320",M Bc. OM > Zaměření STOCH
+MBOM1,"11320",M Bc. OM > 1. ročník
+MBOM2,"11320",M Bc. OM > 2. ročník
+MBFM,"11320",M Bc. FM
+MBFMP,"11320",M Bc. FM > Povinné
+MBFMPV,"11320",M Bc. FM > Povinně volitelné
+MBFMV,"11320",M Bc. FM > Doporučené volitelné
+MBFM1,"11320",M Bc. FM > 1. ročník
+MBFM2,"11320",M Bc. FM > 2. ročník
+MBIB,"11320",M Bc. MMIB
+MBIBP,"11320",M Bc. MMIB > Povinné
+MBIBPV,"11320",M Bc. MMIB > Povinně volitelné
+MBIBV,"11320",M Bc. MMIB > Doporučené volitelné
+MBIB1,"11320",M Bc. MMIB > 1. ročník
+MBIB2,"11320",M Bc. MMIB > 2. ročník
+MBUM,"11320",M Bc. MZV
+MBUMP,"11320",M Bc. MZV > Povinné
+MBUMPV,"11320",M Bc. MZV > Povinně volitelné
+MBUMV,"11320",M Bc. MZV > Doporučené volitelné
+MBUM1,"11320",M Bc. MZV > 1. ročník
+MBUM2,"11320",M Bc. MZV > 2. ročník
+MBDG,"11320",M Bc. DGZV
+MBDGP,"11320",M Bc. DGZV > Povinné
+MBDGPV,"11320",M Bc. DGZV > Povinně volitelné
+MBDGV,"11320",M Bc. DGZV > Doporučené volitelné
+MBDG1,"11320",M Bc. DGZV > 1. ročník
+MBDG2,"11320",M Bc. DGZV > 2. ročník
+MMMA,"11320",M Mgr. MA
+MMMAP,"11320",M Mgr. MA > Povinné
+MMMAPV,"11320",M Mgr. MA > Povinně volitelné
+MMMAV,"11320",M Mgr. MA > Volitelné
+MMIB,"11320",M Mgr. MMIB
+MMIBP,"11320",M Mgr. MMIB > Povinné
+MMIBPV,"11320",M Mgr. MMIB > Povinně volitelné
+MMIBV,"11320",M Mgr. MMIB > Volitelné
+MMNM,"11320",M Mgr. NVM
+MMNMP,"11320",M Mgr. NVM > Povinné
+MMNMPV,"11320",M Mgr. NVM > Povinně volitelné
+MMNMV,"11320",M Mgr. NVM > Volitelné
+MMMOP,"11320",M Mgr. MOD > Povinné
+MMMO,"11320",M Mgr. MOD
+MMMOPV,"11320",M Mgr. MOD > Povinně volitelné
+MMMOV,"11320",M Mgr. MOD > Volitelné
+MMST,"11320",M Mgr. MSTR
+MMSTP,"11320",M Mgr. MSTR > Povinné
+MMSTPV,"11320",M Mgr. MSTR > Povinně volitelné
+MMSTV,"11320",M Mgr. MSTR > Volitelné
+MMPM,"11320",M Mgr. PMSE
+MMPMP,"11320",M Mgr. PMSE > Povinné
+MMPMPV,"11320",M Mgr. PMSE > Povinně volitelné
+MMPMV,"11320",M Mgr. PMSE > Volitelné
+MMFP,"11320",M Mgr. FPM
+MMFPP,"11320",M Mgr. FPM > Povinné
+MMFPPV,"11320",M Mgr. FPM > Povinně volitelné
+MMFPV,"11320",M Mgr. FPM > Volitelné
+MBMOP,"11320",M Bc. MOD > Povinné
+MBMOPV,"11320",M Bc. MOD > Povinně volitelné
+MBMOV,"11320",M Bc. MOD > Volitelné
+MBMO1,"11320",M Bc. MOD > 1. ročník
+MBMO2,"11320",M Bc. MOD > 2. ročník
+P,"11270",povinný
+PV,"11270",povinně volitelný
+V,"11270",volitelný
+EO01,"11310",Sestava lysimetrů a zařízení na kontinuální značen
+EO02,"11310",NIR spectrometr
+EZ01,"11310",Hydroklimatologická terénní laboratoř
+EZ02,"11310",Zkapacitnění laboratoře fyzické geografie - kulový
+EZ03,"11310",Zkapacitnění laboratoře fyzické geografie - kapali
+EZ04,"11310",Ruční spektroradiometr
+EZ05,"11310",Laboratorní spektroradiometr
+EZ06,"11310",Pracovní stanice pro UAV - integrovaný vícekanálov
+EZ07,"11310",Pracovní stanice pro UAV - Pracovní stanice pro 3D
+EZ08,"11310",Kabely pro ERT ARES 6ks
+EZ09,"11310",Mobilní stanice pro měření teploty a vlhkosti půdy
+EZ10,"11310",Termální analyzátor tepelných vlastností materiálů
+EZ11,"11310",Učebna UAV technologií
+EZ12,"11310",Laboratoř 3D dat
+EZ13,"11310",Geoinformační laboratoř fyzické geografie
+EZ14,"11310",Mobilní učebna GIS - notebooky s příslušenstvím
+NRL,"11230",Nekontrolovat_RL
+PM,"11230",C - Politické myšlení
+PRAXE,"11220",Odborné praxe
+AME002,"11210",A – Mezioborová nabídka VP: Jazykové kurzy
+AME003,"11210",A – Mezioborová nabídka VP: Literatura
+AME004,"11210","A – Mezioborová nabídka VP: Filosofie, náboženství"
+AME005,"11210",A – Mezioborová nabídka VP: Historické vědy
+AME006,"11210",A – Mezioborová nabídka VP: Sociální vědy
+AME007,"11210",A – Mezioborová nabídka VP: Uměnovědy
+EXT,"11230",Externí předmět nevyučovaný na UK
+NOINC,"11230",Courses not for incoming students
+EZ15,"11310",Mobilní učebna GIS - dataprojektor
+AME009,"11210",A – Mezioborová nabídka VP: Informace a nová média
+CZV,"11230",Kurzy pro CZV
+AME010,"11210",A – Mezioborová nabídka VP: Ostatní
+P,"11230",A - Politologie
+MV,"11230",B - Mezinárodní vztahy
+ZRP,"11230",Zakázaná_registrace_do_předmětu
+AME008,"11210",A - Mezioborová nabídka VP: Lingvistika
+MMN(PV),"11320",
+AV,"11320",
+U,"11320",
+MBIT,"11320",M Bc. MMIT
+MBITP,"11320",M Bc. MMIT > Povinné
+MBITPV,"11320",M Bc. MMIT > Povinně volitelné
+MBITV,"11320",M Bc. MMIT > Doporučené volitelné
+MBIT1,"11320",M Bc. MMIT > 1. ročník
+MBIT2,"11320",M Bc. MMIT > 2. ročník
+INC,"11230",Courses for incoming students
+E01,"11310",Původní předmět
+EC01,"11310",Sestava HPLC-MS
+EC02,"11310",Vysokokapacitní centrifuga s příslušenstvím
+EC03,"11310",Stolní centrifuga s příslušenstvím
+EC04,"11310",MALDI-TOF MS Systém
+EC05,"11310",Mikrovlnný reaktor
+EC06,"11310",Kompaktní preparativní system
+EC07,"11310",Mikrodestilační přístroj
+EC08,"11310",Odparka a membránová jednotka
+EC09,"11310","Rekonstrukce místnosti č.203, Hlavova 8"
+INC,"11240",Courses available to incoming students
+NOINC,"11240",Courses unavailable to incoming students
+AECES01,"11210",ECES
+DM9,"11320","Pravděp. a statistika, ekonometrie a fin. mat."
+APZ,"11230",A - Politická žurnalistika
+BSZ,"11230",B - Sportovní žurnalistika
+CKZ,"11230",C - Kulturní žurnalistika
+DVZ,"11230",D - Vizuální žurnalistika
+EMT,"11230",E - Mediální tvorba
+EG02,"11310",Rotační magnetometr
+EG01,"11310",Kvadrupólové ICP-MS
+EG03,"11310",Demagnetizér střídavého pole
+EB03,"11310",Mikrovlný procesor histologických vzorků
+EG04,"11310",QUICKpress Piston Cylinder Apparatus
+EB01,"11310",Digestoř pro karyologii/palynologii s odtahem
+EB02,"11310",Ultrapřesný sonikátor pro štěpení DNA/RNA pro příp
+EB04,"11310",Portable Photosynthesis System
+EB05,"11310",Zařízení na měření vodního potenciálu - Schollande
+EB06,"11310",Přenosný senzor pro měření rostlinných barviv
+EB07,"11310",Horizontální laminární box 120 cm
+EB08,"11310",Biohazard laminární box 200 cm
+EB09,"11310",Stolní chlazená centrifuga univerzální se více rot
+EB10,"11310",Invertovaný mikroskop s fluorescenční kamerou
+EB11,"11310",Ultracentrifuga a 3 rotory
+EB12,"11310",Gradientový PCR cycler
+EB13,"11310",SEM s vysokým rozlišením
+EB14,"11310",Biohazard laminární box 200 cm
+EB15,"11310",Vzduchotěsné komory pro izotopové značení
+EB16,"11310",Elektroforéza DNA horizontální
+EB17,"11310",Zdroj napětí na elektroforézu
+EB18,"11310",Pipetmany (sada)
+EB19,"11310",Termoblok
+EB20,"11310",Mikrocentrifuga stolní
+EB21,"11310",Mikrocentrifuga malá
+EB22,"11310",Dataprojektor
+EB23,"11310",Mikroskop badatelský
+EB24,"11310",Stavební úpravy prostor pro umístění chladové míst
+EZ16,"11310",Mobilní učebna pro kurz(y) Population P. notebooky
+EZ17,"11310",Mobilní učebna pro kurz(y) Population P. dataproj.
+EZ18,"11310",Instalace SW

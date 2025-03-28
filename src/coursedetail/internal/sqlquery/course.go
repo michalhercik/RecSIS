@@ -46,6 +46,17 @@ user_ratings AS (
     SELECT cr.category_code, cr.course_code, cr.rating, crc.title, crc.lang FROM user_session
     LEFT jOIN course_ratings cr ON user_session.user_id = cr.user_id
     LEFT JOIN course_rating_categories crc ON cr.category_code = crc.code
+),
+avg_course_overall_ratings AS (
+    SELECT cor.course_code, AVG(rating) AS avg_overall_rating FROM course_overall_ratings cor
+    WHERE course_code=$2
+    GROUP BY course_code
+),
+avg_course_rating AS (
+    SELECT cr.category_code, cr.course_code, AVG(cr.rating) AS avg_rating, crc.title, crc.lang FROM course_ratings cr
+    LEFT JOIN course_rating_categories crc ON cr.category_code = crc.code
+    WHERE course_code=$2
+    GROUP BY cr.course_code, cr.category_code, crc.title, crc.lang
 )
 SELECT
     c.code,
@@ -76,9 +87,20 @@ SELECT
     cor.rating AS overall_rating,
     ur.category_code,
     ur.title AS rating_title,
-    ur.rating
+    ur.rating,
+    avg_cr.avg_rating,
+    avg_cor.avg_overall_rating,
+    c.comments,
+    c.preqrequisities,
+    c.corequisities,
+    c.incompatibilities,
+    c.interchangebilities,
+    c.classes,
+    c.classifications
 FROM courses c
 LEFT JOIN course_overall_ratings cor ON c.code = cor.course_code AND cor.user_id = (SELECT user_id FROM user_session)
 LEFT JOIN user_ratings ur ON c.code = ur.course_code AND ur.lang = c.lang
+LEFT JOIN avg_course_overall_ratings avg_cor ON c.code = avg_cor.course_code
+LEFT JOIN avg_course_rating avg_cr ON c.code = avg_cr.course_code AND avg_cr.lang = c.lang AND avg_cr.category_code = ur.category_code
 WHERE code = $2 AND c.lang = $3;
 `

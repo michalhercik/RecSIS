@@ -3,6 +3,7 @@ package coursedetail
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
+    "fmt"
 )
 
 func itos(i int) string {
@@ -26,7 +27,7 @@ templ blueprintAssignment(code string, t text) {
     <div class="d-flex justify-content-center">
         <div class="btn-group">
             <button type="button" class="btn btn-lg btn-outline-blueprint"
-                hx-post={ "/blueprint/course/" + code }  
+                hx-post={ "/blueprint/course/" + code }
                 hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
             >
                 { t.Assign }
@@ -60,7 +61,7 @@ func semesterHoursExamsString(course *Course, t text) string {
     both := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
     winter := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
     summer := strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2)
-    
+
     switch course.Start {
     case teachingWinterOnly:
         result += winter
@@ -142,7 +143,7 @@ templ guarantors(guarantors []Teacher) {
             }
             if i < len(guarantors) - 1 {
                 // space between guarantors
-                &emsp; 
+                &emsp;
             }
         }
     </p>
@@ -246,6 +247,40 @@ templ Content(course *Course, t text) {
             @blueprintAssignment(course.Code, t)
         </div>
         @accordion(course, t)
+        <br>
+        { fmt.Sprintf("Avg overall rating: %v", course.AvgOverallRating) }
+        <br>
+        { fmt.Sprintf("User overall rating %v", course.UserOverallRating) }
+        <br>
+        { fmt.Sprintf("%v", course.CategoryRatings) }
+        <br><br>
+        { fmt.Sprintf("%v", course.Classifications) }
+        { fmt.Sprintf("%v", course.Classes) }
+        <br>
+        { fmt.Sprintf("%v", course.Prereq) }
+        { fmt.Sprintf("%v", course.Coreq) }
+        { fmt.Sprintf("%v", course.Interchange) }
+        { fmt.Sprintf("%v", course.Incompa) }
+        <br>
+        for _, comment := range course.Comments {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <p class="mb-0">
+                        { comment.TargetType }
+                        { comment.AcademicYearString() }
+                        { comment.TargetTeacherString() }
+                    </p>
+                    <p class="mb-0">
+                        { comment.StudiesType }
+                        { comment.StudiesYearString() }
+                        { comment.StudiesField }
+                    </p>
+                </div>
+                <div class="card-body">
+                    { comment.Content }
+                </div>
+            </div>
+        }
     </div>
 }
 
