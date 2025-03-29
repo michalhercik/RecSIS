@@ -86,7 +86,14 @@ CREATE TABLE courses(
     literature JSONB,
     requirements_for_assesment JSONB,
     entry_requirements JSONB,
-    aim JSONB
+    aim JSONB,
+    comments JSONB,
+    preqrequisities JSONB,
+    corequisities JSONB,
+    incompatibilities JSONB,
+    interchangebilities JSONB,
+    classes JSONB,
+    classifications JSONB
 );
 
 -- CREATE TABLE classifications(

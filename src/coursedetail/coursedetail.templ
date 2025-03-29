@@ -3,9 +3,6 @@ package coursedetail
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
-
-    // TODO: remove after DB update
-    "math/rand"
 )
 
 templ rateButton(rating NullInt64, icon, code string, rate int64) {
@@ -26,92 +23,87 @@ templ rateButton(rating NullInt64, icon, code string, rate int64) {
     </button>
 }
 
-templ Ratings(rating NullInt64, categories []CourseCategoryRating, code string) {
+templ rateModal(categories []CourseCategoryRating, code string, t text) {
+    <div class="modal fade" id="rateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">Categorical rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        for _, c := range categories {
+            <table x-data={ "{ hover: -1, value: " + strconv.Itoa(c.UserRating) + " }" }>
+                <tr>
+                    <td></td>
+                    <td>
+                        <div class="d-flex justify-content-between">
+                            <span>{ c.Title }</span>
+                            <span>{ strconv.Itoa(c.UserRating) }</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d-flex justify-content-center" style="width: 20px;">
+                        <button
+                            class="btn btn-sm btn-outline-none bi bi-trash-fill p-0"
+                            style="font-size: 0.8rem;"
+                            hx-delete={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
+                            @click="value = 0">
+                        </button>
+                    </td>
+                    <td class="w-100">
+                        <div class="progress-stacked">
+                            for i := 1; i <= 5; i++ {
+                                <div class="progress" role="progressbar" style="width: 20%">
+                                    <div
+                                        class="progress-bar"
+                                        :class={ "[ " + strconv.Itoa(i) + " <= hover && 'bg-primary-subtle', hover != -1 && " + strconv.Itoa(i) + " > hover && 'bg-light', hover == -1 && value < " + strconv.Itoa(i) + " && 'bg-light' ]" }
+                                        @mouseover={ "hover = " + strconv.Itoa(i) }
+                                        @mouseleave={ "hover = -1" }
+                                        @click={ "value = " + strconv.Itoa(i) }
+                                        hx-put={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
+                                        hx-vals={ `"rating": ` + strconv.Itoa(i) }
+                                        hx-trigger="click">
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        }
+    </div>
+    </div>
+    </div>
+    </div>
+}
+
+templ Ratings(userRating NullInt64, avgRating NullFloat64, categories []CourseCategoryRating, code string, t text) {
     {{
         // TODO: use data from DB
         numOfRatings := 5798
-        globalRating := 0.89123
-        // TODO: remove after DB update, instead use global calculated rating from DB
-        categoryRating := 0.0
     }}
     <div id="rating">
         <div>
-            @rateButton(rating, "bi-hand-thumbs-down", code, negativeRating)
-            { strconv.Itoa(int(globalRating * 100)) + "% (" + strconv.Itoa(numOfRatings) + ")" }
-            @rateButton(rating, "bi-hand-thumbs-up", code, positiveRating)
+            @rateButton(userRating, "bi-hand-thumbs-down", code, negativeRating)
+            if avgRating.Valid {
+                { strconv.Itoa(int(avgRating.Float64 * 100)) + "% (" + strconv.Itoa(numOfRatings) + ")" }
+            }
+            @rateButton(userRating, "bi-hand-thumbs-up", code, positiveRating)
 
             <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#rateModal">
                 Add Additional Rating
             </button>
 
             // Modal with rating categories
-            <div class="modal fade" id="rateModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Categorical rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                for _, c := range categories {
-                    <table>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <div class="d-flex justify-content-between">
-                                    <span>{ c.Title }</span>
-                                    <span>{ strconv.Itoa(c.Rating) }</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="d-flex justify-content-center" style="width: 20px;">
-                                <button
-                                    class="btn btn-sm btn-outline-none bi bi-trash-fill p-0"
-                                    style="font-size: 0.8rem;">
-                                </button>
-                            </td>
-                            <td class="w-100">
-                                <div class="progress-stacked" x-data="{ hover: -1 }">
-                                    for i := 0; i < c.Rating; i++ {
-                                        <div class="progress" role="progressbar" style="width: 20%">
-                                            <div
-                                                class="progress-bar"
-                                                :class={ strconv.Itoa(i) + " <= hover && 'bg-warning'" }
-                                                @mouseover={ "hover = " + strconv.Itoa(i) }
-                                                @mouseleave={ "hover = -1" }>
-                                            </div>
-                                        </div>
-                                    }
-                                    for i := c.Rating; i < 5; i++ {
-                                        <div class="progress" role="progressbar" style="width: 20%">
-                                            <div
-                                                class="progress-bar"
-                                                :class={ strconv.Itoa(i) + " <= hover ? 'bg-warning' : 'bg-light'" }
-                                                @mouseover={ "hover = " + strconv.Itoa(i) }
-                                                @mouseleave={ "hover = -1" }>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                }
-            </div>
-            </div>
-            </div>
-            </div>
+            @rateModal(categories, code, t)
         </div>
         for _, c := range categories {
-            {{
-                // TODO: remove after DB update
-                categoryRating = float64(rand.Intn(101)) / 100.0
-            }}
             <div>
                 <div class="d-flex justify-content-between">
                     <span>{ c.Title }</span>
-                    <span>{ strconv.FormatFloat(categoryRating, 'f', 2, 64) }</span>
+                    <span>{ strconv.FormatFloat(c.AvgRating, 'f', 1, 64) }</span>
                 </div>
                 <div class="progress" role="progressbar">
                     // this div needs width style for bootstrap progress bar
@@ -119,8 +111,8 @@ templ Ratings(rating NullInt64, categories []CourseCategoryRating, code string) 
                     // so this is one of the few known workarounds - DO NOT TOUCH 
                     // TODO: tweak the color styles constants
                     <div
-                        class={ "progress-bar", templ.KV("bg-success", categoryRating > 0.95), templ.KV("bg-danger", categoryRating < 0.20) }
-                        { templ.Attributes{"style": "width: " + strconv.FormatFloat(categoryRating * 100, 'f', 2, 64) + "%;"}... }>
+                        class={ "progress-bar", templ.KV("bg-success", c.AvgRating / 5 >= 0.90), templ.KV("bg-danger", c.AvgRating / 5 <= 0.30) }
+                        { templ.Attributes{"style": "width: " + strconv.FormatFloat(c.AvgRating * 20, 'f', 2, 64) + "%;"}... }>
                     </div>
                 </div>
             </div>
@@ -132,7 +124,7 @@ templ blueprintAssignment(code string, t text) {
     <div class="d-flex justify-content-center">
         <div class="btn-group">
             <button type="button" class="btn btn-lg btn-outline-blueprint"
-                hx-post={ "/blueprint/course/" + code }  
+                hx-post={ "/blueprint/course/" + code }
                 hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
             >
                 { t.Assign }
@@ -166,7 +158,7 @@ func semesterHoursExamsString(course *Course, t text) string {
     both := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
     winter := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
     summer := strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2)
-    
+
     switch course.Start {
     case teachingWinterOnly:
         result += winter
@@ -256,10 +248,53 @@ templ guarantors(guarantors []Teacher) {
             }
             if i < len(guarantors) - 1 {
                 // space between guarantors
-                &emsp; 
+                &emsp;
             }
         }
     </p>
+}
+
+templ courseDetail(course *Course, t text) {
+    <p class="mb-1"><strong>{ t.Faculty }</strong></p>
+    <p class="mb-2">{ course.Faculty }</p>
+    <p class="mb-1"><strong>{ t.Capacity }</strong></p>
+    <p class="mb-2">{ course.Capacity }</p>
+    <p class="mb-1"><strong>{ t.StateOfCourse }</strong></p>
+    <p class="mb-2">{ course.State }</p>
+    <p class="mb-1"><strong>{ t.LanguageOfCourse }</strong></p>
+    <p class="mb-2">{ course.Language }</p>
+    if course.Link != "" {
+        <p class="mb-1"><strong>{ t.AdditionalInfo }</strong></p>
+        <p class="mb-2"><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></p>
+    }
+    if course.Prereq.String() != "" {
+        <p class="mb-1"><strong>{ t.Prerequisites }</strong></p>
+        <p class="mb-2">{ course.Prereq.String() }</p>
+    }
+    if course.Coreq.String() != "" {
+        <p class="mb-1"><strong>{ t.Corequisites }</strong></p>
+        <p class="mb-2">{ course.Coreq.String() }</p>
+    }
+    if course.Interchange.String() != "" {
+        <p class="mb-1"><strong>{ t.Interchange }</strong></p>
+        <p class="mb-2">{ course.Interchange.String() }</p>
+    }
+    if course.Incompa.String() != "" {
+        <p class="mb-1"><strong>{ t.Incompatible }</strong></p>
+        <p class="mb-2">{ course.Incompa.String() }</p>
+    }
+    if len(course.Classes) > 0 {
+        <p class="mb-1"><strong>{ t.Classes }</strong></p>
+        for _, c := range course.Classes {
+            <p class="mb-2">{ c.Name }</p>
+        }
+    }
+    if len(course.Classifications) > 0 {
+        <p class="mb-1"><strong>{ t.Classification }</strong></p>
+        for _, c := range course.Classifications {
+            <p class="mb-2">{ c.Name }</p>
+        }
+    }
 }
 
 templ teacherStyledRow(t Teacher, position int) {
@@ -279,6 +314,50 @@ templ teacherStyledRow(t Teacher, position int) {
     </tr>
 }
 
+templ teachersTable(teachers TeacherSlice, t text) {
+    if len(teachers) > 0 {
+        <p id="teachers-part" class="mb-1"><strong>{ t.Teachers }</strong></p>
+        <table id="teachers-table" x-data="{ showAll: false }">
+        for i, teacher := range teachers {
+            @teacherStyledRow(teacher, i)
+        }
+        if len(teachers) > 10 {
+            <tr><td></td><td>
+            <button
+                class="btn btn-link text-secondary"
+                @click="showAll = !showAll; if (!showAll) scrollToTeachers()"
+                x-text={ "showAll ? '" + t.ShowLess + "' : '" + t.ShowMore + "'" }>
+            </button>
+            </td></tr>
+        }
+        </table>
+        <script>
+        function scrollToTeachers() {
+            const anchor = document.getElementById('teachers-part');
+            const offset = -52; // top navbar height
+            const topPosition = anchor.getBoundingClientRect().top + window.scrollY + offset;
+            window.scrollTo({ top: topPosition, behavior: 'smooth' });
+        }
+        </script>
+    }
+}
+
+templ teacherStyled(t Teacher) {
+    if len(t.SisID) == 0 {
+        // TODO: pripominky k predmetu
+        <span class="fs-6 text-dark fw-semibold">GLOBAL</span> 
+    } else {
+        if t.TitleBefore != "" {
+            <small style="font-size: 0.6rem;">{ t.TitleBefore + " " }</small>
+        }
+        if t.TitleAfter != "" {
+            <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span><small style="font-size: 0.6rem;">{ ", " + t.TitleAfter }</small>
+        } else {
+            <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span>
+        }
+    }
+}
+
 templ accordion(course *Course, t text) {
     <div class="accordion accordion-flush">
         @accordionItem(course.Annotation, "annotation")
@@ -291,8 +370,24 @@ templ accordion(course *Course, t text) {
     </div>
 }
 
+templ comments(comments []Comment, t text) {
+    for _, comment := range comments {
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <p class="mb-0">
+                @teacherStyled(comment.TargetTeacher)
+                { " " + comment.TargetType + " " + comment.AcademicYearString() }
+            </p>
+            <p class="mb-0">
+                { t.YearStr(comment.StudiesYear) + ", " + comment.StudiesType + ", " + comment.StudiesField }
+            </p>
+        </div>
+        <div class="card-body" style="text-align: justify">
+            { comment.Content }
+        </div>
+    }
+}
+
 templ Content(course *Course, t text) {
-    // TODO only if not empty/nil/...
     <div
         id="basic-info"
         class="card"
@@ -311,54 +406,35 @@ templ Content(course *Course, t text) {
         <div class="card-body">
             <div class="d-flex justify-content-between" style="padding: 0 5%;">
                 <div class="flex-grow-1 d-flex flex-column me-3" style="flex: 1;">
-                    <p class="mb-1"><strong>{ t.Faculty }</strong></p>
-                    <p class="mb-2">{ course.Faculty }</p>
-                    <p class="mb-1"><strong>{ t.Capacity }</strong></p>
-                    <p class="mb-2">{ course.Capacity }</p>
-                    <p class="mb-1"><strong>{ t.StateOfCourse }</strong></p>
-                    <p class="mb-2">{ course.State }</p>
-                    <p class="mb-1"><strong>{ t.LanguageOfCourse }</strong></p>
-                    <p class="mb-2">{ course.Language }</p>
-                    if course.Link != "" {
-                        <p class="mb-1"><strong>{ t.AdditionalInfo }</strong></p>
-                        <p class="mb-2"><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></p>
-                    }
+                    @courseDetail(course, t)
                 </div>
                 <div class="flex-grow-1 d-flex flex-column ms-3" style="flex: 1;">
-                    if len(course.Teachers) > 0 {
-                        <p id="teachers-part" class="mb-1"><strong>{ t.Teachers }</strong></p>
-                        <table id="teachers-table" x-data="{ showAll: false }">
-                        for i, teacher := range course.Teachers {
-                            @teacherStyledRow(teacher, i)
-                        }
-                        if len(course.Teachers) > 10 {
-                            <tr><td></td><td>
-                            <button
-                                class="btn btn-link text-secondary"
-                                @click="showAll = !showAll; if (!showAll) scrollToTeachers()"
-                                x-text={ "showAll ? '" + t.ShowLess + "' : '" + t.ShowMore + "'" }>
-                            </button>
-                            </td></tr>
-                        }
-                        </table>
-                        <script>
-                        function scrollToTeachers() {
-                            const anchor = document.getElementById('teachers-part');
-                            const offset = -52; // top navbar height
-                            const topPosition = anchor.getBoundingClientRect().top + window.scrollY + offset;
-                            window.scrollTo({ top: topPosition, behavior: 'smooth' });
-                        }
-                        </script>
-                    }
+                    @teachersTable(course.Teachers, t)
                 </div>
             </div>
-            @Ratings(course.OverallRating, course.CategoryRatings, course.Code)
+            @Ratings(course.UserOverallRating, course.AvgOverallRating, course.CategoryRatings, course.Code, t)
             <div class="mt-3 text-center">
                 <p><strong>{ t.SISLink + ": " }</strong><a href={ templ.SafeURL(courseSISLink(course.Code, t)) }>{ courseSISLink(course.Code, t) }</a></p>
             </div>
             @blueprintAssignment(course.Code, t)
         </div>
-        @accordion(course, t)
+        // switch between detailed information and comments
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#detail-tab-pane" type="button" role="tab" aria-controls="detail-tab-pane" aria-selected="true">{ t.Detail }</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#comments-tab-pane" type="button" role="tab" aria-controls="comments-tab-pane" aria-selected="false">{ t.Comments }</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active pt-2" id="detail-tab-pane" role="tabpanel" tabindex="0">
+                @accordion(course, t)
+            </div>
+            <div class="tab-pane fade pt-2" id="comments-tab-pane" role="tabpanel" tabindex="0">
+                @comments(course.Comments, t)
+            </div>
+        </div>
     </div>
 }
 

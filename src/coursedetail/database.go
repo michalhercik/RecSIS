@@ -15,22 +15,26 @@ func (reader DBManager) Course(sessionID string, code string, lang DBLang) (*Cou
 	var course Course
 	var response []struct {
 		CourseInfo
-		OverallRating NullInt64      `db:"overall_rating"`
-		Category      sql.NullInt64  `db:"category_code"`
-		RatingTitle   sql.NullString `db:"rating_title"`
-		Rating        sql.NullInt64  `db:"rating"`
+		UserOverallRating NullInt64       `db:"overall_rating"`
+		Category          sql.NullInt64   `db:"category_code"`
+		RatingTitle       sql.NullString  `db:"rating_title"`
+		UserRating        sql.NullInt64   `db:"rating"`
+		AvgOverallRating  NullFloat64     `db:"avg_overall_rating"`
+		AvgRating         sql.NullFloat64 `db:"avg_rating"`
 	}
 	if err := reader.DB.Select(&response, sqlquery.Course, sessionID, code, lang); err != nil {
 		return nil, err
 	}
 	course.CourseInfo = response[0].CourseInfo
-	course.OverallRating = response[0].OverallRating
+	course.UserOverallRating = response[0].UserOverallRating
+	course.AvgOverallRating = response[0].AvgOverallRating
 	if response[0].Category.Valid {
 		for _, r := range response {
 			course.CategoryRatings = append(course.CategoryRatings, CourseCategoryRating{
-				Code:   int(r.Category.Int64),
-				Title:  r.RatingTitle.String,
-				Rating: int(r.Rating.Int64),
+				Code:       int(r.Category.Int64),
+				Title:      r.RatingTitle.String,
+				UserRating: int(r.UserRating.Int64),
+				AvgRating:  float64(r.AvgRating.Float64),
 			})
 		}
 	}

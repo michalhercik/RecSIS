@@ -25,11 +25,18 @@ type text struct {
 	StateOfCourse    string
 	LanguageOfCourse string
 	AdditionalInfo   string
+	Prerequisites    string
+	Corequisites     string
+	Interchange      string
+	Incompatible     string
+	Classes          string
+	Classification   string
 	Guarantors       string
 	Teachers         string
 	ShowMore         string
 	ShowLess         string
 	SISLink          string
+	Detail           string
 	Comments         string
 	CourseWithCode   string
 	NotFound         string
@@ -66,11 +73,18 @@ var texts = map[string]text{
 		StateOfCourse:    "Stav předmětu",
 		LanguageOfCourse: "Jazyk výuky",
 		AdditionalInfo:   "Další informace",
+		Prerequisites:    "Prerekvizity",
+		Corequisites:     "Korekvizity",
+		Interchange:      "Záměnnost",
+		Incompatible:     "Neslučitelnost",
+		Classes:          "Třída(y)",
+		Classification:   "Klasifikace",
 		Guarantors:       "Garant(i)",
 		Teachers:         "Vyučující",
 		ShowMore:         "Zobrazit více",
 		ShowLess:         "Zobrazit méně",
 		SISLink:          "Odkaz do SIS",
+		Detail:           "Detailní informace",
 		Comments:         "Komentáře",
 		CourseWithCode:   "Předmět s kódem ",
 		NotFound:         " nenalezen.",
@@ -96,11 +110,18 @@ var texts = map[string]text{
 		StateOfCourse:    "State of the course",
 		LanguageOfCourse: "Language",
 		AdditionalInfo:   "Additional information",
+		Prerequisites:    "Pre-requisite",
+		Corequisites:     "Co-requisite",
+		Interchange:      "Interchangeability",
+		Incompatible:     "Incompatibility",
+		Classes:          "Class(es)",
+		Classification:   "Classification",
 		Guarantors:       "Guarantor(s)",
 		Teachers:         "Teacher(s)",
 		ShowMore:         "Show more",
 		ShowLess:         "Show less",
 		SISLink:          "Link to SIS",
+		Detail:           "Detailed information",
 		Comments:         "Comments",
 		CourseWithCode:   "Course with code ",
 		NotFound:         " not found.",
