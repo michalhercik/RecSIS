@@ -55,7 +55,7 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 	}
 	code := r.PathValue("code")
 	rating, err := strconv.Atoi(r.FormValue("rating"))
-	if err != nil && (rating == 1 || rating == 0) {
+	if err != nil && (rating == positiveRating || rating == negativeRating) {
 		log.Printf("rate error: %v", err)
 		return
 	}

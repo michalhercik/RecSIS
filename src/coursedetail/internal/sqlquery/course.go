@@ -21,18 +21,18 @@ AND category_code=$3
 
 // TODO: valid_from use the date he finished the course???
 const Rate = `
-INSERT INTO course_ratings (user_id, course_code, overall_rating)
+INSERT INTO course_overall_ratings (user_id, course_code, rating)
 VALUES (
     (SELECT user_id FROM sessions WHERE id=$1),
     $2, $3
 )
 ON CONFLICT (user_id, course_code) DO
-UPDATE SET overall_rating=$3
+UPDATE SET rating=$3
 ;
 `
 
 const DeleteRating = `--sql
-DELETE FROM course_ratings
+DELETE FROM course_overall_ratings
 WHERE user_id=(SELECT user_id FROM sessions WHERE id=$1)
 AND course_code=$2
 ;

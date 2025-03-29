@@ -66,6 +66,7 @@ templ QuickResults(res *QuickResponse, t text) {
                     href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }
                     class="dropdown-item text-truncate"
                     hx-boost="false"
+                    tabindex="0"
                 >
                     { course.code + " - " + course.name }
                 </a>

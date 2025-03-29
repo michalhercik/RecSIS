@@ -16,6 +16,11 @@ type DataManager interface {
 	DeleteRating(sessionID string, code string) error
 }
 
+const (
+	positiveRating = 1
+	negativeRating = 0
+)
+
 type DBLang string
 
 const (
@@ -236,13 +241,13 @@ type CourseCategoryRating struct {
 }
 
 type CourseInfo struct {
-	Code                  string 		   `db:"code"`
-	Name                  string 		   `db:"title"`
-	Faculty               string 		   `db:"faculty"`
-	GuarantorDepartment   string 		   `db:"guarantor"`
-	State                 string 		   `db:"taught"`
+	Code                  string           `db:"code"`
+	Name                  string           `db:"title"`
+	Faculty               string           `db:"faculty"`
+	GuarantorDepartment   string           `db:"guarantor"`
+	State                 string           `db:"taught"`
 	Start                 TeachingSemester `db:"start_semester"`
-	SemesterCount         int    		   `db:"semester_count"`
+	SemesterCount         int              `db:"semester_count"`
 	Language              string           `db:"taught_lang"`
 	LectureRange1         int              `db:"lecture_range1"`
 	SeminarRange1         int              `db:"seminar_range1"`

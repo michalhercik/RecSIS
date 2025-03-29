@@ -3,23 +3,129 @@ package coursedetail
 import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
+
+    // TODO: remove after DB update
+    "math/rand"
 )
 
-func itos(i int) string {
-    return strconv.Itoa(i)
+templ rateButton(rating NullInt64, icon, code string, rate int64) {
+    <button
+        class={
+            "py-0 btn btn-outline-none bi",
+            templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
+            templ.KV(icon, !rating.Valid || rating.Int64 != rate),
+        } 
+        if rating.Valid && rating.Int64 == rate {
+        hx-delete={ "/course/rating/" + code }
+        } else {
+        hx-put={ "/course/rating/" + code }
+        hx-vals={ `"rating": ` + strconv.Itoa(int(rate)) }
+        }
+        hx-target="#rating"
+        hx-swap="outerHTML">
+    </button>
 }
 
-templ Ratings(course *Course) {
-    // <div id="rating">
-    //     <p class="text-warning">Under construction</p> // TODO: remove
-    //     Overall Rating: { ratings.Overall.String() }
-    //     <button hx-post={ fmt.Sprintf("/course/like/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Like</button>
-    //     <button hx-post={ fmt.Sprintf("/course/dislike/%s", courseCode) } hx-target="#rating" hx-swap="outerHTML">Dislike</button>
-    //     Difficulty Rating: { ratings.Difficulty.String() }
-    //     Workload Rating: { ratings.Workload.String() }
-    //     Usefulness Rating: { ratings.Usefulness.String() }
-    //     Fun Rating: { ratings.Fun.String() }
-    // </div>
+templ Ratings(rating NullInt64, categories []CourseCategoryRating, code string) {
+    {{
+        // TODO: use data from DB
+        numOfRatings := 5798
+        globalRating := 0.89123
+        // TODO: remove after DB update, instead use global calculated rating from DB
+        categoryRating := 0.0
+    }}
+    <div id="rating">
+        <div>
+            @rateButton(rating, "bi-hand-thumbs-down", code, negativeRating)
+            { strconv.Itoa(int(globalRating * 100)) + "% (" + strconv.Itoa(numOfRatings) + ")" }
+            @rateButton(rating, "bi-hand-thumbs-up", code, positiveRating)
+
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#rateModal">
+                Add Additional Rating
+            </button>
+
+            // Modal with rating categories
+            <div class="modal fade" id="rateModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Categorical rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                for _, c := range categories {
+                    <table>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <div class="d-flex justify-content-between">
+                                    <span>{ c.Title }</span>
+                                    <span>{ strconv.Itoa(c.Rating) }</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="d-flex justify-content-center" style="width: 20px;">
+                                <button
+                                    class="btn btn-sm btn-outline-none bi bi-trash-fill p-0"
+                                    style="font-size: 0.8rem;">
+                                </button>
+                            </td>
+                            <td class="w-100">
+                                <div class="progress-stacked" x-data="{ hover: -1 }">
+                                    for i := 0; i < c.Rating; i++ {
+                                        <div class="progress" role="progressbar" style="width: 20%">
+                                            <div
+                                                class="progress-bar"
+                                                :class={ strconv.Itoa(i) + " <= hover && 'bg-warning'" }
+                                                @mouseover={ "hover = " + strconv.Itoa(i) }
+                                                @mouseleave={ "hover = -1" }>
+                                            </div>
+                                        </div>
+                                    }
+                                    for i := c.Rating; i < 5; i++ {
+                                        <div class="progress" role="progressbar" style="width: 20%">
+                                            <div
+                                                class="progress-bar"
+                                                :class={ strconv.Itoa(i) + " <= hover ? 'bg-warning' : 'bg-light'" }
+                                                @mouseover={ "hover = " + strconv.Itoa(i) }
+                                                @mouseleave={ "hover = -1" }>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                }
+            </div>
+            </div>
+            </div>
+            </div>
+        </div>
+        for _, c := range categories {
+            {{
+                // TODO: remove after DB update
+                categoryRating = float64(rand.Intn(101)) / 100.0
+            }}
+            <div>
+                <div class="d-flex justify-content-between">
+                    <span>{ c.Title }</span>
+                    <span>{ strconv.FormatFloat(categoryRating, 'f', 2, 64) }</span>
+                </div>
+                <div class="progress" role="progressbar">
+                    // this div needs width style for bootstrap progress bar
+                    // golang template for some reason do not allow dynamic style atribute
+                    // so this is one of the few known workarounds - DO NOT TOUCH 
+                    // TODO: tweak the color styles constants
+                    <div
+                        class={ "progress-bar", templ.KV("bg-success", categoryRating > 0.95), templ.KV("bg-danger", categoryRating < 0.20) }
+                        { templ.Attributes{"style": "width: " + strconv.FormatFloat(categoryRating * 100, 'f', 2, 64) + "%;"}... }>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 }
 
 templ blueprintAssignment(code string, t text) {
@@ -113,7 +219,15 @@ templ accordionItem(desc NullDescription, id string) {
         <script>
         function insertContent(id, content) {
             const shadowRoot = document.getElementById("content-" + id).attachShadow({ mode: 'open' });
-            shadowRoot.innerHTML = content;
+            shadowRoot.innerHTML = `
+                <style>
+                    p {
+                        margin-top: 10px;
+                        margin-bottom: 10px;
+                    }
+                </style>
+                ${content}
+            `;
         }
         </script>
     </div>
@@ -178,8 +292,6 @@ templ accordion(course *Course, t text) {
 }
 
 templ Content(course *Course, t text) {
-    // TODO render ratings
-    //@Ratings(course.CourseRatings, course.Code)
     // TODO only if not empty/nil/...
     <div
         id="basic-info"
@@ -240,6 +352,7 @@ templ Content(course *Course, t text) {
                     }
                 </div>
             </div>
+            @Ratings(course.OverallRating, course.CategoryRatings, course.Code)
             <div class="mt-3 text-center">
                 <p><strong>{ t.SISLink + ": " }</strong><a href={ templ.SafeURL(courseSISLink(course.Code, t)) }>{ courseSISLink(course.Code, t) }</a></p>
             </div>
