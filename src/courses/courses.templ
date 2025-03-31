@@ -123,12 +123,14 @@ templ checkboxInput(name, value, label string, count int, t text) {
     </div>
 }
 
-// TODO: currently cannot use, because param is not exported
-// templ filterOptions(cp *coursesPage, p filter.param, t text) {
-//     for f := range cp.facets.ParamDistribution(p) {
-//         @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(p)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-//     }
-// }
+templ filterOptions(label string, cp *coursesPage, p filter.Parameter, t text) {
+    <div>
+        <p class="form-label">{ label + ":" }</p>
+        for f := range cp.facets.ParamDistribution(p) {
+            @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(p)), strconv.Itoa(f.Code), f.Label, f.Count, t)
+        }
+    </div>
+}
 
 
 templ filterSection(cp *coursesPage, t text) {
@@ -142,26 +144,32 @@ templ filterSection(cp *coursesPage, t text) {
             hx-trigger="change"
         >
             // semester filter
-            <div>
-                <p class="form-label">{ t.SemesterFilter + ":" }</p>
-                for f := range cp.facets.ParamDistribution(filter.StartSemester) {
-                    @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(filter.StartSemester)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-                }
-            </div>
+            @filterOptions(t.SemesterFilter, cp, filter.StartSemester, t)
+            // number of semesters filter
+            @filterOptions(t.SemesterCountFilter, cp, filter.SemesterCount, t)
             // faculty filter
-            <div>
-                <p class="form-label">{ t.FacultyFilter + ":" }</p>
-                for f := range cp.facets.ParamDistribution(filter.Faculty) {
-                    @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(filter.Faculty)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-                }
-            </div>
+            @filterOptions(t.FacultyFilter, cp, filter.Faculty, t)
             // credits filter
-            <div>
-                <p class="form-label">{ t.CreditsFilter + ":" }</p>
-                for f := range cp.facets.ParamDistribution(filter.Credits) {
-                    @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(filter.Credits)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-                }
-            </div>
+            @filterOptions(t.CreditsFilter, cp, filter.Credits, t)
+            // exam type filter
+            @filterOptions(t.ExamTypeFilter, cp, filter.ExamType, t)
+            // ranges filters
+            @filterOptions(t.LectureRangeWFilter, cp, filter.LectureRangeWinter, t)
+            @filterOptions(t.SeminarRangeWFilter, cp, filter.SeminarRangeWinter, t)
+            @filterOptions(t.LectureRangeSFilter, cp, filter.LectureRangeSummer, t)
+            @filterOptions(t.SeminarRangeSFilter, cp, filter.SeminarRangeSummer, t)
+            // range unit filter
+            @filterOptions(t.RangeUnitFilter, cp, filter.RangeUnit, t)
+            // is taught filter
+            @filterOptions(t.TaughtFilter, cp, filter.Taught, t)
+            // language filter
+            @filterOptions(t.LanguageFilter, cp, filter.TaughtLang, t)
+            // guarantor filter
+            @filterOptions(t.FacultyGuarantorFilter, cp, filter.FacultyGuarantor, t)
+            // max capacity filter
+            @filterOptions(t.CapacityFilter, cp, filter.Capacity, t)
+            // min number people filter
+            @filterOptions(t.MinNumberFilter, cp, filter.MinNumber, t)
         </form>
         // move to the top of the page button
         <div class="text-center justify-content-center d-flex mt-3" style="position: sticky; top: 72px;">
