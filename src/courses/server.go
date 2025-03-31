@@ -96,7 +96,7 @@ func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t
 	// coursesPage := createPageContent(res, req)
 	coursesPage := res
 	// TODO: return page
-	Courses(&coursesPage, t).Render(r.Context(), w)
+	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
 func (s Server) csQuickSearch(w http.ResponseWriter, r *http.Request) {
