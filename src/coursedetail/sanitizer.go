@@ -36,6 +36,7 @@ func (d *Description) SanitizeContent(keepNewLines bool) string {
 }
 
 func makeHardLineBreaks(content string, keepOriginal bool) string {
+	// TODO: SIS probably just squash all new lines to one in this case
 	if keepOriginal {
 		return content
 	}

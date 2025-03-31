@@ -38,6 +38,7 @@ type text struct {
 	SISLink          string
 	Detail           string
 	Comments         string
+	NoComments       string
 	CourseWithCode   string
 	NotFound         string
 	// utils
@@ -58,9 +59,9 @@ var texts = map[string]text{
 		Language:         "cs",
 		Faculty:          "Fakulta",
 		Semester:         "Semestr",
-		Winter:           "ZS",
-		Summer:           "LS",
-		Both:             "oba",
+		Winter:           "Zimní",
+		Summer:           "Letní",
+		Both:             "Oba",
 		WinterAssign:     "ZS",
 		SummerAssign:     "LS",
 		BothAssign:       "Oba",
@@ -86,6 +87,7 @@ var texts = map[string]text{
 		SISLink:          "Odkaz do SIS",
 		Detail:           "Detailní informace",
 		Comments:         "Komentáře",
+		NoComments:       "Pro tento předmět nejsou žádné komentáře.",
 		CourseWithCode:   "Předmět s kódem ",
 		NotFound:         " nenalezen.",
 		// utils
@@ -123,6 +125,7 @@ var texts = map[string]text{
 		SISLink:          "Link to SIS",
 		Detail:           "Detailed information",
 		Comments:         "Comments",
+		NoComments:       "No comments for this course.",
 		CourseWithCode:   "Course with code ",
 		NotFound:         " not found.",
 		// utils

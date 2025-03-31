@@ -118,11 +118,11 @@ func (ts *TeachingSemester) String(lang string) string {
 	semester := ""
 	switch *ts {
 	case teachingWinterOnly:
-		semester = texts[lang].WinterAssign
+		semester = texts[lang].Winter
 	case teachingSummerOnly:
-		semester = texts[lang].SummerAssign
+		semester = texts[lang].Summer
 	case teachingBoth:
-		semester = texts[lang].BothAssign
+		semester = texts[lang].Both
 	default:
 		semester = "unsupported"
 	}
@@ -390,12 +390,4 @@ func (c Comment) AcademicYearString() string {
 
 func (c Comment) StudiesYearString() string {
 	return strconv.Itoa(c.StudiesYear)
-}
-
-func (c Comment) TargetTeacherString() string {
-	if len(c.TargetTeacher.SisID) > 0 {
-		return c.TargetTeacher.String()
-	} else {
-		return "Global"
-	}
 }
