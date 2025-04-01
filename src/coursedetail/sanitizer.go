@@ -6,20 +6,14 @@ import (
 
 	"log"
 
-	"bytes"
-
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/yuin/goldmark"
-	goldmarkRenderer "github.com/yuin/goldmark/renderer/html"
 	"golang.org/x/net/html"
 )
 
-func (d *Description) SanitizeContent(keepNewLines bool) string {
+func (d *Description) SanitizeContent(squash bool) string {
 	content := d.Content
-	// convert "\n" to "\n\n" for hard line breaks, if needed
-	hardNewLines := makeHardLineBreaks(content, keepNewLines)
-	// convert markdown to html
-	htmlContent := markdownToHTML(hardNewLines)
+	// parse content to html
+	htmlContent := parseToHTML(content, squash)
 	// clean html elements
 	cleanedContent := cleanHTML(htmlContent)
 	// sanitize html
@@ -35,58 +29,78 @@ func (d *Description) SanitizeContent(keepNewLines bool) string {
 	return sanitizedContent
 }
 
-func makeHardLineBreaks(content string, keepOriginal bool) string {
-	// TODO: SIS probably just squash all new lines to one in this case
-	if keepOriginal {
-		return content
-	}
-
-	// Split the content into lines.
-	lines := strings.Split(content, "\n")
+// creating own parser for SIS content
+// ==================================
+// *** KNOWN RULES ***
+//
+// content		translation
+// ----------------------------------
+// '* line'		<b> line </b>
+// '-line'		<ul><li> line </li></ul>
+// 'line'		<p> line </p>
+//
+// extra
+// ----------------------------------
+// '<link>'		<a href="link"> link </a>
+//
+// ==================================
+// annotation seems to be just squashed text
+func parseToHTML(content string, squash bool) string {
 	var builder strings.Builder
 
-	for i, line := range lines {
-		builder.WriteString(line)
-		// Determine if we should add an extra newline.
-		// Check if we're not at the last line.
-		if i < len(lines)-1 {
-			// If either the current or the next line is a list item,
-			// insert only a single newline.
-			if isListItem(line) || isListItem(lines[i+1]) {
-				builder.WriteString("\n")
+	lines := strings.Split(content, "\n")
+	if squash {
+		// squash all lines into one <p> tag
+		builder.WriteString("<p>")
+		for _, line := range lines {
+			builder.WriteString(strings.TrimSpace(line) + " ")
+		}
+		builder.WriteString("</p>")
+	} else {
+		// parse each line according to the rules
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+
+			if strings.Contains(line, "<") && strings.Contains(line, ">") {
+				// find all substrings enclosed in angle brackets
+				re := regexp.MustCompile(`<([^>]+)>`)
+				matches := re.FindAllStringSubmatch(line, -1)
+				for _, match := range matches {
+					trimmed := strings.TrimSpace(match[1]) // trim content inside the angle brackets
+					if strings.HasPrefix(trimmed, "http") {
+						// convert to hyperlink
+						line = strings.Replace(line, match[0], "<a href=\""+trimmed+"\">"+trimmed+"</a>", 1)
+					} else {
+						// leave the original content unchanged
+						line = strings.Replace(line, match[0], "<"+trimmed+">", 1)
+					}
+				}
+			}
+
+			if strings.HasPrefix(line, "* ") {
+				// bold text
+				builder.WriteString("<b>" + strings.TrimPrefix(line, "* ") + "</b>")
+			} else if strings.HasPrefix(line, "-") {
+				// unordered list item
+				builder.WriteString("<ul><li>" + strings.TrimPrefix(line, "-") + "</li></ul>")
 			} else {
-				builder.WriteString("\n\n")
+				// regular paragraph
+				builder.WriteString("<p>" + line + "</p>")
 			}
 		}
 	}
 
-	newContent := builder.String()
-	return newContent
-}
-
-// isListItem checks if a line starts with a common Markdown list marker.
-func isListItem(line string) bool {
-	trimmed := strings.TrimSpace(line)
-	return strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") || strings.HasPrefix(trimmed, "+ ")
-}
-
-// convert markdown to HTML using goldmark
-func markdownToHTML(content string) string {
-	md := goldmark.New(
-		goldmark.WithRendererOptions(
-			goldmarkRenderer.WithUnsafe(), // Allow raw HTML
-		),
-	)
-	// convert markdown to HTML
-	var buf bytes.Buffer
-	if err := md.Convert([]byte(content), &buf); err != nil {
-		panic(err)
-	}
-	return buf.String()
+	return builder.String()
 }
 
 // for correct rendering, it is necessary to replace invalid tags with <p>
-// known invalid tags: <h7>, <tema>
+// ==================================
+// *** KNOWN INVALID TAGS ***
+//
+// <h7>
+// <tema>
+//
+// ==================================
 func cleanHTML(content string) string {
 	// regex to match <h7> and <tema> tags case-insensitively
 	re := regexp.MustCompile(`(?i)</?(h7|tema)>`)

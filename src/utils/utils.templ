@@ -78,10 +78,12 @@ templ Header(title string, t Text) {
             window.location.href = newUrl;
         }
     }"
-    class="sticky-top">
+    class="sticky-md-top">
         <nav class="navbar navbar-expand-md navbar-light bg-light py-0"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
             <div class="container-fluid">
-                <a class="navbar-brand fs-3" href={ templ.URL(t.LangLink("")) }>RecSIS</a>
+                <div style="width: 100px;">
+                    <a class="navbar-brand fs-3" href={ templ.URL(t.LangLink("")) }>RecSIS</a>
+                </div>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -92,7 +94,7 @@ templ Header(title string, t Text) {
                         @navItem(t.LangLink("/blueprint"), t.Blueprint, title == t.Blueprint)
                         @navItem(t.LangLink("/degreeplan"), t.DegreePlan, title == t.DegreePlan)
                     </ul>
-                    <div class="d-flex">
+                    <div class="d-flex justify-content-end" style="width: 100px;">
                         if t.Language == "cs" {
                             @langButton("en")
                         } else {
