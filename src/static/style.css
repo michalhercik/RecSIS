@@ -42,6 +42,11 @@ body {
     margin-right: auto;
 }
 
+/* Blueprint Popover styles */
+.popover-body {
+    text-align: right;
+}
+
 /* Assign box styles */
 .assign-box {
     position: absolute;
