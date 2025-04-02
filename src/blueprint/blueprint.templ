@@ -319,7 +319,7 @@ templ coursesBody(courses []Course, canUnassign bool, showCondition, xSortMethod
 templ noCoursesTableContent(text, xSort string) {
     <thead><tr>
         <th></th> // checkbox
-        <th><h5 class="mb-0 text-nowrap">{ text }</h5></th> // text (or code)
+        <th><h5 class="mb-0 text-nowrap text-secondary">{ text }</h5></th> // text (or code)
         <th></th> // title
         <th class="d-none d-md-table-cell"></th> // credits
         <th class="d-none d-md-table-cell"></th> // winter
@@ -415,7 +415,7 @@ templ winterTable(courses []Course, year, yearCount, yearCredits, winterCredits 
         } else {
         // if there are no courses
             {{
-                text := t.YearStr(year) + " " + t.Winter + " (" + strconv.Itoa(yearCredits) + ")" + " - " + t.EmptySemester
+                text := t.YearStr(year) + " " + t.Winter + " - " + t.EmptySemester
             }}
             @noCoursesTableContent(text, sortHxPatch(year, int(assignmentWinter), t))
         }

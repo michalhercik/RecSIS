@@ -114,22 +114,35 @@ templ search(coursesPage *coursesPage, t text) {
 }
 
 templ checkboxInput(name, value, label string, count int, t text) {
-    <div class="form-check">
-        <input role="button" class="form-check-input" 
-            type="checkbox" name={ name } id={ name + "-" + value } value={ value }>
-        <label role="button" class="form-check-label" for={ name + "-" + value }>
-            { label + " (" + strconv.Itoa(count) + ")" }
-        </label>
-    </div>
+    if (count > 0) {
+        <div class="form-check">
+            <input role="button" class="form-check-input" disabled?={ count == 0 }
+                type="checkbox" name={ name } id={ name + "-" + value } value={ value }>
+            <label role="button" class="form-check-label" for={ name + "-" + value }>
+                { label + " (" + strconv.Itoa(count) + ")" }
+            </label>
+        </div>
+    }
 }
 
 templ filterOptions(label string, cp *coursesPage, p filter.Parameter, t text) {
-    <div>
-        <p class="form-label">{ label + ":" }</p>
+    {{
+        show := false
         for f := range cp.facets.ParamDistribution(p) {
-            @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(p)), strconv.Itoa(f.Code), f.Label, f.Count, t)
+            if f.Count > 0 {
+                show = true
+                break
+            }
         }
-    </div>
+    }}
+    if (show) {
+        <div>
+            <p class="form-label">{ label + ":" }</p>
+            for f := range cp.facets.ParamDistribution(p) {
+                @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(p)), strconv.Itoa(f.Code), f.Label, f.Count, t)
+            }
+        </div>
+    }
 }
 
 
