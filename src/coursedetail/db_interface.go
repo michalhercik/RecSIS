@@ -257,10 +257,11 @@ func (n NullFloat64) String() string {
 }
 
 type CourseCategoryRating struct {
-	Code       int     `db:"category_code"`
-	Title      string  `db:"rating_title"`
-	UserRating int     `db:"rating"`
-	AvgRating  float64 `db:"avg_rating"`
+	Code        int         `db:"category_code"`
+	Title       string      `db:"rating_title"`
+	UserRating  NullInt64   `db:"rating"`
+	AvgRating   NullFloat64 `db:"avg_rating"`
+	RatingCount NullInt64   `db:"rating_count"`
 }
 
 type CourseInfo struct {
@@ -349,10 +350,11 @@ func (jsa JSONStringArray) String() string {
 
 type Course struct {
 	CourseInfo
-	Link                 string // link to course webpage (not SIS)
+	UserOverallRating    NullInt64   `db:"overall_rating"`
+	AvgOverallRating     NullFloat64 `db:"avg_overall_rating"`
+	OverallRatingCount   NullInt64   `db:"overall_rating_count"`
+	Link                 string      // link to course webpage (not SIS)
 	BlueprintAssignments []Assignment
-	UserOverallRating    NullInt64
-	AvgOverallRating     NullFloat64
 	CategoryRatings      []CourseCategoryRating
 	Comments             search.SearchResult //[]course.Comment
 }

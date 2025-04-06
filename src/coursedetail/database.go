@@ -1,8 +1,6 @@
 package coursedetail
 
 import (
-	"database/sql"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/coursedetail/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/language"
@@ -14,30 +12,11 @@ type DBManager struct {
 
 func (reader DBManager) Course(sessionID string, code string, lang language.Language) (*Course, error) {
 	var course Course
-	var response []struct {
-		CourseInfo
-		UserOverallRating NullInt64       `db:"overall_rating"`
-		Category          sql.NullInt64   `db:"category_code"`
-		RatingTitle       sql.NullString  `db:"rating_title"`
-		UserRating        sql.NullInt64   `db:"rating"`
-		AvgOverallRating  NullFloat64     `db:"avg_overall_rating"`
-		AvgRating         sql.NullFloat64 `db:"avg_rating"`
-	}
-	if err := reader.DB.Select(&response, sqlquery.Course, sessionID, code, lang); err != nil {
+	if err := reader.DB.Get(&course, sqlquery.Course, sessionID, code, lang); err != nil {
 		return nil, err
 	}
-	course.CourseInfo = response[0].CourseInfo
-	course.UserOverallRating = response[0].UserOverallRating
-	course.AvgOverallRating = response[0].AvgOverallRating
-	if response[0].Category.Valid {
-		for _, r := range response {
-			course.CategoryRatings = append(course.CategoryRatings, CourseCategoryRating{
-				Code:       int(r.Category.Int64),
-				Title:      r.RatingTitle.String,
-				UserRating: int(r.UserRating.Int64),
-				AvgRating:  float64(r.AvgRating.Float64),
-			})
-		}
+	if err := reader.DB.Select(&course.CategoryRatings, sqlquery.Rating, sessionID, code, lang); err != nil {
+		return nil, err
 	}
 	return &course, nil
 }
