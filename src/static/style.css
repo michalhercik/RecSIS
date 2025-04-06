@@ -242,6 +242,20 @@ body {
     max-width: max-content;
 }
 
+/* Course detail rating form ticks styles */
+.tick-container {
+    position: relative;
+    width: 97%;
+    top: -5px;
+}
+
+.tick {
+    position: absolute;
+    text-align: center;
+    font-size: 12px;
+    transform: translateX(-50%);
+}
+
 /* Degree plan table columns width styles */
 .degree-plan-table th:nth-child(1),
 .degree-plan-table td:nth-child(1) {
