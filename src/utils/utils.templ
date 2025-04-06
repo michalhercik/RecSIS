@@ -62,7 +62,7 @@ templ navItem(url, text string, active bool) {
 
 templ langButton(lang string) {
     <button
-        class="btn btn-outline-dark"
+        class="btn btn-outline-none"
         @click={ "changeLanguage('" + lang + "')" }>
         { lang }
     </button>

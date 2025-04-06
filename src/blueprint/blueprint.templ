@@ -483,14 +483,18 @@ templ Content(data *Blueprint, t text) {
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            initAll();
+        });
+
+        function initAll() {
             initializeTooltips();
             initializePopovers();
             setupCheckboxShiftClick();
-        });
+        }
 
         document.addEventListener('htmx:afterSwap', function (e) {
             // Initialize tooltips and popovers after HTMX swaps in new content
-            document.dispatchEvent(new Event('DOMContentLoaded'));
+            initAll();
             // Reinitialize Alpine when HTMX swaps in new content
             if (e.detail.target === document.body) {
                 console.log("htmx:afterSwap.body");

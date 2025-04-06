@@ -16,41 +16,39 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
         <h5 class="modal-title">Categorical rating</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
     </div>
-    <div class="modal-body m-auto">
+    <div class="modal-body m-2">
         for _, c := range categories {
-            <table class="mb-2" x-data={ "{ hover: -1, value: " + fmt.Sprintf("%d", c.UserRating.Int64) + " }" }>
-                <tr class="p-0">
-                    <td></td>
-                    <td>
-                        <div class="d-flex justify-content-between">
-                            <span class="fw-semibold">{ c.Title }</span>
-                            <span class="fw-semibold" x-text="hover == -1 ? value : hover"></span>
-                        </div>
-                    </td>
-                </tr>
-                <tr class="p-0">
-                    <td>
-                        <button
-                            class="btn btn-outline-none bi bi-trash-fill px-1 m-auto"
-                            hx-delete={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
-                            @click="value = 0">
-                        </button>
-                    </td>
-                    <td>
-                        for i := 1; i <= 10; i++ {
-                            <button
-                                class="btn btn-outline-none px-1 py-0 lh-1 fs-2 bi"
-                                :class={ "[ " + strconv.Itoa(i) + " <= hover && 'bi-star-fill', hover != -1 && " + strconv.Itoa(i) + " > hover && 'bi-star', hover == -1 && value < " + strconv.Itoa(i) + " && 'bi-star', hover == -1 && " + strconv.Itoa(i) + " <= value && 'bi-star-fill' ]" }
-                                @mouseover={ "hover = " + strconv.Itoa(i) }
-                                @mouseleave={ "hover = -1" }
-                                @click={ "value = " + strconv.Itoa(i) }
-                                hx-put={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
-                                hx-vals={ `"rating": ` + strconv.Itoa(i) }>
-                            </button>
+            <div class="d-flex align-items-center gap-2 pb-3">
+                <button
+                    class="btn btn-outline-none bi bi-trash-fill p-0"
+                    hx-delete={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
+                    @click="value = 0">
+                </button>
+                <div class="flex-grow-1">
+                    <label for={ c.Title + "-range" } class="form-label d-flex justify-content-between mb-0">
+                        <span class="fw-semibold">{ c.Title }</span>
+                        <span class="fw-semibold">{ fmt.Sprintf("%d", c.UserRating.Int64) }</span>
+                    </label>
+                    <input
+                        type="range"
+                        name="rating"
+                        class="form-range"
+                        id={ c.Title + "-range" }
+                        min="0" max="10" step="1"
+                        value={ fmt.Sprintf("%d", c.UserRating.Int64) }
+                        hx-put={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
+                        hx-trigger="change">
+                    <div class="tick-container m-auto">
+                        for i := 0; i <= 10; i++ {
+                            <span
+                                class="tick"
+                                { templ.Attributes{"style": "left: " + strconv.Itoa(i * 10) + "%;" }... }>
+                                { strconv.Itoa(i) }
+                            </span>
                         }
-                    </td>
-                </tr>
-            </table>
+                    </div>
+                </div>
+            </div>
         }
     </div>
     </div>
@@ -61,7 +59,7 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
 templ rateButton(rating NullInt64, icon, code string, rate int64) {
     <button
         class={
-            "py-0 btn btn-outline-dark bi",
+            "py-0 btn btn-light bi",
             templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
             templ.KV(icon, !rating.Valid || rating.Int64 != rate),
         }
@@ -101,21 +99,17 @@ templ Ratings(userRating NullInt64, avgRating NullFloat64, categories []CourseCa
         numOfRatings := 42
     }}
     <div id="rating">
-        <div>
-            <div class="btn-group" role="group">
-                @likeButton(userRating, avgRating, numOfRatings, code)
-                @dislikeButton(userRating, code)
-            </div>
-
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#rateModal">
-                Additional Rating
-            </button>
-
-            // Modal with rating categories
-            @rateModal(categories, code, t)
+        <div class="btn-group" role="group">
+            @likeButton(userRating, avgRating, numOfRatings, code)
+            @dislikeButton(userRating, code)
         </div>
+        <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#rateModal">
+            Additional Rating
+        </button>
+        // Modal with rating categories
+        @rateModal(categories, code, t)
         for _, c := range categories {
-            <div>
+            <div class="mb-2">
                 <div class="d-flex justify-content-between">
                     <span class="fw-semibold">{ c.Title }</span>
                     <span class="fw-semibold">{ strconv.FormatFloat(c.AvgRating.Float64, 'f', 1, 64) + " (" + fmt.Sprintf("%d", c.RatingCount.Int64) + ")" }</span>

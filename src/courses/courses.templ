@@ -127,6 +127,7 @@ templ checkboxInput(name, value, label string, count int, t text) {
 
 templ filterOptions(label string, cp *coursesPage, p filter.Parameter, t text) {
     {{
+        // TODO: move this to BE, as facets method
         show := false
         for f := range cp.facets.ParamDistribution(p) {
             if f.Count > 0 {
