@@ -2,6 +2,8 @@ package coursedetail
 
 import (
     "github.com/michalhercik/RecSIS/utils"
+    "github.com/michalhercik/RecSIS/internal/interface/teacher"
+    "github.com/michalhercik/RecSIS/internal/interface/course"
     "strconv"
 )
 
@@ -59,7 +61,7 @@ templ rateButton(rating NullInt64, icon, code string, rate int64) {
             "py-0 btn btn-light bi",
             templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
             templ.KV(icon, !rating.Valid || rating.Int64 != rate),
-        } 
+        }
         if rating.Valid && rating.Int64 == rate {
         hx-delete={ "/course/rating/" + code }
         } else {
@@ -74,7 +76,7 @@ templ rateButton(rating NullInt64, icon, code string, rate int64) {
 
 // TODO: this is just for VSCode template coloring, it can be inlined
 func ratingStr(avgRating NullFloat64, numberOfRatings int) string {
-    if avgRating.Valid { 
+    if avgRating.Valid {
         return " " + strconv.Itoa(int(avgRating.Float64 * 100)) + "% (" + strconv.Itoa(numberOfRatings) + ")"
     }
     return ""
@@ -345,10 +347,10 @@ templ teachersTable(teachers TeacherSlice, t text) {
     </div>
 }
 
-templ teacherStyled(t Teacher) {
-    if len(t.SisID) == 0 {
+templ teacherStyled(t teacher.Teacher) {
+    if len(t.SISID) == 0 {
         // TODO: pripominky k predmetu (as text), if not valid than this text, add to translate
-        <span class="fs-6 text-dark fw-semibold">GLOBAL</span> 
+        <span class="fs-6 text-dark fw-semibold">GLOBAL</span>
     } else {
         if t.TitleBefore != "" {
             <small style="font-size: 0.6rem;">{ t.TitleBefore + " " }</small>
@@ -373,7 +375,7 @@ templ accordion(course *Course, t text) {
     </div>
 }
 
-templ comments(comments []Comment, t text) {
+templ comments(comments []course.Comment, t text) {
     if len(comments) == 0 {
         <div class="alert alert-primary" role="alert">
             { t.NoComments }
@@ -384,10 +386,10 @@ templ comments(comments []Comment, t text) {
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <p class="mb-0">
                         @teacherStyled(comment.TargetTeacher)
-                        { " " + comment.TargetType + " " + comment.AcademicYearString() }
+                        { " " + comment.Type + " " + comment.AcademicYearString() }
                     </p>
                     <p class="mb-0">
-                        { t.YearStr(comment.StudiesYear) + ", " + comment.StudiesType + ", " + comment.StudiesField }
+                        { t.YearStr(comment.StudyYear) + ", " + comment.StudyField + ", " + comment.StudyField }
                     </p>
                 </div>
                 <div class="card-body" style="text-align: justify">
@@ -417,12 +419,12 @@ templ details(course *Course, t text) {
             @accordion(course, t)
         </div>
         <div class="tab-pane fade pt-2" id="comments-tab-pane" role="tabpanel" tabindex="0">
-            @comments(course.Comments, t)
+            @comments(course.Comments.Comments(), t)
         </div>
         if len(course.Teachers) > 0 {
             <div class="tab-pane fade pt-2" id="teachers-tab-pane" role="tabpanel" tabindex="0">
                 @teachersTable(course.Teachers, t)
-            </div> 
+            </div>
         }
     </div>
 }
@@ -434,7 +436,7 @@ templ Content(course *Course, t text) {
     <div class="my-3">
         @badges(course, t)
     </div>
-    // two columns 
+    // two columns
     <div class="my-3">
         <div class="d-flex">
             // left column guarantors and requisites

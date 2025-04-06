@@ -1,31 +1,3 @@
-# #!/bin/bash
-
-# MASTER_KEY="MASTER_KEY"
-# COURSES_JSON_PATH="$(dirname "$0")/../init_search/courses.json"
-
-# response=$(curl -s -X DELETE \
-#     -H "Authorization: Bearer $MASTER_KEY" \
-#     "http://localhost:7700/indexes/courses/documents")
-
-# echo "$response"
-
-# response=$(curl -s -X POST \
-#     -H "Authorization: Bearer $MASTER_KEY" \
-#     -H "Content-Type: application/x-ndjson" \
-#     --data-binary "@$COURSES_JSON_PATH" \
-#     "http://localhost:7700/indexes/courses/documents?primaryKey=id")
-
-# echo "$response"
-
-# dict='["C#", "c#", "C++", "c++"]'
-# response=$(curl -s -X PUT \
-#     -H "Authorization: Bearer $MASTER_KEY" \
-#     -H "Content-Type: application/json" \
-#     -d "$dict" \
-#     "http://localhost:7700/indexes/courses/settings/dictionary")
-
-# echo "$response"
-
 #!/bin/bash
 
 # Set the MeiliSearch API key
@@ -111,3 +83,39 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -d "$dict" \
   "$BASE_URL/indexes/courses/settings/dictionary")
 echo "PUT dictionary: $response"
+
+response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/x-ndjson" \
+  --data-binary @"$(dirname "$0")/../init_search/comments.json" \
+  "$BASE_URL/indexes/courses-comments/documents?primaryKey=id")
+echo "POST documents: $response"
+
+filterable='[
+    "teacher.KOD",
+    "study_field",
+    "academic_year",
+    "study_year",
+    "course_code",
+    "study_type.code",
+    "study_type.name_cs",
+    "study_type.name_en",
+    "target_type"
+]'
+response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "$filterable" \
+  "$BASE_URL/indexes/courses-comments/settings/filterable-attributes")
+echo "PUT filterable attributes: $response"
+
+sortable='[
+    "academic_year",
+    ""
+]'
+response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "$sortable" \
+  "$BASE_URL/indexes/courses-comments/settings/sortable-attributes")
+echo "PUT filterable attributes: $response"

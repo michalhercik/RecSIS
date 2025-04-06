@@ -4,13 +4,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
+
+	"github.com/michalhercik/RecSIS/internal/course/comments/search"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 // TODO: change interface name if interface changes
 type DataManager interface {
-	Course(sessionID string, code string, lang DBLang) (*Course, error)
+	Course(sessionID string, code string, lang language.Language) (*Course, error)
 	RateCategory(sessionID string, code string, category string, rating int) error
 	DeleteCategoryRating(sessionID string, code string, category string) error
 	Rate(sessionID string, code string, value int) error
@@ -287,7 +289,6 @@ type CourseInfo struct {
 	AssesmentRequirements NullDescription  `db:"requirements_for_assesment"`
 	EntryRequirements     NullDescription  `db:"entry_requirements"`
 	Aim                   NullDescription  `db:"aim"`
-	Comments              CommentSlice     `db:"comments"`
 	Prereq                JSONStringArray  `db:"preqrequisities"`
 	Coreq                 JSONStringArray  `db:"corequisities"`
 	Incompa               JSONStringArray  `db:"incompatibilities"`
@@ -353,41 +354,50 @@ type Course struct {
 	UserOverallRating    NullInt64
 	AvgOverallRating     NullFloat64
 	CategoryRatings      []CourseCategoryRating
+	Comments             search.SearchResult //[]course.Comment
 }
 
-type CommentSlice []Comment
+// type CommentSlice []Comment
 
-func (cs *CommentSlice) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case nil:
-		*cs = nil
-		return nil
-	case []byte:
-		*cs = nil
-		err := json.Unmarshal(v, &cs)
-		return err
-	case string:
-		err := json.Unmarshal([]byte(v), &cs)
-		return err
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
-}
+// func (cs *CommentSlice) Scan(val interface{}) error {
+// 	switch v := val.(type) {
+// 	case nil:
+// 		*cs = nil
+// 		return nil
+// 	case []byte:
+// 		*cs = nil
+// 		err := json.Unmarshal(v, &cs)
+// 		return err
+// 	case string:
+// 		err := json.Unmarshal([]byte(v), &cs)
+// 		return err
+// 	default:
+// 		return fmt.Errorf("unsupported type: %T", v)
+// 	}
+// }
 
-type Comment struct {
-	StudiesType   string  `json:"NAZEV"`
-	StudiesYear   int     `json:"SROC"`
-	StudiesField  string  `json:"SOBOR"`
-	AcademicYear  int     `json:"SSKR"`
-	TargetType    string  `json:"PRDMTYP"`
-	TargetTeacher Teacher `json:"TEACHER"`
-	Content       string  `json:"MEMO"`
-}
+// type Comment struct {
+// 	StudiesType   string  `json:"NAZEV"`
+// 	StudiesYear   int     `json:"SROC"`
+// 	StudiesField  string  `json:"SOBOR"`
+// 	AcademicYear  int     `json:"SSKR"`
+// 	TargetType    string  `json:"PRDMTYP"`
+// 	TargetTeacher Teacher `json:"TEACHER"`
+// 	Content       string  `json:"MEMO"`
+// }
 
-func (c Comment) AcademicYearString() string {
-	return strconv.Itoa(c.AcademicYear)
-}
+// func (c Comment) AcademicYearString() string {
+// 	return strconv.Itoa(c.AcademicYear)
+// }
 
-func (c Comment) StudiesYearString() string {
-	return strconv.Itoa(c.StudiesYear)
-}
+// func (c Comment) StudiesYearString() string {
+// 	return strconv.Itoa(c.StudiesYear)
+// }
+
+// func (c Comment) TargetTeacherString() string {
+// 	if len(c.TargetTeacher.SisID) > 0 {
+// 		return c.TargetTeacher.String()
+// 	} else {
+// 		return "Global"
+// 	}
+// }

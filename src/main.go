@@ -5,6 +5,10 @@ import (
 	"log"
 	"net/http"
 
+	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
+	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
+	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/urlparser"
+
 	// pages
 	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/blueprint"
@@ -68,13 +72,26 @@ func main() {
 	blueprint.Server{
 		Data: blueprint.DBManager{DB: db},
 	}.Register(router, "/blueprint")
+
 	coursedetail.Server{
 		Data: coursedetail.DBManager{DB: db},
+		CourseComments: meilicomments.MeiliSearch{
+			Client:        meiliClient,
+			CommentsIndex: meilisearch.IndexConfig{Uid: "courses-comments"},
+			UrlToFilter: urlparser.FilterParser{
+				ParamPrefix: "parf",
+				IDToParam:   params.IdToParam,
+			},
+			TeacherParam: params.TeacherCode,
+			CourseParam:  params.CourseCode,
+		},
 	}.Register(router, "/course")
+
 	courses.Server{
 		Data:   courses.DBManager{DB: db},
 		Search: courses.MeiliSearch{Client: meiliClient, Courses: meilisearch.IndexConfig{Uid: "courses"}},
 	}.Register(router, "/courses")
+
 	degreeplan.Server{
 		Data: degreeplan.DBManager{DB: db},
 	}.Register(router, "/degreeplan")
