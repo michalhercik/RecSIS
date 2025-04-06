@@ -2,6 +2,8 @@ package coursedetail
 
 import (
     "github.com/michalhercik/RecSIS/utils"
+    "github.com/michalhercik/RecSIS/internal/interface/teacher"
+    "github.com/michalhercik/RecSIS/internal/interface/course"
     "strconv"
 )
 
@@ -11,7 +13,7 @@ templ rateButton(rating NullInt64, icon, code string, rate int64) {
             "py-0 btn btn-outline-none bi",
             templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
             templ.KV(icon, !rating.Valid || rating.Int64 != rate),
-        } 
+        }
         if rating.Valid && rating.Int64 == rate {
         hx-delete={ "/course/rating/" + code }
         } else {
@@ -108,7 +110,7 @@ templ Ratings(userRating NullInt64, avgRating NullFloat64, categories []CourseCa
                 <div class="progress" role="progressbar">
                     // this div needs width style for bootstrap progress bar
                     // golang template for some reason do not allow dynamic style atribute
-                    // so this is one of the few known workarounds - DO NOT TOUCH 
+                    // so this is one of the few known workarounds - DO NOT TOUCH
                     // TODO: tweak the color styles constants
                     <div
                         class={ "progress-bar", templ.KV("bg-success", c.AvgRating / 5 >= 0.90), templ.KV("bg-danger", c.AvgRating / 5 <= 0.30) }
@@ -342,10 +344,10 @@ templ teachersTable(teachers TeacherSlice, t text) {
     }
 }
 
-templ teacherStyled(t Teacher) {
-    if len(t.SisID) == 0 {
+templ teacherStyled(t teacher.Teacher) {
+    if len(t.SISID) == 0 {
         // TODO: pripominky k predmetu
-        <span class="fs-6 text-dark fw-semibold">GLOBAL</span> 
+        <span class="fs-6 text-dark fw-semibold">GLOBAL</span>
     } else {
         if t.TitleBefore != "" {
             <small style="font-size: 0.6rem;">{ t.TitleBefore + " " }</small>
@@ -370,15 +372,15 @@ templ accordion(course *Course, t text) {
     </div>
 }
 
-templ comments(comments []Comment, t text) {
+templ comments(comments []course.Comment, t text) {
     for _, comment := range comments {
         <div class="card-header d-flex justify-content-between align-items-center">
             <p class="mb-0">
                 @teacherStyled(comment.TargetTeacher)
-                { " " + comment.TargetType + " " + comment.AcademicYearString() }
+                { " " + comment.Type + " " + comment.AcademicYearString() }
             </p>
             <p class="mb-0">
-                { t.YearStr(comment.StudiesYear) + ", " + comment.StudiesType + ", " + comment.StudiesField }
+                { t.YearStr(comment.StudyYear) + ", " + comment.Study.Name + ", " + comment.StudyField }
             </p>
         </div>
         <div class="card-body" style="text-align: justify">
@@ -432,7 +434,7 @@ templ Content(course *Course, t text) {
                 @accordion(course, t)
             </div>
             <div class="tab-pane fade pt-2" id="comments-tab-pane" role="tabpanel" tabindex="0">
-                @comments(course.Comments, t)
+                @comments(course.Comments.Comments(), t)
             </div>
         </div>
     </div>

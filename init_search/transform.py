@@ -6,6 +6,31 @@ def converter(data):
         return None
     return json.loads(data)
 
+def com_agg(row):
+    data = {
+        "course_code": row.iloc[0]["POVINN"],
+        "target_type": row.iloc[0]["PRDMTYP"],
+        "content": row.iloc[0]["MEMO"],
+        "study_year": row.iloc[0]["SROC"],
+        "academic_year": row.iloc[0]["SSKR"],
+        "semester": row.iloc[0]["SEM"],
+        "study_field": row.iloc[0]["SOBOR"],
+        "teacher": row.iloc[0]["TEACHER"],
+        "study_type": {
+            "code": row.iloc[0]["KOD"],
+            "abbr": row.iloc[0]["ZKRATKA"],
+            "name_cs": row[row["LANG"] == "cs"]["NAZEV"].iloc[0],
+            "name_en": row[row["LANG"] == "en"]["NAZEV"].iloc[0]
+        }
+    }
+    return pd.Series(data=data, index=data.keys())
+
+
+comments = pd.read_csv('./init_db/ankecy_transformed.csv', converters={"TEACHER": converter}, dtype={"SROC": pd.Int32Dtype()})
+comments = comments.groupby(["POVINN", "SOBOR", "SSKR", "SROC", "SEM", "KOD"]).apply(com_agg)
+comments = comments.reset_index(drop=True).reset_index().rename(columns={"index": "id"})
+comments = comments.to_json('./init_search/comments.json', orient='records', lines=True)
+exit()
 
 povinn = pd.read_csv('./init_db/POVINN.csv')
 courses = pd.read_csv('./init_db/courses_transformed.csv', usecols=[

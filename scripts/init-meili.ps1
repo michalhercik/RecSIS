@@ -3,6 +3,11 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/docume
     -Headers @{ "Authorization" = "Bearer MASTER_KEY" }
 echo "$($response.StatusCode) $($response.Content)"
 
+$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/documents" `
+    -Method Delete `
+    -Headers @{ "Authorization" = "Bearer MASTER_KEY" }
+echo "$($response.StatusCode) $($response.Content)"
+
 $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents?primaryKey=id" `
     -Method Post `
     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
@@ -66,4 +71,40 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settin
     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
     -ContentType "application/json" `
     -Body ($dict | ConvertTo-Json)
+echo "$($response.StatusCode) $($response.Content)"
+
+$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/documents?primaryKey=id" `
+    -Method Post `
+    -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
+    -ContentType "application/x-ndjson" `
+    -InFile "$PSScriptRoot/../init_search/comments.json"
+echo "$($response.StatusCode) $($response.Content)"
+
+$filterable = @(
+    "teacher.KOD",
+    "study_field",
+    "academic_year",
+    "study_year",
+    "course_code",
+    "study_type.code",
+    "study_type.name_cs",
+    "study_type.name_en",
+    "target_type"
+)
+$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/settings/filterable-attributes" `
+    -Method Put `
+    -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
+    -ContentType "application/json" `
+    -Body ($filterable | ConvertTo-Json)
+echo "$($response.StatusCode) $($response.Content)"
+
+$sortable = @(
+    "academic_year",
+    ""
+)
+$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/settings/sortable-attributes" `
+    -Method Put `
+    -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
+    -ContentType "application/json" `
+    -Body ($sortable | ConvertTo-Json)
 echo "$($response.StatusCode) $($response.Content)"

@@ -90,7 +90,6 @@ SELECT
     ur.rating,
     avg_cr.avg_rating,
     avg_cor.avg_overall_rating,
-    c.comments,
     c.preqrequisities,
     c.corequisities,
     c.incompatibilities,

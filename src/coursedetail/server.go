@@ -5,10 +5,15 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
+	"github.com/michalhercik/RecSIS/internal/course/comments/search"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 type Server struct {
-	Data DataManager
+	Data           DataManager
+	CourseComments search.SearchEngine
 }
 
 func (s Server) Register(router *http.ServeMux, prefix string) {
@@ -23,27 +28,55 @@ func (s Server) Register(router *http.ServeMux, prefix string) {
 }
 
 func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, texts["cs"], cs)
+	s.page(w, r, texts["cs"], language.CS)
 }
 
 func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, texts["en"], en)
+	s.page(w, r, texts["en"], language.EN)
 }
 
-func (s Server) page(w http.ResponseWriter, r *http.Request, t text, lang DBLang) {
+func (s Server) page(w http.ResponseWriter, r *http.Request, t text, lang language.Language) {
 	sessionCookie, err := r.Cookie("recsis_session_key")
 	if err != nil {
 		log.Printf("courseDetail error: %v", err)
 		return
 	}
 	code := r.PathValue("code")
-	course, err := s.Data.Course(sessionCookie.Value, code, lang)
+	course, err := s.course(sessionCookie.Value, code, lang, r)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", code, err)
 		PageNotFound(code, t).Render(r.Context(), w)
 	} else {
 		Page(course, t).Render(r.Context(), w)
 	}
+}
+
+func (s Server) course(sessionID, code string, lang language.Language, r *http.Request) (*Course, error) {
+	var result *Course
+	result, err := s.Data.Course(sessionID, code, lang)
+	if err != nil {
+		return nil, err
+	}
+	br := s.CourseComments.BuildRequest(lang)
+	br, err = br.ParseURLQuery(r.URL.Query())
+	if err != nil {
+		return nil, err
+	}
+	searchQuery := r.FormValue("q")
+	br = br.SetQuery(searchQuery)
+	br = br.AddCourse(code)
+	br = br.SetLimit(20)
+	br = br.SetOffset(0)
+	br = br.AddSort(params.AcademicYear, params.Desc)
+	req, err := br.Build()
+	if err != nil {
+		return nil, err
+	}
+	result.Comments, err = s.CourseComments.Comments(req)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (s Server) rate(w http.ResponseWriter, r *http.Request) {

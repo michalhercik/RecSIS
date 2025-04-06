@@ -5,13 +5,14 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/coursedetail/internal/sqlquery"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 type DBManager struct {
 	DB *sqlx.DB
 }
 
-func (reader DBManager) Course(sessionID string, code string, lang DBLang) (*Course, error) {
+func (reader DBManager) Course(sessionID string, code string, lang language.Language) (*Course, error) {
 	var course Course
 	var response []struct {
 		CourseInfo
