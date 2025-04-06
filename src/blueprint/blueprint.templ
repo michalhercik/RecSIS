@@ -7,6 +7,7 @@ import (
 )
 
 const lastPosition = -1
+const ttDelay = "600"
 
 templ DefaultCourseAdditionPresenter(info insertedCourseInfo) {
 
@@ -68,6 +69,7 @@ templ adjustCoursesButton(transparent bool, icon, xShow, tooltip, vals, include 
         }
         data-bs-toggle="tooltip"
         data-bs-placement="bottom"
+        data-bs-delay={ ttDelay }
         data-bs-title={ tooltip }
         @click="bootstrap.Tooltip.getInstance($el).dispose();"
         @mouseleave="initializeTooltips()"
@@ -140,20 +142,21 @@ templ assignCourseButtonInternal(transparent bool, tooltip, showCondButton, show
             x-show={ showCondButton }
             data-bs-toggle="tooltip"
             data-bs-placement="bottom"
+            data-bs-delay={ ttDelay }
             data-bs-title={ tooltip }
             class="btn btn-outline-secondary btn-sm bi bi-arrows-move"
             if (transparent) {
                 style="--bs-btn-border-color: transparent;"
             }
             @click="openAssign = !openAssign;
-                    tooltipEnabled = !tooltipEnabled;
                     let tooltip = bootstrap.Tooltip.getInstance($el);
-                    if (tooltipEnabled) {
-                        initializeTooltips();
-                    } else {
+                    if (openAssign) {
                         tooltip.disable();
                         tooltip.hide();
-                    }">
+                    } else {
+                        initializeTooltips();
+                    }"
+            @mouseleave="if (!openAssign) initializeTooltips()">
         </button>
         <div
             x-cloak
@@ -185,7 +188,7 @@ templ optionMenu(data *Blueprint, t text) {
         yearCount := len(data.years) - 1
         anyYears := len(data.years) > 1
     }}
-    <div class="option-menu p-2" x-data="{ showCredits: false, openAssign: false, tooltipEnabled: true }">
+    <div class="option-menu p-2" x-data="{ showCredits: false, openAssign: false }">
         // change number of years
         { t.NumOfYears + ":" }
         <button
@@ -235,6 +238,7 @@ templ dragCourseButton(t text) {
         x-show="hover && !isSorting"
         data-bs-toggle="tooltip"
         data-bs-placement="bottom"
+        data-bs-delay={ ttDelay }
         data-bs-title={ t.TTMove }
         class="btn btn-sm bi bi-grip-horizontal"
         style="--bs-btn-active-border-color: transparent;"
@@ -281,7 +285,7 @@ templ coursesBody(courses []Course, canUnassign bool, showCondition, xSortMethod
     >
         for _, course := range courses {
         <tr
-            x-data="{ hover: false, openAssign: false, tooltipEnabled: true }"
+            x-data="{ hover: false, openAssign: false }"
             @mouseover="hover = true"
             @mouseleave="hover = false, openAssign = false, initializeTooltips()"
             x-sort:item={ strconv.Itoa(course.ID) }
@@ -315,7 +319,7 @@ templ coursesBody(courses []Course, canUnassign bool, showCondition, xSortMethod
 templ noCoursesTableContent(text, xSort string) {
     <thead><tr>
         <th></th> // checkbox
-        <th><h5 class="mb-0 text-nowrap">{ text }</h5></th> // text (or code)
+        <th><h5 class="mb-0 text-nowrap text-secondary">{ text }</h5></th> // text (or code)
         <th></th> // title
         <th class="d-none d-md-table-cell"></th> // credits
         <th class="d-none d-md-table-cell"></th> // winter
@@ -368,12 +372,25 @@ templ unassignedTable(unassigned []Course, yearCount int, t text) {
     </div>
 }
 
+templ popoverHeadline(year, yearCredits, winterCredits int, semester string, t text) {
+    <h5
+        class="mb-0 text-nowrap"
+        data-bs-toggle="popover"
+        data-bs-trigger="hover" 
+        data-bs-html="true"
+        data-bs-placement="bottom"
+        data-bs-title={ t.TTNumberOfCredits }
+        data-bs-content={ t.TTSemesterCredits + ": " + strconv.Itoa(winterCredits) + "<br>" + t.TTYearCredits + ": " + strconv.Itoa(yearCredits) }>
+        { t.YearStr(year) + " " + semester }
+    </h5>
+}
+
 templ winterHeadline(year, yearCredits, winterCredits int, t text) {
     <thead><tr>
         <th class="text-end align-middle p-0 bg-white" style="line-height: 1;">
             @showHideCoursesButton("winter" + strconv.Itoa(year))
         </th>
-        <th><h5 class="mb-0 text-nowrap">{ t.YearStr(year) + " " + t.Winter + " (" + strconv.Itoa(yearCredits) + ")" }</h5></th>
+        <th> @popoverHeadline(year, yearCredits, winterCredits, t.Winter, t) </th>
         <th></th>
         <th class="th-overflow credits-column d-none d-md-table-cell">{ t.Credits + ": " + strconv.Itoa(winterCredits) }</th>
         <th class="d-none d-md-table-cell">{ t.Winter }</th>
@@ -398,7 +415,7 @@ templ winterTable(courses []Course, year, yearCount, yearCredits, winterCredits 
         } else {
         // if there are no courses
             {{
-                text := t.YearStr(year) + " " + t.Winter + " (" + strconv.Itoa(yearCredits) + ")" + " - " + t.EmptySemester
+                text := t.YearStr(year) + " " + t.Winter + " - " + t.EmptySemester
             }}
             @noCoursesTableContent(text, sortHxPatch(year, int(assignmentWinter), t))
         }
@@ -411,7 +428,7 @@ templ summerHeadline(year, yearCredits, summerCredits int, t text) {
         <th class="text-end align-middle p-0 bg-white" style="line-height: 1;">
             @showHideCoursesButton("summer" + strconv.Itoa(year))
         </th>
-        <th><h5 class="mb-0 text-nowrap">{ t.YearStr(year) + " " + t.Summer }</h5></th>
+        <th> @popoverHeadline(year, yearCredits, summerCredits, t.Summer, t) </th>
         <th></th>
         <th class="th-overflow credits-column d-none d-md-table-cell">{ t.Credits + ": " + strconv.Itoa(summerCredits) }</th>
         <th class="d-none d-md-table-cell">{ t.Winter }</th>
@@ -467,11 +484,13 @@ templ Content(data *Blueprint, t text) {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             initializeTooltips();
+            initializePopovers();
             setupCheckboxShiftClick();
         });
 
         document.addEventListener('htmx:afterSwap', function (e) {
-            setupCheckboxShiftClick();
+            // Initialize tooltips and popovers after HTMX swaps in new content
+            document.dispatchEvent(new Event('DOMContentLoaded'));
             // Reinitialize Alpine when HTMX swaps in new content
             if (e.detail.target === document.body) {
                 console.log("htmx:afterSwap.body");
@@ -517,22 +536,15 @@ templ Content(data *Blueprint, t text) {
             });
 
             // Initialize new tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                var tooltip = new bootstrap.Tooltip(tooltipTriggerEl, {
-                    delay: { show: 750 } // define delay for tooltip show
-                });
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+        };
 
-                // Override the show method to check for visibility
-                var originalShow = tooltip.show;
-                tooltip.show = function () {
-                    if (tooltipTriggerEl.offsetParent !== null) {
-                        originalShow.call(tooltip);
-                    }
-                };
-
-                return tooltip;
-            });
+        // bootstrap popover initialization
+        function initializePopovers() {
+            // Initialize new popovers
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+            const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
         };
 
         // shift click for multiple checkboxes

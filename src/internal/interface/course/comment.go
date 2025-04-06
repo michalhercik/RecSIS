@@ -31,6 +31,10 @@ type Student struct {
 	Study      StudyType `json:"study_type"`
 }
 
+func (c Comment) StudiesYearString() string {
+	return strconv.Itoa(c.StudyYear)
+}
+
 type StudyType struct {
 	Code string `json:"code"`
 	Abbr string `json:"abbr"`

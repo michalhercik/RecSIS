@@ -42,6 +42,11 @@ type text struct {
 	TTReassign         string
 	TTUnassignSummer   string
 	TTRemoveSummer     string
+	// stats
+	TTNumberOfCredits string
+	TTSemesterCredits string
+	TTYearCredits     string
+	TTTotalCredits    string
 	// utils
 	Utils utils.Text
 }
@@ -92,6 +97,11 @@ var texts = map[string]text{
 		TTReassign:         "Přesunout předmět",
 		TTUnassignSummer:   "Přesunout všechny předměty z tohoto letního semestru do nezařazených",
 		TTRemoveSummer:     "Odstranit všechny předměty z tohoto letního semestru",
+		// stats
+		TTNumberOfCredits: "Počet kreditů",
+		TTSemesterCredits: "V tomto semestru",
+		TTYearCredits:     "V tomto ročníku",
+		TTTotalCredits:    "Celkem",
 		// utils
 		Utils: utils.Texts["cs"],
 	},
@@ -131,6 +141,11 @@ var texts = map[string]text{
 		TTReassign:         "Reassign course",
 		TTUnassignSummer:   "Unassign all courses from this summer semester",
 		TTRemoveSummer:     "Remove all courses from this summer semester",
+		// stats
+		TTNumberOfCredits: "Number of credits",
+		TTSemesterCredits: "In this semester",
+		TTYearCredits:     "In this year",
+		TTTotalCredits:    "Total",
 		// utils
 		Utils: utils.Texts["en"],
 	},
