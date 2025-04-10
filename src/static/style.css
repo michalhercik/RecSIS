@@ -256,6 +256,20 @@ body {
     transform: translateX(-50%);
 }
 
+/* Course detail not rated no thumb range styles */
+.no-thumb::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.no-thumb::-moz-range-thumb {
+    width: 0 !important;
+    height: 0 !important;
+    border: none !important;
+}
+
 /* Degree plan table columns width styles */
 .degree-plan-table th:nth-child(1),
 .degree-plan-table td:nth-child(1) {

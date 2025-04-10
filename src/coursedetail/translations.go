@@ -35,6 +35,8 @@ type text struct {
 	Teachers         string
 	ShowMore         string
 	ShowLess         string
+	NotRated         string
+	NoRatings        string
 	SISLink          string
 	Detail           string
 	Comments         string
@@ -84,6 +86,8 @@ var texts = map[string]text{
 		Teachers:         "Vyučující",
 		ShowMore:         "Zobrazit více",
 		ShowLess:         "Zobrazit méně",
+		NotRated:         "Nehodnoceno",
+		NoRatings:        "Žádná hodnocení",
 		SISLink:          "Odkaz do SIS",
 		Detail:           "Detailní informace",
 		Comments:         "Komentáře",
@@ -122,6 +126,8 @@ var texts = map[string]text{
 		Teachers:         "Teacher(s)",
 		ShowMore:         "Show more",
 		ShowLess:         "Show less",
+		NotRated:         "Not rated",
+		NoRatings:        "No ratings",
 		SISLink:          "Link to SIS",
 		Detail:           "Detailed information",
 		Comments:         "Comments",

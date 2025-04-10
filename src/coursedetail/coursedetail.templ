@@ -27,12 +27,18 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
                 <div class="flex-grow-1">
                     <label for={ c.Title + "-range" } class="form-label d-flex justify-content-between mb-0">
                         <span class="fw-semibold">{ c.Title }</span>
-                        <span class="fw-semibold">{ fmt.Sprintf("%d", c.UserRating.Int64) }</span>
+                        <span class="fw-semibold">
+                            if c.UserRating.Valid {
+                                { fmt.Sprintf("%d", c.UserRating.Int64) }
+                            } else {
+                                { t.NotRated }
+                            }
+                        </span>
                     </label>
                     <input
                         type="range"
                         name="rating"
-                        class="form-range"
+                        class={ "form-range", templ.KV("no-thumb", !c.UserRating.Valid) }
                         id={ c.Title + "-range" }
                         min="0" max="10" step="1"
                         value={ fmt.Sprintf("%d", c.UserRating.Int64) }
@@ -67,7 +73,7 @@ templ rateButton(rating NullInt64, icon, code string, rate int64) {
         hx-delete={ "/course/rating/" + code }
         } else {
         hx-put={ "/course/rating/" + code }
-        hx-vals={ `"rating": ` + strconv.Itoa(int(rate)) }
+        hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
         }
         hx-target="#rating"
         hx-swap="outerHTML">
@@ -76,14 +82,14 @@ templ rateButton(rating NullInt64, icon, code string, rate int64) {
 }
 
 // TODO: this is just for VSCode template coloring, it can be inlined
-func ratingStr(avgRating NullFloat64, numberOfRatings int) string {
+func ratingStr(avgRating NullFloat64, numberOfRatings NullInt64) string {
     if avgRating.Valid {
-        return " " + strconv.Itoa(int(avgRating.Float64 * 100)) + "% (" + strconv.Itoa(numberOfRatings) + ")"
+        return " " + fmt.Sprintf("%.0f", avgRating.Float64 * 100) + "% (" + fmt.Sprintf("%d", numberOfRatings.Int64) + ")"
     }
     return ""
 }
 
-templ likeButton(rating NullInt64, avgRating NullFloat64, numberOfRatings int, code string) {
+templ likeButton(rating NullInt64, avgRating NullFloat64, numberOfRatings NullInt64, code string) {
     @rateButton(rating, "bi-hand-thumbs-up", code, positiveRating) {
         { ratingStr(avgRating, numberOfRatings) }
     }
@@ -93,11 +99,7 @@ templ dislikeButton(rating NullInt64, code string) {
     @rateButton(rating, "bi-hand-thumbs-down", code, negativeRating)
 }
 
-templ Ratings(userRating NullInt64, avgRating NullFloat64, categories []CourseCategoryRating, code string, t text) {
-    {{
-        // TODO: use data from DB
-        numOfRatings := 42
-    }}
+templ Ratings(userRating NullInt64, avgRating NullFloat64, numOfRatings NullInt64, categories []CourseCategoryRating, code string, t text) {
     <div id="rating">
         <div class="btn-group" role="group">
             @likeButton(userRating, avgRating, numOfRatings, code)
@@ -112,7 +114,13 @@ templ Ratings(userRating NullInt64, avgRating NullFloat64, categories []CourseCa
             <div class="mb-2">
                 <div class="d-flex justify-content-between">
                     <span class="fw-semibold">{ c.Title }</span>
-                    <span class="fw-semibold">{ strconv.FormatFloat(c.AvgRating.Float64, 'f', 1, 64) + " (" + fmt.Sprintf("%d", c.RatingCount.Int64) + ")" }</span>
+                    <span class="fw-semibold">
+                        if c.AvgRating.Valid && c.RatingCount.Valid {
+                            { fmt.Sprintf("%.1f (%d)", c.AvgRating.Float64, c.RatingCount.Int64) }
+                        } else {
+                            { t.NoRatings }
+                        }
+                    </span>
                 </div>
                 <div class="progress" role="progressbar" style="height: 10px;">
                     // this div needs width style for bootstrap progress bar
@@ -120,7 +128,7 @@ templ Ratings(userRating NullInt64, avgRating NullFloat64, categories []CourseCa
                     // so this is one of the few known workarounds - DO NOT TOUCH
                     <div
                         class="progress-bar rounded-pill"
-                        { templ.Attributes{"style": "width: " + strconv.FormatFloat(c.AvgRating.Float64 * 10, 'f', 2, 64) + "%;"}... }>
+                        { templ.Attributes{"style": fmt.Sprintf("width: %.2f%%;", c.AvgRating.Float64 * 10)}... }>
                     </div>
                 </div>
             </div>
@@ -447,7 +455,7 @@ templ Content(course *Course, t text) {
             </div>
             // right column ratings
             <div class="flex-grow-1" style="flex: 1;">
-                @Ratings(course.UserOverallRating, course.AvgOverallRating, course.CategoryRatings, course.Code, t)
+                @Ratings(course.UserOverallRating, course.AvgOverallRating, course.OverallRatingCount, course.CategoryRatings, course.Code, t)
             </div>
         </div>
         // link to additional information
