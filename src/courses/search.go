@@ -6,6 +6,7 @@ import (
 
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/michalhercik/RecSIS/courses/internal/filter"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 type Request struct {
@@ -14,7 +15,7 @@ type Request struct {
 	indexUID    string
 	page        int
 	hitsPerPage int
-	lang        Language
+	lang        language.Language
 	filter      filter.Expression
 }
 
@@ -56,7 +57,7 @@ type QuickRequest struct {
 	indexUID string
 	limit    int64
 	offset   int64
-	lang     Language
+	lang     language.Language
 }
 
 type QuickCourse struct {
@@ -206,9 +207,9 @@ func buildQuickSearchRequest(r QuickRequest) (*meilisearch.SearchRequest, error)
 		Offset: r.offset,
 	}
 	switch r.lang {
-	case cs:
+	case language.CS:
 		result.AttributesToRetrieve = []string{"code", "cs.NAME"}
-	case en:
+	case language.EN:
 		result.AttributesToRetrieve = []string{"code", "en.NAME"}
 	default:
 		return result, fmt.Errorf("SearchRequest: unsupported language: %v", r.lang)

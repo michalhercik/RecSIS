@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	"github.com/michalhercik/RecSIS/courses/internal/filter"
+	"github.com/michalhercik/RecSIS/language"
 	//"log"
 )
 
 type DataManager interface {
-	Courses(sessionID string, courseCodes []string, lang Language) ([]Course, error)
-	ParamLabels(lang Language) (map[string][]filter.ParamValue, error)
+	Courses(sessionID string, courseCodes []string, lang language.Language) ([]Course, error)
+	ParamLabels(lang language.Language) (map[string][]filter.ParamValue, error)
 }
 
 type SemesterAssignment int
@@ -85,14 +86,15 @@ const (
 )
 
 func (ts *TeachingSemester) String(lang string) string {
+	l := language.Language(lang)
 	semester := ""
 	switch *ts {
 	case teachingWinterOnly:
-		semester = texts[lang].WinterAssign
+		semester = texts[l].WinterAssign
 	case teachingSummerOnly:
-		semester = texts[lang].SummerAssign
+		semester = texts[l].SummerAssign
 	case teachingBoth:
-		semester = texts[lang].Both
+		semester = texts[l].Both
 	default:
 		semester = "unsupported"
 	}
@@ -105,21 +107,22 @@ type Assignment struct {
 }
 
 func (a Assignment) String(lang string) string {
+	l := language.Language(lang)
 	semester := ""
 	switch a.Semester {
 	case assignmentNone:
-		semester = texts[lang].N
+		semester = texts[l].N
 	case assignmentWinter:
-		semester = texts[lang].W
+		semester = texts[l].W
 	case assignmentSummer:
-		semester = texts[lang].S
+		semester = texts[l].S
 	default:
-		semester = texts[lang].ER
+		semester = texts[l].ER
 	}
 
 	result := fmt.Sprintf("%d%s", a.Year, semester)
 	if a.Year == 0 {
-		result = texts[lang].UN
+		result = texts[l].UN
 	}
 	return result
 }

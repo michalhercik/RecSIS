@@ -1,13 +1,13 @@
 package courses
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/michalhercik/RecSIS/courses/internal/filter"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 const courseIndex = "courses"
@@ -21,26 +21,14 @@ type Server struct {
 }
 
 func (s Server) Register(router *http.ServeMux, prefix string) {
-	//router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page) // TODO get language from http header
-	router.HandleFunc(fmt.Sprintf("GET /cs%s", prefix), s.csPage)
-	router.HandleFunc(fmt.Sprintf("GET /en%s", prefix), s.enPage)
-	//router.HandleFunc(fmt.Sprintf("GET %s/search", prefix), s.content) // TODO get language from http header
-	router.HandleFunc(fmt.Sprintf("GET /cs%s/search", prefix), s.csContent)
-	router.HandleFunc(fmt.Sprintf("GET /en%s/search", prefix), s.enContent)
-	//router.HandleFunc(fmt.Sprintf("GET %s/quicksearch", prefix), s.quickSearch) // TODO get language from http header
-	router.HandleFunc(fmt.Sprintf("GET /cs%s/quicksearch", prefix), s.csQuickSearch)
-	router.HandleFunc(fmt.Sprintf("GET /en%s/quicksearch", prefix), s.enQuickSearch)
+	lr := language.LanguageRouter{Router: router}
+	lr.HandleLangFunc(prefix, http.MethodGet, s.page)
+	lr.HandleLangFunc(prefix+"/search/", http.MethodGet, s.content)
+	lr.HandleLangFunc(prefix+"/quicksearch/", http.MethodGet, s.quickSearch)
 }
 
-func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, cs, texts["cs"])
-}
-
-func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, en, texts["en"])
-}
-
-func (s Server) page(w http.ResponseWriter, r *http.Request, lang Language, t text) {
+func (s Server) page(w http.ResponseWriter, r *http.Request, lang language.Language) {
+	t := texts[lang]
 	req, err := parseQueryRequest(r, lang)
 	if err != nil {
 		// TODO: handle error
@@ -48,34 +36,17 @@ func (s Server) page(w http.ResponseWriter, r *http.Request, lang Language, t te
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	var result coursesPage
-	if len(req.query) > 0 {
-		result, err = s.search(req)
-		if err != nil {
-			log.Printf("search: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	} else {
-		result, err = s.facetDistribution(lang)
-		if err != nil {
-			log.Printf("facetDistribution: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+	result, err := s.search(req)
+	if err != nil {
+		log.Printf("search: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	Page(&result, t).Render(r.Context(), w)
 }
 
-func (s Server) csContent(w http.ResponseWriter, r *http.Request) {
-	s.content(w, r, cs, texts["cs"])
-}
-
-func (s Server) enContent(w http.ResponseWriter, r *http.Request) {
-	s.content(w, r, en, texts["en"])
-}
-
-func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t text) {
+func (s Server) content(w http.ResponseWriter, r *http.Request, lang language.Language) {
+	t := texts[lang]
 	req, err := parseQueryRequest(r, lang)
 	if err != nil {
 		// TODO: handle error
@@ -99,15 +70,8 @@ func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t
 	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
-func (s Server) csQuickSearch(w http.ResponseWriter, r *http.Request) {
-	s.quickSearch(w, r, cs, texts["cs"])
-}
-
-func (s Server) enQuickSearch(w http.ResponseWriter, r *http.Request) {
-	s.quickSearch(w, r, en, texts["en"])
-}
-
-func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang Language, t text) {
+func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang language.Language) {
+	t := texts[lang]
 	query := r.FormValue(searchParam)
 	req := QuickRequest{
 		query:    query,
@@ -125,7 +89,7 @@ func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang Languag
 	QuickResults(&res, t).Render(r.Context(), w)
 }
 
-func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
+func parseQueryRequest(r *http.Request, lang language.Language) (Request, error) {
 	var req Request
 	sessionCookie, err := r.Cookie("recsis_session_key")
 	if err != nil {
@@ -185,7 +149,7 @@ func (s Server) search(req Request) (coursesPage, error) {
 	return result, nil
 }
 
-func (s Server) facetDistribution(lang Language) (coursesPage, error) {
+func (s Server) facetDistribution(lang language.Language) (coursesPage, error) {
 	var result coursesPage
 	f, err := s.Search.FacetDistribution()
 	if err != nil {

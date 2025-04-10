@@ -8,6 +8,7 @@ import (
 	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/urlparser"
+	"github.com/michalhercik/RecSIS/language"
 
 	// pages
 	"github.com/jmoiron/sqlx"
@@ -105,7 +106,7 @@ func main() {
 	//////////////////////////////////////////
 	server := http.Server{
 		Addr:    ":8000", // DOCKER, PRODUCTION: when run as docker container remove localhost
-		Handler: logging(router),
+		Handler: logging(language.DefaultLanguage(router)),
 	}
 
 	log.Println("Server starting ...")
