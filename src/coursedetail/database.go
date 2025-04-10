@@ -21,22 +21,50 @@ func (reader DBManager) Course(sessionID string, code string, lang language.Lang
 	return &course, nil
 }
 
-func (db DBManager) RateCategory(sessionID string, code string, category string, rating int) error {
+func (db DBManager) RateCategory(sessionID string, code string, category string, rating int, lang language.Language) ([]CourseCategoryRating, error) {
+	var updatedRating []CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.RateCategory, sessionID, code, category, rating)
-	return err
+	if err != nil {
+		return updatedRating, err
+	}
+	if err = db.DB.Select(&updatedRating, sqlquery.Rating, sessionID, code, lang); err != nil {
+		return updatedRating, err
+	}
+	return updatedRating, err
 }
 
-func (db DBManager) DeleteCategoryRating(sessionID string, code string, category string) error {
+func (db DBManager) DeleteCategoryRating(sessionID string, code string, category string, lang language.Language) ([]CourseCategoryRating, error) {
+	var updatedRating []CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.DeleteCategoryRating, sessionID, code, category)
-	return err
+	if err != nil {
+		return updatedRating, err
+	}
+	if err = db.DB.Select(&updatedRating, sqlquery.Rating, sessionID, code, lang); err != nil {
+		return updatedRating, err
+	}
+	return updatedRating, err
 }
 
-func (db DBManager) Rate(sessionID string, code string, value int) error {
+func (db DBManager) Rate(sessionID string, code string, value int) (CourseRating, error) {
+	var rating CourseRating
 	_, err := db.DB.Exec(sqlquery.Rate, sessionID, code, value)
-	return err
+	if err != nil {
+		return rating, err
+	}
+	if err = db.DB.Get(&rating, sqlquery.CourseOverallRating, sessionID, code); err != nil {
+		return rating, err
+	}
+	return rating, err
 }
 
-func (db DBManager) DeleteRating(sessionID string, code string) error {
+func (db DBManager) DeleteRating(sessionID string, code string) (CourseRating, error) {
+	var rating CourseRating
 	_, err := db.DB.Exec(sqlquery.DeleteRating, sessionID, code)
-	return err
+	if err != nil {
+		return rating, err
+	}
+	if err = db.DB.Get(&rating, sqlquery.CourseOverallRating, sessionID, code); err != nil {
+		return rating, err
+	}
+	return rating, err
 }

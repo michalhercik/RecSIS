@@ -13,10 +13,10 @@ import (
 // TODO: change interface name if interface changes
 type DataManager interface {
 	Course(sessionID string, code string, lang language.Language) (*Course, error)
-	RateCategory(sessionID string, code string, category string, rating int) error
-	DeleteCategoryRating(sessionID string, code string, category string) error
-	Rate(sessionID string, code string, value int) error
-	DeleteRating(sessionID string, code string) error
+	RateCategory(sessionID string, code string, category string, rating int, lang language.Language) ([]CourseCategoryRating, error)
+	DeleteCategoryRating(sessionID string, code string, category string, lang language.Language) ([]CourseCategoryRating, error)
+	Rate(sessionID string, code string, value int) (CourseRating, error)
+	DeleteRating(sessionID string, code string) (CourseRating, error)
 }
 
 const (
@@ -46,13 +46,14 @@ const (
 )
 
 func (s Semester) String(lang string) string {
+	l := language.Language(lang)
 	switch s {
 	case winter:
-		return texts[lang].Winter
+		return texts[l].Winter
 	case summer:
-		return texts[lang].Summer
+		return texts[l].Summer
 	case both:
-		return texts[lang].Both
+		return texts[l].Both
 	default:
 		return "unknown"
 	}
@@ -118,13 +119,14 @@ const (
 
 func (ts *TeachingSemester) String(lang string) string {
 	semester := ""
+	l := language.Language(lang)
 	switch *ts {
 	case teachingWinterOnly:
-		semester = texts[lang].Winter
+		semester = texts[l].Winter
 	case teachingSummerOnly:
-		semester = texts[lang].Summer
+		semester = texts[l].Summer
 	case teachingBoth:
-		semester = texts[lang].Both
+		semester = texts[l].Both
 	default:
 		semester = "unsupported"
 	}
@@ -212,8 +214,9 @@ func (d *NullDescription) Scan(val interface{}) error {
 type Capacity int
 
 func (c Capacity) String(lang string) string {
+	l := language.Language(lang)
 	if c == -1 { // -1 means no limit
-		return texts[lang].CapacityNoLimit
+		return texts[l].CapacityNoLimit
 	}
 	return fmt.Sprintf("%d", c)
 }
@@ -256,12 +259,16 @@ func (n NullFloat64) String() string {
 	return fmt.Sprintf("%f", n.Float64)
 }
 
-type CourseCategoryRating struct {
-	Code        int         `db:"category_code"`
-	Title       string      `db:"rating_title"`
+type CourseRating struct {
 	UserRating  NullInt64   `db:"rating"`
 	AvgRating   NullFloat64 `db:"avg_rating"`
 	RatingCount NullInt64   `db:"rating_count"`
+}
+
+type CourseCategoryRating struct {
+	Code  int    `db:"category_code"`
+	Title string `db:"rating_title"`
+	CourseRating
 }
 
 type CourseInfo struct {
@@ -350,10 +357,11 @@ func (jsa JSONStringArray) String() string {
 
 type Course struct {
 	CourseInfo
-	UserOverallRating    NullInt64   `db:"overall_rating"`
-	AvgOverallRating     NullFloat64 `db:"avg_overall_rating"`
-	OverallRatingCount   NullInt64   `db:"overall_rating_count"`
-	Link                 string      // link to course webpage (not SIS)
+	CourseRating
+	// UserOverallRating    NullInt64   `db:"overall_rating"`
+	// AvgOverallRating     NullFloat64 `db:"avg_overall_rating"`
+	// OverallRatingCount   NullInt64   `db:"overall_rating_count"`
+	Link                 string // link to course webpage (not SIS)
 	BlueprintAssignments []Assignment
 	CategoryRatings      []CourseCategoryRating
 	Comments             search.SearchResult //[]course.Comment

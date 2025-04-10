@@ -447,7 +447,7 @@ templ Content(course *Course, t text) {
             </div>
             // right column ratings
             <div class="flex-grow-1" style="flex: 1;">
-                @Ratings(course.UserOverallRating, course.AvgOverallRating, course.CategoryRatings, course.Code, t)
+                @Ratings(course.UserRating, course.AvgRating, course.CategoryRatings, course.Code, t)
             </div>
         </div>
         // link to additional information
