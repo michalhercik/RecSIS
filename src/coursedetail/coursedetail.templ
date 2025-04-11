@@ -102,7 +102,7 @@ templ dislikeButton(rating NullInt64, code string) {
     @rateButton(rating, "bi-hand-thumbs-down", code, negativeRating)
 }
 
-templ OverallRating(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, code string, t text) {
+templ OverallRating(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, code string) {
     <div id="simple-rating">
         <div class="btn-group" role="group">
             @likeButton(userRating, avgRating, ratingCount, code)
@@ -154,7 +154,7 @@ templ CategoryRating(categories []CourseCategoryRating, code string, showModal b
 }
 
 templ ratings(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, categories []CourseCategoryRating, code string, t text) {
-    @OverallRating(userRating, avgRating, ratingCount, code, t)
+    @OverallRating(userRating, avgRating, ratingCount, code)
     // TODO: translate and rename
     <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#rate-modal">
         Additional Rating
@@ -466,7 +466,7 @@ templ details(course *Course, t text) {
 
 templ Content(course *Course, t text) {
     // code and title
-    <h1 class="text-center my-4">{ course.Code + " - " + course.Name }</h1>
+    <h1 class="text-center py-2">{ course.Code + " - " + course.Name }</h1>
     // badges with information
     <div class="my-3">
         @badges(course, t)

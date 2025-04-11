@@ -24,7 +24,7 @@ templ Page(title string, t Text) {
     <html lang={ t.Language }>
         <head>
             <meta charset="UTF-8">
-            <title>{ title }</title> // TODO: translate
+            <title>{ title }</title>
             // css
             <link rel="stylesheet" href="/style.css">
             // bootstrap
@@ -82,7 +82,7 @@ templ Header(title string, t Text) {
         <nav class="navbar navbar-expand-md navbar-light bg-light py-0"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
             <div class="container-fluid">
                 <div style="width: 100px;">
-                    <a class="navbar-brand fs-3" href={ templ.URL(t.LangLink("")) }>RecSIS</a>
+                    <a class="navbar-brand fs-3" href={ templ.URL("") }>RecSIS</a>
                 </div>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>

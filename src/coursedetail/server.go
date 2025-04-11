@@ -105,7 +105,7 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 		log.Printf("rate error: %v", err)
 	}
 	// render the overall rating
-	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code, texts[lang]).Render(r.Context(), w)
+	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code).Render(r.Context(), w)
 }
 
 func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +120,7 @@ func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 		log.Printf("deleteRating error: %v", err)
 	}
 	// render the overall rating
-	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code, texts[lang]).Render(r.Context(), w)
+	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code).Render(r.Context(), w)
 }
 
 func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
