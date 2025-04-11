@@ -3,6 +3,7 @@ package blueprint
 import (
 	"strconv"
 
+	"github.com/michalhercik/RecSIS/language"
 	"github.com/michalhercik/RecSIS/utils"
 )
 
@@ -60,8 +61,8 @@ func (t text) YearStr(year int) string {
 	return ""
 }
 
-var texts = map[string]text{
-	"cs": {
+var texts = map[language.Language]text{
+	language.CS: {
 		Language:         "cs",
 		NumOfYears:       "Počet ročníků",
 		Total:            "Celkem",
@@ -105,7 +106,7 @@ var texts = map[string]text{
 		// utils
 		Utils: utils.Texts["cs"],
 	},
-	"en": {
+	language.EN: {
 		Language:         "en",
 		NumOfYears:       "Number of years",
 		Total:            "Total",

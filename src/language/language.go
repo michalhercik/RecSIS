@@ -1,33 +1,75 @@
 package language
 
 import (
-	"log"
+	"context"
 	"net/http"
-	"net/url"
-	"strings"
 )
 
 type Language string
 
+const langLen int = 2
 const (
-	CS Language = "cs"
-	EN Language = "en"
+	Default Language = CS
+	CS      Language = "cs"
+	EN      Language = "en"
 )
+
+func (l Language) Handle(handler LanguageFuncHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handler(w, r, l)
+	}
+}
+
+func FromString(lang string) (Language, bool) {
+	switch lang {
+	case string(CS):
+		return CS, true
+	case string(EN):
+		return EN, true
+	default:
+		return "", false
+	}
+}
+
+func FromContext(ctx context.Context) Language {
+	lang, ok := ctx.Value(key{}).(Language)
+	if ok {
+		return lang
+	}
+	return Default
+}
 
 type LanguageFuncHandler func(http.ResponseWriter, *http.Request, Language)
 
-func DefaultLanguage(next http.Handler) http.Handler {
+func SetAndStripLanguage(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !(strings.HasPrefix(r.URL.Path, "/"+string(CS)) || strings.HasPrefix(r.URL.Path, "/"+string(EN))) {
-			path, err := url.JoinPath(string(CS), r.URL.Path)
-			if err != nil {
-				log.Println("DefaultLanguage:", err)
-				return
-			}
-			r.URL.Path = path
+		originalReq := r
+		lang, ok := parseLanguage(r)
+		if ok {
+			r = requestWithLanguage(r, lang)
 		}
 		next.ServeHTTP(w, r)
+		r = originalReq
 	})
+}
+
+func parseLanguage(r *http.Request) (Language, bool) {
+	if len(r.URL.Path) >= langLen+1 {
+		prefix := r.URL.Path[1 : langLen+1]
+		lang, ok := FromString(prefix)
+		return lang, ok
+	}
+	return Default, false
+}
+
+func requestWithLanguage(r *http.Request, lang Language) *http.Request {
+	r.URL.Path = r.URL.Path[langLen+1:]
+	if len(r.URL.Path) == 0 {
+		r.URL.Path = "/"
+	}
+	ctx := context.WithValue(r.Context(), key{}, lang)
+	r = r.WithContext(ctx)
+	return r
 }
 
 type LanguageRouter struct {
@@ -39,8 +81,4 @@ func (lr LanguageRouter) HandleLangFunc(path string, method string, handler Lang
 	lr.Router.HandleFunc(method+" /"+string(EN)+path, EN.Handle(handler))
 }
 
-func (l Language) Handle(handler LanguageFuncHandler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handler(w, r, l)
-	}
-}
+type key struct{}

@@ -16,18 +16,32 @@ const pageParam = "page"
 const hitsPerPageParam = "hitsPerPage"
 
 type Server struct {
+	router *http.ServeMux
 	Data   DataManager
 	Search SearchEngine
 }
 
-func (s Server) Register(router *http.ServeMux, prefix string) {
-	lr := language.LanguageRouter{Router: router}
-	lr.HandleLangFunc(prefix, http.MethodGet, s.page)
-	lr.HandleLangFunc(prefix+"/search/", http.MethodGet, s.content)
-	lr.HandleLangFunc(prefix+"/quicksearch/", http.MethodGet, s.quickSearch)
+func (s *Server) Init() {
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", s.page)
+	router.HandleFunc("GET /search/", s.content)
+	router.HandleFunc("GET /quicksearch/", s.quickSearch)
+	s.router = router
 }
 
-func (s Server) page(w http.ResponseWriter, r *http.Request, lang language.Language) {
+func (s Server) Router() http.Handler {
+	return s.router
+}
+
+// func (s Server) Register(router *http.ServeMux, prefix string) {
+// 	lr := language.LanguageRouter{Router: router}
+// 	lr.HandleLangFunc(prefix, http.MethodGet, s.page)
+// 	lr.HandleLangFunc(prefix+"/search/", http.MethodGet, s.content)
+// 	lr.HandleLangFunc(prefix+"/quicksearch/", http.MethodGet, s.quickSearch)
+// }
+
+func (s Server) page(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	req, err := parseQueryRequest(r, lang)
 	if err != nil {
@@ -45,7 +59,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request, lang language.Langu
 	Page(&result, t).Render(r.Context(), w)
 }
 
-func (s Server) content(w http.ResponseWriter, r *http.Request, lang language.Language) {
+func (s Server) content(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	req, err := parseQueryRequest(r, lang)
 	if err != nil {
@@ -70,7 +85,8 @@ func (s Server) content(w http.ResponseWriter, r *http.Request, lang language.La
 	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
-func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang language.Language) {
+func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	query := r.FormValue(searchParam)
 	req := QuickRequest{

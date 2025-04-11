@@ -69,12 +69,13 @@ func main() {
 	// Handlers
 	//////////////////////////////////////////
 
-	home.Server{}.Register(router)
-	blueprint.Server{
+	home := home.Server{}
+	home.Init()
+	blueprint := blueprint.Server{
 		Data: blueprint.DBManager{DB: db},
-	}.Register(router, "/blueprint")
-
-	coursedetail.Server{
+	}
+	blueprint.Init()
+	coursedetail := coursedetail.Server{
 		Data: coursedetail.DBManager{DB: db},
 		CourseComments: meilicomments.MeiliSearch{
 			Client:        meiliClient,
@@ -86,19 +87,25 @@ func main() {
 			TeacherParam: params.TeacherCode,
 			CourseParam:  params.CourseCode,
 		},
-	}.Register(router, "/course")
-
-	courses.Server{
+	}
+	coursedetail.Init()
+	courses := courses.Server{
 		Data:   courses.DBManager{DB: db},
 		Search: courses.MeiliSearch{Client: meiliClient, Courses: meilisearch.IndexConfig{Uid: "courses"}},
-	}.Register(router, "/courses")
-
-	degreeplan.Server{
+	}
+	courses.Init()
+	degreePlan := degreeplan.Server{
 		Data: degreeplan.DBManager{DB: db},
-	}.Register(router, "/degreeplan")
-
+	}
+	degreePlan.Init()
 	static := http.FileServer(http.Dir("static"))
-	router.Handle("/favicon.ico", static)
+
+	router.Handle("/", home.Router())
+	router.Handle("/blueprint", blueprint.Router())
+	router.Handle("/coursedetail", coursedetail.Router())
+	router.Handle("/courses", courses.Router())
+	router.Handle("/degreeplan", degreePlan.Router())
+	router.Handle("GET /favicon.ico", static)
 	router.Handle("GET /style.css", static)
 
 	//////////////////////////////////////////
@@ -106,7 +113,7 @@ func main() {
 	//////////////////////////////////////////
 	server := http.Server{
 		Addr:    ":8000", // DOCKER, PRODUCTION: when run as docker container remove localhost
-		Handler: logging(language.DefaultLanguage(router)),
+		Handler: logging(language.SetAndStripLanguage(router)),
 	}
 
 	log.Println("Server starting ...")

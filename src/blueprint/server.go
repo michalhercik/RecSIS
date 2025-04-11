@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 /**
@@ -17,20 +18,24 @@ TODO:
 */
 
 type Server struct {
-	Data DataManager
+	router *http.ServeMux
+	Data   DataManager
 }
 
-func (s Server) Register(router *http.ServeMux, prefix string) {
-	//router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page) //TODO get language from http header
-	router.HandleFunc(fmt.Sprintf("GET /cs%s", prefix), s.csPage)
-	router.HandleFunc(fmt.Sprintf("GET /en%s", prefix), s.enPage)
-	router.HandleFunc(fmt.Sprintf("POST %s/year", prefix), s.yearAddition)
-	router.HandleFunc(fmt.Sprintf("DELETE %s/year", prefix), s.yearRemoval)
-	router.HandleFunc(fmt.Sprintf("POST %s/course/{code}", prefix), s.courseAddition)
-	router.HandleFunc(fmt.Sprintf("PATCH %s/course/{id}", prefix), s.courseMovement)
-	router.HandleFunc(fmt.Sprintf("PATCH %s/courses", prefix), s.coursesMovement)
-	router.HandleFunc(fmt.Sprintf("DELETE %s/course/{id}", prefix), s.courseRemoval)
-	router.HandleFunc(fmt.Sprintf("DELETE %s/courses", prefix), s.coursesRemoval)
+func (s *Server) Init() {
+	s.router = http.NewServeMux()
+	s.router.HandleFunc("GET /", s.page)
+	s.router.HandleFunc("POST /year", s.yearAddition)
+	s.router.HandleFunc("DELETE /year", s.yearRemoval)
+	s.router.HandleFunc("POST /course/{code}", s.courseAddition)
+	s.router.HandleFunc("PATCH /course/{id}", s.courseMovement)
+	s.router.HandleFunc("PATCH /courses", s.coursesMovement)
+	s.router.HandleFunc("DELETE /course/{id}", s.courseRemoval)
+	s.router.HandleFunc("DELETE /courses", s.coursesRemoval)
+}
+
+func (s Server) Router() http.Handler {
+	return s.router
 }
 
 // ===============================================================================================================================
@@ -76,12 +81,8 @@ func parseYearSemesterPosition(r *http.Request) (int, SemesterAssignment, int, e
 }
 
 func parseLanguage(r *http.Request) (text, error) {
-	lang := r.FormValue("lang")
-	if lang == "cs" || lang == "en" {
-		return texts[lang], nil
-	}
-	// TODO: default return english, might be better to return an error
-	return texts["en"], nil
+	lang := language.FromContext(r.Context())
+	return texts[lang], nil
 }
 
 func atoiSlice(s []string) ([]int, error) {
@@ -118,16 +119,18 @@ func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request, t text) 
 	result.Render(r.Context(), w)
 }
 
-func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, texts["cs"])
-}
+// func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
+// 	s.page(w, r, texts["cs"])
+// }
 
-func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, texts["en"])
-}
+// func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
+// 	s.page(w, r, texts["en"])
+// }
 
-func (s Server) page(w http.ResponseWriter, r *http.Request, t text) {
+func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	var result templ.Component
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
 	sessionCookie, err := r.Cookie("recsis_session_key")
 	if err != nil {
 		http.Error(w, "unknown student", http.StatusBadRequest)
