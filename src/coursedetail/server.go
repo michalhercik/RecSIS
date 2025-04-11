@@ -40,6 +40,8 @@ func (s Server) Router() http.Handler {
 // }
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
+	log.Println("Jsem tady!")
+	log.Println(r.URL.Path)
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	sessionCookie, err := r.Cookie("recsis_session_key")

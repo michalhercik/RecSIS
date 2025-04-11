@@ -34,6 +34,10 @@ func logging(next http.Handler) http.Handler {
 	})
 }
 
+func handle(router *http.ServeMux, prefix string, handler http.Handler) {
+	router.Handle(prefix, http.StripPrefix(prefix[:len(prefix)-1], handler))
+}
+
 func main() {
 
 	router := http.NewServeMux()
@@ -101,10 +105,10 @@ func main() {
 	static := http.FileServer(http.Dir("static"))
 
 	router.Handle("/", home.Router())
-	router.Handle("/blueprint", blueprint.Router())
-	router.Handle("/coursedetail", coursedetail.Router())
-	router.Handle("/courses", courses.Router())
-	router.Handle("/degreeplan", degreePlan.Router())
+	handle(router, "/blueprint/", blueprint.Router())
+	handle(router, "/course/", coursedetail.Router())
+	handle(router, "/courses/", courses.Router())
+	handle(router, "/degreeplan/", degreePlan.Router())
 	router.Handle("GET /favicon.ico", static)
 	router.Handle("GET /style.css", static)
 
