@@ -20,7 +20,7 @@ AND category_code=$3
 `
 
 // TODO: valid_from use the date he finished the course???
-const Rate = `
+const Rate = `--sql
 INSERT INTO course_overall_ratings (user_id, course_code, rating)
 VALUES (
     (SELECT user_id FROM sessions WHERE id=$1),
@@ -29,6 +29,19 @@ VALUES (
 ON CONFLICT (user_id, course_code) DO
 UPDATE SET rating=$3
 ;
+`
+const CourseOverallRating = `--sql
+WITH session_user_id AS (
+  SELECT user_id FROM sessions WHERE id=$1
+),
+avg_course_overall_ratings AS (
+    SELECT cor.course_code, AVG(rating) AS avg_rating, COUNT(rating) AS rating_count FROM course_overall_ratings cor
+    WHERE course_code=$2
+    GROUP BY course_code
+)
+SELECT rating, avg_rating, rating_count from session_user_id s
+LEFT JOIN course_overall_ratings cor ON course_code=$2 AND s.user_id=cor.user_id
+LEFT JOIN avg_course_overall_ratings acor ON cor.course_code=acor.course_code
 `
 
 const DeleteRating = `--sql
@@ -53,7 +66,7 @@ user_course_overall_ratings AS (
 --     LEFT JOIN course_rating_categories crc ON cr.category_code = crc.code
 -- ),
 avg_course_overall_ratings AS (
-    SELECT cor.course_code, AVG(rating) AS avg_overall_rating, COUNT(rating) AS overall_rating_count FROM course_overall_ratings cor
+    SELECT cor.course_code, AVG(rating) AS avg_rating, COUNT(rating) AS rating_count FROM course_overall_ratings cor
     WHERE course_code=$2
     GROUP BY course_code
 )
@@ -83,9 +96,9 @@ SELECT
     c.literature,
     c.entry_requirements,
     c.terms_of_passing,
-    ucor.rating AS overall_rating,
-    avg_cor.avg_overall_rating,
-    avg_cor.overall_rating_count,
+    ucor.rating,
+    avg_cor.avg_rating,
+    avg_cor.rating_count,
     c.preqrequisities,
     c.corequisities,
     c.incompatibilities,

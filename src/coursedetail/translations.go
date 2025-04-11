@@ -3,6 +3,7 @@ package coursedetail
 import (
 	"strconv"
 
+	"github.com/michalhercik/RecSIS/language"
 	"github.com/michalhercik/RecSIS/utils"
 )
 
@@ -56,8 +57,8 @@ func (t text) YearStr(year int) string {
 	return ""
 }
 
-var texts = map[string]text{
-	"cs": {
+var texts = map[language.Language]text{
+	language.CS: {
 		Language:         "cs",
 		Faculty:          "Fakulta",
 		Semester:         "Semestr",
@@ -97,7 +98,7 @@ var texts = map[string]text{
 		// utils
 		Utils: utils.Texts["cs"],
 	},
-	"en": {
+	language.EN: {
 		Language:         "en",
 		Faculty:          "Faculty",
 		Semester:         "Semester",

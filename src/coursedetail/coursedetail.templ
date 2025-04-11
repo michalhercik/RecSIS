@@ -9,11 +9,11 @@ import (
 )
 
 templ rateModal(categories []CourseCategoryRating, code string, t text) {
-    <div class="modal fade" id="rateModal" tabindex="-1">
+    <div class="modal fade" id="rate-modal" tabindex="-1" aria-labelledby="category-modal-title">
     <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
     <div class="modal-header">
-        <h5 class="modal-title">Categorical rating</h5>
+        <h5 class="modal-title" id="category-modal-title">Categorical rating</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
     </div>
     <div class="modal-body m-2">
@@ -21,8 +21,9 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
             <div class="d-flex align-items-center gap-2 pb-3">
                 <button
                     class="btn btn-outline-none bi bi-trash-fill p-0"
-                    hx-delete={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
-                    @click="value = 0">
+                    hx-delete={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
+                    hx-target="#category-rating"
+                    hx-swap="outerHTML">
                 </button>
                 <div class="flex-grow-1">
                     <label for={ c.Title + "-range" } class="form-label d-flex justify-content-between mb-0">
@@ -42,7 +43,9 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
                         id={ c.Title + "-range" }
                         min="0" max="10" step="1"
                         value={ fmt.Sprintf("%d", c.UserRating.Int64) }
-                        hx-put={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
+                        hx-put={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
+                        hx-target="#category-rating"
+                        hx-swap="outerHTML"
                         hx-trigger="change">
                     <div class="tick-container m-auto">
                         for i := 0; i <= 10; i++ {
@@ -75,7 +78,7 @@ templ rateButton(rating NullInt64, icon, code string, rate int64) {
         hx-put={ "/course/rating/" + code }
         hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
         }
-        hx-target="#rating"
+        hx-target="#simple-rating"
         hx-swap="outerHTML">
         { children... }
     </button>
@@ -99,15 +102,29 @@ templ dislikeButton(rating NullInt64, code string) {
     @rateButton(rating, "bi-hand-thumbs-down", code, negativeRating)
 }
 
-templ Ratings(userRating NullInt64, avgRating NullFloat64, numOfRatings NullInt64, categories []CourseCategoryRating, code string, t text) {
-    <div id="rating">
+templ OverallRating(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, code string, t text) {
+    <div id="simple-rating">
         <div class="btn-group" role="group">
-            @likeButton(userRating, avgRating, numOfRatings, code)
+            @likeButton(userRating, avgRating, ratingCount, code)
             @dislikeButton(userRating, code)
         </div>
-        <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#rateModal">
-            Additional Rating
-        </button>
+    </div>
+}
+
+templ CategoryRating(categories []CourseCategoryRating, code string, showModal bool, t text) {
+    <div id="category-rating" x-init={ fmt.Sprintf("if (%t) showModal()", showModal) }>
+        <script>
+        function showModal() {
+            const rateModalEl = document.getElementById('rate-modal');
+            const rateModal = bootstrap.Modal.getOrCreateInstance(rateModalEl);
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            rateModal.show();
+            console.log("Modal shown");
+        }
+        </script>
         // Modal with rating categories
         @rateModal(categories, code, t)
         for _, c := range categories {
@@ -134,6 +151,15 @@ templ Ratings(userRating NullInt64, avgRating NullFloat64, numOfRatings NullInt6
             </div>
         }
     </div>
+}
+
+templ ratings(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, categories []CourseCategoryRating, code string, t text) {
+    @OverallRating(userRating, avgRating, ratingCount, code, t)
+    // TODO: translate and rename
+    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#rate-modal">
+        Additional Rating
+    </button>
+    @CategoryRating(categories, code, hideModal, t)
 }
 
 templ blueprintAssignment(code string, t text) {
@@ -394,11 +420,11 @@ templ comments(comments []course.Comment, t text) {
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <p class="mb-0">
+                        { comment.Type + " " + comment.AcademicYearString() + " " }
                         @teacherStyled(comment.TargetTeacher)
-                        { " " + comment.Type + " " + comment.AcademicYearString() }
                     </p>
                     <p class="mb-0">
-                        { t.YearStr(comment.StudyYear) + ", " + comment.StudyField + ", " + comment.StudyField }
+                        { t.YearStr(comment.StudyYear) + ", " + comment.Study.Name + ", " + comment.StudyField }
                     </p>
                 </div>
                 <div class="card-body" style="text-align: justify">
@@ -455,7 +481,7 @@ templ Content(course *Course, t text) {
             </div>
             // right column ratings
             <div class="flex-grow-1" style="flex: 1;">
-                @Ratings(course.UserOverallRating, course.AvgOverallRating, course.OverallRatingCount, course.CategoryRatings, course.Code, t)
+                @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
             </div>
         </div>
         // link to additional information
