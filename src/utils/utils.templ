@@ -2,6 +2,7 @@ package utils
 
 import (
     "strings"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 templ watermark() {
@@ -21,7 +22,7 @@ templ watermark() {
 
 templ Page(title string, t Text) {
     <!DOCTYPE html>
-    <html lang={ t.Language }>
+    <html lang={ string(t.Language) }>
         <head>
             <meta charset="UTF-8">
             <title>{ title }</title>
@@ -60,11 +61,11 @@ templ navItem(url, text string, active bool) {
     <li class="nav-item"><a class={ class } href={ templ.URL(url) }>{ text }</a></li>
 }
 
-templ langButton(lang string) {
+templ langButton(l language.Language) {
     <button
-        class="btn btn-outline-none"
-        @click={ "changeLanguage('" + lang + "')" }>
-        { lang }
+        class="btn btn-outline-none ps-0"
+        @click={ "changeLanguage('" + string(l) + "')" }>
+        { string(l) }
     </button>
 }
 
@@ -84,7 +85,7 @@ templ Header(title string, t Text) {
                 <div style="width: 100px;">
                     <a class="navbar-brand fs-3" href={ templ.URL("") }>RecSIS</a>
                 </div>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler fs-6" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
@@ -94,11 +95,11 @@ templ Header(title string, t Text) {
                         @navItem(t.LangLink("/blueprint"), t.Blueprint, title == t.Blueprint)
                         @navItem(t.LangLink("/degreeplan"), t.DegreePlan, title == t.DegreePlan)
                     </ul>
-                    <div class="d-flex justify-content-end" style="width: 100px;">
-                        if t.Language == "cs" {
-                            @langButton("en")
+                    <div class="d-flex justify-content-start justify-content-md-end" style="width: 100px;">
+                        if t.Language == language.CS {
+                            @langButton(language.EN)
                         } else {
-                            @langButton("cs")
+                            @langButton(language.CS)
                         }
                     </div>
                 </div>

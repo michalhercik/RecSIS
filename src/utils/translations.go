@@ -1,36 +1,38 @@
 package utils
 
+import "github.com/michalhercik/RecSIS/language"
+
 type Text struct {
-	Language string
-	Home string
-	Courses string
-	Blueprint string
-	DegreePlan string 
-	Login string
-	Contact string
+	Language   language.Language
+	Home       string
+	Courses    string
+	Blueprint  string
+	DegreePlan string
+	Login      string
+	Contact    string
 }
 
 func (t Text) LangLink(URL string) string {
-	return "/" + t.Language + URL
+	return "/" + string(t.Language) + URL
 }
 
 var Texts = map[string]Text{
 	"cs": {
-		Language: "cs",
-		Home: "Domů",
-		Courses: "Hledání",
-		Blueprint: "Blueprint",
+		Language:   language.CS,
+		Home:       "Domů",
+		Courses:    "Hledání",
+		Blueprint:  "Blueprint",
 		DegreePlan: "Studijní plán",
-		Login: "Přihlášení",
-		Contact: "V případě jakýchkoliv problémů kontaktujte tým RecSIS.",
+		Login:      "Přihlášení",
+		Contact:    "V případě jakýchkoliv problémů kontaktujte tým RecSIS.",
 	},
 	"en": {
-		Language: "en",
-		Home: "Home",
-		Courses: "Search",
-		Blueprint: "Blueprint",
+		Language:   language.EN,
+		Home:       "Home",
+		Courses:    "Search",
+		Blueprint:  "Blueprint",
 		DegreePlan: "Degree plan",
-		Login: "Login",
-		Contact: "In case of any problems, please contact the RecSIS team.",
+		Login:      "Login",
+		Contact:    "In case of any problems, please contact the RecSIS team.",
 	},
 }
