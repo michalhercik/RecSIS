@@ -2,11 +2,12 @@ package degreeplan
 
 import (
 	"encoding/json"
+
+	"github.com/michalhercik/RecSIS/language"
 )
 
 type DataManager interface {
-	// TODO: add lang parameter
-	DegreePlan(uid string, lang DBLang) (*DegreePlan, error)
+	DegreePlan(uid string, lang language.Language) (*DegreePlan, error)
 }
 
 type DBLang string

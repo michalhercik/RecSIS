@@ -1,24 +1,26 @@
 package degreeplan
 
 import (
-	"github.com/michalhercik/RecSIS/utils"
 	"strconv"
+
+	"github.com/michalhercik/RecSIS/language"
+	"github.com/michalhercik/RecSIS/utils"
 )
 
 type text struct {
-	Language string
-	Code string
-	Title string
-	Status string
-	Completed string
-	InBlueprint string
+	Language     string
+	Code         string
+	Title        string
+	Status       string
+	Completed    string
+	InBlueprint  string
 	NotCompleted string
-	Credits string
-	Winter string
-	Summer string
-	Blueprint string
-	Assign string
-	Year string
+	Credits      string
+	Winter       string
+	Summer       string
+	Blueprint    string
+	Assign       string
+	Year         string
 	WinterAssign string
 	SummerAssign string
 	// utils
@@ -34,40 +36,40 @@ func (t text) YearStr(year int) string {
 	return ""
 }
 
-var texts = map[string]text{
-	"cs": {
-		Language: "cs",
-		Code: "Kód",
-		Title: "Název",
-		Status: "Stav",
-		Completed: "Splněno",
-		InBlueprint: "Blueprint",
+var texts = map[language.Language]text{
+	language.CS: {
+		Language:     "cs",
+		Code:         "Kód",
+		Title:        "Název",
+		Status:       "Stav",
+		Completed:    "Splněno",
+		InBlueprint:  "Blueprint",
 		NotCompleted: "Nesplněno",
-		Credits: "Kredity",
-		Winter: "ZS",
-		Summer: "LS",
-		Blueprint: "Blueprint",
-		Assign: "Přiřadit",
-		Year: "ročník",
+		Credits:      "Kredity",
+		Winter:       "ZS",
+		Summer:       "LS",
+		Blueprint:    "Blueprint",
+		Assign:       "Přiřadit",
+		Year:         "ročník",
 		WinterAssign: "ZS",
 		SummerAssign: "LS",
 		// utils
 		Utils: utils.Texts["cs"],
 	},
-	"en": {
-		Language: "en",
-		Code: "Code",
-		Title: "Title",
-		Status: "Status",
-		Completed: "Completed",
-		InBlueprint: "Blueprint",
+	language.EN: {
+		Language:     "en",
+		Code:         "Code",
+		Title:        "Title",
+		Status:       "Status",
+		Completed:    "Completed",
+		InBlueprint:  "Blueprint",
 		NotCompleted: "Not completed",
-		Credits: "Credits",
-		Winter: "Winter",
-		Summer: "Summer",
-		Blueprint: "Blueprint",
-		Assign: "Assign",
-		Year: "Year",
+		Credits:      "Credits",
+		Winter:       "Winter",
+		Summer:       "Summer",
+		Blueprint:    "Blueprint",
+		Assign:       "Assign",
+		Year:         "Year",
 		WinterAssign: "Winter",
 		SummerAssign: "Summer",
 		// utils
