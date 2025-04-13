@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/michalhercik/RecSIS/auth"
 	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/urlparser"
@@ -77,6 +78,7 @@ func main() {
 	home.Init()
 	blueprint := blueprint.Server{
 		Data: blueprint.DBManager{DB: db},
+		Auth: auth.UserIDFromContext{},
 	}
 	blueprint.Init()
 	coursedetail := coursedetail.Server{
@@ -91,15 +93,18 @@ func main() {
 			TeacherParam: params.TeacherCode,
 			CourseParam:  params.CourseCode,
 		},
+		Auth: auth.UserIDFromContext{},
 	}
 	coursedetail.Init()
 	courses := courses.Server{
 		Data:   courses.DBManager{DB: db},
 		Search: courses.MeiliSearch{Client: meiliClient, Courses: meilisearch.IndexConfig{Uid: "courses"}},
+		Auth:   auth.UserIDFromContext{},
 	}
 	courses.Init()
 	degreePlan := degreeplan.Server{
 		Data: degreeplan.DBManager{DB: db},
+		Auth: auth.UserIDFromContext{},
 	}
 	degreePlan.Init()
 	static := http.FileServer(http.Dir("static"))
@@ -115,9 +120,19 @@ func main() {
 	//////////////////////////////////////////
 	// Server setup
 	//////////////////////////////////////////
+	authentication := auth.Authentication{
+		Authenticate: auth.DBManager{DB: db}.Authenticate,
+	}
+	var handler http.Handler
+	handler = router
+	handler = language.SetAndStripLanguage(router)
+	// handler = authentication.AuthenticateHTTP(handler)
+	_ = authentication
+	handler = auth.NoAuth(handler)
+	handler = logging(handler)
 	server := http.Server{
 		Addr:    ":8000", // DOCKER, PRODUCTION: when run as docker container remove localhost
-		Handler: logging(language.SetAndStripLanguage(router)),
+		Handler: handler,
 	}
 
 	log.Println("Server starting ...")

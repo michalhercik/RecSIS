@@ -3,8 +3,7 @@ package sqlquery
 const RateCategory = `
 INSERT INTO course_ratings (user_id, course_code, category_code, rating)
 VALUES (
-    (SELECT user_id FROM sessions WHERE id=$1),
-    $2, $3, $4
+    $1, $2, $3, $4
 )
 ON CONFLICT (user_id, category_code, course_code) DO
 UPDATE SET rating=$4
@@ -13,7 +12,7 @@ UPDATE SET rating=$4
 
 const DeleteCategoryRating = `--sql
 DELETE FROM course_ratings
-WHERE user_id=(SELECT user_id FROM sessions WHERE id=$1)
+WHERE user_id=$1
 AND course_code=$2
 AND category_code=$3
 ;
@@ -23,48 +22,37 @@ AND category_code=$3
 const Rate = `--sql
 INSERT INTO course_overall_ratings (user_id, course_code, rating)
 VALUES (
-    (SELECT user_id FROM sessions WHERE id=$1),
-    $2, $3
+    $1, $2, $3
 )
 ON CONFLICT (user_id, course_code) DO
 UPDATE SET rating=$3
 ;
 `
 const CourseOverallRating = `--sql
-WITH session_user_id AS (
-  SELECT user_id FROM sessions WHERE id=$1
-),
-avg_course_overall_ratings AS (
+WITH avg_course_overall_ratings AS (
     SELECT cor.course_code, AVG(rating) AS avg_rating, COUNT(rating) AS rating_count FROM course_overall_ratings cor
     WHERE course_code=$2
     GROUP BY course_code
 )
-SELECT rating, avg_rating, rating_count from session_user_id s
-LEFT JOIN course_overall_ratings cor ON course_code=$2 AND s.user_id=cor.user_id
+SELECT rating, avg_rating, rating_count FROM course_overall_ratings cor
 LEFT JOIN avg_course_overall_ratings acor ON cor.course_code=acor.course_code
+WHERE cor.user_id=$1
+AND cor.course_code=$2
 `
 
 const DeleteRating = `--sql
 DELETE FROM course_overall_ratings
-WHERE user_id=(SELECT user_id FROM sessions WHERE id=$1)
+WHERE user_id=$1
 AND course_code=$2
 ;
 `
 
-const Course = `
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
+const Course = `--sql
+WITH user_course_overall_ratings AS (
+    SELECT cor.course_code, cor.rating AS rating FROM course_overall_ratings cor
+    WHERE cor.user_id=$1
+    AND cor.course_code=$2
 ),
-user_course_overall_ratings AS (
-    SELECT cor.course_code, cor.rating AS rating FROM user_session
-    LEFT JOIN course_overall_ratings cor ON user_session.user_id = cor.user_id
-    WHERE cor.course_code=$2
-),
--- user_ratings AS (
---     SELECT cr.category_code, cr.course_code, cr.rating, crc.title, crc.lang FROM user_session
---     LEFT JOIN course_ratings cr ON user_session.user_id = cr.user_id
---     LEFT JOIN course_rating_categories crc ON cr.category_code = crc.code
--- ),
 avg_course_overall_ratings AS (
     SELECT cor.course_code, AVG(rating) AS avg_rating, COUNT(rating) AS rating_count FROM course_overall_ratings cor
     WHERE course_code=$2
@@ -112,13 +100,10 @@ WHERE code = $2 AND c.lang = $3;
 `
 
 const Rating = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-),
-user_ratings AS (
-    SELECT cr.category_code, cr.course_code, cr.rating FROM user_session
-    LEFT JOIN course_ratings cr ON user_session.user_id = cr.user_id
-    WHERE cr.course_code=$2
+WITH user_ratings AS (
+    SELECT cr.category_code, cr.course_code, cr.rating FROM course_ratings cr
+    WHERE cr.user_id=$1
+    AND cr.course_code=$2
 ),
 avg_course_rating AS (
     SELECT cr.category_code, cr.course_code, AVG(cr.rating) AS avg_rating, COUNT(cr.rating) AS rating_count FROM course_ratings cr

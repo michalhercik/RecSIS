@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/michalhercik/RecSIS/internal/course/comments/search"
@@ -17,6 +18,10 @@ type DataManager interface {
 	DeleteCategoryRating(sessionID string, code string, category string, lang language.Language) ([]CourseCategoryRating, error)
 	Rate(sessionID string, code string, value int) (CourseRating, error)
 	DeleteRating(sessionID string, code string) (CourseRating, error)
+}
+
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
 }
 
 const (

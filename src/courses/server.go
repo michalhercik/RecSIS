@@ -19,6 +19,7 @@ type Server struct {
 	router *http.ServeMux
 	Data   DataManager
 	Search SearchEngine
+	Auth   Authentication
 }
 
 func (s *Server) Init() {
@@ -33,17 +34,10 @@ func (s Server) Router() http.Handler {
 	return s.router
 }
 
-// func (s Server) Register(router *http.ServeMux, prefix string) {
-// 	lr := language.LanguageRouter{Router: router}
-// 	lr.HandleLangFunc(prefix, http.MethodGet, s.page)
-// 	lr.HandleLangFunc(prefix+"/search/", http.MethodGet, s.content)
-// 	lr.HandleLangFunc(prefix+"/quicksearch/", http.MethodGet, s.quickSearch)
-// }
-
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	req, err := parseQueryRequest(r, lang)
+	req, err := s.parseQueryRequest(w, r)
 	if err != nil {
 		// TODO: handle error
 		log.Printf("search: %v", err)
@@ -62,11 +56,10 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	req, err := parseQueryRequest(r, lang)
+	req, err := s.parseQueryRequest(w, r)
 	if err != nil {
 		// TODO: handle error
 		log.Printf("search: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	res, err := s.search(req)
@@ -105,12 +98,14 @@ func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
 	QuickResults(&res, t).Render(r.Context(), w)
 }
 
-func parseQueryRequest(r *http.Request, lang language.Language) (Request, error) {
+func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Request, error) {
 	var req Request
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return req, err
 	}
+	lang := language.FromContext(r.Context())
 	query := r.FormValue(searchParam)
 	page, err := strconv.Atoi(r.FormValue(pageParam))
 	if err != nil {
@@ -127,7 +122,7 @@ func parseQueryRequest(r *http.Request, lang language.Language) (Request, error)
 	}
 
 	req = Request{
-		sessionID:   sessionCookie.Value,
+		userID:      userID,
 		query:       query,
 		indexUID:    courseIndex,
 		page:        page,
@@ -145,7 +140,7 @@ func (s Server) search(req Request) (coursesPage, error) {
 	if err != nil {
 		return result, err
 	}
-	coursesData, err := s.Data.Courses(req.sessionID, searchResponse.Courses, req.lang)
+	coursesData, err := s.Data.Courses(req.userID, searchResponse.Courses, req.lang)
 	if err != nil {
 		return result, err
 	}

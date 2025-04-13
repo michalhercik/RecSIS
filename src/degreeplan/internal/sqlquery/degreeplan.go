@@ -1,14 +1,14 @@
 package sqlquery
 
 const DegreePlan = `
-WITH user_session AS (
-	SELECT user_id FROM sessions WHERE id=$1
-),
-user_blueprint_courses AS (
-	SELECT course_code FROM user_session s
-	LEFT JOIN blueprint_years y ON y.user_id = s.user_id
+-- WITH user_session AS (
+-- 	SELECT user_id FROM sessions WHERE id=$1
+-- ),
+WITH user_blueprint_courses AS (
+	SELECT course_code FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON bs.blueprint_year_id = y.id
 	LEFT JOIN blueprint_courses bc ON bc.blueprint_semester_id = bs.id
+	WHERE y.user_id = $1
 )
 SELECT
 	dp.bloc_subject_code,
@@ -27,16 +27,16 @@ SELECT
 	c.semester_count,
 	c.exam_type,
 	ubc.course_code IS NOT NULL in_blueprint
-FROM user_session s
-LEFT JOIN bla_studies bs ON s.user_id = bs.user_id
+FROM bla_studies bs
 LEFT JOIN degree_plans dp ON bs.degree_plan_code = dp.plan_code AND bs.start_year = dp.plan_year
 LEFT JOIN courses c ON dp.course_code = c.code
 LEFT JOIN user_blueprint_courses ubc ON ubc.course_code = c.code
-WHERE dp.lang = $2
+WHERE bs.user_id = $1
+AND dp.lang = $2
 AND c.lang = $2
 AND interchangeability IS NULL
 -- TODO: pick a user selected study or max
-AND bs.start_year = ( SELECT MIN(bs.start_year) FROM user_session s LEFT JOIN bla_studies bs ON s.user_id = bs.user_id )
+AND bs.start_year = ( SELECT MIN(bs.start_year) FROM bla_studies bs WHERE bs.user_id = $1 )
 ORDER BY dp.bloc_type, dp.seq
 ;
 `

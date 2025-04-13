@@ -10,7 +10,7 @@ import (
 )
 
 type Request struct {
-	sessionID   string
+	userID      string
 	query       string
 	indexUID    string
 	page        int

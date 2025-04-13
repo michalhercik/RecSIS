@@ -14,12 +14,6 @@ const (
 	EN      Language = "en"
 )
 
-func (l Language) Handle(handler LanguageFuncHandler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handler(w, r, l)
-	}
-}
-
 func FromString(lang string) (Language, bool) {
 	switch lang {
 	case string(CS):
@@ -38,8 +32,6 @@ func FromContext(ctx context.Context) Language {
 	}
 	return Default
 }
-
-type LanguageFuncHandler func(http.ResponseWriter, *http.Request, Language)
 
 func SetAndStripLanguage(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -70,15 +62,6 @@ func requestWithLanguage(r *http.Request, lang Language) *http.Request {
 	ctx := context.WithValue(r.Context(), key{}, lang)
 	r = r.WithContext(ctx)
 	return r
-}
-
-type LanguageRouter struct {
-	Router *http.ServeMux
-}
-
-func (lr LanguageRouter) HandleLangFunc(path string, method string, handler LanguageFuncHandler) {
-	lr.Router.HandleFunc(method+" /"+string(CS)+path, CS.Handle(handler))
-	lr.Router.HandleFunc(method+" /"+string(EN)+path, EN.Handle(handler))
 }
 
 type key struct{}

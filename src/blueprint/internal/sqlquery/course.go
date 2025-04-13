@@ -12,15 +12,12 @@ Param order:
 */
 
 const InsertCourse = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-),
-target_position AS (
-	SELECT bs.id AS blueprint_semester_id, COALESCE(bc.position, 0) + 1 AS position FROM user_session s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+WITH target_position AS (
+	SELECT bs.id AS blueprint_semester_id, COALESCE(bc.position, 0) + 1 AS position FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
 	LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
-	WHERE y.academic_year=$2
+	WHERE y.user_id=$1
+	AND y.academic_year=$2
 	AND bs.semester=$3
 	ORDER BY bc.position DESC
 	LIMIT 1
@@ -40,13 +37,10 @@ RETURNING id
 `
 
 const MoveCourses = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-),
-user_semesters AS (
-	SELECT bs.id, bs.semester, y.academic_year FROM sessions s
-	LEFT JOIN blueprint_years y ON s.user_id = y.user_id
+WITH user_semesters AS (
+	SELECT bs.id, bs.semester, y.academic_year FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON bs.blueprint_year_id=y.id
+	WHERE y.user_id=$1
 ),
 origin_courses AS (
 	SELECT bc.id FROM user_semesters us
@@ -77,22 +71,19 @@ WHERE bc.id IN ( SELECT id FROM origin_courses );
 `
 
 const AppendCourses = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-),
-origin AS (
-	SELECT bc.id FROM user_session s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+WITH origin AS (
+	SELECT bc.id FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
 	LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
-	WHERE bc.id = any($4)
+	WHERE y.user_id=$1
+	AND bc.id = any($4)
 ),
 target_semester_position AS (
-	SELECT bs.id AS blueprint_semester_id, COALESCE(bc.position, 0) AS max_position FROM user_session s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+	SELECT bs.id AS blueprint_semester_id, COALESCE(bc.position, 0) AS max_position FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
 	LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
-	WHERE y.academic_year=$2
+	WHERE y.user_id = $1
+	AND y.academic_year=$2
 	AND bs.semester=$3
 	ORDER BY bc.position DESC
 	LIMIT 1
@@ -105,21 +96,18 @@ WHERE bc.id IN ( SELECT id FROM origin );
 `
 
 const UnassignYear = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-),
-origin AS (
-	SELECT bs.id, bs.semester FROM sessions s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+WITH origin AS (
+	SELECT bs.id, bs.semester FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
-	WHERE y.academic_year=$2
+	WHERE y.user_id = $1
+	AND y.academic_year=$2
 ),
 unassigned AS (
-	SELECT bs.id, COALESCE(position, 0) AS max_position FROM sessions s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+	SELECT bs.id, COALESCE(position, 0) AS max_position FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
 	LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
-	WHERE y.academic_year=0
+	WHERE y.user_id = $1
+	AND y.academic_year = 0
 	AND bs.semester = 0
 	ORDER BY bc.position DESC
 	LIMIT 1
@@ -133,22 +121,19 @@ WHERE o.id = bc.blueprint_semester_id
 `
 
 const UnassignSemester = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-),
-origin_semester_id AS (
-	SELECT bs.id FROM user_session s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+WITH origin_semester_id AS (
+	SELECT bs.id FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
-	WHERE y.academic_year=$2
+	WHERE y.user_id=$1
+	AND y.academic_year=$2
 	AND bs.semester=$3
 ),
 unassigned AS (
-	SELECT bs.id, COALESCE(bc.position, 0) AS max_position FROM user_session s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+	SELECT bs.id, COALESCE(bc.position, 0) AS max_position FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
 	LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
-	WHERE y.academic_year=0
+	WHERE y.user_id = $1
+	AND y.academic_year=0
 	AND bs.semester = 0
 	ORDER BY bc.position DESC
 	LIMIT 1
@@ -162,15 +147,12 @@ WHERE bc.blueprint_semester_id = os.id
 `
 
 const DeleteCoursesByID = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-),
-target_semesters_id AS (
-	SELECT bc.id FROM user_session s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+WITH target_semesters_id AS (
+	SELECT bc.id FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
 	LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
-	WHERE bc.id = any($2)
+	WHERE y.user_id = $1
+	AND bc.id = any($2)
 )
 DELETE FROM blueprint_courses
 WHERE id IN ( SELECT id FROM target_semesters_id )
@@ -178,14 +160,11 @@ WHERE id IN ( SELECT id FROM target_semesters_id )
 `
 
 const DeleteCoursesBySemester = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-),
-target_semester_id AS (
-	SELECT bs.id FROM user_session s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+WITH target_semester_id AS (
+	SELECT bs.id FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
-	WHERE y.academic_year=$2
+	WHERE y.user_id = $1
+	AND y.academic_year=$2
 	AND bs.semester=$3
 )
 DELETE FROM blueprint_courses bc
@@ -194,14 +173,11 @@ WHERE bc.blueprint_semester_id = ts.id
 ;
 `
 const DeleteCoursesByYear = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-),
-target_semesters_id AS (
-	SELECT bs.id FROM user_session s
-	LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+WITH target_semesters_id AS (
+	SELECT bs.id FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
-	WHERE y.academic_year=$2
+	WHERE y.user_id = $1
+	AND y.academic_year=$2
 )
 DELETE FROM blueprint_courses
 WHERE blueprint_semester_id IN
@@ -210,9 +186,6 @@ WHERE blueprint_semester_id IN
 `
 
 const SelectCourses = `--sql
-WITH user_session AS (
-	SELECT DISTINCT user_id FROM sessions WHERE id=$1
-)
 SELECT
 	y.academic_year,
 	bc.id,
@@ -229,12 +202,12 @@ SELECT
 	COALESCE(c.exam_type, '') exam_type,
 	COALESCE(c.credits, -1) credits,
 	c.guarantors
-FROM user_session s
-LEFT JOIN blueprint_years y ON s.user_id=y.user_id
+FROM blueprint_years y
 LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
 LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
 LEFT JOIN courses c ON bc.course_code=c.code AND bc.course_valid_from = c.valid_from
-WHERE c.lang = $2
+WHERE y.user_id = $1
+AND c.lang = $2
 OR c.lang IS NULL
 ORDER BY y.academic_year, bs.semester, bc.position
 ;

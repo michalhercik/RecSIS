@@ -3,6 +3,7 @@ package courses
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/michalhercik/RecSIS/courses/internal/filter"
@@ -13,6 +14,10 @@ import (
 type DataManager interface {
 	Courses(sessionID string, courseCodes []string, lang language.Language) ([]Course, error)
 	ParamLabels(lang language.Language) (map[string][]filter.ParamValue, error)
+}
+
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
 }
 
 type SemesterAssignment int

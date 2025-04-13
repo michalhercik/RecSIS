@@ -2,12 +2,17 @@ package degreeplan
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/michalhercik/RecSIS/language"
 )
 
 type DataManager interface {
 	DegreePlan(uid string, lang language.Language) (*DegreePlan, error)
+}
+
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
 }
 
 type DBLang string

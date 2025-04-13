@@ -20,6 +20,7 @@ TODO:
 type Server struct {
 	router *http.ServeMux
 	Data   DataManager
+	Auth   Authentication
 }
 
 func (s *Server) Init() {
@@ -103,13 +104,12 @@ func atoiSlice(s []string) ([]int, error) {
 
 func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request, t text) {
 	var result templ.Component
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	data, err := s.Data.Blueprint(sessionCookie.Value, DBLang(t.Language))
+	data, err := s.Data.Blueprint(userID, DBLang(t.Language))
 	if err != nil {
 		log.Println(err)
 		result = InternalServerErrorContent(t)
@@ -119,25 +119,16 @@ func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request, t text) 
 	result.Render(r.Context(), w)
 }
 
-// func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
-// 	s.page(w, r, texts["cs"])
-// }
-
-// func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
-// 	s.page(w, r, texts["en"])
-// }
-
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	var result templ.Component
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	data, err := s.Data.Blueprint(sessionCookie.Value, DBLang(t.Language))
+	data, err := s.Data.Blueprint(userID, DBLang(t.Language))
 	if err != nil {
 		log.Println(err)
 		result = InternalServerErrorPage(t)
@@ -190,19 +181,18 @@ func (s Server) moveCourses(r *http.Request, userSession string) error {
 
 func (s Server) coursesMovement(w http.ResponseWriter, r *http.Request) {
 	var err error
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	switch r.FormValue("type") {
 	case yearUnassign:
-		err = s.unassignYear(r, sessionCookie.Value)
+		err = s.unassignYear(r, userID)
 	case semesterUnassign:
-		err = s.unassignSemester(r, sessionCookie.Value)
+		err = s.unassignSemester(r, userID)
 	case selectedMove:
-		err = s.moveCourses(r, sessionCookie.Value)
+		err = s.moveCourses(r, userID)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
@@ -221,10 +211,9 @@ func (s Server) coursesMovement(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	course, err := strconv.Atoi(r.PathValue("id"))
@@ -238,9 +227,9 @@ func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if position == -1 {
-		err = s.Data.AppendCourses(sessionCookie.Value, year, semester, course)
+		err = s.Data.AppendCourses(userID, year, semester, course)
 	} else if position >= 0 {
-		err = s.Data.InsertCourses(sessionCookie.Value, year, semester, position, course)
+		err = s.Data.InsertCourses(userID, year, semester, position, course)
 	} else {
 		http.Error(w, "Invalid position", http.StatusBadRequest)
 		return
@@ -293,19 +282,19 @@ func (s Server) removeCourses(r *http.Request, session string) error {
 }
 
 func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	var err error
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	switch r.FormValue("type") {
 	case yearRemove:
-		err = s.removeCoursesByYear(r, sessionCookie.Value)
+		err = s.removeCoursesByYear(r, userID)
 	case semesterRemove:
-		err = s.removeCoursesBySemester(r, sessionCookie.Value)
+		err = s.removeCoursesBySemester(r, userID)
 	case selectedRemove:
-		err = s.removeCourses(r, sessionCookie.Value)
+		err = s.removeCourses(r, userID)
 	default:
 		http.Error(w, "Invalid type", http.StatusBadRequest)
 	}
@@ -324,10 +313,9 @@ func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	course, err := strconv.Atoi(r.PathValue("id"))
@@ -336,7 +324,7 @@ func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse course ID", http.StatusBadRequest)
 		return
 	}
-	err = s.Data.RemoveCourses(sessionCookie.Value, course)
+	err = s.Data.RemoveCourses(userID, course)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -359,9 +347,9 @@ func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 type courseAdditionPresenter func(insertedCourseInfo) templ.Component
 
 func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		log.Printf("courseAddition error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	course := r.PathValue("code")
@@ -401,7 +389,7 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 	// 	w.WriteHeader(http.StatusInternalServerError)
 	// 	return
 	// }
-	courseID, err := s.Data.NewCourse(sessionCookie.Value, course, year, semester)
+	courseID, err := s.Data.NewCourse(userID, course, year, semester)
 	if err != nil {
 		log.Println(err)
 		return
@@ -415,13 +403,11 @@ func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
 // ===============================================================================================================================
 
 func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
-		return
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	}
-	if err := s.Data.RemoveYear(sessionCookie.Value); err != nil {
+	if err := s.Data.RemoveYear(userID); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -440,13 +426,18 @@ func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
 // ===============================================================================================================================
 
 func (s Server) yearAddition(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	// sessionCookie, err := r.Cookie("recsis_session_key")
+	// if err != nil {
+	// 	http.Error(w, "unknown student", http.StatusBadRequest)
+	// 	log.Printf("HandlePage error: %v", err)
+	// 	return
+	// }
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	if err := s.Data.AddYear(sessionCookie.Value); err != nil {
+	if err := s.Data.AddYear(userID); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

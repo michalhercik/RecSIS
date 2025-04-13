@@ -14,6 +14,7 @@ type Server struct {
 	router         *http.ServeMux
 	Data           DataManager
 	CourseComments search.SearchEngine
+	Auth           Authentication
 }
 
 func (s *Server) Init() {
@@ -30,27 +31,16 @@ func (s Server) Router() http.Handler {
 	return s.router
 }
 
-// func (s Server) Register(router *http.ServeMux, prefix string) {
-// 	lr := language.LanguageRouter{Router: router}
-// 	lr.HandleLangFunc(fmt.Sprintf("%s/{code}", prefix), http.MethodGet, s.page)
-// 	lr.HandleLangFunc(fmt.Sprintf("%s/rating/{code}/{category}", prefix), http.MethodPut, s.rateCategory)
-// 	lr.HandleLangFunc(fmt.Sprintf("%s/rating/{code}/{category}", prefix), http.MethodDelete, s.deleteCategoryRating)
-// 	lr.HandleLangFunc(fmt.Sprintf("%s/rating/{code}", prefix), http.MethodPut, s.rate)
-// 	lr.HandleLangFunc(fmt.Sprintf("%s/rating/{code}", prefix), http.MethodDelete, s.deleteRating)
-// }
-
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
-	log.Println("Jsem tady!")
-	log.Println(r.URL.Path)
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		log.Printf("courseDetail error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	code := r.PathValue("code")
-	course, err := s.course(sessionCookie.Value, code, lang, r)
+	course, err := s.course(userID, code, lang, r)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", code, err)
 		PageNotFound(code, t).Render(r.Context(), w)
@@ -59,9 +49,9 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s Server) course(sessionID, code string, lang language.Language, r *http.Request) (*Course, error) {
+func (s Server) course(userID, code string, lang language.Language, r *http.Request) (*Course, error) {
 	var result *Course
-	result, err := s.Data.Course(sessionID, code, lang)
+	result, err := s.Data.Course(userID, code, lang)
 	if err != nil {
 		return nil, err
 	}
@@ -89,9 +79,9 @@ func (s Server) course(sessionID, code string, lang language.Language, r *http.R
 
 func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 	// get the course code from the request
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		log.Printf("rate error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	code := r.PathValue("code")
@@ -100,7 +90,7 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 		log.Printf("rate error: %v", err)
 		return
 	}
-	updatedRating, err := s.Data.Rate(sessionCookie.Value, code, rating)
+	updatedRating, err := s.Data.Rate(userID, code, rating)
 	if err != nil {
 		log.Printf("rate error: %v", err)
 	}
@@ -109,13 +99,13 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		log.Printf("deleteRating error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	code := r.PathValue("code")
-	updatedRating, err := s.Data.DeleteRating(sessionCookie.Value, code)
+	updatedRating, err := s.Data.DeleteRating(userID, code)
 	if err != nil {
 		log.Printf("deleteRating error: %v", err)
 	}
@@ -125,9 +115,9 @@ func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		log.Printf("rateCategory error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	code := r.PathValue("code")
@@ -138,7 +128,7 @@ func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//TODO handle language properly
-	updatedRating, err := s.Data.RateCategory(sessionCookie.Value, code, category, rating, lang)
+	updatedRating, err := s.Data.RateCategory(userID, code, category, rating, lang)
 	if err != nil {
 		log.Printf("rateCategory error: %v", err)
 	}
@@ -148,15 +138,15 @@ func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		log.Printf("deleteCategoryRating error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	code := r.PathValue("code")
 	category := r.PathValue("category")
 	//TODO handle language properly
-	updatedRating, err := s.Data.DeleteCategoryRating(sessionCookie.Value, code, category, lang)
+	updatedRating, err := s.Data.DeleteCategoryRating(userID, code, category, lang)
 	if err != nil {
 		log.Printf("deleteCategoryRating error: %v", err)
 	}

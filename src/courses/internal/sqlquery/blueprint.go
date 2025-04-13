@@ -8,17 +8,14 @@ ORDER BY fl.label
 `
 
 const Courses = `--sql
-WITH user_session AS (
-	SELECT user_id FROM sessions WHERE id=$1
-),
-user_blueprint_courses AS (
+WITH user_blueprint_courses AS (
 	SELECT
 		bc.course_code,
 		json_agg(json_build_object('year', y.academic_year, 'semester', bs.semester)) AS assignment
-	FROM user_session s
-	LEFT JOIN blueprint_years y ON y.user_id = s.user_id
+	FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON bs.blueprint_year_id = y.id
 	LEFT JOIN blueprint_courses bc ON bc.blueprint_semester_id = bs.id
+	WHERE y.user_id = $1
 	GROUP BY bc.course_code
 )
 SELECT
@@ -46,11 +43,11 @@ ORDER BY t.ord
 
 const Blueprint = `
 	SELECT DISTINCT c.code, bs.semester, y.academic_year
-	FROM sessions s
-	LEFT JOIN blueprint_years y ON y.user_id = s.user_id
+	FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON bs.blueprint_year_id = y.id
 	LEFT JOIN blueprint_courses bc ON bc.blueprint_semester_id = bs.id
 	LEFT JOIN courses c ON c.code = bc.course_code AND c.valid_from = bc.course_valid_from
-	WHERE s.id = $1
+	WHERE y.user_id = $1
+	AND s.id = $1
 	AND c.code = ANY($2)
 `

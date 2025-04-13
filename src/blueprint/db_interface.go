@@ -4,21 +4,26 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 )
 
 type DataManager interface {
-	Blueprint(sessionID string, lang DBLang) (*Blueprint, error)
-	NewCourse(sessionID string, course string, year int, semester SemesterAssignment) (int, error)
-	AppendCourses(sessionID string, year int, semester SemesterAssignment, courses ...int) error
-	InsertCourses(sessionID string, year int, semester SemesterAssignment, position int, courses ...int) error
-	UnassignYear(sessionID string, year int) error
-	UnassignSemester(sessionID string, year int, semester SemesterAssignment) error
-	RemoveCourses(sessionID string, courses ...int) error
-	RemoveCoursesBySemester(sessionID string, year int, semester SemesterAssignment) error
-	RemoveCoursesByYear(sessionID string, year int) error
-	AddYear(sessionID string) error
-	RemoveYear(sessionID string) error
+	Blueprint(userID string, lang DBLang) (*Blueprint, error)
+	NewCourse(userID string, course string, year int, semester SemesterAssignment) (int, error)
+	AppendCourses(userID string, year int, semester SemesterAssignment, courses ...int) error
+	InsertCourses(userID string, year int, semester SemesterAssignment, position int, courses ...int) error
+	UnassignYear(userID string, year int) error
+	UnassignSemester(userID string, year int, semester SemesterAssignment) error
+	RemoveCourses(userID string, courses ...int) error
+	RemoveCoursesBySemester(userID string, year int, semester SemesterAssignment) error
+	RemoveCoursesByYear(userID string, year int) error
+	AddYear(userID string) error
+	RemoveYear(userID string) error
+}
+
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
 }
 
 const (

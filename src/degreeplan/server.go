@@ -10,6 +10,7 @@ import (
 type Server struct {
 	router *http.ServeMux
 	Data   DataManager
+	Auth   Authentication
 }
 
 func (s *Server) Init() {
@@ -25,13 +26,12 @@ func (s Server) Router() http.Handler {
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	uid_cookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "unknown student", http.StatusBadRequest)
-		log.Printf("HandlePage error: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	dp, err := s.Data.DegreePlan(uid_cookie.Value, lang)
+	dp, err := s.Data.DegreePlan(userID, lang)
 	if err != nil {
 		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
 		log.Printf("HandlePage error: %v", err)
