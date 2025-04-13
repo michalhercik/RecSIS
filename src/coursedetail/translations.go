@@ -36,10 +36,14 @@ type text struct {
 	Teachers         string
 	ShowMore         string
 	ShowLess         string
+	NotRated         string
+	NoRatings        string
 	SISLink          string
+	Description      string
+	NoDescription    string
+	Survey           string
+	NoSurvey         string
 	Detail           string
-	Comments         string
-	NoComments       string
 	CourseWithCode   string
 	NotFound         string
 	// utils
@@ -85,10 +89,14 @@ var texts = map[language.Language]text{
 		Teachers:         "Vyučující",
 		ShowMore:         "Zobrazit více",
 		ShowLess:         "Zobrazit méně",
+		NotRated:         "Nehodnoceno",
+		NoRatings:        "Žádná hodnocení",
 		SISLink:          "Odkaz do SIS",
+		Description:      "Popis",
+		NoDescription:    "Pro tento předmět není k dispozici žádný popis.",
+		Survey:           "Anketa",
+		NoSurvey:         "Pro tento předmět nejsou žádné komentáře.",
 		Detail:           "Detailní informace",
-		Comments:         "Komentáře",
-		NoComments:       "Pro tento předmět nejsou žádné komentáře.",
 		CourseWithCode:   "Předmět s kódem ",
 		NotFound:         " nenalezen.",
 		// utils
@@ -113,8 +121,8 @@ var texts = map[language.Language]text{
 		StateOfCourse:    "State of the course",
 		LanguageOfCourse: "Language",
 		AdditionalInfo:   "Additional information",
-		Prerequisites:    "Pre-requisite",
-		Corequisites:     "Co-requisite",
+		Prerequisites:    "Pre-requisites",
+		Corequisites:     "Co-requisites",
 		Interchange:      "Interchangeability",
 		Incompatible:     "Incompatibility",
 		Classes:          "Class(es)",
@@ -123,10 +131,14 @@ var texts = map[language.Language]text{
 		Teachers:         "Teacher(s)",
 		ShowMore:         "Show more",
 		ShowLess:         "Show less",
+		NotRated:         "Not rated",
+		NoRatings:        "No ratings",
 		SISLink:          "Link to SIS",
+		Description:      "Description",
+		NoDescription:    "No description available for this course.",
+		Survey:           "Survey",
+		NoSurvey:         "No surveys for this course.",
 		Detail:           "Detailed information",
-		Comments:         "Comments",
-		NoComments:       "No comments for this course.",
 		CourseWithCode:   "Course with code ",
 		NotFound:         " not found.",
 		// utils

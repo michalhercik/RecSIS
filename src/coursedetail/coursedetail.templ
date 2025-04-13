@@ -9,11 +9,11 @@ import (
 )
 
 templ rateModal(categories []CourseCategoryRating, code string, t text) {
-    <div class="modal fade" id="rateModal" tabindex="-1">
+    <div class="modal fade" id="rate-modal" tabindex="-1" aria-labelledby="category-modal-title">
     <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
     <div class="modal-header">
-        <h5 class="modal-title">Categorical rating</h5>
+        <h5 class="modal-title" id="category-modal-title">Categorical rating</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
     </div>
     <div class="modal-body m-2">
@@ -21,22 +21,31 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
             <div class="d-flex align-items-center gap-2 pb-3">
                 <button
                     class="btn btn-outline-none bi bi-trash-fill p-0"
-                    hx-delete={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
-                    @click="value = 0">
+                    hx-delete={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
+                    hx-target="#category-rating"
+                    hx-swap="outerHTML">
                 </button>
                 <div class="flex-grow-1">
                     <label for={ c.Title + "-range" } class="form-label d-flex justify-content-between mb-0">
                         <span class="fw-semibold">{ c.Title }</span>
-                        <span class="fw-semibold">{ fmt.Sprintf("%d", c.UserRating.Int64) }</span>
+                        <span class="fw-semibold">
+                            if c.UserRating.Valid {
+                                { fmt.Sprintf("%d", c.UserRating.Int64) }
+                            } else {
+                                { t.NotRated }
+                            }
+                        </span>
                     </label>
                     <input
                         type="range"
                         name="rating"
-                        class="form-range"
+                        class={ "form-range", templ.KV("no-thumb", !c.UserRating.Valid) }
                         id={ c.Title + "-range" }
                         min="0" max="10" step="1"
                         value={ fmt.Sprintf("%d", c.UserRating.Int64) }
-                        hx-put={ "/course/rating/" + code + "/" + strconv.Itoa(c.Code) }
+                        hx-put={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
+                        hx-target="#category-rating"
+                        hx-swap="outerHTML"
                         hx-trigger="change">
                     <div class="tick-container m-auto">
                         for i := 0; i <= 10; i++ {
@@ -67,23 +76,23 @@ templ rateButton(rating NullInt64, icon, code string, rate int64) {
         hx-delete={ "/course/rating/" + code }
         } else {
         hx-put={ "/course/rating/" + code }
-        hx-vals={ `"rating": ` + strconv.Itoa(int(rate)) }
+        hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
         }
-        hx-target="#rating"
+        hx-target="#simple-rating"
         hx-swap="outerHTML">
         { children... }
     </button>
 }
 
 // TODO: this is just for VSCode template coloring, it can be inlined
-func ratingStr(avgRating NullFloat64, numberOfRatings int) string {
+func ratingStr(avgRating NullFloat64, numberOfRatings NullInt64) string {
     if avgRating.Valid {
-        return " " + strconv.Itoa(int(avgRating.Float64 * 100)) + "% (" + strconv.Itoa(numberOfRatings) + ")"
+        return " " + fmt.Sprintf("%.0f", avgRating.Float64 * 100) + "% (" + fmt.Sprintf("%d", numberOfRatings.Int64) + ")"
     }
     return ""
 }
 
-templ likeButton(rating NullInt64, avgRating NullFloat64, numberOfRatings int, code string) {
+templ likeButton(rating NullInt64, avgRating NullFloat64, numberOfRatings NullInt64, code string) {
     @rateButton(rating, "bi-hand-thumbs-up", code, positiveRating) {
         { ratingStr(avgRating, numberOfRatings) }
     }
@@ -93,26 +102,42 @@ templ dislikeButton(rating NullInt64, code string) {
     @rateButton(rating, "bi-hand-thumbs-down", code, negativeRating)
 }
 
-templ Ratings(userRating NullInt64, avgRating NullFloat64, categories []CourseCategoryRating, code string, t text) {
-    {{
-        // TODO: use data from DB
-        numOfRatings := 42
-    }}
-    <div id="rating">
+templ OverallRating(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, code string) {
+    <div id="simple-rating">
         <div class="btn-group" role="group">
-            @likeButton(userRating, avgRating, numOfRatings, code)
+            @likeButton(userRating, avgRating, ratingCount, code)
             @dislikeButton(userRating, code)
         </div>
-        <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#rateModal">
-            Additional Rating
-        </button>
+    </div>
+}
+
+templ CategoryRating(categories []CourseCategoryRating, code string, showModal bool, t text) {
+    <div id="category-rating" x-init={ fmt.Sprintf("if (%t) showModal()", showModal) }>
+        <script>
+        function showModal() {
+            const rateModalEl = document.getElementById('rate-modal');
+            const rateModal = bootstrap.Modal.getOrCreateInstance(rateModalEl);
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            rateModal.show();
+            console.log("Modal shown");
+        }
+        </script>
         // Modal with rating categories
         @rateModal(categories, code, t)
         for _, c := range categories {
             <div class="mb-2">
                 <div class="d-flex justify-content-between">
                     <span class="fw-semibold">{ c.Title }</span>
-                    <span class="fw-semibold">{ strconv.FormatFloat(c.AvgRating.Float64, 'f', 1, 64) + " (" + fmt.Sprintf("%d", c.RatingCount.Int64) + ")" }</span>
+                    <span class="fw-semibold">
+                        if c.AvgRating.Valid && c.RatingCount.Valid {
+                            { fmt.Sprintf("%.1f (%d)", c.AvgRating.Float64, c.RatingCount.Int64) }
+                        } else {
+                            { t.NoRatings }
+                        }
+                    </span>
                 </div>
                 <div class="progress" role="progressbar" style="height: 10px;">
                     // this div needs width style for bootstrap progress bar
@@ -120,7 +145,7 @@ templ Ratings(userRating NullInt64, avgRating NullFloat64, categories []CourseCa
                     // so this is one of the few known workarounds - DO NOT TOUCH
                     <div
                         class="progress-bar rounded-pill"
-                        { templ.Attributes{"style": "width: " + strconv.FormatFloat(c.AvgRating.Float64 * 10, 'f', 2, 64) + "%;"}... }>
+                        { templ.Attributes{"style": fmt.Sprintf("width: %.2f%%;", c.AvgRating.Float64 * 10)}... }>
                     </div>
                 </div>
             </div>
@@ -128,36 +153,43 @@ templ Ratings(userRating NullInt64, avgRating NullFloat64, categories []CourseCa
     </div>
 }
 
+templ ratings(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, categories []CourseCategoryRating, code string, t text) {
+    @OverallRating(userRating, avgRating, ratingCount, code)
+    // TODO: translate and rename
+    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#rate-modal">
+        Additional Rating
+    </button>
+    @CategoryRating(categories, code, hideModal, t)
+}
+
 templ blueprintAssignment(code string, t text) {
-    <div class="d-flex justify-content-center">
-        <div class="btn-group">
-            <button type="button" class="btn btn-lg btn-outline-blueprint"
-                hx-post={ "/blueprint/course/" + code }
-                hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
-            >
-                { t.Assign }
-            </button>
-            <button type="button" class="btn btn-lg btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-                data-bs-toggle="dropdown" aria-expanded="false">
-            </button>
-            <ul class="dropdown-menu">
-            // TODO: make dynamic, NOT 3 fixed years
-                for year := 1; year <= 3; year++ {
-                    <li class="mx-3"><button class="dropdown-item text-center"
-                        hx-post={ "/blueprint/course/" + code }
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` }
-                    >
-                    { t.YearStr(year) + " " + t.WinterAssign }
-                    </button></li>
-                    <li class="mx-3"><button class="dropdown-item text-center"
-                        hx-post={ "/blueprint/course/" + code }
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` }
-                    >
-                    { t.YearStr(year) + " " + t.SummerAssign }
-                    </button></li>
-                }
-            </ul>
-        </div>
+    <div class="btn-group">
+        <button type="button" class="btn btn-outline-blueprint"
+            hx-post={ "/blueprint/course/" + code }
+            hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
+        >
+            { t.Assign }
+        </button>
+        <button type="button" class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+            data-bs-toggle="dropdown" aria-expanded="false">
+        </button>
+        <ul class="dropdown-menu">
+        // TODO: make dynamic, NOT 3 fixed years
+            for year := 1; year <= 3; year++ {
+                <li class="mx-3"><button class="dropdown-item text-center"
+                    hx-post={ "/blueprint/course/" + code }
+                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` }
+                >
+                { t.YearStr(year) + " " + t.WinterAssign }
+                </button></li>
+                <li class="mx-3"><button class="dropdown-item text-center"
+                    hx-post={ "/blueprint/course/" + code }
+                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` }
+                >
+                { t.YearStr(year) + " " + t.SummerAssign }
+                </button></li>
+            }
+        </ul>
     </div>
 }
 
@@ -199,49 +231,6 @@ func courseSISLink(code string, t text) string {
     return "unsupported language"
 }
 
-templ accordionItem(desc NullDescription, id string) {
-    if desc.Valid {
-    <div class="accordion-item">
-        <h2 class="accordion-header">
-            <button class="accordion-button fs-4" type="button" data-bs-toggle="collapse" data-bs-target={ "#panel-" + id } aria-expanded="true" aria-controls={ "panel-" + id }>
-                { utils.CapitalizeFirstLetter(desc.Title) }
-            </button>
-        </h2>
-        <div id={ "panel-" + id } class="accordion-collapse collapse show">
-            <div
-                id={ "content-" + id }
-                class="accordion-body"
-                style="text-align: justify"
-                x-init={ "insertContent('" + id + "', `" + desc.SanitizeContent(id == "annotation") + "`)" }>
-            </div>
-        </div>
-        // inserting content as shadow DOM
-        <script>
-        function insertContent(id, content) {
-            const shadowRoot = document.getElementById("content-" + id).attachShadow({ mode: 'open' });
-            shadowRoot.innerHTML = `
-                <style>
-                    ul {
-                        margin: 0;
-                        padding-left: 30px;
-                    }
-                </style>
-                ${content}
-            `;
-        }
-        </script>
-    </div>
-    }
-}
-
-templ ribbon(ba Assignments, t text) {
-    //if len(ba) > 0 {
-        <div class="ribbon-detail">
-            <span>{ ba.String(t.Language) }</span>
-        </div>
-    //}
-}
-
 templ requisitesLinks(req []string, title string, t text) {
     if len(req) != 0 {
         <p class="mb-1"><strong>{ title }</strong></p>
@@ -257,57 +246,45 @@ templ requisitesLinks(req []string, title string, t text) {
     }
 }
 
-templ requisites(course *Course, t text) {
-    @requisitesLinks(course.Prereq, t.Prerequisites, t)
-    @requisitesLinks(course.Coreq, t.Corequisites, t)
-    @requisitesLinks(course.Interchange, t.Interchange, t)
-    @requisitesLinks(course.Incompa, t.Incompatible, t)
-}
-
-templ standartBadge(icon, text string) {
-    <span class="badge rounded-pill text-bg-light fs-6 my-1">
-        <i class={ "bi " + icon }></i> { text }
+templ badges(course *Course, t text) {
+    // TODO: make this dynamic (this just for show)
+    <span class="badge rounded-pill bg-blueprint fs-6 my-1">
+        <i class="bi bi-basket2"></i> in blueprint
+    </span>
+    <span class="badge rounded-pill bg-success fs-6 my-1">
+        <i class="bi bi-check-lg"></i> completed
+    </span>
+    <span class="badge rounded-pill bg-danger fs-6 my-1">
+        <i class="bi bi-stickies"></i> in degree plan
     </span>
 }
 
-templ badges(course *Course, t text) {
-    <div class="d-flex my-2">
-        <div class="flex-grow-1">
-            @standartBadge("bi-coin", t.ECredits + ": " + strconv.Itoa(course.Credits))
-            @standartBadge("bi-journal-bookmark-fill", course.Start.String(t.Language))
-            @standartBadge("bi-calendar-week", hoursString(course, t) + " " + course.ExamType)
-        </div>
-        // TODO: this is for show
-        <div class="flex-grow-1 text-end">
-            <span class="badge rounded-pill bg-blueprint fs-6 my-1">
-                <i class="bi bi-basket2"></i> in blueprint
-            </span>
-            <span class="badge rounded-pill bg-success fs-6 my-1">
-                <i class="bi bi-check-lg"></i> completed
-            </span>
-            <span class="badge rounded-pill bg-danger fs-6 my-1">
-                <i class="bi bi-stickies"></i> in degree plan
-            </span>
-        </div>
-        // ======================
-    </div>
-    <div>
-        @standartBadge("bi-mortarboard", course.Faculty)
-        // TODO: here insert katedru
-        @standartBadge("bi-diagram-3", "TODOkatedra")
-        @standartBadge("bi-chat-left-dots", course.Language)
-        @standartBadge("bi-check-circle", course.State)
-        @standartBadge("bi-person-lines-fill", course.Capacity)
-    </div>
-    <div>
-        // TODO: this maybe written as list
-        for _, c := range course.Classes {
-            @standartBadge("bi-people", c.Name)
+templ leftColumn(course *Course, t text) {
+    <p class="mb-1"><strong>{ fmt.Sprintf("%s: ", t.ECredits) }</strong>{ fmt.Sprintf("%d", course.Credits) }</p>
+    <p class="mb-1"><strong>{ fmt.Sprintf("%s: ", t.Semester) }</strong>{ course.Start.String(t.Language) }</p>
+    <p class="mb-1"><strong>{ fmt.Sprintf("%s: ", t.ScopeExam) }</strong>{ fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType) }</p>
+    <p class="mb-0"><strong>{ t.Faculty }</strong></p> // TODO: plus katedra
+    <p class="mb-1">{ course.Faculty }</p> // TODO: plus katedra
+    <p class="mb-0"><strong>{ t.LanguageOfCourse }</strong></p>
+    <p class="mb-1">{ course.Language }</p>
+    
+    if len(course.Guarantors) > 0 {
+        <p id="guarantors-part" class="mb-0"><strong>{ t.Guarantors }</strong></p>
+        <table id="guarantors-table" class="mb-2">
+        for _, g := range course.Guarantors {
+            @teacherStyledRow(g)
         }
-        for _, c := range course.Classifications {
-            @standartBadge("bi-folder", c.Name)
-        }
-    </div>
+        </table>
+    }
+    
+    // TODO: if not default (=taught) show NOT TAUGHT, else do not show anything
+    <p class="mb-0"><strong>{ t.StateOfCourse }</strong></p>
+    <p class="mb-1">{ course.State }</p>
+    // TODO: if unlimited capacity do not show anything, else show capacity
+    <p class="mb-0"><strong>{ t.Capacity }</strong></p>
+    <p class="mb-1">{ course.Capacity }</p>
+
+    @requisitesLinks(course.Prereq, t.Prerequisites, t)
 }
 
 templ teacherStyledRow(t Teacher) {
@@ -327,25 +304,12 @@ templ teacherStyledRow(t Teacher) {
     </tr>
 }
 
-templ guarantorsTable(guarantors TeacherSlice, t text) {
-    if len(guarantors) > 0 {
-        <p id="guarantors-part" class="mb-1"><strong>{ t.Guarantors }</strong></p>
-        <table id="guarantors-table" class="mb-2">
-        for _, g := range guarantors {
-            @teacherStyledRow(g)
-        }
-        </table>
-    }
-}
-
 templ teachersTable(teachers TeacherSlice, t text) {
-    <div class="d-flex justify-content-center">
-        <table id="teachers-table">
-        for _, teacher := range teachers {
-            @teacherStyledRow(teacher)
-        }
-        </table>
-    </div>
+    <table id="teachers-table">
+    for _, teacher := range teachers {
+        @teacherStyledRow(teacher)
+    }
+    </table>
 }
 
 templ teacherStyled(t teacher.Teacher) {
@@ -364,106 +328,192 @@ templ teacherStyled(t teacher.Teacher) {
     }
 }
 
-templ accordion(course *Course, t text) {
-    <div class="accordion accordion-flush">
-        @accordionItem(course.Annotation, "annotation")
-        @accordionItem(course.Syllabus, "syllabus")
-        @accordionItem(course.PassingTerms, "passing-terms")
-        @accordionItem(course.Literature, "literature")
-        @accordionItem(course.AssesmentRequirements, "assesment-requirements")
-        @accordionItem(course.EntryRequirements, "entry-requirements")
-        @accordionItem(course.Aim, "aim")
+templ descriptionItem(desc NullDescription, id string) {
+    if desc.Valid {
+    <div>
+        <div class="card mb-3">
+            <div class="card-header">
+                <h2 class="my-0">
+                    { utils.CapitalizeFirstLetter(desc.Title) }
+                </h2>
+            </div>
+            <div class="card-body py-1" style="text-align: justify">
+                <div
+                    id={ "content-" + id }
+                    x-init={ "insertContent('" + id + "', `" + desc.SanitizeContent(id == "annotation") + "`)" }>
+                </div>
+            </div>
+        </div>
+        // inserting content as shadow DOM
+        <script>
+        function insertContent(id, content) {
+            const shadowRoot = document.getElementById("content-" + id).attachShadow({ mode: 'open' });
+            shadowRoot.innerHTML = `
+                <style>
+                    ul {
+                        margin: 0;
+                        padding-left: 30px;
+                    }
+                    p:first-of-type {
+                        margin-top: 0.5rem;
+                    }
+                </style>
+                ${content}
+            `;
+        }
+        </script>
     </div>
+    }
 }
 
-templ comments(comments []course.Comment, t text) {
-    if len(comments) == 0 {
+templ description(course *Course, t text) {
+    if !course.Annotation.Valid && !course.Syllabus.Valid && !course.PassingTerms.Valid && !course.Literature.Valid && !course.AssesmentRequirements.Valid && !course.EntryRequirements.Valid && !course.Aim.Valid {
         <div class="alert alert-primary" role="alert">
-            { t.NoComments }
+            { t.NoDescription }
         </div>
     } else {
-        for _, comment := range comments {
-            <div class="card mb-3">
+        <div>
+            @descriptionItem(course.Annotation, "annotation")
+            @descriptionItem(course.Syllabus, "syllabus")
+            @descriptionItem(course.PassingTerms, "passing-terms")
+            @descriptionItem(course.Literature, "literature")
+            @descriptionItem(course.AssesmentRequirements, "assesment-requirements")
+            @descriptionItem(course.EntryRequirements, "entry-requirements")
+            @descriptionItem(course.Aim, "aim")
+        </div>
+    }
+}
+
+templ survey(surveys []course.Comment, t text) {
+    if len(surveys) == 0 {
+        <div class="alert alert-primary" role="alert">
+            { t.NoSurvey }
+        </div>
+    } else {
+        for _, s := range surveys {
+            <div class="card mb-1">
                 <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center mb-0">
+                        <div style="width: 115px;">{ s.AcademicYearString() + " " + s.Type + " " }</div>
+                        <div class="ms-2">
+                            @teacherStyled(s.TargetTeacher)
+                        </div>
+                    </div>
                     <p class="mb-0">
-                        @teacherStyled(comment.TargetTeacher)
-                        { " " + comment.Type + " " + comment.AcademicYearString() }
-                    </p>
-                    <p class="mb-0">
-                        { t.YearStr(comment.StudyYear) + ", " + comment.StudyField + ", " + comment.StudyField }
+                        { fmt.Sprintf("%s, %s, %s", t.YearStr(s.StudyYear), s.Study.Name, s.StudyField) }
                     </p>
                 </div>
                 <div class="card-body" style="text-align: justify">
-                    { comment.Content }
+                    { s.Content }
                 </div>
             </div>
         }
     }
 }
 
+templ detailInfo(course *Course, t text) {
+    <div class="d-flex">
+        // left column classes, classification and requisites
+        <div class="flex-grow-1" style="flex: 1;">
+            if len(course.Classes) > 0 {
+                <p class="mb-0"><strong>{ t.Classes }</strong></p>
+                for _, c := range course.Classes {
+                    <p class="mb-0">{ c.Name }</p>
+                }
+            }
+            if len(course.Classifications) > 0 {
+                <p class="mb-0 mt-1"><strong>{ t.Classification }</strong></p>
+                for _, c := range course.Classifications {
+                    <p class="mb-0">{ c.Name }</p>
+                }
+            }
+            @requisitesLinks(course.Coreq, t.Corequisites, t)
+            @requisitesLinks(course.Interchange, t.Interchange, t)
+            @requisitesLinks(course.Incompa, t.Incompatible, t)
+        </div>
+        // right column teachers
+        <div class="flex-grow-1" style="flex: 1;">
+            if len(course.Teachers) > 0 {
+                <p class="mb-0 mt-1"><strong>{ t.Teachers }</strong></p>
+                @teachersTable(course.Teachers, t)
+            }
+        </div>
+    </div> 
+}
+
+templ buttons(course *Course, t text) {
+    // link to additional information
+    if course.Link != "" {
+        <a class="btn btn-outline-secondary" href={ templ.SafeURL(course.Link) } role="button">
+            { t.AdditionalInfo }
+        </a>
+    }
+    // SIS link
+    <a class="btn btn-outline-secondary" href={ templ.SafeURL(courseSISLink(course.Code, t)) } role="button">
+        { t.SISLink }
+    </a>
+    // TODO: zapsat button
+    <a class="btn btn-outline-secondary" href="#" role="button">
+        zapsat
+    </a>
+    // TODO: more buttons
+    <a class="btn btn-outline-secondary" href="#" role="button">
+        dalsi button
+    </a>
+    // button to assign course to blueprint
+    @blueprintAssignment(course.Code, t)
+}
+
 templ details(course *Course, t text) {
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#detail-tab-pane" type="button" role="tab" aria-controls="detail-tab-pane" aria-selected="true">{ t.Detail }</button>
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#desc-tab-pane" type="button" role="tab" aria-controls="desc-tab-pane" aria-selected="true">{ t.Description }</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#comments-tab-pane" type="button" role="tab" aria-controls="comments-tab-pane" aria-selected="false">{ t.Comments }</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#survey-tab-pane" type="button" role="tab" aria-controls="survey-tab-pane" aria-selected="false">{ t.Survey }</button>
         </li>
-        if len(course.Teachers) > 0 {
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#teachers-tab-pane" type="button" role="tab" aria-controls="teachers-tab-pane" aria-selected="false">{ t.Teachers }</button>
-            </li>
-        }
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#detail-tab-pane" type="button" role="tab" aria-controls="detail-tab-pane" aria-selected="false">{ t.Detail }</button>
+        </li>
     </ul>
     <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active pt-2" id="detail-tab-pane" role="tabpanel" tabindex="0">
-            @accordion(course, t)
+        <div class="tab-pane fade show active pt-2" id="desc-tab-pane" role="tabpanel" tabindex="0">
+            @description(course, t)
         </div>
-        <div class="tab-pane fade pt-2" id="comments-tab-pane" role="tabpanel" tabindex="0">
-            @comments(course.Comments.Comments(), t)
+        <div class="tab-pane fade pt-2" id="survey-tab-pane" role="tabpanel" tabindex="0">
+            @survey(course.Comments.Comments(), t)
         </div>
-        if len(course.Teachers) > 0 {
-            <div class="tab-pane fade pt-2" id="teachers-tab-pane" role="tabpanel" tabindex="0">
-                @teachersTable(course.Teachers, t)
-            </div>
-        }
+        <div class="tab-pane fade pt-2" id="detail-tab-pane" role="tabpanel" tabindex="0">
+            @detailInfo(course, t)
+        </div>
     </div>
 }
 
 templ Content(course *Course, t text) {
     // code and title
-    <h1 class="text-center my-4">{ course.Code + " - " + course.Name }</h1>
+    <h1 class="text-center pt-2">{ course.Code + " - " + course.Name }</h1>
     // badges with information
-    <div class="my-3">
+    <div class="text-center pb-2">
         @badges(course, t)
     </div>
     // two columns
     <div class="my-3">
         <div class="d-flex">
-            // left column guarantors and requisites
+            // left column most important information
             <div class="flex-grow-1" style="flex: 1;">
-                @guarantorsTable(course.Guarantors, t)
-                @requisites(course, t)
+                @leftColumn(course, t)
             </div>
             // right column ratings
             <div class="flex-grow-1" style="flex: 1;">
-                @Ratings(course.UserRating, course.AvgRating, course.CategoryRatings, course.Code, t)
+                @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
             </div>
         </div>
-        // link to additional information
-        if course.Link != "" {
-            <div>
-                <p><strong>{ t.AdditionalInfo + ": " }</strong><a href={ templ.SafeURL(course.Link) }>{ course.Link }</a></p>
-            </div>
-        }
-        // SIS link
-        <div class="mt-3 text-center">
-            <p><strong>{ t.SISLink + ": " }</strong><a href={ templ.SafeURL(courseSISLink(course.Code, t)) }>{ courseSISLink(course.Code, t) }</a></p>
-        </div>
-        // button to assign course to blueprint
-        @blueprintAssignment(course.Code, t)
     </div>
-    // switch between detailed information, comments and teachers
+    // buttons
+    <div class="d-flex justify-content-center gap-1">
+        @buttons(course, t)
+    </div>
+    // switch between description, survey and detailed information
     @details(course, t)
 }
 

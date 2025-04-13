@@ -94,8 +94,8 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("rate error: %v", err)
 	}
-	// TODO: render overall rating
-	_ = updatedRating
+	// render the overall rating
+	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code).Render(r.Context(), w)
 }
 
 func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
@@ -109,8 +109,8 @@ func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("deleteRating error: %v", err)
 	}
-	// TODO: render overall rating
-	_ = updatedRating
+	// render the overall rating
+	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code).Render(r.Context(), w)
 }
 
 func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
@@ -132,8 +132,8 @@ func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("rateCategory error: %v", err)
 	}
-	// TOOD: render category rating
-	_ = updatedRating
+	// render category rating
+	CategoryRating(updatedRating, code, showModal, texts[lang]).Render(r.Context(), w)
 }
 
 func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
@@ -150,6 +150,6 @@ func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("deleteCategoryRating error: %v", err)
 	}
-	// TOOD: render category rating
-	_ = updatedRating
+	// render category rating
+	CategoryRating(updatedRating, code, showModal, texts[lang]).Render(r.Context(), w)
 }

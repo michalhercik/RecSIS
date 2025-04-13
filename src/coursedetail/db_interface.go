@@ -27,14 +27,17 @@ type Authentication interface {
 const (
 	positiveRating = 1
 	negativeRating = 0
+
+	hideModal = false
+	showModal = true
 )
 
 type DBLang string
 
-const (
-	cs DBLang = "cs"
-	en DBLang = "en"
-)
+// const (
+// 	cs DBLang = "cs"
+// 	en DBLang = "en"
+// )
 
 type Faculty struct {
 	SisID int
@@ -139,8 +142,8 @@ func (ts *TeachingSemester) String(lang string) string {
 }
 
 type Assignment struct {
-	year     int
-	semester Semester
+	// year     int
+	// semester Semester
 }
 
 func (a Assignment) String(lang string) string {

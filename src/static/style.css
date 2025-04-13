@@ -206,31 +206,6 @@ body {
     z-index: 50;
 }
 
-/* Course detail card blueprint assignment ribbon styles */
-.ribbon-detail {
-    width: 150px;
-    height: 150px;
-    overflow: hidden;
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-
-.ribbon-detail span {
-    position: absolute;
-    display: block;
-    width: 200px;
-    padding: 15px 0;
-    background: rgb(4, 108, 181);
-    color: white;
-    text-align: center;
-    font-size: 16px;
-    font-weight: bold;
-    transform: rotate(45deg);
-    top: 25px;
-    right: -50px;
-}
-
 /* Course detail teachers table styles */
 #teachers-table {
     table-layout: auto;
@@ -254,6 +229,20 @@ body {
     text-align: center;
     font-size: 12px;
     transform: translateX(-50%);
+}
+
+/* Course detail not rated no thumb range styles */
+.no-thumb::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.no-thumb::-moz-range-thumb {
+    width: 0 !important;
+    height: 0 !important;
+    border: none !important;
 }
 
 /* Degree plan table columns width styles */
