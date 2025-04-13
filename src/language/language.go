@@ -36,12 +36,14 @@ func FromContext(ctx context.Context) Language {
 func SetAndStripLanguage(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		originalReq := r
+		originalPath := r.URL.Path
 		lang, ok := parseLanguage(r)
 		if ok {
 			r = requestWithLanguage(r, lang)
 		}
 		next.ServeHTTP(w, r)
 		r = originalReq
+		r.URL.Path = originalPath
 	})
 }
 

@@ -1,6 +1,8 @@
 package utils
 
-import "github.com/michalhercik/RecSIS/language"
+import (
+	"github.com/michalhercik/RecSIS/language"
+)
 
 type Text struct {
 	Language   language.Language
@@ -13,7 +15,8 @@ type Text struct {
 }
 
 func (t Text) LangLink(URL string) string {
-	return "/" + string(t.Language) + URL
+	link := "/" + string(t.Language) + URL
+	return link
 }
 
 var Texts = map[string]Text{

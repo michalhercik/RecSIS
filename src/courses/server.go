@@ -25,8 +25,8 @@ type Server struct {
 func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", s.page)
-	router.HandleFunc("GET /search/", s.content)
-	router.HandleFunc("GET /quicksearch/", s.quickSearch)
+	router.HandleFunc("GET /search", s.content)
+	router.HandleFunc("GET /quicksearch", s.quickSearch)
 	s.router = router
 }
 

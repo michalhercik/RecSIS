@@ -125,7 +125,7 @@ func main() {
 	}
 	var handler http.Handler
 	handler = router
-	handler = language.SetAndStripLanguage(router)
+	handler = language.SetAndStripLanguage(handler)
 	// handler = authentication.AuthenticateHTTP(handler)
 	_ = authentication
 	handler = auth.NoAuth(handler)
@@ -138,5 +138,8 @@ func main() {
 	log.Println("Server starting ...")
 	log.Println("http://localhost:8000/")
 
-	server.ListenAndServe()
+	err = server.ListenAndServe()
+	if err != nil {
+		log.Fatalf("Server failed: %v", err)
+	}
 }

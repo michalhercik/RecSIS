@@ -27,7 +27,7 @@ func semesterHoursExamsString(course *Course, t text) string {
     both := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
     winter := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
     summer := strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2)
-    
+
     switch course.Start {
     case teachingWinterOnly:
         result += winter
