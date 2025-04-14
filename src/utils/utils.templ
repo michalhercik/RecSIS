@@ -38,6 +38,8 @@ templ Page(title string, t Text) {
             // alpine js
             <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script> // drag and drop
             <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+            // Google Fonts
+            <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;700&display=swap" rel="stylesheet">
         </head>
         <body hx-boost="true">
             // @watermark()
@@ -83,7 +85,10 @@ templ Header(title string, t Text) {
         <nav class="navbar navbar-expand-md navbar-light bg-light py-0"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
             <div class="container-fluid">
                 <div style="width: 100px;">
-                    <a class="navbar-brand fs-3" href={ templ.URL("") }>RecSIS</a>
+                    <a class="d-flex align-items-center navbar-brand fs-3" href={ templ.URL("/home") } style="font-family: 'Saira', sans-serif;">
+                        <img src="/logo.svg" alt="Logo" style="height: 30px;" class="me-1 mb-1">
+                        RecSIS
+                    </a>
                 </div>
                 <button class="navbar-toggler fs-6" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>

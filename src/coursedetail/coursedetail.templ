@@ -122,7 +122,6 @@ templ CategoryRating(categories []CourseCategoryRating, code string, showModal b
                 backdrop.remove();
             }
             rateModal.show();
-            console.log("Modal shown");
         }
         </script>
         // Modal with rating categories
@@ -233,8 +232,8 @@ func courseSISLink(code string, t text) string {
 
 templ requisitesLinks(req []string, title string, t text) {
     if len(req) != 0 {
-        <p class="mb-1"><strong>{ title }</strong></p>
-        <p class="mb-2">
+        <p class="mb-0 mt-1"><strong>{ title }</strong></p>
+        <p class="mb-0">
             for i, c := range req {
                 if i != len(req) - 1 {
                     @utils.CourseLink(c, t.Utils)<span>, </span>
@@ -260,29 +259,29 @@ templ badges(course *Course, t text) {
 }
 
 templ leftColumn(course *Course, t text) {
-    <p class="mb-1"><strong>{ fmt.Sprintf("%s: ", t.ECredits) }</strong>{ fmt.Sprintf("%d", course.Credits) }</p>
-    <p class="mb-1"><strong>{ fmt.Sprintf("%s: ", t.Semester) }</strong>{ course.Start.String(t.Language) }</p>
-    <p class="mb-1"><strong>{ fmt.Sprintf("%s: ", t.ScopeExam) }</strong>{ fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType) }</p>
-    <p class="mb-0"><strong>{ t.Faculty }</strong></p> // TODO: plus katedra
-    <p class="mb-1">{ course.Faculty }</p> // TODO: plus katedra
-    <p class="mb-0"><strong>{ t.LanguageOfCourse }</strong></p>
-    <p class="mb-1">{ course.Language }</p>
+    <p class="mb-0"><strong>{ fmt.Sprintf("%s: ", t.ECredits) }</strong>{ fmt.Sprintf("%d", course.Credits) }</p>
+    <p class="mb-0 mt-1"><strong>{ fmt.Sprintf("%s: ", t.Semester) }</strong>{ course.Start.String(t.Language) }</p>
+    <p class="mb-0 mt-1"><strong>{ fmt.Sprintf("%s: ", t.ScopeExam) }</strong>{ fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType) }</p>
+    <p class="mb-0 mt-1"><strong>{ t.Faculty }</strong></p> // TODO: plus katedra
+    <p class="mb-0">{ course.Faculty }</p> // TODO: plus katedra
+    <p class="mb-0 mt-1"><strong>{ t.LanguageOfCourse }</strong></p>
+    <p class="mb-0">{ course.Language }</p>
     
     if len(course.Guarantors) > 0 {
-        <p id="guarantors-part" class="mb-0"><strong>{ t.Guarantors }</strong></p>
-        <table id="guarantors-table" class="mb-2">
-        for _, g := range course.Guarantors {
-            @teacherStyledRow(g)
-        }
+        <p id="guarantors-part" class="mb-0 mt-1"><strong>{ t.Guarantors }</strong></p>
+        <table id="guarantors-table" class="mb-0">
+            for _, g := range course.Guarantors {
+                @teacherStyledRow(g)
+            }
         </table>
     }
     
     // TODO: if not default (=taught) show NOT TAUGHT, else do not show anything
-    <p class="mb-0"><strong>{ t.StateOfCourse }</strong></p>
-    <p class="mb-1">{ course.State }</p>
+    <p class="mb-0 mt-1"><strong>{ t.StateOfCourse }</strong></p>
+    <p class="mb-0">{ course.State }</p>
     // TODO: if unlimited capacity do not show anything, else show capacity
-    <p class="mb-0"><strong>{ t.Capacity }</strong></p>
-    <p class="mb-1">{ course.Capacity }</p>
+    <p class="mb-0 mt-1"><strong>{ t.Capacity }</strong></p>
+    <p class="mb-0">{ course.Capacity }</p>
 
     @requisitesLinks(course.Prereq, t.Prerequisites, t)
 }
@@ -302,14 +301,6 @@ templ teacherStyledRow(t Teacher) {
             }
         </td>
     </tr>
-}
-
-templ teachersTable(teachers TeacherSlice, t text) {
-    <table id="teachers-table">
-    for _, teacher := range teachers {
-        @teacherStyledRow(teacher)
-    }
-    </table>
 }
 
 templ teacherStyled(t teacher.Teacher) {
@@ -435,7 +426,11 @@ templ detailInfo(course *Course, t text) {
         <div class="flex-grow-1" style="flex: 1;">
             if len(course.Teachers) > 0 {
                 <p class="mb-0 mt-1"><strong>{ t.Teachers }</strong></p>
-                @teachersTable(course.Teachers, t)
+                <table id="teachers-table" class="mb-0">
+                    for _, teacher := range course.Teachers {
+                        @teacherStyledRow(teacher)
+                    }
+                </table>
             }
         </div>
     </div> 

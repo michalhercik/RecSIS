@@ -116,6 +116,7 @@ func main() {
 	handle(router, "/degreeplan/", degreePlan.Router())
 	router.Handle("GET /favicon.ico", static)
 	router.Handle("GET /style.css", static)
+	router.Handle("GET /logo.svg", static)
 
 	//////////////////////////////////////////
 	// Server setup
