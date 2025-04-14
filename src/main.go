@@ -114,9 +114,9 @@ func main() {
 	handle(router, "/course/", coursedetail.Router())
 	handle(router, "/courses/", courses.Router())
 	handle(router, "/degreeplan/", degreePlan.Router())
-	router.Handle("GET /favicon.ico", static)
-	router.Handle("GET /style.css", static)
+	router.Handle("GET /favicon-256x256.ico", static)
 	router.Handle("GET /logo.svg", static)
+	router.Handle("GET /style.css", static)
 
 	//////////////////////////////////////////
 	// Server setup
