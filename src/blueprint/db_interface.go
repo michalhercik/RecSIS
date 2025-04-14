@@ -217,6 +217,14 @@ type Blueprint struct {
 	years []AcademicYear
 }
 
+func (b *Blueprint) totalCredits() int {
+	total := 0
+	for _, year := range b.years {
+		total += year.credits()
+	}
+	return total
+}
+
 func (b *Blueprint) assign(position BlueprintRecordPosition, course *Course) error {
 	if position.AcademicYear < 0 {
 		return fmt.Errorf("year must be non-negative %d", position.AcademicYear)

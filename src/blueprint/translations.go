@@ -47,6 +47,7 @@ type text struct {
 	TTNumberOfCredits string
 	TTSemesterCredits string
 	TTYearCredits     string
+	TTRunningCredits  string
 	TTTotalCredits    string
 	// utils
 	Utils utils.Text
@@ -102,6 +103,7 @@ var texts = map[language.Language]text{
 		TTNumberOfCredits: "Počet kreditů",
 		TTSemesterCredits: "V tomto semestru",
 		TTYearCredits:     "V tomto ročníku",
+		TTRunningCredits:  "Průběžný součet",
 		TTTotalCredits:    "Celkem",
 		// utils
 		Utils: utils.Texts["cs"],
@@ -146,6 +148,7 @@ var texts = map[language.Language]text{
 		TTNumberOfCredits: "Number of credits",
 		TTSemesterCredits: "In this semester",
 		TTYearCredits:     "In this year",
+		TTRunningCredits:  "Running total",
 		TTTotalCredits:    "Total",
 		// utils
 		Utils: utils.Texts["en"],
