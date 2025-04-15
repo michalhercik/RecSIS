@@ -245,23 +245,35 @@ templ requisitesLinks(req []string, title string, t text) {
     }
 }
 
-templ badges(course *Course, t text) {
-    // TODO: make this dynamic (this just for show)
-    <span class="badge rounded-pill bg-blueprint fs-6 my-1">
-        <i class="bi bi-basket2"></i> in blueprint
-    </span>
-    <span class="badge rounded-pill bg-success fs-6 my-1">
-        <i class="bi bi-check-lg"></i> completed
-    </span>
-    <span class="badge rounded-pill bg-danger fs-6 my-1">
-        <i class="bi bi-stickies"></i> in degree plan
+templ standartBadge(text, bgColor string) {
+    <span class={ fmt.Sprintf("badge rounded-pill %s fs-6 me-1", bgColor) }>
+        { text }
     </span>
 }
 
+templ badges(course *Course, t text) {
+    <div class="d-flex justify-content-between">
+        <div class="text-start">
+            @standartBadge(fmt.Sprintf("%s: %d", t.ECredits, course.Credits), course.Start.Color())
+            @standartBadge(course.Start.String(t.Language), course.Start.Color())
+            @standartBadge(fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType), course.Start.Color())
+        </div>
+        <div class="text-end">
+            // TODO: make this dynamic (this just for show)
+            <span class="badge rounded-pill bg-blueprint fs-6">
+                <i class="bi bi-basket2"></i> in blueprint
+            </span>
+            <span class="badge rounded-pill text-bg-success fs-6">
+                <i class="bi bi-check-lg"></i> completed
+            </span>
+            <span class="badge rounded-pill text-bg-danger fs-6">
+                <i class="bi bi-stickies"></i> in degree plan
+            </span>
+        </div>
+    </div>
+}
+
 templ leftColumn(course *Course, t text) {
-    <p class="mb-0"><strong>{ fmt.Sprintf("%s: ", t.ECredits) }</strong>{ fmt.Sprintf("%d", course.Credits) }</p>
-    <p class="mb-0 mt-1"><strong>{ fmt.Sprintf("%s: ", t.Semester) }</strong>{ course.Start.String(t.Language) }</p>
-    <p class="mb-0 mt-1"><strong>{ fmt.Sprintf("%s: ", t.ScopeExam) }</strong>{ fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType) }</p>
     <p class="mb-0 mt-1"><strong>{ t.Faculty }</strong></p> // TODO: plus katedra
     <p class="mb-0">{ course.Faculty }</p> // TODO: plus katedra
     <p class="mb-0 mt-1"><strong>{ t.LanguageOfCourse }</strong></p>
@@ -451,9 +463,10 @@ templ buttons(course *Course, t text) {
     <a class="btn btn-outline-secondary" href="#" role="button">
         zapsat
     </a>
-    // TODO: more buttons
+    // TODO: rozvrh buttons
+    // for NDMI002 https://is.cuni.cz/studium/rozvrhng/roz_predmet_macro.php?fak=11320&skr=2024&sem=1&predmet=NDMI002
     <a class="btn btn-outline-secondary" href="#" role="button">
-        dalsi button
+        rozvrh
     </a>
     // button to assign course to blueprint
     @blueprintAssignment(course.Code, t)

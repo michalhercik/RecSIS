@@ -1,20 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="360" height="360">
-    <g transform="translate(0,-50)">
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+    <g transform="translate(45,-10)">
         <!-- Square left -->
-        <rect x="0" y="250" width="100" height="100" fill="rgb(138,199,90)" />
+        <rect x="0" y="200" width="100" height="100" fill="rgb(138,199,90)" />
 
-        <g transform="translate(2.7,0)">
-            <!-- Rhomboid -->
-            <polygon points="200,200 200,58.58 129.29,129.29 129.29,270.71" fill="rgb(138,199,90)" transform="translate(4,-5.66)"/>
-            <!-- Triangle big -->
-            <polygon points="100,300 200,400 200,200" fill="rgb(138,199,90)" transform="translate(4,0)"/>
-            <!-- Triangle small left -->
-            <polygon points="100,300 100,400 200,400" fill="rgb(138,199,90)" transform="translate(1.3,2.7)"/>
+        <!-- Triangle small left -->
+        <polygon points="200,100 129.29,29.29 129.9,170.71" fill="rgb(138,199,90)" transform="translate(4,-11.22)"/>
+        <!-- Triangle big -->
+        <polygon points="100,200 200,300 200,100" fill="rgb(138,199,90)" transform="translate(4,-5.66)"/>
+        <!-- Rhomboid -->
+        <polygon points="100,200 100,300 200,400 200,300" fill="rgb(138,199,90)" transform="translate(4,0)"/>
 
-            <!-- Square right -->
-            <rect x="200" y="200" width="100" height="100" fill="rgb(138,199,90)" transform="translate(8,-2)"/>
-            <!-- Triangle small right -->
-            <polygon points="200,300 200,400 300,300" fill="rgb(138,199,90)" transform="translate(8,2)"/>
-        </g>
+        <!-- Square right -->
+        <rect x="200" y="200" width="100" height="100" fill="rgb(138,199,90)" transform="translate(8,-4)"/>
+        <!-- Triangle small right -->
+        <polygon points="200,300 200,400 300,300" fill="rgb(138,199,90)" transform="translate(8,0)"/>
     </g>
 </svg>

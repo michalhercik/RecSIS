@@ -4,6 +4,7 @@ import (
     "github.com/michalhercik/RecSIS/utils"
     "strconv"
     "strings"
+    "fmt"
 )
 
 const lastPosition = -1
@@ -14,11 +15,11 @@ templ DefaultCourseAdditionPresenter(info insertedCourseInfo) {
 }
 
 // hx-vals generator methods
-func vType(typeStr string) string     { return `"type": "` + typeStr + `"` }
-func vYear(year int) string           { return `"year": ` + strconv.Itoa(year) }
-func vSem(semester int) string        { return `"semester": ` + strconv.Itoa(semester) }
-func vPos() string                    { return `"position": ` + strconv.Itoa(lastPosition) }
-func vLang(t text) string             { return `"lang": "` + t.Language + `"` }
+func vType(typeStr string) string     { return fmt.Sprintf(`"type": "%s"`, typeStr) }
+func vYear(year int) string           { return fmt.Sprintf(`"year": %d`, year) }
+func vSem(semester int) string        { return fmt.Sprintf(`"semester": %d`, semester) }
+func vPos() string                    { return fmt.Sprintf(`"position": %d`, lastPosition) }
+func vLang(t text) string             { return fmt.Sprintf(`"lang": "%s"`, t.Language) }
 
 func mergeVals(vals ...string) string { return strings.Join(vals, ", ") }
 
@@ -56,7 +57,7 @@ templ removeCoursesButton(transparent bool, tooltip, vals, include string) {
 }
 
 templ unassignCourseButton(ID int, t text) {
-    @adjustCoursesButton(true, "bi-dash-circle", "hover && !isSorting", t.TTUnassign, mergeVals(vYear(0), vSem(0), vPos(), vLang(t)), "", templ.Attributes{"hx-patch": "/blueprint/course/" + strconv.Itoa(ID)})
+    @adjustCoursesButton(true, "bi-dash-circle", "hover && !isSorting", t.TTUnassign, mergeVals(vYear(0), vSem(0), vPos(), vLang(t)), "", templ.Attributes{"hx-patch": fmt.Sprintf("/blueprint/course/%d", ID)})
 }
 
 templ assignSemesterButton(year, semester int, patch, vals, include, semesterText string, t text) {
@@ -122,11 +123,11 @@ templ assignCoursesButton(yearCount int, t text) {
 }
 
 templ assignCourseButton(tooltip string, yearCount, ID int, t text) {
-    @assignCourseButtonInternal(true, tooltip, "hover && !isSorting", " && hover && !isSorting", "/blueprint/course/" + strconv.Itoa(ID), "", "", yearCount, t)
+    @assignCourseButtonInternal(true, tooltip, "hover && !isSorting", " && hover && !isSorting", fmt.Sprintf("/blueprint/course/%d", ID), "", "", yearCount, t)
 }
 
 templ removeCourseButton(ID int, t text) {
-    @adjustCoursesButton(true, "bi-trash-fill", "hover && !isSorting", t.TTRemove, vLang(t), "", templ.Attributes{"hx-delete": "/blueprint/course/" + strconv.Itoa(ID)})
+    @adjustCoursesButton(true, "bi-trash-fill", "hover && !isSorting", t.TTRemove, vLang(t), "", templ.Attributes{"hx-delete": fmt.Sprintf("/blueprint/course/%d", ID)})
 }
 
 templ summarizeFooter(data *Blueprint, t text) {
@@ -135,11 +136,11 @@ templ summarizeFooter(data *Blueprint, t text) {
             <th></th>
             <th><h5 class="mb-0 text-nowrap">{ t.Total }</h5></th>
             <th></th>
-            <th class="th-overflow credits-column d-none d-md-table-cell">{ t.Credits + ": " + strconv.Itoa(data.totalCredits()) }</th>
+            <th class="th-overflow credits-column d-none d-md-table-cell">{ fmt.Sprintf("%s: %d", t.Credits, data.totalCredits()) }</th>
             <th class="d-none d-md-table-cell"></th>
             <th class="d-none d-md-table-cell"></th>
             <th class="d-none d-xl-table-cell"></th>
-            <th class="th-overflow align-middle pt-0 pb-0" style="line-height: 1;">
+            <th class="th-overflow align-middle py-0 lh-1">
                 // change number of years
                 // for this to overflow left, text order is left to right so the elements are in the opposite order
                 <button
@@ -154,7 +155,7 @@ templ summarizeFooter(data *Blueprint, t text) {
                     hx-delete="/blueprint/year"
                     hx-vals={ vLang(t) }
                     hx-target="main"
-                    :disabled={ strconv.Itoa(len(data.years) - 1) + " <= 0" }>
+                    :disabled={ fmt.Sprintf("%d <= 0", len(data.years) - 1) }>
                 </button>
                 { t.NumOfYears }
             </th>
@@ -188,7 +189,7 @@ templ showHideCoursesButton(showVar string) {
 func winterString(course *Course) string {
     winterText := ""
     if course.Start == teachingWinterOnly || course.Start == teachingBoth {
-        winterText = strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1) + ", " + course.ExamType
+        winterText = fmt.Sprintf("%d/%d, %s", course.LectureRange1, course.SeminarRange1, course.ExamType)
     } else {
         winterText = "---"
     }
@@ -198,9 +199,9 @@ func winterString(course *Course) string {
 func summerString(course *Course) string {
     summerText := ""
     if course.Start == teachingSummerOnly {
-        summerText = strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2) + ", " + course.ExamType
+        summerText = fmt.Sprintf("%d/%d, %s", course.LectureRange2, course.SeminarRange2, course.ExamType)
     } else if course.Start == teachingBoth {
-        summerText = strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1) + ", " + course.ExamType
+        summerText = fmt.Sprintf("%d/%d, %s", course.LectureRange1, course.SeminarRange1, course.ExamType)
     } else {
         summerText = "---"
     }
@@ -211,7 +212,7 @@ templ checkbox(ID, yearCount int, t text) {
     <div class="checkbox-container" x-data="{ checked: false, showMenu: false, hoverTimeout: null, openAssign: false }">
         <input
             type="checkbox"
-            id={ "checkbox" + strconv.Itoa(ID) }
+            id={ fmt.Sprintf("checkbox%d", ID) }
             class="form-check-input"
             style="border: 1px solid #2c2c2c !important; z-index: 1 !important;"
             name="selected"
@@ -258,7 +259,7 @@ templ coursesBody(courses []Course, canUnassign bool, showCondition, xSortMethod
             <td class="d-none d-md-table-cell">{ winterString(&course) }</td>
             <td class="d-none d-md-table-cell">{ summerString(&course) }</td>
             <td class="d-none d-xl-table-cell">{ course.Guarantors.string() }</td>
-            <td class="text-end align-middle pt-0 pb-0">
+            <td class="text-end align-middle py-0">
                 if canUnassign {
                     // unassign button
                     @unassignCourseButton(course.ID, t)
@@ -295,14 +296,12 @@ templ noCoursesTableContent(text, xSort string) {
 }
 
 func sortHxPatch(year, semester int, t text) string {
-    yearStr := strconv.Itoa(year)
-    semesterStr := strconv.Itoa(semester)
-    return `sortHxPatch($item, ` + yearStr + `, ` + semesterStr + `, $position, "` + t.Language + `")`
+    return fmt.Sprintf(`sortHxPatch($item, %d, %d, $position, "%s")`, year, semester, t.Language)
 }
 
 templ unassignHeadline(t text) {
     <thead><tr>
-        <th class="text-end align-middle p-0 bg-white" style="line-height: 1;">
+        <th class="text-end align-middle p-0 bg-white lh-1">
             @showHideCoursesButton("showUnassigned")
         </th>
         <th><h5 class="mb-0 text-nowrap">{ t.Unassigned }</h5></th>
@@ -311,7 +310,7 @@ templ unassignHeadline(t text) {
         <th class="d-none d-md-table-cell">{ t.Winter }</th>
         <th class="d-none d-md-table-cell">{ t.Summer }</th>
         <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
-        <th class="text-end align-middle pt-0 pb-0" style="line-height: 1;">
+        <th class="text-end align-middle py-0 lh-1">
             // remove all unassigned courses button
             @removeCoursesButton(true, t.TTRemoveUnassigned, mergeVals(vType(yearRemove), vYear(0), vLang(t)), "")
         </th>
@@ -319,7 +318,7 @@ templ unassignHeadline(t text) {
 }
 
 templ unassignedTable(unassigned []Course, yearCount int, t text) {
-    <div class="pt-2">
+    <div class="pt-3">
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
         if len(unassigned) > 0 {
         // if there are unassigned courses
@@ -336,28 +335,31 @@ templ unassignedTable(unassigned []Course, yearCount int, t text) {
 templ popoverHeadline(year, runningCredits, yearCredits, semesterCredits int, semester string, t text) {
     <h5
         class="mb-0 text-nowrap"
+        style="cursor: help;"
         data-bs-toggle="popover"
         data-bs-trigger="hover" 
         data-bs-html="true"
         data-bs-placement="bottom"
         data-bs-title={ t.TTNumberOfCredits }
-        data-bs-content={ t.TTSemesterCredits + ": " + strconv.Itoa(semesterCredits) + "<br>" + t.TTYearCredits + ": " + strconv.Itoa(yearCredits) + "<br>" + t.TTRunningCredits + ": " + strconv.Itoa(runningCredits) }>
-        { t.YearStr(year) + " " + semester }
+        data-bs-content={ fmt.Sprintf("%s: %d<br>%s: %d<br>%s: %d", t.TTSemesterCredits, semesterCredits, t.TTYearCredits, yearCredits, t.TTRunningCredits, runningCredits) }>
+        { fmt.Sprintf("%s %s", t.YearStr(year), semester) }
     </h5>
 }
 
 templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, t text) {
     <thead><tr>
-        <th class="text-end align-middle p-0 bg-white" style="line-height: 1;">
-            @showHideCoursesButton("winter" + strconv.Itoa(year))
+        <th class="text-end align-middle p-0 bg-white lh-1">
+            @showHideCoursesButton(fmt.Sprintf("winter%d", year))
         </th>
-        <th> @popoverHeadline(year, runningCredits, yearCredits, winterCredits, t.Winter, t) </th>
+        <th>
+            @popoverHeadline(year, runningCredits, yearCredits, winterCredits, t.Winter, t)
+        </th>
         <th></th>
-        <th class="th-overflow credits-column d-none d-md-table-cell">{ t.Credits + ": " + strconv.Itoa(winterCredits) }</th>
+        <th class="th-overflow credits-column d-none d-md-table-cell">{ fmt.Sprintf("%s: %d", t.Credits, winterCredits) }</th>
         <th class="d-none d-md-table-cell">{ t.Winter }</th>
         <th class="d-none d-md-table-cell">{ t.Summer }</th>
         <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
-        <th class="text-end align-middle pt-0 pb-0" style="line-height: 1;">
+        <th class="text-end align-middle py-0 lh-1">
             // unassign all courses button
             @unassignCoursesButton(true, t.TTUnassignWinter, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentWinter)), vLang(t)), "")
             // remove all courses button
@@ -372,7 +374,7 @@ templ winterTable(courses []Course, year, yearCount, runningCredits, yearCredits
         if len(courses) > 0 {
         // if there are some courses
             @winterHeadline(year, runningCredits, yearCredits, winterCredits, t)
-            @coursesBody(courses, true, "winter" + strconv.Itoa(year), sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t)
+            @coursesBody(courses, true, fmt.Sprintf("winter%d", year), sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t)
         } else {
         // if there are no courses
             {{
@@ -386,16 +388,18 @@ templ winterTable(courses []Course, year, yearCount, runningCredits, yearCredits
 
 templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, t text) {
     <thead><tr>
-        <th class="text-end align-middle p-0 bg-white" style="line-height: 1;">
-            @showHideCoursesButton("summer" + strconv.Itoa(year))
+        <th class="text-end align-middle p-0 bg-white lh-1">
+            @showHideCoursesButton(fmt.Sprintf("summer%d", year))
         </th>
-        <th> @popoverHeadline(year, runningCredits, yearCredits, summerCredits, t.Summer, t) </th>
+        <th>
+            @popoverHeadline(year, runningCredits, yearCredits, summerCredits, t.Summer, t)
+        </th>
         <th></th>
-        <th class="th-overflow credits-column d-none d-md-table-cell">{ t.Credits + ": " + strconv.Itoa(summerCredits) }</th>
+        <th class="th-overflow credits-column d-none d-md-table-cell">{ fmt.Sprintf("%s: %d", t.Credits, summerCredits) }</th>
         <th class="d-none d-md-table-cell">{ t.Winter }</th>
         <th class="d-none d-md-table-cell">{ t.Summer }</th>
         <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
-        <th class="text-end align-middle pt-0 pb-0" style="line-height: 1;">
+        <th class="text-end align-middle py-0 lh-1">
             // unassign all courses button
             @unassignCoursesButton(true, t.TTUnassignSummer, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentSummer)), vLang(t)), "")
             // remove all courses button
@@ -410,7 +414,7 @@ templ summerTable(courses []Course, year, yearCount, runningCredits, yearCredits
         if len(courses) > 0 {
         // if there are some courses
             @summerHeadline(year, runningCredits, yearCredits, summerCredits, t)
-            @coursesBody(courses, true, "summer" + strconv.Itoa(year), sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t)
+            @coursesBody(courses, true, fmt.Sprintf("summer%d", year), sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t)
         } else {
         // if there are no courses
             {{
@@ -425,7 +429,7 @@ templ summerTable(courses []Course, year, yearCount, runningCredits, yearCredits
 templ yearsTables(years []AcademicYear, t text) {
     {{ runningCredits := 0 }}
     for _, year := range years {
-        <div id={ "blueprint-year-" + strconv.Itoa(year.position) }>
+        <div id={ fmt.Sprintf("blueprint-year-%d", year.position) }>
             // render winter
             {{ runningCredits += year.winterCredits() }}
             @winterTable(year.winter, year.position, len(years), runningCredits, year.credits(), year.winterCredits(), t)
@@ -437,7 +441,7 @@ templ yearsTables(years []AcademicYear, t text) {
 }
 
 templ Content(data *Blueprint, t text) {
-    <div x-data={ "data(" + strconv.Itoa(len(data.years)) + ")" } class="container">
+    <div x-data={ fmt.Sprintf("data(%d)", len(data.years)) } class="container">
         @unassignedTable(data.years[0].unassigned, len(data.years) - 1, t)
         if len(data.years) > 1 {
             @yearsTables(data.years[1:], t)
