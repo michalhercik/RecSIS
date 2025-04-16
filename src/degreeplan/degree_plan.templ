@@ -62,38 +62,78 @@ templ blueprintAssignment(code string, t text) {
     </div>
 }
 
+templ headlineBadge(color, text string) {
+    <span class={ "d-none d-xl-inline-block ms-2 rounded-pill badge " + color }>
+        { text }
+    </span>
+    <span class={ "d-inline-flex d-xl-none ms-2 align-center rounded-circle " + color } style="width: 20px; height: 20px;">
+        <span class="visually-hidden">{ text }</span>
+    </span>
+}
+
+templ badge(color, text string) {
+    <span class={ "d-none d-md-inline-block rounded-pill badge " + color }>
+        { text }
+    </span>
+    <span class={ "d-inline-flex d-md-none ms-2 align-center rounded-circle " + color } style="width: 20px; height: 20px;">
+        <span class="visually-hidden">{ text }</span>
+    </span>
+}
+
 templ Content(dp *DegreePlan, t text) {
     for _, bloc := range dp.blocs {
-        <table class="table table-sm degree-plan-table">
+        if bloc.Name != "" {
+            <h6 class="d-md-none">
+                { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
+                if bloc.hasLimit() {
+                    <span class="d-md-none">{ fmt.Sprintf("(≥%d %s)", bloc.Limit, t.CreditsShort) }</span>
+                }
+                if bloc.completed() {
+                    @headlineBadge("bg-success", t.Completed)
+                } else if bloc.inBlueprint() {
+                    @headlineBadge("bg-blueprint", t.InBlueprint)
+                } else if bloc.hasLimit() {
+                    @headlineBadge("bg-danger", t.NotCompleted)
+                }
+            </h6>
+        }
+        <table class="table table-sm table-hover degree-plan-table">
             <thead>
                 <tr>
                     if bloc.Name == "" {
                         <th>{ t.Code }</th>
                         <th>{ t.Title }</th>
                     } else {
-                        <th><h5 class="text-nowrap">
-                            { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
-                            if bloc.completed() {
-                                <span class="badge bg-success">{ t.Completed }</span>
-                            } else if bloc.inBlueprint() {
-                                <span class="badge bg-blueprint">{ t.InBlueprint }</span>
-                            } else if bloc.hasLimit() {
-                                <span class="badge bg-danger">{ t.NotCompleted }</span>
-                            }
-                        </h5></th>
-                        <th></th>
+                        <th>
+                            <h5 class="mb-0 text-nowrap d-none d-md-block">
+                                { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
+                                if bloc.completed() {
+                                    @headlineBadge("bg-success", t.Completed)
+                                } else if bloc.inBlueprint() {
+                                    @headlineBadge("bg-blueprint", t.InBlueprint)
+                                } else if bloc.hasLimit() {
+                                    @headlineBadge("bg-danger", t.NotCompleted)
+                                }
+                            </h5>
+                            <span class="d-md-none">{ t.Code }</span>
+                        </th>
+                        <th>
+                            <span class="d-md-none">{ t.Title }</span>
+                        </th>
                     }
                     <th></th>
-                    <th class="th-overflow credits-column">
+                    <th class="th-overflow pe-0">
                         { fmt.Sprintf("%s:", t.Credits) }
                         <span style="color: rgb(19, 92, 4);">{ fmt.Sprintf("%d", bloc.completedCredits()) }</span>|<span style="color: rgb(4, 108, 181);">{ fmt.Sprintf("%d", bloc.inBlueprintCredits()) }</span>
+                    </th>
+                    <th class="d-none d-md-table-cell">
                         if bloc.hasLimit() {
                             { fmt.Sprintf("(≥%d)", bloc.Limit) }
                         }
                     </th>
-                    <th>{ t.Winter }</th>
-                    <th>{ t.Summer }</th>
-                    <th>{ t.Blueprint }</th>
+                    <th class="d-none d-lg-table-cell">{ t.Winter }</th>
+                    <th class="d-none d-lg-table-cell">{ t.Summer }</th>
+                    <th class="text-center">{ t.Blueprint }</th>
                 </tr>
             </thead>
             <tbody>
@@ -108,19 +148,20 @@ templ Content(dp *DegreePlan, t text) {
                     <td class="align-middle lh-1">
                     // TODO: add course completion status -> change `false` to `course.Completed`
                     if false {
-                        <span class="badge bg-success">{ t.Completed }</span>
+                        @badge("bg-success", t.Completed)
                     } else if course.InBlueprint {
-                        <span class="badge bg-blueprint">{ t.InBlueprint }</span>
+                        @badge("bg-blueprint", t.InBlueprint)
                     } else {
-                        <span class="badge bg-danger">{ t.NotCompleted }</span>
+                        @badge("bg-danger", t.NotCompleted)
                     }
                     </td>
-                    <td class="credits-column text-end">
+                    <td class="text-end pe-0">
                         { fmt.Sprintf("%d", course.Credits) }
                     </td>
-                    <td>{ winterString(&course) }</td>
-                    <td>{ summerString(&course) }</td>
-                    <td class="align-middle py-0 lh-1">
+                    <td class="d-none d-md-table-cell"></td>
+                    <td class="d-none d-lg-table-cell">{ winterString(&course) }</td>
+                    <td class="d-none d-lg-table-cell">{ summerString(&course) }</td>
+                    <td class="text-center align-middle py-0 lh-1">
                         @blueprintAssignment(course.Code, t)
                     </td>
                 </tr>

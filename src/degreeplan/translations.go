@@ -16,6 +16,7 @@ type text struct {
 	InBlueprint  string
 	NotCompleted string
 	Credits      string
+	CreditsShort string
 	Needed       string
 	Winter       string
 	Summer       string
@@ -47,6 +48,7 @@ var texts = map[language.Language]text{
 		InBlueprint:  "Blueprint",
 		NotCompleted: "Nesplněno",
 		Credits:      "Kredity",
+		CreditsShort: "kr.",
 		Needed:       "potřeba",
 		Winter:       "ZS",
 		Summer:       "LS",
@@ -67,6 +69,7 @@ var texts = map[language.Language]text{
 		InBlueprint:  "Blueprint",
 		NotCompleted: "Not completed",
 		Credits:      "Credits",
+		CreditsShort: "cr.",
 		Needed:       "needed",
 		Winter:       "Winter",
 		Summer:       "Summer",

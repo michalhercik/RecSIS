@@ -199,7 +199,7 @@ body {
     width: 136px;
 }
 
-/* teable header cell overflow */
+/* table header cell overflow */
 .th-overflow {
     direction: rtl; 
     text-align: right;
@@ -347,30 +347,53 @@ body {
 /* status */
 .degree-plan-table th:nth-child(3),
 .degree-plan-table td:nth-child(3) {
-    width: 120px;
+    width: 110px;
+}
+
+@media (max-width: 767px) {
+    .degree-plan-table th:nth-child(3),
+    .degree-plan-table td:nth-child(3) {
+        width: 30px;
+    }
 }
 
 /* credits */
 .degree-plan-table th:nth-child(4),
 .degree-plan-table td:nth-child(4) {
-    width: 30px;
+    width: 20px;
+}
+
+/* bloc limit */
+.degree-plan-table th:nth-child(5),
+.degree-plan-table td:nth-child(5) {
+    width: 48px;
 }
 
 /* winter */
-.degree-plan-table th:nth-child(5),
-.degree-plan-table td:nth-child(5) {
-    width: 90px;
-}
-
-/* summer */
 .degree-plan-table th:nth-child(6),
 .degree-plan-table td:nth-child(6) {
     width: 90px;
 }
 
-/* button */
+/* summer */
 .degree-plan-table th:nth-child(7),
 .degree-plan-table td:nth-child(7) {
-    width: 80px;
+    width: 90px;
+}
+
+/* button */
+.degree-plan-table th:nth-child(8),
+.degree-plan-table td:nth-child(8) {
+    width: 90px;
+}
+
+@media (max-width: 992px) {
+    .degree-plan-table th {
+        font-size: 0.9rem !important;
+    }
+
+    .degree-plan-table th h5 {
+        font-size: 1.1rem !important;
+    }
 }
 /* ============================================== */

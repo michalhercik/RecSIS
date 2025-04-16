@@ -13,7 +13,7 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
     <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
     <div class="modal-header">
-        <h5 class="modal-title" id="category-modal-title">Categorical rating</h5>
+        <h5 class="modal-title" id="category-modal-title">{ t.CategoricalRatings }</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
     </div>
     <div class="modal-body m-2">
@@ -65,10 +65,10 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
     </div>
 }
 
-templ rateButton(rating NullInt64, icon, code string, rate int64) {
+templ rateButton(rating NullInt64, icon, position, code string, rate int64) {
     <button
         class={
-            "py-0 btn btn-light bi",
+            "rounded-" + position + "-pill btn btn-outline-dark bi",
             templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
             templ.KV(icon, !rating.Valid || rating.Int64 != rate),
         }
@@ -93,13 +93,13 @@ func ratingStr(avgRating NullFloat64, numberOfRatings NullInt64) string {
 }
 
 templ likeButton(rating NullInt64, avgRating NullFloat64, numberOfRatings NullInt64, code string) {
-    @rateButton(rating, "bi-hand-thumbs-up", code, positiveRating) {
+    @rateButton(rating, "bi-hand-thumbs-up", "start", code, positiveRating) {
         { ratingStr(avgRating, numberOfRatings) }
     }
 }
 
 templ dislikeButton(rating NullInt64, code string) {
-    @rateButton(rating, "bi-hand-thumbs-down", code, negativeRating)
+    @rateButton(rating, "bi-hand-thumbs-down", "end", code, negativeRating)
 }
 
 templ OverallRating(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, code string) {
@@ -153,11 +153,12 @@ templ CategoryRating(categories []CourseCategoryRating, code string, showModal b
 }
 
 templ ratings(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, categories []CourseCategoryRating, code string, t text) {
-    @OverallRating(userRating, avgRating, ratingCount, code)
-    // TODO: translate and rename
-    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#rate-modal">
-        Additional Rating
-    </button>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        @OverallRating(userRating, avgRating, ratingCount, code)
+        <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#rate-modal">
+            { t.AdditionalRatings }
+        </button>
+    </div>
     @CategoryRating(categories, code, hideModal, t)
 }
 
@@ -288,7 +289,7 @@ templ leftColumn(course *Course, t text) {
         </table>
     }
     
-    // TODO: if not default (=taught) show NOT TAUGHT, else do not show anything
+    // TODO: if not default (default=taught) show NOT TAUGHT, else do not show anything
     <p class="mb-0 mt-1"><strong>{ t.StateOfCourse }</strong></p>
     <p class="mb-0">{ course.State }</p>
     // TODO: if unlimited capacity do not show anything, else show capacity
@@ -499,26 +500,24 @@ templ details(course *Course, t text) {
 
 templ Content(course *Course, t text) {
     // code and title
-    <h1 class="text-center pt-2">{ course.Code + " - " + course.Name }</h1>
+    <h1 class="text-center pt-3">{ course.Code + " - " + course.Name }</h1>
     // badges with information
-    <div class="text-center pb-2">
+    <div class="text-center pb-4">
         @badges(course, t)
     </div>
     // two columns
-    <div class="my-3">
-        <div class="d-flex">
-            // left column most important information
-            <div class="flex-grow-1" style="flex: 1;">
-                @leftColumn(course, t)
-            </div>
-            // right column ratings
-            <div class="flex-grow-1" style="flex: 1;">
-                @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
-            </div>
+    <div class="d-flex pb-4">
+        // left column most important information
+        <div class="flex-grow-1" style="flex: 1;">
+            @leftColumn(course, t)
+        </div>
+        // right column ratings
+        <div class="flex-grow-1" style="flex: 1;">
+            @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
         </div>
     </div>
     // buttons
-    <div class="d-flex justify-content-center gap-1">
+    <div class="d-flex justify-content-center gap-1 pb-2">
         @buttons(course, t)
     </div>
     // switch between description, survey and detailed information
@@ -527,7 +526,7 @@ templ Content(course *Course, t text) {
 
 templ Page(course *Course, t text) {
     @utils.Page(course.Code + " - " + course.Name, t.Utils) {
-        <div class="container pt-2">
+        <div class="container">
             @Content(course, t)
         </div>
     }
