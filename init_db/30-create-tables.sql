@@ -297,13 +297,59 @@ CREATE TABLE course_ratings (
 --     labels VARCHAR(50)[] NOT NULL
 -- )
 
-CREATE TABLE filter_labels (
-    id INT NOT NULL,
-    lang CHAR(2) NOT NULL,
-    label VARCHAR(50) NOT NULL
+-- CREATE TABLE filter_labels (
+--     id INT NOT NULL,
+--     lang CHAR(2) NOT NULL,
+--     label VARCHAR(50) NOT NULL
+-- );
+
+-- CREATE TABLE filter_params (
+--     param_name VARCHAR(30) NOT NULL,
+--     value_id INT NOT NULL
+-- );
+
+-- CREATE TABLE course_filter_categories (
+--     id GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     position INT NOT NULL,
+-- )
+
+-- CREATE TABLE course_filter_category_desc (
+--     lang CHAR(2) NOT NULL,
+--     category_id INT NOT NULL REFERENCES course_filter_categories(id),
+--     title VARCHAR(50) NOT NULL,
+--     description VARCHAR(200) NOT NULL,
+-- )
+
+-- CREATE TABLE course_filter_category_values (
+--     id GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     category_id INT NOT NULL REFERENCES course_filter_categories(id),
+--     position INT NOT NULL,
+-- )
+
+-- CREATE TABLE course_filter_category_values_desc (
+--     lang CHAR(2) NOT NULL,
+--     value_id INT NOT NULL REFERENCES course_filter_category_values(id),
+--     title VARCHAR(50) NOT NULL,
+--     description VARCHAR(200) NOT NULL,
+-- )
+
+CREATE TABLE filter_categories (
+    id INT PRIMARY KEY,
+    facet_id VARCHAR(50) NOT NULL,
+    title_cs VARCHAR(50) NOT NULL,
+    title_en VARCHAR(50) NOT NULL,
+    description_cs VARCHAR(200),
+    description_en VARCHAR(200),
+    position INT NOT NULL
 );
 
-CREATE TABLE filter_params (
-    param_name VARCHAR(30) NOT NULL,
-    value_id INT NOT NULL
+CREATE TABLE filter_values (
+    id INT PRIMARY KEY,
+    category_id INT NOT NULL REFERENCES filter_categories(id),
+    facet_id VARCHAR(50) NOT NULL,
+    title_cs VARCHAR(50) NOT NULL,
+    title_en VARCHAR(50) NOT NULL,
+    description_cs VARCHAR(200),
+    description_en VARCHAR(200),
+    position INT NOT NULL
 );

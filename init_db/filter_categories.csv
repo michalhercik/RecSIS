@@ -1,0 +1,16 @@
+,facet_id,title_cs,title_en,desc_cs,desc_en,position
+0,faculty,Fakulta,Faculty,,,0
+1,taught,Stav Předmětu,Course Status,,,1
+2,language,Jazyk Výuky,Language,,,2
+3,semester_count,Počet Semestrů,Number of Semesters,,,3
+4,start_semester,Semestr,Semester,,,4
+5,range_unit,Jednotka Rozsahu,Range Unit,,,5
+6,lecture_range_winter,Rozsah Přednášky Zima,Winter Lecture Range,,,6
+7,lecture_range_summer,Rozsah Přednášky Léto,Summer Lecture Range,,,7
+8,lecture_range_winter,Rozsah Semináře Zima,Winter Seminar Range,,,8
+9,lecture_range_summer,Rozsah Semináře Léto,Summer Seminar Range,,,9
+10,exam_type,Typ Examinace,Exam Type,,,10
+11,credits,Kredity,Credits,,,11
+12,department,Katedra,Department,,,12
+13,capacity,Kapacita,Capacity,,,13
+14,min_occupancy,Minimální Obsazenost,Minimum Occupancy,,,14

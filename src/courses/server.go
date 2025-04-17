@@ -16,13 +16,31 @@ const pageParam = "page"
 const hitsPerPageParam = "hitsPerPage"
 
 type Server struct {
-	router *http.ServeMux
-	Data   DataManager
-	Search SearchEngine
-	Auth   Authentication
+	router  *http.ServeMux
+	Data    DataManager
+	Search  SearchEngine
+	Auth    Authentication
+	filters filter.Filters
 }
 
+//================================================================================
+// Interface
+//================================================================================
+
 func (s *Server) Init() {
+	s.initFilters()
+	s.initRouter()
+}
+
+func (s Server) Router() http.Handler {
+	return s.router
+}
+
+//================================================================================
+// Init
+//================================================================================
+
+func (s *Server) initRouter() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", s.page)
 	router.HandleFunc("GET /search", s.content)
@@ -30,9 +48,17 @@ func (s *Server) Init() {
 	s.router = router
 }
 
-func (s Server) Router() http.Handler {
-	return s.router
+func (s *Server) initFilters() {
+	filters, err := s.Data.Filters()
+	if err != nil {
+		log.Fatalf("failed to load filters: %v", err)
+	}
+	s.filters = filters
 }
+
+//================================================================================
+// Handlers
+//================================================================================
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
@@ -115,7 +141,7 @@ func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Reque
 	if err != nil {
 		hitsPerPage = coursesPerPage
 	}
-	filter, err := filter.ParseFilters(r.URL.Query())
+	filter, err := s.filters.ParseURLQuery(r.URL.Query())
 	if err != nil {
 		// TODO: handle error
 		log.Printf("search error: %v", err)
@@ -129,6 +155,7 @@ func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Reque
 		hitsPerPage: hitsPerPage,
 		lang:        lang,
 		filter:      filter,
+		facets:      s.filters.Facets,
 	}
 	return req, nil
 }
@@ -144,36 +171,36 @@ func (s Server) search(req Request) (coursesPage, error) {
 	if err != nil {
 		return result, err
 	}
-	paramLabels, err := s.Data.ParamLabels(req.lang)
-	if err != nil {
-		return result, err
-	}
-	facets := filter.MakeFacetDistribution(searchResponse.FacetDistribution, paramLabels)
+	// paramLabels, err := s.Data.ParamLabels(req.lang)
+	// if err != nil {
+	// 	return result, err
+	// }
+	// facets := filter.MakeFacetDistribution(searchResponse.FacetDistribution, paramLabels)
 	result = coursesPage{
 		courses:    coursesData,
 		page:       int(req.page),
 		pageSize:   int(req.hitsPerPage),
 		totalPages: searchResponse.TotalPages,
 		search:     req.query,
-		facets:     facets,
+		facets:     filter.IterFiltersWithFacets(s.filters, searchResponse.FacetDistribution, req.lang),
 	}
 	return result, nil
 }
 
 func (s Server) facetDistribution(lang language.Language) (coursesPage, error) {
 	var result coursesPage
-	f, err := s.Search.FacetDistribution()
-	if err != nil {
-		return result, err
-	}
-	param, err := s.Data.ParamLabels(lang)
-	if err != nil {
-		return result, err
-	}
-	facets := filter.MakeFacetDistribution(f, param)
-	result = coursesPage{
-		facets: facets,
-	}
+	// f, err := s.Search.FacetDistribution()
+	// if err != nil {
+	// 	return result, err
+	// }
+	// param, err := s.Data.ParamLabels(lang)
+	// if err != nil {
+	// 	return result, err
+	// }
+	// facets := filter.MakeFacetDistribution(f, param)
+	// result = coursesPage{
+	// 	facets: facets,
+	// }
 	return result, nil
 }
 

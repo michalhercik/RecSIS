@@ -17,13 +17,14 @@ type Request struct {
 	hitsPerPage int
 	lang        language.Language
 	filter      filter.Expression
+	facets      []string
 }
 
 type Response struct {
 	TotalHits         int
 	TotalPages        int
 	Courses           []string
-	FacetDistribution map[string]map[int]int
+	FacetDistribution map[string]map[string]int
 }
 
 type MultiResponse struct {
@@ -37,7 +38,7 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 		Hits       []struct {
 			Code string `json:"code"`
 		} `json:"Hits"`
-		FacetDistribution map[string]map[int]int `json:"FacetDistribution"`
+		FacetDistribution map[string]map[string]int `json:"FacetDistribution"`
 	}
 	if err := json.Unmarshal(data, &hit); err != nil {
 		return err
@@ -112,8 +113,8 @@ type MeiliSearch struct {
 
 func (s MeiliSearch) FacetDistribution() (map[string]map[int]int, error) {
 	searchReq := &meilisearch.SearchRequest{
-		Limit:  0, // TODO: not working, probably bug in meilisearch-go -> write own client...
-		Facets: filter.SliceOfParamStr(),
+		Limit:  0,          // TODO: not working, probably bug in meilisearch-go -> write own client...
+		Facets: []string{}, //filter.SliceOfParamStr(),
 	}
 	response, err := s.Client.Index(s.Courses.Uid).Search("", searchReq)
 	if err != nil {
@@ -142,7 +143,7 @@ func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisear
 		HitsPerPage:          int64(r.hitsPerPage),
 		AttributesToRetrieve: []string{"code"},
 		Filter:               r.filter.String(),
-		Facets:               filter.SliceOfParamStr(),
+		Facets:               r.facets,
 	})
 	for param, filter := range r.filter.Except() {
 		_ = param
@@ -153,7 +154,7 @@ func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisear
 			Limit:                0,          // TODO: not working, probably bug in meilisearch-go -> write own client...
 			AttributesToRetrieve: []string{}, // TODO: not working, probably bug in meilisearch-go -> write own client...
 			Filter:               filter,
-			Facets:               []string{param.String()},
+			Facets:               []string{param},
 		})
 	}
 	return result

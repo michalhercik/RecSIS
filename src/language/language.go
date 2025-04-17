@@ -14,6 +14,29 @@ const (
 	EN      Language = "en"
 )
 
+type LangString struct {
+	CS string `json:"cs"`
+	EN string `json:"en"`
+}
+
+func MakeLangString(cs, en string) LangString {
+	return LangString{
+		CS: cs,
+		EN: en,
+	}
+}
+
+func (ls LangString) String(lang Language) string {
+	switch lang {
+	case CS:
+		return ls.CS
+	case EN:
+		return ls.EN
+	default:
+		return ls.String(Default)
+	}
+}
+
 func FromString(lang string) (Language, bool) {
 	switch lang {
 	case string(CS):

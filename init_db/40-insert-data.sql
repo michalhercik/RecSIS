@@ -67,14 +67,24 @@ FROM '/docker-entrypoint-initdb.d/blueprint_years.csv'
 DELIMITER ','
 CSV HEADER;
 
-COPY filter_labels(id, lang, label)
+COPY filter_categories(id, facet_id, title_cs, title_en, description_cs, description_en, position)
+FROM '/docker-entrypoint-initdb.d/filter_categories.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY filter_values(id, title_cs, title_en, category_id, description_cs, description_en, facet_id, position)
 FROM '/docker-entrypoint-initdb.d/filter_values.csv'
 DELIMITER ','
 CSV HEADER;
 
-COPY filter_params(param_name, value_id)
-FROM '/docker-entrypoint-initdb.d/filter_params.csv'
-DELIMITER ',';
+-- COPY filter_labels(id, lang, label)
+-- FROM '/docker-entrypoint-initdb.d/filter_values.csv'
+-- DELIMITER ','
+-- CSV HEADER;
+
+-- COPY filter_params(param_name, value_id)
+-- FROM '/docker-entrypoint-initdb.d/filter_params.csv'
+-- DELIMITER ',';
 
 -- COPY blueprint_semesters(blueprint_year,course,semester,position)
 -- FROM '/docker-entrypoint-initdb.d/blueprint_semesters.csv'

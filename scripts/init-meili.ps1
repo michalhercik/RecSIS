@@ -23,14 +23,14 @@ $filterable = @(
     "lecture_range_summer",
     "seminar_range_summer",
     "credits",
-    "faculty_guarantor",
+    "department",
     "exam_type",
     "range_unit",
     "taught",
-    "taught_lang",
+    "language",
     "faculty",
     "capacity",
-    "min_number"
+    "min_occupancy"
 )
 $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settings/filterable-attributes" `
     -Method Put `

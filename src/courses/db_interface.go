@@ -3,6 +3,7 @@ package courses
 import (
 	"encoding/json"
 	"fmt"
+	"iter"
 	"net/http"
 	"strings"
 
@@ -13,7 +14,8 @@ import (
 
 type DataManager interface {
 	Courses(sessionID string, courseCodes []string, lang language.Language) ([]Course, error)
-	ParamLabels(lang language.Language) (map[string][]filter.ParamValue, error)
+	// ParamLabels(lang language.Language) (map[string][]filter.ParamValue, error)
+	Filters() (filter.Filters, error)
 }
 
 type Authentication interface {
@@ -34,15 +36,8 @@ type coursesPage struct {
 	pageSize   int
 	totalPages int
 	search     string
-	facets     filter.FacetDistribution
+	facets     iter.Seq[filter.FacetIterator] // func(func(filter.FacetIterator) bool) //filter.Filters //FacetDistribution
 }
-
-type Language string
-
-const (
-	cs Language = "cs"
-	en Language = "en"
-)
 
 type Teacher struct {
 	SisID       int    `json:"KOD"`
