@@ -114,10 +114,21 @@ body {
     border-color: rgb(3, 87, 146) !important;
 }
 
-/* Blueprint colored badge */
+/* Badges colors */
 .bg-blueprint {
-    background-color: rgb(4, 108, 181); /* Custom blueprint color */
-    color: white;
+    background-color: rgb(4, 108, 181);
+}
+
+.bg-winter {
+    background-color: rgb(51, 97, 124);
+}
+
+.bg-summer {
+    background-color: rgb(180, 66, 0);
+}
+
+.bg-both {
+    background-color: rgb(106, 49, 114);
 }
 
 /* === Blueprint tables styles === */
@@ -188,11 +199,18 @@ body {
     width: 136px;
 }
 
+/* table header cell overflow */
 .th-overflow {
     direction: rtl; 
     text-align: right;
     white-space: nowrap;
 }
+
+/* Credits alignment styles */
+.credits-column {
+    padding-right: 20px !important;
+}
+
 /* =============================== */
 
 /* Courses grid styles */
@@ -306,43 +324,76 @@ body {
     border: none !important;
 }
 
-/* Degree plan table columns width styles */
-.degree-plan-table th:nth-child(1),
-.degree-plan-table td:nth-child(1) {
-    width: 88px;
+/* === Degree plan table columns width styles === */
+.degree-plan-table {
+    table-layout: fixed;
 }
 
+/* code */
+.degree-plan-table th:nth-child(1),
+.degree-plan-table td:nth-child(1) {
+    width: 85px;
+}
+
+/* title */
 .degree-plan-table th:nth-child(2),
 .degree-plan-table td:nth-child(2) {
     width: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* status */
 .degree-plan-table th:nth-child(3),
 .degree-plan-table td:nth-child(3) {
-    width: 120px;
+    width: 110px;
 }
 
+@media (max-width: 767px) {
+    .degree-plan-table th:nth-child(3),
+    .degree-plan-table td:nth-child(3) {
+        width: 30px;
+    }
+}
+
+/* credits */
 .degree-plan-table th:nth-child(4),
 .degree-plan-table td:nth-child(4) {
-    width: 70px;
+    width: 20px;
 }
 
+/* bloc limit */
 .degree-plan-table th:nth-child(5),
 .degree-plan-table td:nth-child(5) {
-    width: 100px;
+    width: 48px;
 }
 
+/* winter */
 .degree-plan-table th:nth-child(6),
 .degree-plan-table td:nth-child(6) {
-    width: 100px;
+    width: 90px;
 }
 
+/* summer */
 .degree-plan-table th:nth-child(7),
 .degree-plan-table td:nth-child(7) {
-    width: 80px;
+    width: 90px;
 }
 
-/* Credits alignment styles */
-.credits-column {
-    padding-right: 20px !important;
+/* button */
+.degree-plan-table th:nth-child(8),
+.degree-plan-table td:nth-child(8) {
+    width: 90px;
 }
+
+@media (max-width: 992px) {
+    .degree-plan-table th {
+        font-size: 0.9rem !important;
+    }
+
+    .degree-plan-table th h5 {
+        font-size: 1.1rem !important;
+    }
+}
+/* ============================================== */

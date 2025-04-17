@@ -68,7 +68,7 @@ templ navItem(url, text string, active bool) {
 
 templ langButton(l language.Language) {
     <button
-        class="btn btn-outline-none ps-0"
+        class="fw-semibold btn btn-outline-none ps-0"
         @click={ "changeLanguage('" + string(l) + "')" }>
         { string(l) }
     </button>
@@ -89,7 +89,7 @@ templ Header(title string, t Text) {
             <div class="container-fluid">
                 <div style="width: 100px;">
                     <a class="d-flex align-items-center navbar-brand fs-3" href={ templ.URL("/home") } style="font-family: 'Saira', sans-serif;">
-                        <img src="/logo.svg" alt="Logo" style="height: 30px;" class="me-1 mb-1">
+                        <img src="/logo.svg" alt="Logo" style="height: 30px;" class="mb-1 pe-1">
                         RecSIS
                     </a>
                 </div>

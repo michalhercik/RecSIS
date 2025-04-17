@@ -54,6 +54,45 @@ type Bloc struct {
 	Courses []Course
 }
 
+func (bloc *Bloc) hasLimit() bool {
+	return bloc.Limit > -1
+}
+
+func (b *Bloc) inBlueprint() bool {
+	if b.hasLimit() && b.inBlueprintCredits() >= b.Limit {
+		return true
+	}
+	return false
+}
+
+func (b *Bloc) inBlueprintCredits() int {
+	credits := 0
+	for _, c := range b.Courses {
+		if c.InBlueprint {
+			credits += c.Credits
+		}
+	}
+	return credits
+}
+
+func (b *Bloc) completed() bool {
+	if b.hasLimit() && b.completedCredits() >= b.Limit {
+		return true
+	}
+	return false
+}
+
+func (b *Bloc) completedCredits() int {
+	credits := 0
+	for _, c := range b.Courses {
+		// TODO: add course completion status -> change `false` to `course.Completed`
+		if false {
+			credits += c.Credits
+		}
+	}
+	return credits
+}
+
 type CourseStatus string
 
 func (c CourseStatus) String() string {

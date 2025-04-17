@@ -2,17 +2,17 @@ package degreeplan
 
 import (
     "github.com/michalhercik/RecSIS/utils"
-    "strconv"
+    "fmt"
 )
 
 func hoursExamsString(lecture, seminar int, examType string) string {
-    return strconv.Itoa(lecture) + "/" + strconv.Itoa(seminar) + ", " + examType
+    return fmt.Sprintf("%d/%d, %s", lecture, seminar, examType)
 }
 
 func winterString(course *Course) string {
     winterText := ""
     if course.Start == teachingWinterOnly || course.Start == teachingBoth {
-        winterText = strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1) + ", " + course.ExamType
+        winterText = fmt.Sprintf("%d/%d, %s", course.LectureRange1, course.SeminarRange1, course.ExamType)
     } else {
         winterText = "---"
     }
@@ -22,9 +22,9 @@ func winterString(course *Course) string {
 func summerString(course *Course) string {
     summerText := ""
     if course.Start == teachingSummerOnly {
-        summerText = strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2) + ", " + course.ExamType
+        summerText = fmt.Sprintf("%d/%d, %s", course.LectureRange2, course.SeminarRange2, course.ExamType)
     } else if course.Start == teachingBoth {
-        summerText = strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1) + ", " + course.ExamType
+        summerText = fmt.Sprintf("%d/%d, %s", course.LectureRange1, course.SeminarRange1, course.ExamType)
     } else {
         summerText = "---"
     }
@@ -34,102 +34,134 @@ func summerString(course *Course) string {
 templ blueprintAssignment(code string, t text) {
     <div class="btn-group">
         <button type="button" class="btn btn-sm btn-outline-blueprint"
-            hx-post={ "/blueprint/course/" + code }  
-            hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
+            hx-post={ fmt.Sprintf("/blueprint/course/%s", code) }  
+            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "lang": "%s"`, t.Language) }
         >
             { t.Assign }
         </button>
         <button type="button" class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
             data-bs-toggle="dropdown" aria-expanded="false">
         </button>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu lh-base">
         // TODO: make dynamic, NOT 3 fixed years
             for year := 1; year <= 3; year++ {
                 <li class="mx-3"><button class="dropdown-item text-center"
-                    hx-post={ "/blueprint/course/" + code }  
-                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` } 
+                    hx-post={ fmt.Sprintf("/blueprint/course/%s", code) }  
+                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1, "lang": "%s"`, year, t.Language) } 
                 >
-                { t.YearStr(year) + " " + t.WinterAssign }
+                { fmt.Sprintf("%s %s", t.YearStr(year), t.WinterAssign) }
                 </button></li>
                 <li class="mx-3"><button class="dropdown-item text-center"
-                    hx-post={ "/blueprint/course/" + code }  
-                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` } 
+                    hx-post={ fmt.Sprintf("/blueprint/course/%s", code) }  
+                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2, "lang": "%s"`, year, t.Language) } 
                 >
-                { t.YearStr(year) + " " + t.SummerAssign }
+                { fmt.Sprintf("%s %s", t.YearStr(year), t.SummerAssign) }
                 </button></li>
             }
         </ul>
     </div>
 }
 
+templ headlineBadge(color, text string) {
+    <span class={ "d-none d-xl-inline-block ms-2 rounded-pill badge " + color }>
+        { text }
+    </span>
+    <span class={ "d-inline-flex d-xl-none ms-2 align-center rounded-circle " + color } style="width: 20px; height: 20px;">
+        <span class="visually-hidden">{ text }</span>
+    </span>
+}
+
+templ badge(color, text string) {
+    <span class={ "d-none d-md-inline-block rounded-pill badge " + color }>
+        { text }
+    </span>
+    <span class={ "d-inline-flex d-md-none ms-2 align-center rounded-circle " + color } style="width: 20px; height: 20px;">
+        <span class="visually-hidden">{ text }</span>
+    </span>
+}
+
 templ Content(dp *DegreePlan, t text) {
-    <br> // TODO: if there is better solution to add space, then delete this line
     for _, bloc := range dp.blocs {
-        {{
-            inBLueprintCredits := 0
-            for _, course := range bloc.Courses {
-                if course.InBlueprint {
-                    inBLueprintCredits += course.Credits
+        if bloc.Name != "" {
+            <h6 class="d-md-none">
+                { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
+                if bloc.hasLimit() {
+                    <span class="d-md-none">{ fmt.Sprintf("(≥%d %s)", bloc.Limit, t.CreditsShort) }</span>
                 }
-            }
-        }}
-        <div class="d-flex justify-content-between align-items-center">
-            <h5>{ utils.CapitalizeFirstLetter(bloc.Name) }</h5>
-            <div>
-                <p
-                    class="me-2"
-                    style="color: rgb(4, 108, 181); display: inline-block;">
-                    { strconv.Itoa(inBLueprintCredits) + "/" + strconv.Itoa(bloc.Limit) }
-                </p>
-                <p
-                    class="me-2"
-                    style="color: rgb(19, 92, 4); display: inline-block;">
-                    { "0/" + strconv.Itoa(bloc.Limit) }
-                </p>
-            </div>
-        </div>
-        <table class="table degree-plan-table">
+                if bloc.completed() {
+                    @headlineBadge("bg-success", t.Completed)
+                } else if bloc.inBlueprint() {
+                    @headlineBadge("bg-blueprint", t.InBlueprint)
+                } else if bloc.hasLimit() {
+                    @headlineBadge("bg-danger", t.NotCompleted)
+                }
+            </h6>
+        }
+        <table class="table table-sm table-hover degree-plan-table">
             <thead>
                 <tr>
-                    <th>{ t.Code }</th>
-                    <th>{ t.Title }</th>
-                    <th>/*{ t.Status }*/</th> // TODO: headline or not?
-                    <th class="text-end">{ t.Credits }</th>
-                    <th>{ t.Winter }</th>
-                    <th>{ t.Summer }</th>
-                    <th>{ t.Blueprint }</th>
+                    if bloc.Name == "" {
+                        <th>{ t.Code }</th>
+                        <th>{ t.Title }</th>
+                    } else {
+                        <th>
+                            <h5 class="mb-0 text-nowrap d-none d-md-block">
+                                { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
+                                if bloc.completed() {
+                                    @headlineBadge("bg-success", t.Completed)
+                                } else if bloc.inBlueprint() {
+                                    @headlineBadge("bg-blueprint", t.InBlueprint)
+                                } else if bloc.hasLimit() {
+                                    @headlineBadge("bg-danger", t.NotCompleted)
+                                }
+                            </h5>
+                            <span class="d-md-none">{ t.Code }</span>
+                        </th>
+                        <th>
+                            <span class="d-md-none">{ t.Title }</span>
+                        </th>
+                    }
+                    <th></th>
+                    <th class="th-overflow pe-0">
+                        { fmt.Sprintf("%s:", t.Credits) }
+                        <span style="color: rgb(19, 92, 4);">{ fmt.Sprintf("%d", bloc.completedCredits()) }</span>|<span style="color: rgb(4, 108, 181);">{ fmt.Sprintf("%d", bloc.inBlueprintCredits()) }</span>
+                    </th>
+                    <th class="d-none d-md-table-cell">
+                        if bloc.hasLimit() {
+                            { fmt.Sprintf("(≥%d)", bloc.Limit) }
+                        }
+                    </th>
+                    <th class="d-none d-lg-table-cell">{ t.Winter }</th>
+                    <th class="d-none d-lg-table-cell">{ t.Summer }</th>
+                    <th class="text-center">{ t.Blueprint }</th>
                 </tr>
             </thead>
             <tbody>
             for _, course := range bloc.Courses {
                 <tr> 
-                    <td>
+                    <td> 
                         @utils.CourseLink(course.Code, t.Utils)
                     </td>
                     <td>
                         @utils.TitleCourseLink(course.Code, course.Title, t.Utils)
                     </td>
-                    <td>
+                    <td class="align-middle lh-1">
                     // TODO: add course completion status -> change `false` to `course.Completed`
                     if false {
-                        <span class="badge bg-success">{ t.Completed }</span>
+                        @badge("bg-success", t.Completed)
                     } else if course.InBlueprint {
-                        <span class="badge bg-blueprint">{ t.InBlueprint }</span>
+                        @badge("bg-blueprint", t.InBlueprint)
                     } else {
-                        <span class="badge bg-danger">{ t.NotCompleted }</span>
+                        @badge("bg-danger", t.NotCompleted)
                     }
                     </td>
-                    <td
-                        class="credits-column text-end">
-                        { strconv.Itoa(course.Credits) }
+                    <td class="text-end pe-0">
+                        { fmt.Sprintf("%d", course.Credits) }
                     </td>
-                    <td>
-                        { winterString(&course) }
-                    </td>
-                    <td>
-                        { summerString(&course) }
-                    </td>
-                    <td>
+                    <td class="d-none d-md-table-cell"></td>
+                    <td class="d-none d-lg-table-cell">{ winterString(&course) }</td>
+                    <td class="d-none d-lg-table-cell">{ summerString(&course) }</td>
+                    <td class="text-center align-middle py-0 lh-1">
                         @blueprintAssignment(course.Code, t)
                     </td>
                 </tr>
@@ -142,7 +174,9 @@ templ Content(dp *DegreePlan, t text) {
 templ Page(dp *DegreePlan, t text) {
     @utils.Page(t.Utils.DegreePlan, t.Utils) {
         <div class="container">
-            @Content(dp, t)
+            <div class="pt-3">
+                @Content(dp, t)
+            </div>
         </div>
     }
 }

@@ -141,6 +141,19 @@ func (ts *TeachingSemester) String(lang string) string {
 	return semester
 }
 
+func (ts *TeachingSemester) Color() string {
+	switch *ts {
+	case teachingWinterOnly:
+		return "bg-winter"
+	case teachingSummerOnly:
+		return "bg-summer"
+	case teachingBoth:
+		return "bg-both"
+	default:
+		return "bg-text-secondary"
+	}
+}
+
 type Assignment struct {
 	// year     int
 	// semester Semester
