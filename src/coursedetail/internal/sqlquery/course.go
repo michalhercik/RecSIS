@@ -34,10 +34,12 @@ WITH avg_course_overall_ratings AS (
     WHERE course_code=$2
     GROUP BY course_code
 )
-SELECT rating, avg_rating, rating_count FROM course_overall_ratings cor
-LEFT JOIN avg_course_overall_ratings acor ON cor.course_code=acor.course_code
-WHERE cor.user_id=$1
-AND cor.course_code=$2
+SELECT rating, avg_rating, rating_count FROM avg_course_overall_ratings avg_cor
+LEFT JOIN course_overall_ratings cor ON avg_cor.course_code = cor.course_code AND cor.user_id=$1
+-- SELECT rating, avg_rating, rating_count FROM course_overall_ratings cor
+-- LEFT JOIN avg_course_overall_ratings acor ON cor.course_code=acor.course_code
+-- WHERE cor.user_id=$1
+-- AND cor.course_code=$2
 `
 
 const DeleteRating = `--sql
