@@ -113,11 +113,11 @@ templ search(coursesPage *coursesPage, t text) {
     </form>
 }
 
-templ checkboxInput(name, value, label string, count int, t text) {
+templ checkboxInput(name, value, label string, count int, checked bool, t text) {
     if (count > 0 || true) {
         <div class="form-check">
             <input role="button" class="form-check-input" disabled?={ count == 0 }
-                type="checkbox" name={ name } id={ name + "-" + value } value={ value }>
+                type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
             <label role="button" class="form-check-label" for={ name + "-" + value }>
                 { label + " (" + strconv.Itoa(count) + ")" }
             </label>
@@ -161,7 +161,7 @@ templ filterSection(cp *coursesPage, t text) {
                 <div>
                     <p class="form-label">{ category.Title + ":" }</p>
                     for value := range category.IterWithFacets() {
-                        @checkboxInput("par" + category.ID, value.ID, value.Title, value.Count, t)
+                        @checkboxInput("par" + category.ID, value.ID, value.Title, value.Count, value.Checked, t)
                     }
                 </div>
             }

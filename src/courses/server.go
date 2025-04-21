@@ -70,7 +70,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	result, err := s.search(req)
+	result, err := s.search(req, r)
 	if err != nil {
 		log.Printf("search: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -88,7 +88,7 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 		log.Printf("search: %v", err)
 		return
 	}
-	res, err := s.search(req)
+	res, err := s.search(req, r)
 	if err != nil {
 		log.Printf("search: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -160,7 +160,7 @@ func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Reque
 	return req, nil
 }
 
-func (s Server) search(req Request) (coursesPage, error) {
+func (s Server) search(req Request, httpReq *http.Request) (coursesPage, error) {
 	// search for courses
 	var result coursesPage
 	searchResponse, err := s.Search.Search(req)
@@ -182,7 +182,7 @@ func (s Server) search(req Request) (coursesPage, error) {
 		pageSize:   int(req.hitsPerPage),
 		totalPages: searchResponse.TotalPages,
 		search:     req.query,
-		facets:     filter.IterFiltersWithFacets(s.filters, searchResponse.FacetDistribution, req.lang),
+		facets:     filter.IterFiltersWithFacets(s.filters, searchResponse.FacetDistribution, httpReq.URL.Query(), req.lang),
 	}
 	return result, nil
 }
