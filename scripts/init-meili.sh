@@ -27,14 +27,14 @@ filterable='[
   "lecture_range_summer",
   "seminar_range_summer",
   "credits",
-  "faculty_guarantor",
+  "department",
   "exam_type",
   "range_unit",
   "taught",
-  "taught_lang",
+  "language",
   "faculty",
   "capacity",
-  "min_number"
+  "min_occupancy"
 ]'
 response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -H "Authorization: Bearer $API_KEY" \
