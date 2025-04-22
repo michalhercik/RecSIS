@@ -83,14 +83,15 @@ templ search(coursesPage *coursesPage, t text) {
         hx-swap="outerHTML"
         hx-include="#filter-form"
         class="pt-3 pb-3"
-        x-data="{ quickResOpen: false }"
+        x-data="{ quickResOpen: false, quickResLoaded: false }"
+        @htmx:after-request="quickResLoaded = true"
     >
         <div class="justify-content-center mx-5">
             <div class="dropdown" @click.away="quickResOpen = false">
                 <div class="input-group">
                     <input type="text" name={ searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
                         x-model="searchInput"
-                        @click="quickResOpen = true"
+                        @click="if (!quickResLoaded && searchInput !== '') $dispatch('triggerSearch'); quickResOpen = true;"
                         @keydown="quickResOpen = true"
                         @keydown.escape="quickResOpen = false"
                         @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
