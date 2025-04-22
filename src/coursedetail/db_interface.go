@@ -27,9 +27,6 @@ type Authentication interface {
 const (
 	positiveRating = 1
 	negativeRating = 0
-
-	hideModal = false
-	showModal = true
 )
 
 type DBLang string

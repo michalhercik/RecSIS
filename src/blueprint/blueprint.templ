@@ -145,15 +145,13 @@ templ summarizeFooter(data *Blueprint, t text) {
                 // for this to overflow left, text order is left to right so the elements are in the opposite order
                 <button
                     class="btn btn-sm btn-outline-secondary bi bi-plus"
-                    hx-post="/blueprint/year"
-                    hx-vals={ vLang(t) }
+                    hx-post={ t.Utils.LangLink("/blueprint/year") }
                     hx-target="main">
                 </button>
                 { strconv.Itoa(len(data.years) - 1) }
                 <button
                     class="btn btn-outline-secondary btn-sm bi bi-dash"
-                    hx-delete="/blueprint/year"
-                    hx-vals={ vLang(t) }
+                    hx-delete={ t.Utils.LangLink("/blueprint/year") }
                     hx-target="main"
                     :disabled={ fmt.Sprintf("%d <= 0", len(data.years) - 1) }>
                 </button>

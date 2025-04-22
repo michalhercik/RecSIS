@@ -18,35 +18,37 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
     </div>
     <div class="modal-body m-2">
         for _, c := range categories {
-            <div class="d-flex align-items-center gap-2 pb-3">
+            <div class="d-flex align-items-center gap-2 pb-3" x-data={ fmt.Sprintf("{ value: %d, valid: %t}", c.UserRating.Int64, c.UserRating.Valid) }>
                 <button
                     class="btn btn-outline-none bi bi-trash-fill p-0"
                     hx-delete={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
                     hx-target="#category-rating"
-                    hx-swap="outerHTML">
+                    hx-swap="outerHTML"
+                    @click="valid = false">
                 </button>
                 <div class="flex-grow-1">
                     <label for={ c.Title + "-range" } class="form-label d-flex justify-content-between mb-0">
                         <span class="fw-semibold">{ c.Title }</span>
-                        <span class="fw-semibold">
-                            if c.UserRating.Valid {
-                                { fmt.Sprintf("%d", c.UserRating.Int64) }
-                            } else {
-                                { t.NotRated }
-                            }
-                        </span>
+                        <template x-if="valid">
+                            <span x-text="value" class="fw-semibold"></span>
+                        </template>
+                        <template x-if="!valid">
+                            <span class="fw-semibold">{ t.NotRated }</span>
+                        </template>
                     </label>
                     <input
                         type="range"
                         name="rating"
-                        class={ "form-range", templ.KV("no-thumb", !c.UserRating.Valid) }
+                        class="form-range"
+                        :class="valid || 'no-thumb'"
                         id={ c.Title + "-range" }
                         min="0" max="10" step="1"
-                        value={ fmt.Sprintf("%d", c.UserRating.Int64) }
+                        x-model="value"
+                        @click="valid = true"
                         hx-put={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
                         hx-target="#category-rating"
                         hx-swap="outerHTML"
-                        hx-trigger="change">
+                        hx-trigger="click">
                     <div class="tick-container m-auto">
                         for i := 0; i <= 10; i++ {
                             <span
@@ -65,17 +67,17 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
     </div>
 }
 
-templ rateButton(rating NullInt64, icon, position, code string, rate int64) {
+templ rateButton(rating NullInt64, icon, position, pos, code string, rate int64, t text) {
     <button
         class={
-            "rounded-" + position + "-pill btn btn-outline-dark bi",
+            "rounded-" + position + "-pill p" + pos + "-3 btn btn-outline-dark bi",
             templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
             templ.KV(icon, !rating.Valid || rating.Int64 != rate),
         }
         if rating.Valid && rating.Int64 == rate {
-        hx-delete={ "/course/rating/" + code }
+        hx-delete={ t.Utils.LangLink("/course/rating/" + code) }
         } else {
-        hx-put={ "/course/rating/" + code }
+        hx-put={ t.Utils.LangLink("/course/rating/" + code) }
         hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
         }
         hx-target="#simple-rating"
@@ -84,48 +86,31 @@ templ rateButton(rating NullInt64, icon, position, code string, rate int64) {
     </button>
 }
 
-// TODO: this is just for VSCode template coloring, it can be inlined
-func ratingStr(avgRating NullFloat64, numberOfRatings NullInt64) string {
-    if avgRating.Valid {
-        return " " + fmt.Sprintf("%.0f", avgRating.Float64 * 100) + "% (" + fmt.Sprintf("%d", numberOfRatings.Int64) + ")"
-    }
-    return ""
-}
-
-templ likeButton(rating NullInt64, avgRating NullFloat64, numberOfRatings NullInt64, code string) {
-    @rateButton(rating, "bi-hand-thumbs-up", "start", code, positiveRating) {
-        { ratingStr(avgRating, numberOfRatings) }
+templ likeButton(rating NullInt64, avgRating NullFloat64, numberOfRatings NullInt64, code string, t text) {
+    @rateButton(rating, "bi-hand-thumbs-up", "start", "s", code, positiveRating, t) {
+        if avgRating.Valid {
+            <span>{ " " + fmt.Sprintf("%.0f", avgRating.Float64 * 100) + "% (" + fmt.Sprintf("%d", numberOfRatings.Int64) + ")" }</span>
+        } else {
+            <span>{ " " + t.NoRatings }</span>
+        }
     }
 }
 
-templ dislikeButton(rating NullInt64, code string) {
-    @rateButton(rating, "bi-hand-thumbs-down", "end", code, negativeRating)
+templ dislikeButton(rating NullInt64, code string, t text) {
+    @rateButton(rating, "bi-hand-thumbs-down", "end", "e", code, negativeRating, t)
 }
 
-templ OverallRating(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, code string) {
+templ OverallRating(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, code string, t text) {
     <div id="simple-rating">
         <div class="btn-group" role="group">
-            @likeButton(userRating, avgRating, ratingCount, code)
-            @dislikeButton(userRating, code)
+            @likeButton(userRating, avgRating, ratingCount, code, t)
+            @dislikeButton(userRating, code, t)
         </div>
     </div>
 }
 
-templ CategoryRating(categories []CourseCategoryRating, code string, showModal bool, t text) {
-    <div id="category-rating" x-init={ fmt.Sprintf("if (%t) showModal()", showModal) }>
-        <script>
-        function showModal() {
-            const rateModalEl = document.getElementById('rate-modal');
-            const rateModal = bootstrap.Modal.getOrCreateInstance(rateModalEl);
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-            rateModal.show();
-        }
-        </script>
-        // Modal with rating categories
-        @rateModal(categories, code, t)
+templ CategoryRating(categories []CourseCategoryRating, code string, t text) {
+    <div id="category-rating">
         for _, c := range categories {
             <div class="mb-2">
                 <div class="d-flex justify-content-between">
@@ -154,12 +139,14 @@ templ CategoryRating(categories []CourseCategoryRating, code string, showModal b
 
 templ ratings(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, categories []CourseCategoryRating, code string, t text) {
     <div class="d-flex justify-content-between align-items-center mb-3">
-        @OverallRating(userRating, avgRating, ratingCount, code)
+        @OverallRating(userRating, avgRating, ratingCount, code, t)
         <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#rate-modal">
             { t.AdditionalRatings }
         </button>
     </div>
-    @CategoryRating(categories, code, hideModal, t)
+    @CategoryRating(categories, code, t)
+    // Modal with rating categories
+    @rateModal(categories, code, t)
 }
 
 templ blueprintAssignment(code string, t text) {
@@ -335,19 +322,12 @@ templ teacherStyled(t teacher.Teacher) {
 templ descriptionItem(desc NullDescription, id string) {
     if desc.Valid {
     <div>
-        <div class="card mb-3">
-            <div class="card-header">
-                <h2 class="my-0">
-                    { utils.CapitalizeFirstLetter(desc.Title) }
-                </h2>
-            </div>
-            <div class="card-body py-1" style="text-align: justify">
-                <div
-                    id={ "content-" + id }
-                    x-init={ "insertContent('" + id + "', `" + desc.SanitizeContent(id == "annotation") + "`)" }>
-                </div>
-            </div>
+        <h2>{ utils.CapitalizeFirstLetter(desc.Title) }</h2>
+        <div
+            id={ "content-" + id }
+            x-init={ "insertContent('" + id + "', `" + desc.SanitizeContent(id == "annotation") + "`)" }>
         </div>
+        <hr>
         // inserting content as shadow DOM
         <script>
         function insertContent(id, content) {
@@ -457,7 +437,7 @@ templ buttons(course *Course, t text) {
         </a>
     }
     // SIS link
-    <a class="btn btn-outline-secondary" href={ templ.SafeURL(courseSISLink(course.Code, t)) } role="button">
+    <a class="btn btn-outline-secondary" href={ templ.SafeURL(courseSISLink(course.Code, t)) } target="_blank" role="button">
         { t.SISLink }
     </a>
     // TODO: zapsat button
