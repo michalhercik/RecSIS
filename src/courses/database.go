@@ -1,6 +1,7 @@
 package courses
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -22,17 +23,57 @@ func (m DBManager) Courses(userID string, courseCodes []string, lang language.La
 	return result, nil
 }
 
-func (m DBManager) ParamLabels(lang language.Language) (map[string][]filter.ParamValue, error) {
-	var result map[string][]filter.ParamValue = make(map[string][]filter.ParamValue)
-	var rows []struct {
-		Param string `db:"param_name"`
-		filter.ParamValue
+// func (m DBManager) ParamLabels(lang language.Language) (map[string][]filter.ParamValue, error) {
+// 	var result map[string][]filter.ParamValue = make(map[string][]filter.ParamValue)
+// 	var rows []struct {
+// 		Param string `db:"param_name"`
+// 		filter.ParamValue
+// 	}
+// 	if err := m.DB.Select(&rows, sqlquery.ParamLabels, lang); err != nil {
+// 		return nil, fmt.Errorf("failed to fetch param labels: %w", err)
+// 	}
+// 	for _, row := range rows {
+// 		result[row.Param] = append(result[row.Param], row.ParamValue)
+// 	}
+// 	return result, nil
+// }
+
+func (m DBManager) Filters() (filter.Filters, error) {
+	// Retrieve
+	tmpResult := []struct {
+		CategoryID      string         `db:"category_id"`
+		CategoryFacetID string         `db:"category_facet_id"`
+		CategoryTitleCS string         `db:"category_title_cs"`
+		CategoryTitleEN string         `db:"category_title_en"`
+		CategoryDescCS  sql.NullString `db:"category_description_cs"`
+		CategoryDescEN  sql.NullString `db:"category_description_en"`
+		ValueID         string         `db:"value_id"`
+		ValueFacetID    string         `db:"value_facet_id"`
+		ValueTitleCS    string         `db:"value_title_cs"`
+		ValueTitleEN    string         `db:"value_title_en"`
+		ValueDescCS     sql.NullString `db:"value_description_cs"`
+		ValueDescEN     sql.NullString `db:"value_description_en"`
+	}{}
+	if err := m.DB.Select(&tmpResult, sqlquery.Filters); err != nil {
+		return filter.Filters{}, fmt.Errorf("failed to fetch filters: %w", err)
 	}
-	if err := m.DB.Select(&rows, sqlquery.ParamLabels, lang); err != nil {
-		return nil, fmt.Errorf("failed to fetch param labels: %w", err)
+	// Parse
+	fb := filter.FilterBuilder{}
+	for _, row := range tmpResult {
+		if fb.IsLastCategory(row.CategoryID) {
+			fb.Category(filter.MakeFilterIdentity(
+				row.CategoryID,
+				row.CategoryFacetID,
+				language.MakeLangString(row.CategoryTitleCS, row.CategoryTitleEN),
+				language.MakeLangString(row.CategoryDescCS.String, row.CategoryDescEN.String),
+			))
+		}
+		fb.Value(filter.MakeFilterIdentity(
+			row.ValueID,
+			row.ValueFacetID,
+			language.MakeLangString(row.ValueTitleCS, row.ValueTitleEN),
+			language.MakeLangString(row.ValueDescCS.String, row.ValueDescEN.String),
+		))
 	}
-	for _, row := range rows {
-		result[row.Param] = append(result[row.Param], row.ParamValue)
-	}
-	return result, nil
+	return fb.Build(), nil
 }

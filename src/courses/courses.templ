@@ -2,7 +2,7 @@ package courses
 
 import (
     "github.com/michalhercik/RecSIS/utils"
-	"github.com/michalhercik/RecSIS/courses/internal/filter"
+	// "github.com/michalhercik/RecSIS/courses/internal/filter"
     "strconv"
 )
 
@@ -114,11 +114,11 @@ templ search(coursesPage *coursesPage, t text) {
     </form>
 }
 
-templ checkboxInput(name, value, label string, count int, t text) {
-    if (count > 0) {
+templ checkboxInput(name, value, label string, count int, checked bool, t text) {
+    if (count > 0 || true) {
         <div class="form-check">
             <input role="button" class="form-check-input" disabled?={ count == 0 }
-                type="checkbox" name={ name } id={ name + "-" + value } value={ value }>
+                type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
             <label role="button" class="form-check-label" for={ name + "-" + value }>
                 { label + " (" + strconv.Itoa(count) + ")" }
             </label>
@@ -126,26 +126,26 @@ templ checkboxInput(name, value, label string, count int, t text) {
     }
 }
 
-templ filterOptions(label string, cp *coursesPage, p filter.Parameter, t text) {
-    {{
-        // TODO: move this to BE, as facets method
-        show := false
-        for f := range cp.facets.ParamDistribution(p) {
-            if f.Count > 0 {
-                show = true
-                break
-            }
-        }
-    }}
-    if (show) {
-        <div>
-            <p class="form-label">{ label + ":" }</p>
-            for f := range cp.facets.ParamDistribution(p) {
-                @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(p)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-            }
-        </div>
-    }
-}
+// templ filterOptions(label string, cp *coursesPage, p filter.Parameter, t text) {
+//     {{
+//         // TODO: move this to BE, as facets method
+//         show := false
+//         for f := range cp.facets.ParamDistribution(p) {
+//             if f.Count > 0 {
+//                 show = true
+//                 break
+//             }
+//         }
+//     }}
+//     if (show) {
+//         <div>
+//             <p class="form-label">{ label + ":" }</p>
+//             for f := range cp.facets.ParamDistribution(p) {
+//                 @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(p)), strconv.Itoa(f.Code), f.Label, f.Count, t)
+//             }
+//         </div>
+//     }
+// }
 
 
 templ filterSection(cp *coursesPage, t text) {
@@ -158,33 +158,14 @@ templ filterSection(cp *coursesPage, t text) {
             hx-include="#search-form"
             hx-trigger="change"
         >
-            // semester filter
-            @filterOptions(t.SemesterFilter, cp, filter.StartSemester, t)
-            // number of semesters filter
-            @filterOptions(t.SemesterCountFilter, cp, filter.SemesterCount, t)
-            // faculty filter
-            @filterOptions(t.FacultyFilter, cp, filter.Faculty, t)
-            // credits filter
-            @filterOptions(t.CreditsFilter, cp, filter.Credits, t)
-            // exam type filter
-            @filterOptions(t.ExamTypeFilter, cp, filter.ExamType, t)
-            // ranges filters
-            @filterOptions(t.LectureRangeWFilter, cp, filter.LectureRangeWinter, t)
-            @filterOptions(t.SeminarRangeWFilter, cp, filter.SeminarRangeWinter, t)
-            @filterOptions(t.LectureRangeSFilter, cp, filter.LectureRangeSummer, t)
-            @filterOptions(t.SeminarRangeSFilter, cp, filter.SeminarRangeSummer, t)
-            // range unit filter
-            @filterOptions(t.RangeUnitFilter, cp, filter.RangeUnit, t)
-            // is taught filter
-            @filterOptions(t.TaughtFilter, cp, filter.Taught, t)
-            // language filter
-            @filterOptions(t.LanguageFilter, cp, filter.TaughtLang, t)
-            // guarantor filter
-            @filterOptions(t.FacultyGuarantorFilter, cp, filter.FacultyGuarantor, t)
-            // max capacity filter
-            @filterOptions(t.CapacityFilter, cp, filter.Capacity, t)
-            // min number people filter
-            @filterOptions(t.MinNumberFilter, cp, filter.MinNumber, t)
+            for category := range cp.facets {
+                <div>
+                    <p class="form-label">{ category.Title + ":" }</p>
+                    for value := range category.IterWithFacets() {
+                        @checkboxInput("par" + category.ID, value.ID, value.Title, value.Count, value.Checked, t)
+                    }
+                </div>
+            }
         </form>
         // move to the top of the page button
         <div class="text-center justify-content-center d-flex mt-3" style="position: sticky; top: 72px;">
