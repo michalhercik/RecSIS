@@ -182,31 +182,44 @@ templ blueprintAssignment(code string, t text) {
 
 func hoursString(course *Course, t text) string {
     result := ""
-    both := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
-    winter := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
-    summer := strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2)
-
-    switch course.Start {
-    case teachingWinterOnly:
-        result += winter
-    case teachingSummerOnly:
-        result += summer
-    case teachingBoth:
-        result += both
+    winter := course.LectureRangeWinter.Valid && course.SeminarRangeWinter.Valid
+    summer := course.LectureRangeSummer.Valid && course.SeminarRangeSummer.Valid
+    if winter {
+        result += fmt.Sprintf("%d/%d", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64)
     }
-
-    if course.SemesterCount == 2 {
-        switch course.Start {
-        case teachingWinterOnly:
-            result += ", " + summer
-        case teachingSummerOnly:
-            result += ", " + winter
-        case teachingBoth:
-            result = "ERROR" // TODO: what should be done in this case? can it even happen?
-        }
+    if winter && summer {
+        result += ", "
     }
-
+    if summer {
+        result += fmt.Sprintf("%d/%d", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64)
+    }
     return result
+    // result := ""
+    // both := strconv.Itoa(course.LectureRangeWinter) + "/" + strconv.Itoa(course.SeminarRangeWinter)
+    // winter := strconv.Itoa(course.LectureRangeWinter) + "/" + strconv.Itoa(course.SeminarRangeWinter)
+    // summer := strconv.Itoa(course.LectureRangeSummer) + "/" + strconv.Itoa(course.SeminarRangeSummer)
+
+    // switch course.Start {
+    // case teachingWinterOnly:
+    //     result += winter
+    // case teachingSummerOnly:
+    //     result += summer
+    // case teachingBoth:
+    //     result += both
+    // }
+
+    // if course.SemesterCount == 2 {
+    //     switch course.Start {
+    //     case teachingWinterOnly:
+    //         result += ", " + summer
+    //     case teachingSummerOnly:
+    //         result += ", " + winter
+    //     case teachingBoth:
+    //         result = "ERROR" // TODO: what should be done in this case? can it even happen?
+    //     }
+    // }
+
+    // return result
 }
 
 func courseSISLink(code string, t text) string {
@@ -239,12 +252,38 @@ templ standartBadge(text, bgColor string) {
     </span>
 }
 
+func courseStyleClass(c *Course) string {
+    switch c.Start {
+        case teachingBoth:
+            return "bg-both"
+        case teachingWinterOnly:
+            return "bg-winter"
+        case teachingSummerOnly:
+            return "bg-summer"
+        default:
+            return ""
+    }
+}
+
+func courseStartString(c *Course, t text) string {
+    switch c.Start {
+        case teachingBoth:
+            return t.Both
+        case teachingWinterOnly:
+            return t.Winter
+        case teachingSummerOnly:
+            return t.Summer
+        default:
+            return ""
+    }
+}
+
 templ badges(course *Course, t text) {
     <div class="d-flex justify-content-between">
         <div class="text-start">
-            @standartBadge(fmt.Sprintf("%s: %d", t.ECredits, course.Credits), course.Start.Color())
-            @standartBadge(course.Start.String(t.Language), course.Start.Color())
-            @standartBadge(fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType), course.Start.Color())
+            @standartBadge(fmt.Sprintf("%s: %d", t.ECredits, course.Credits), courseStyleClass(course))
+            @standartBadge(courseStartString(course, t), courseStyleClass(course))
+            @standartBadge(fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType), courseStyleClass(course))
         </div>
         <div class="text-end">
             // TODO: make this dynamic (this just for show)
@@ -266,7 +305,7 @@ templ leftColumn(course *Course, t text) {
     <p class="mb-0">{ course.Faculty }</p> // TODO: plus katedra
     <p class="mb-0 mt-1"><strong>{ t.LanguageOfCourse }</strong></p>
     <p class="mb-0">{ course.Language }</p>
-    
+
     if len(course.Guarantors) > 0 {
         <p id="guarantors-part" class="mb-0 mt-1"><strong>{ t.Guarantors }</strong></p>
         <table id="guarantors-table" class="mb-0">
@@ -275,7 +314,7 @@ templ leftColumn(course *Course, t text) {
             }
         </table>
     }
-    
+
     // TODO: if not default (default=taught) show NOT TAUGHT, else do not show anything
     <p class="mb-0 mt-1"><strong>{ t.StateOfCourse }</strong></p>
     <p class="mb-0">{ course.State }</p>
@@ -426,7 +465,7 @@ templ detailInfo(course *Course, t text) {
                 </table>
             }
         </div>
-    </div> 
+    </div>
 }
 
 templ buttons(course *Course, t text) {

@@ -201,18 +201,17 @@ func (d NullDescription) string() string {
 }
 
 type Course struct {
-	Code          string           `db:"code"`
-	Name          string           `db:"title"`
-	Annotation    NullDescription  `db:"annotation"`
-	Start         TeachingSemester `db:"start_semester"`
-	SemesterCount int              `db:"semester_count"`
-	LectureRange1 int              `db:"lecture_range1"`
-	SeminarRange1 int              `db:"seminar_range1"`
-	LectureRange2 int              `db:"lecture_range2"`
-	SeminarRange2 int              `db:"seminar_range2"`
-	ExamType      string           `db:"exam_type"`
-	Credits       int              `db:"credits"`
-	Guarantors    TeacherSlice     `db:"guarantors"`
-	// Rating               int
-	BlueprintAssignments AssignmentSlice `db:"assignment"`
+	Code                 string           `db:"code"`
+	Name                 string           `db:"title"`
+	Annotation           NullDescription  `db:"annotation"`
+	Start                TeachingSemester `db:"start_semester"`
+	SemesterCount        int              `db:"semester_count"`
+	LectureRange1        int              `db:"lecture_range1"`
+	SeminarRange1        int              `db:"seminar_range1"`
+	LectureRange2        int              `db:"lecture_range2"`
+	SeminarRange2        int              `db:"seminar_range2"`
+	ExamType             string           `db:"exam_type"`
+	Credits              int              `db:"credits"`
+	Guarantors           TeacherSlice     `db:"guarantors"`
+	BlueprintAssignments AssignmentSlice  `db:"assignment"`
 }
