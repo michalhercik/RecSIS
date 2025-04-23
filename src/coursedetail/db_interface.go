@@ -2,7 +2,6 @@ package coursedetail
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -32,47 +31,71 @@ const (
 	showModal = true
 )
 
-type DBLang string
-
-// const (
-// 	cs DBLang = "cs"
-// 	en DBLang = "en"
-// )
-
-type Faculty struct {
-	SisID int
-	Name  string
-	Abbr  string
+type Course struct {
+	Code                string
+	Name                string
+	Faculty             string
+	GuarantorDepartment string
+	State               string
+	Start               TeachingSemester
+	// SemesterCount         int
+	Language              string
+	LectureRangeWinter    sql.NullInt64
+	SeminarRangeWinter    sql.NullInt64
+	LectureRangeSummer    sql.NullInt64
+	SeminarRangeSummer    sql.NullInt64
+	ExamType              string
+	Credits               int
+	Guarantors            TeacherSlice
+	Teachers              TeacherSlice
+	MinEnrollment         Capacity
+	Capacity              string
+	Annotation            NullDescription
+	Syllabus              NullDescription
+	PassingTerms          NullDescription
+	Literature            NullDescription
+	AssesmentRequirements NullDescription
+	EntryRequirements     NullDescription
+	Aim                   NullDescription
+	Prereq                []string
+	Coreq                 []string
+	Incompa               []string
+	Interchange           []string
+	Classes               []Class
+	Classifications       []Class
+	CourseRating
+	Link                 string // link to course webpage (not SIS)
+	BlueprintAssignments []Assignment
+	CategoryRatings      []CourseCategoryRating
+	Comments             search.SearchResult
 }
 
-type Semester int
+func (c Course) IsTaughtInWinter() bool {
+	return c.LectureRangeWinter.Valid && c.SeminarRangeWinter.Valid
+}
+
+func (c Course) IsTaughtInSummer() bool {
+	return c.LectureRangeSummer.Valid && c.SeminarRangeSummer.Valid
+}
+
+func (c Course) IsTaughtBoth() bool {
+	return c.IsTaughtInWinter() && c.IsTaughtInSummer()
+}
+
+type TeachingSemester int
 
 const (
-	winter Semester = iota + 1
-	summer
-	both
+	teachingWinterOnly TeachingSemester = iota + 1
+	teachingSummerOnly
+	teachingBoth
 )
 
-func (s Semester) String(lang string) string {
-	l := language.Language(lang)
-	switch s {
-	case winter:
-		return texts[l].Winter
-	case summer:
-		return texts[l].Summer
-	case both:
-		return texts[l].Both
-	default:
-		return "unknown"
-	}
-}
-
 type Teacher struct {
-	SisID       string `json:"KOD"`
-	FirstName   string `json:"JMENO"`
-	LastName    string `json:"PRIJMENI"`
-	TitleBefore string `json:"TITULPRED"`
-	TitleAfter  string `json:"TITULZA"`
+	SisID       string
+	FirstName   string
+	LastName    string
+	TitleBefore string
+	TitleAfter  string
 }
 
 func (t Teacher) String() string {
@@ -104,55 +127,72 @@ func (t TeacherSlice) string() string {
 	return strings.Join(names, ", ")
 }
 
-func (ts *TeacherSlice) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case []byte:
-		json.Unmarshal(v, &ts)
-		return nil
-	case string:
-		json.Unmarshal([]byte(v), &ts)
-		return nil
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
+type Description struct {
+	Title   string
+	Content string
 }
 
-type TeachingSemester int
-
-const (
-	teachingWinterOnly TeachingSemester = iota + 1
-	teachingSummerOnly
-	teachingBoth
-)
-
-func (ts *TeachingSemester) String(lang string) string {
-	semester := ""
-	l := language.Language(lang)
-	switch *ts {
-	case teachingWinterOnly:
-		semester = texts[l].Winter
-	case teachingSummerOnly:
-		semester = texts[l].Summer
-	case teachingBoth:
-		semester = texts[l].Both
-	default:
-		semester = "unsupported"
-	}
-	return semester
+type NullDescription struct {
+	Description
+	Valid bool
 }
 
-func (ts *TeachingSemester) Color() string {
-	switch *ts {
-	case teachingWinterOnly:
-		return "bg-winter"
-	case teachingSummerOnly:
-		return "bg-summer"
-	case teachingBoth:
-		return "bg-both"
-	default:
-		return "bg-text-secondary"
-	}
-}
+// type Faculty struct {
+// 	SisID int
+// 	Name  string
+// 	Abbr  string
+// }
+
+// type Semester int
+
+// const (
+// 	winter Semester = iota + 1
+// 	summer
+// 	both
+// )
+
+// func (s Semester) String(lang string) string {
+// 	l := language.Language(lang)
+// 	switch s {
+// 	case winter:
+// 		return texts[l].Winter
+// 	case summer:
+// 		return texts[l].Summer
+// 	case both:
+// 		return texts[l].Both
+// 	default:
+// 		return "unknown"
+// 	}
+// }
+
+// func (ts *TeachingSemester) String(lang string) string {
+// 	semester := ""
+// 	l := language.Language(lang)
+// 	switch *ts {
+// 	case teachingWinterOnly:
+// 		semester = texts[l].Winter
+// 	case teachingSummerOnly:
+// 		semester = texts[l].Summer
+// 	case teachingBoth:
+// 		semester = texts[l].Both
+// 	default:
+// 		semester = "unsupported"
+// 	}
+// 	return semester
+// }
+
+// func (ts *TeachingSemester) Color() string {
+// 	switch *ts {
+// 	case teachingWinterOnly:
+// 		return "bg-winter"
+// 	case teachingSummerOnly:
+// 		return "bg-summer"
+// 	case teachingBoth:
+// 		return "bg-both"
+// 	default:
+// 		return "bg-text-secondary"
+// 	}
+// }
 
 type Assignment struct {
 	// year     int
@@ -193,44 +233,17 @@ func (a Assignments) String(lang string) string {
 	return strings.Join(assignments, " ")
 }
 
-type Description struct {
-	Title   string `json:"TITLE"`
-	Content string `json:"MEMO"`
-}
-
-func (d *Description) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case []byte:
-		json.Unmarshal(v, &d)
-		return nil
-	case string:
-		json.Unmarshal([]byte(v), &d)
-		return nil
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
-}
-
-func (d Description) Value() (interface{}, error) {
-	return json.Marshal(d)
-}
-
-type NullDescription struct {
-	Description
-	Valid bool
-}
-
-func (d *NullDescription) Scan(val interface{}) error {
-	if val == nil {
-		d.Valid = false
-		return nil
-	}
-	if err := d.Description.Scan(val); err != nil {
-		return err
-	}
-	d.Valid = true
-	return nil
-}
+// func (d *NullDescription) Scan(val interface{}) error {
+// 	if val == nil {
+// 		d.Valid = false
+// 		return nil
+// 	}
+// 	if err := d.Description.Scan(val); err != nil {
+// 		return err
+// 	}
+// 	d.Valid = true
+// 	return nil
+// }
 
 type Capacity int
 
@@ -244,16 +257,6 @@ func (c Capacity) String(lang string) string {
 
 type NullInt64 sql.NullInt64
 
-func (n *NullInt64) Scan(value interface{}) error {
-	var i sql.NullInt64
-	err := i.Scan(value)
-	if err != nil {
-		return err
-	}
-	*n = NullInt64(i)
-	return nil
-}
-
 func (n NullInt64) String() string {
 	if !n.Valid {
 		return "NULL"
@@ -263,16 +266,6 @@ func (n NullInt64) String() string {
 
 type NullFloat64 sql.NullFloat64
 
-func (n *NullFloat64) Scan(value interface{}) error {
-	var i sql.NullFloat64
-	err := i.Scan(value)
-	if err != nil {
-		return err
-	}
-	*n = NullFloat64(i)
-	return nil
-}
-
 func (n NullFloat64) String() string {
 	if !n.Valid {
 		return "NULL"
@@ -281,111 +274,20 @@ func (n NullFloat64) String() string {
 }
 
 type CourseRating struct {
-	UserRating  NullInt64   `db:"rating"`
-	AvgRating   NullFloat64 `db:"avg_rating"`
-	RatingCount NullInt64   `db:"rating_count"`
+	UserRating  NullInt64
+	AvgRating   NullFloat64
+	RatingCount NullInt64
 }
 
 type CourseCategoryRating struct {
-	Code  int    `db:"category_code"`
-	Title string `db:"rating_title"`
+	Code  int
+	Title string
 	CourseRating
-}
-
-type CourseInfo struct {
-	Code                  string           `db:"code"`
-	Name                  string           `db:"title"`
-	Faculty               string           `db:"faculty"`
-	GuarantorDepartment   string           `db:"guarantor"`
-	State                 string           `db:"taught"`
-	Start                 TeachingSemester `db:"start_semester"`
-	SemesterCount         int              `db:"semester_count"`
-	Language              string           `db:"taught_lang"`
-	LectureRange1         int              `db:"lecture_range1"`
-	SeminarRange1         int              `db:"seminar_range1"`
-	LectureRange2         int              `db:"lecture_range2"`
-	SeminarRange2         int              `db:"seminar_range2"`
-	ExamType              string           `db:"exam_type"`
-	Credits               int              `db:"credits"`
-	Guarantors            TeacherSlice     `db:"guarantors"`
-	Teachers              TeacherSlice     `db:"teachers"`
-	MinEnrollment         Capacity         `db:"min_number"`
-	Capacity              string           `db:"capacity"`
-	Annotation            NullDescription  `db:"annotation"`
-	Syllabus              NullDescription  `db:"syllabus"`
-	PassingTerms          NullDescription  `db:"terms_of_passing"`
-	Literature            NullDescription  `db:"literature"`
-	AssesmentRequirements NullDescription  `db:"requirements_for_assesment"`
-	EntryRequirements     NullDescription  `db:"entry_requirements"`
-	Aim                   NullDescription  `db:"aim"`
-	Prereq                JSONStringArray  `db:"preqrequisities"`
-	Coreq                 JSONStringArray  `db:"corequisities"`
-	Incompa               JSONStringArray  `db:"incompatibilities"`
-	Interchange           JSONStringArray  `db:"interchangebilities"`
-	Classes               ClassSlice       `db:"classes"`
-	Classifications       ClassSlice       `db:"classifications"`
-}
-
-type ClassSlice []Class
-
-func (cs *ClassSlice) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case nil:
-		*cs = nil
-		return nil
-	case []byte:
-		*cs = nil
-		err := json.Unmarshal(v, &cs)
-		return err
-	case string:
-		err := json.Unmarshal([]byte(v), &cs)
-		return err
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
 }
 
 type Class struct {
-	Code string `json:"KOD"`
-	Name string `json:"NAZEV"`
-}
-
-type JSONStringArray []string
-
-func (jsa *JSONStringArray) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case nil:
-		jsa = nil
-		return nil
-	case []byte:
-		*jsa = nil
-		err := json.Unmarshal(v, &jsa)
-		return err
-	case string:
-		err := json.Unmarshal([]byte(v), &jsa)
-		return err
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
-}
-
-func (jsa JSONStringArray) String() string {
-	if len(jsa) == 0 {
-		return ""
-	}
-	return strings.Join(jsa, ", ")
-}
-
-type Course struct {
-	CourseInfo
-	CourseRating
-	// UserOverallRating    NullInt64   `db:"overall_rating"`
-	// AvgOverallRating     NullFloat64 `db:"avg_overall_rating"`
-	// OverallRatingCount   NullInt64   `db:"overall_rating_count"`
-	Link                 string // link to course webpage (not SIS)
-	BlueprintAssignments []Assignment
-	CategoryRatings      []CourseCategoryRating
-	Comments             search.SearchResult //[]course.Comment
+	Code string
+	Name string
 }
 
 // type CommentSlice []Comment
