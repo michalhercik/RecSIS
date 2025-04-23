@@ -29,9 +29,9 @@ func IterFiltersWithFacets(filters Filters, facets Facets, query url.Values, lan
 	}
 }
 
-func (ci FacetIterator) IterWithFacets() iter.Seq[FacetValue] {
-	return func(yield func(FacetValue) bool) {
-		for _, v := range ci.filter.values {
+func (ci FacetIterator) IterWithFacets() iter.Seq2[int, FacetValue] {
+	return func(yield func(int, FacetValue) bool) {
+		for i, v := range ci.filter.values {
 			count, ok := ci.facets[v.facetID]
 			if !ok {
 				count = 0
@@ -44,11 +44,15 @@ func (ci FacetIterator) IterWithFacets() iter.Seq[FacetValue] {
 				Count:   count,
 				Checked: checked,
 			}
-			if !yield(result) {
+			if !yield(i, result) {
 				return
 			}
 		}
 	}
+}
+
+func (ci FacetIterator) Size() int {
+	return len(ci.filter.values)
 }
 
 type Facets map[string]map[string]int

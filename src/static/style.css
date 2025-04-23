@@ -198,8 +198,8 @@ body {
 /* buttons */
 .blueprint-table th:nth-child(8),
 .blueprint-table td:nth-child(8) {
-    /* 4 * button=32 + 2 * padding=4 */
-    width: 136px;
+    /* 3 * button=32 + 2 * padding=4 */
+    width: 104px;
 }
 
 /* table header cell overflow */
@@ -219,12 +219,12 @@ body {
 /* Courses grid styles */
 .grid-page {
     display: grid;
-    grid-template-columns: 200px 1fr;
+    grid-template-columns: 230px 1fr;
     gap: 1rem; /* Space between columns */
 }
 
 .filter {
-    width: 200px; /* Ensure the width stays fixed */
+    width: 230px; /* Ensure the width stays fixed */
     padding: 1rem;
 }
 

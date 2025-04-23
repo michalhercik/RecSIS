@@ -3,7 +3,8 @@ package courses
 import (
     "github.com/michalhercik/RecSIS/utils"
 	// "github.com/michalhercik/RecSIS/courses/internal/filter"
-    "strconv"
+    "strconv" // TODO: rewrite all strconv.Itoa to fmt.Sprintf
+    "fmt"
 )
 
 const coursesPerPage = 30
@@ -82,7 +83,7 @@ templ search(coursesPage *coursesPage, t text) {
         hx-target="#courses-page"
         hx-swap="outerHTML"
         hx-include="#filter-form"
-        class="pt-3 pb-3"
+        class="py-3"
         x-data="{ quickResOpen: false, quickResLoaded: false }"
         @htmx:after-request="quickResLoaded = true"
     >
@@ -92,7 +93,7 @@ templ search(coursesPage *coursesPage, t text) {
                     <input type="text" name={ searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
                         x-model="searchInput"
                         @click="if (!quickResLoaded && searchInput !== '') $dispatch('triggerSearch'); quickResOpen = true;"
-                        @keydown="quickResOpen = true"
+                        @input="quickResOpen = true"
                         @keydown.escape="quickResOpen = false"
                         @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
                         hx-get={ t.Utils.LangLink("/courses/quicksearch") }
@@ -114,16 +115,32 @@ templ search(coursesPage *coursesPage, t text) {
     </form>
 }
 
-templ checkboxInput(name, value, label string, count int, checked bool, t text) {
-    if (count > 0 || true) {
-        <div class="form-check">
-            <input role="button" class="form-check-input" disabled?={ count == 0 }
-                type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
-            <label role="button" class="form-check-label" for={ name + "-" + value }>
-                { label + " (" + strconv.Itoa(count) + ")" }
-            </label>
-        </div>
-    }
+templ helpIcon(content string) {
+    <i
+        class="mx-1 bi"
+        :class="hoverHelp ? 'bi-question-circle-fill' : 'bi-question-circle'"
+        @mouseover="hoverHelp = true"
+        @mouseleave="hoverHelp = false"
+        data-bs-toggle="tooltip"
+        data-bs-placement="right"
+        data-bs-delay="200"
+        data-bs-title={ content }
+        >
+    </i>
+}
+
+templ checkboxInput(name, value, label, desc string, count int, checked bool, t text) {
+    <div class="form-check">
+        <input role="button" class="form-check-input" disabled?={ count == 0 }
+            type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
+        <label role="button" class="form-check-label" for={ name + "-" + value } x-data="{ hoverHelp: false }">
+            <span>{ label }</span>
+            if desc != "" {
+                @helpIcon(desc)
+            }
+            <span>{ "(" + strconv.Itoa(count) + ")" } </span>
+        </label>
+    </div>
 }
 
 templ filterSection(cp *coursesPage, t text) {
@@ -136,12 +153,34 @@ templ filterSection(cp *coursesPage, t text) {
             hx-include="#search-form"
             hx-trigger="change"
         >
+            {{
+                valuesShown := 3
+            }}
             for category := range cp.facets {
-                <div>
-                    <p class="form-label">{ category.Title + ":" }</p>
-                    for value := range category.IterWithFacets() {
-                        @checkboxInput("par" + category.ID, value.ID, value.Title, value.Count, value.Checked, t)
+                <div x-data="{ expanded: false }">
+                    <div class="d-flex justify-content-start align-items-end" x-data="{ hoverHelp: false }">
+                        <p class="form-label fw-semibold mb-0 mt-2">{ category.Title }</p>
+                        if category.Desc != "" {
+                            @helpIcon(category.Desc)
+                        }
+                    </div> 
+                    for i, value := range category.IterWithFacets() {
+                        <div x-show={ fmt.Sprintf("expanded || %d < %d", i, valuesShown) }>
+                            @checkboxInput("par" + category.ID, value.ID, value.Title, value.Desc, value.Count, value.Checked, t)
+                        </div>
                     }
+                    <div x-show={ fmt.Sprintf("%t", category.Size() > valuesShown) }>
+                        <button
+                            type="button"
+                            class="btn btn-link text-secondary p-0"
+                            if others := category.Size() - valuesShown; others < 5 {
+                                x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore4Minus, others) }
+                            } else {
+                                x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore5Plus, others) }
+                            }
+                            @click="expanded = !expanded">
+                        </button>
+                    </div>
                 </div>
             }
         </form>
@@ -339,7 +378,7 @@ templ Content(coursesPage *coursesPage, t text) {
     // TODO: define x-data, x-model and x-init for all filters to survive page reload
     // x-data is needed for x-bind:class to work
     <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" }>
-        <div class="filter bg-body-secondary">
+        <div class="filter border-end bg-light">
             @filterSection(coursesPage, t)
         </div>
         <div class="main-content">
@@ -347,6 +386,22 @@ templ Content(coursesPage *coursesPage, t text) {
             @Courses(coursesPage, t)
         </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeTooltips();
+    });
+
+    document.addEventListener('htmx:afterSwap', function () {
+        initializeTooltips();
+    });
+
+    // bootstrap tooltip initialization
+    function initializeTooltips() {
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    };
+    </script>
 }
 
 templ Page(coursesPage *coursesPage, t text) {

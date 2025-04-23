@@ -35,6 +35,9 @@ type text struct {
 	CapacityFilter         string
 	MinNumberFilter        string
 	TopFilter              string
+	ShowMore4Minus         string
+	ShowMore5Plus          string
+	ShowLess               string
 	Assign                 string
 	Year                   string
 	WinterAssign           string
@@ -91,6 +94,9 @@ var texts = map[language.Language]text{
 		CapacityFilter:         "Kapacita",
 		MinNumberFilter:        "Minimální počet zapsaných",
 		TopFilter:              "Filtrovat",
+		ShowMore4Minus:         "Další",
+		ShowMore5Plus:          "Dalších",
+		ShowLess:               "Skrýt ostatní",
 		Assign:                 "Přiřadit",
 		Year:                   "ročník",
 		WinterAssign:           "ZS",
@@ -136,6 +142,9 @@ var texts = map[language.Language]text{
 		CapacityFilter:         "Capacity",
 		MinNumberFilter:        "Minimum number of students",
 		TopFilter:              "Filter",
+		ShowMore4Minus:         "Another",
+		ShowMore5Plus:          "Another",
+		ShowLess:               "Hide others",
 		Assign:                 "Assign",
 		Year:                   "Year",
 		WinterAssign:           "Winter",
