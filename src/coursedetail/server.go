@@ -94,8 +94,10 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("rate error: %v", err)
 	}
+	// get language
+	lang := language.FromContext(r.Context())
 	// render the overall rating
-	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code).Render(r.Context(), w)
+	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code, texts[lang]).Render(r.Context(), w)
 }
 
 func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
@@ -109,8 +111,10 @@ func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("deleteRating error: %v", err)
 	}
+	// get language
+	lang := language.FromContext(r.Context())
 	// render the overall rating
-	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code).Render(r.Context(), w)
+	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code, texts[lang]).Render(r.Context(), w)
 }
 
 func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +137,7 @@ func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
 		log.Printf("rateCategory error: %v", err)
 	}
 	// render category rating
-	CategoryRating(updatedRating, code, showModal, texts[lang]).Render(r.Context(), w)
+	CategoryRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
 }
 
 func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
@@ -151,5 +155,5 @@ func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
 		log.Printf("deleteCategoryRating error: %v", err)
 	}
 	// render category rating
-	CategoryRating(updatedRating, code, showModal, texts[lang]).Render(r.Context(), w)
+	CategoryRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
 }

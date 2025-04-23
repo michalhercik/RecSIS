@@ -83,14 +83,15 @@ templ search(coursesPage *coursesPage, t text) {
         hx-swap="outerHTML"
         hx-include="#filter-form"
         class="pt-3 pb-3"
-        x-data="{ quickResOpen: false }"
+        x-data="{ quickResOpen: false, quickResLoaded: false }"
+        @htmx:after-request="quickResLoaded = true"
     >
         <div class="justify-content-center mx-5">
             <div class="dropdown" @click.away="quickResOpen = false">
                 <div class="input-group">
                     <input type="text" name={ searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
                         x-model="searchInput"
-                        @click="quickResOpen = true"
+                        @click="if (!quickResLoaded && searchInput !== '') $dispatch('triggerSearch'); quickResOpen = true;"
                         @keydown="quickResOpen = true"
                         @keydown.escape="quickResOpen = false"
                         @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
@@ -124,28 +125,6 @@ templ checkboxInput(name, value, label string, count int, checked bool, t text) 
         </div>
     }
 }
-
-// templ filterOptions(label string, cp *coursesPage, p filter.Parameter, t text) {
-//     {{
-//         // TODO: move this to BE, as facets method
-//         show := false
-//         for f := range cp.facets.ParamDistribution(p) {
-//             if f.Count > 0 {
-//                 show = true
-//                 break
-//             }
-//         }
-//     }}
-//     if (show) {
-//         <div>
-//             <p class="form-label">{ label + ":" }</p>
-//             for f := range cp.facets.ParamDistribution(p) {
-//                 @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(p)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-//             }
-//         </div>
-//     }
-// }
-
 
 templ filterSection(cp *coursesPage, t text) {
     <div class="form-group" style="height: 100%;">
@@ -241,7 +220,7 @@ templ courseCard(course *Course, t text) {
                 x-ref="annotation"
             >
                 <h5 class="card-title"><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.Code)) }>{ course.Name }</a></h5>
-                // TODO take care of no guarantors
+                // TODO: take care of no guarantors
                 <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string() }</h6>
                 <p class="card-text annotation-text">{ course.Annotation.string() }</p>
             </div>

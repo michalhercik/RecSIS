@@ -124,7 +124,7 @@ templ Content(dp *DegreePlan, t text) {
                     <th></th>
                     <th class="th-overflow pe-0">
                         { fmt.Sprintf("%s:", t.Credits) }
-                        <span style="color: rgb(19, 92, 4);">{ fmt.Sprintf("%d", bloc.completedCredits()) }</span>|<span style="color: rgb(4, 108, 181);">{ fmt.Sprintf("%d", bloc.inBlueprintCredits()) }</span>
+                        <span style="color: rgb(19, 92, 4);">{ fmt.Sprintf("%d", bloc.completedCredits()) }</span> | <span style="color: rgb(4, 108, 181);">{ fmt.Sprintf("%d", bloc.inBlueprintCredits()) }</span>
                     </th>
                     <th class="d-none d-md-table-cell">
                         if bloc.hasLimit() {
