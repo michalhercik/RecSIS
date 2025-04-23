@@ -340,6 +340,7 @@ CREATE TABLE filter_categories (
     title_en VARCHAR(50) NOT NULL,
     description_cs VARCHAR(200),
     description_en VARCHAR(200),
+    displayed_value_limit INT NOT NULL,
     position INT NOT NULL
 );
 

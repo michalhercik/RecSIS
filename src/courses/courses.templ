@@ -138,9 +138,10 @@ templ filterSection(cp *coursesPage, t text) {
         >
             for category := range cp.facets {
                 <div>
-                    <p class="form-label">{ category.Title + ":" }</p>
+                    <p class="form-label">{ category.Title() + ":" }</p>
+                    // category.DisplayedValueLimit()
                     for value := range category.IterWithFacets() {
-                        @checkboxInput("par" + category.ID, value.ID, value.Title, value.Count, value.Checked, t)
+                        @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Count, value.Checked, t)
                     }
                 </div>
             }

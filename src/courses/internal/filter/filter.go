@@ -47,7 +47,8 @@ type Filters struct {
 }
 type FilterCategory struct {
 	FilterIdentity
-	values []FilterValue
+	displayedValueLimit int
+	values              []FilterValue
 }
 
 func MakeFilterCategory(identity FilterIdentity, values []FilterValue) FilterCategory {
@@ -59,6 +60,10 @@ func MakeFilterCategory(identity FilterIdentity, values []FilterValue) FilterCat
 
 func (fc FilterCategory) Values() []FilterValue {
 	return fc.values
+}
+
+func (fc FilterCategory) DisplayedValueLimit() int {
+	return fc.displayedValueLimit
 }
 
 type FilterValue struct {

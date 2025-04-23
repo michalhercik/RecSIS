@@ -22,10 +22,8 @@ echo "POST documents: $response"
 filterable='[
   "start_semester",
   "semester_count",
-  "lecture_range_winter",
-  "seminar_range_winter",
-  "lecture_range_summer",
-  "seminar_range_summer",
+  "lecture_range",
+  "seminar_range",
   "credits",
   "department",
   "exam_type",

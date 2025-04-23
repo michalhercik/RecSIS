@@ -1,14 +1,12 @@
-,facet_id,title_cs,title_en,desc_cs,desc_en,position
-0,faculty,Fakulta,Faculty,,,0
-1,taught,Stav předmětu,Course status,,,1
-2,start_semester,Semestr,Semester,,,2
-3,credits,Kredity,Credits,,,3
-4,semester_count,Počet semestrů,Number of semesters,,,4
-5,lecture_range_winter,Rozsah přednášky zima,Winter lecture range,,,5
-6,lecture_range_summer,Rozsah přednášky léto,Summer Lecture range,,,6
-7,lecture_range_winter,Rozsah semináře zima,Winter seminar range,,,7
-8,lecture_range_summer,Rozsah semináře léto,Summer seminar range,,,8
-9,language,Jazyk výuky,Language,,,9
-10,exam_type,Typ examinace,Exam type,,,10
-11,range_unit,Jednotka rozsahu,Range unit,,,11
-12,department,Katedra,Department,,,12
+,facet_id,title_cs,title_en,desc_cs,desc_en,displayed_value_limit,position
+0,faculty,Fakulta,Faculty,,,3,0
+1,taught,Stav předmětu,Course status,,,3,1
+2,start_semester,Semestr,Semester,,,3,2
+3,credits,Kredity,Credits,,,6,3
+4,semester_count,Počet semestrů,Number of semesters,,,3,4
+5,lecture_range,Rozsah přednášky,Lecture range,,,3,5
+6,seminar_range,Rozsah cvičení,Seminar range,,,3,6
+7,language,Jazyk výuky,Language,,,2,7
+8,exam_type,Typ examinace,Exam type,,,4,8
+9,range_unit,Jednotka rozsahu,Range unit,,,4,9
+10,department,Katedra,Department,,,6,10

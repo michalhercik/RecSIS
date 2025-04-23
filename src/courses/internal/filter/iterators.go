@@ -14,9 +14,8 @@ func IterFiltersWithFacets(filters Filters, facets Facets, query url.Values, lan
 			f := facets[c.facetID]
 			checked := query["par"+c.id]
 			result := FacetIterator{
-				ID:      c.id,
-				Title:   c.Title(lang),
-				Desc:    c.Desc(lang),
+				title:   c.Title(lang),
+				desc:    c.Desc(lang),
 				filter:  c,
 				facets:  f,
 				lang:    lang,
@@ -55,13 +54,25 @@ type Facets map[string]map[string]int
 type FacetCategory map[string]int
 
 type FacetIterator struct {
-	ID      string
-	Title   string
-	Desc    string
+	title   string
+	desc    string
 	filter  FilterCategory
 	facets  FacetCategory
 	lang    language.Language
 	checked []string
+}
+
+func (fi FacetIterator) ID() string {
+	return fi.filter.id
+}
+func (fi FacetIterator) Title() string {
+	return fi.title
+}
+func (fi FacetIterator) Desc() string {
+	return fi.desc
+}
+func (fi FacetIterator) DisplayedValueLimit() int {
+	return fi.filter.displayedValueLimit
 }
 
 type FacetValue struct {

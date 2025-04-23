@@ -27,10 +27,12 @@ en = courses[courses["LANG"] == "en"]
 df = pd.merge(cs, en, on="POVINN", suffixes=("CS", "EN"))
 
 facet2column = {
-    "lecture_range_winter": "LECTURE_RANGE_WINTER",
-    "lecture_range_summer": "LECTURE_RANGE_SUMMER",
-    "seminar_range_winter": "SEMINAR_RANGE_WINTER",
-    "seminar_range_summer": "SEMINAR_RANGE_SUMMER",
+    # "lecture_range_winter": "LECTURE_RANGE_WINTER",
+    # "lecture_range_summer": "LECTURE_RANGE_SUMMER",
+    # "seminar_range_winter": "SEMINAR_RANGE_WINTER",
+    # "seminar_range_summer": "SEMINAR_RANGE_SUMMER",
+    "lecture_range": "LECTURE_RANGE",
+    "seminar_range": "SEMINAR_RANGE",
     "exam_type": "VTYP",
     "credits": "VEBODY",
     "faculty": "FACULTY_NAME",
@@ -51,10 +53,12 @@ exam_order = {
     "Z": 3,
 }
 facet2sort = {
-    "lecture_range_winter": asint,
-    "lecture_range_summer": asint,
-    "seminar_range_winter": asint,
-    "seminar_range_summer": asint,
+    # "lecture_range_winter": asint,
+    # "lecture_range_summer": asint,
+    # "seminar_range_winter": asint,
+    # "seminar_range_summer": asint,
+    "lecture_range": asint,
+    "seminar_range": asint,
     "credits": asint,
     "min_occupancy": asint,
     "capacity": asint,
@@ -74,23 +78,25 @@ format_facet_id = {
 
 categories = pd.DataFrame(
     data=[
-        ["faculty", "Fakulta", "Faculty", "", ""],
-        ["taught", "Stav předmětu", "Course status", "", ""],
-        ["start_semester", "Semestr", "Semester", "", ""],
-        ["credits", "Kredity", "Credits", "", ""],
-        ["semester_count", "Počet semestrů", "Number of semesters", "", ""],
-        ["lecture_range_winter", "Rozsah přednášky zima", "Winter lecture range", "", ""],
-        ["lecture_range_summer", "Rozsah přednášky léto", "Summer Lecture range", "", ""],
-        ["lecture_range_winter", "Rozsah semináře zima", "Winter seminar range", "", ""],
-        ["lecture_range_summer", "Rozsah semináře léto", "Summer seminar range", "", ""],
-        ["language", "Jazyk výuky", "Language", "", ""],
-        ["exam_type", "Typ examinace", "Exam type", "", ""],
-        ["range_unit", "Jednotka rozsahu", "Range unit", "", ""],
-        ["department", "Katedra", "Department", "", ""],
+        ["faculty", "Fakulta", "Faculty", "", "", 3],
+        ["taught", "Stav předmětu", "Course status", "", "", 3],
+        ["start_semester", "Semestr", "Semester", "", "", 3],
+        ["credits", "Kredity", "Credits", "", "", 6],
+        ["semester_count", "Počet semestrů", "Number of semesters", "", "", 3],
+        ["lecture_range", "Rozsah přednášky", "Lecture range", "", "", 3],
+        ["seminar_range", "Rozsah cvičení", "Seminar range", "", "", 3],
+        # ["lecture_range_winter", "Rozsah přednášky zima", "Winter lecture range", "", ""],
+        # ["lecture_range_summer", "Rozsah přednášky léto", "Summer Lecture range", "", ""],
+        # ["seminar_range_winter", "Rozsah semináře zima", "Winter seminar range", "", ""],
+        # ["seminar_range_summer", "Rozsah semináře léto", "Summer seminar range", "", ""],
+        ["language", "Jazyk výuky", "Language", "", "", 2],
+        ["exam_type", "Typ examinace", "Exam type", "", "", 4],
+        ["range_unit", "Jednotka rozsahu", "Range unit", "", "", 4],
+        ["department", "Katedra", "Department", "", "", 6],
         # ["capacity", "Kapacita", "Capacity", "", ""],
         # ["min_occupancy", "Minimální Obsazenost", "Minimum Occupancy", "", ""],
     ],
-    columns=["facet_id", "title_cs", "title_en", "desc_cs", "desc_en"]
+    columns=["facet_id", "title_cs", "title_en", "desc_cs", "desc_en", "displayed_value_limit"]
 )
 categories["position"] = categories.index
 
@@ -127,8 +133,34 @@ langs = langs.sort_values(by=["title_cs", "title_en"], key=lambda x: x.apply(lam
 langs = langs.reset_index(drop=True)
 langs["position"] = langs.index
 
-category_values = [langs]
-for row in categories[categories["facet_id"] != "language"].iterrows():
+lrange = pd.concat([df["LECTURE_RANGE_WINTERCS"], df["LECTURE_RANGE_SUMMERCS"]])
+lrange = lrange.rename("facet_id")
+lrange = lrange.drop_duplicates().dropna()
+lrange = lrange.sort_values(key=facet2sort["lecture_range"])
+lrange = lrange.reset_index(drop=True)
+lrange = lrange.to_frame()
+lrange["category"] = categories[categories["facet_id"] == "lecture_range"].index[0]
+lrange["title_cs"] = lrange["facet_id"]
+lrange["title_en"] = lrange["facet_id"]
+lrange["description_cs"] = ""
+lrange["description_en"] = ""
+lrange["position"] = lrange.index
+
+srange = pd.concat([df["SEMINAR_RANGE_WINTERCS"], df["SEMINAR_RANGE_SUMMERCS"]])
+srange = srange.rename("facet_id")
+srange = srange.drop_duplicates().dropna()
+srange = srange.sort_values(key=facet2sort["seminar_range"])
+srange = srange.reset_index(drop=True)
+srange = srange.to_frame()
+srange["category"] = categories[categories["facet_id"] == "seminar_range"].index[0]
+srange["title_cs"] = srange["facet_id"]
+srange["title_en"] = srange["facet_id"]
+srange["description_cs"] = ""
+srange["description_en"] = ""
+srange["position"] = srange.index
+
+category_values = [langs, lrange, srange]
+for row in categories[~categories["facet_id"].isin(["language", "lecture_range", "seminar_range"])].iterrows():
     col = facet2column[row[1]["facet_id"]]
     cv = df[[col+"CS", col+"EN"]].drop_duplicates().rename(columns={col+"CS": "title_cs", col+"EN": "title_en"})
     formater = format_facet_id.get(row[1]["facet_id"], lambda x: x)
