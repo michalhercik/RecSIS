@@ -41,18 +41,19 @@ func (m DBManager) Courses(userID string, courseCodes []string, lang language.La
 func (m DBManager) Filters() (filter.Filters, error) {
 	// Retrieve
 	tmpResult := []struct {
-		CategoryID      string         `db:"category_id"`
-		CategoryFacetID string         `db:"category_facet_id"`
-		CategoryTitleCS string         `db:"category_title_cs"`
-		CategoryTitleEN string         `db:"category_title_en"`
-		CategoryDescCS  sql.NullString `db:"category_description_cs"`
-		CategoryDescEN  sql.NullString `db:"category_description_en"`
-		ValueID         string         `db:"value_id"`
-		ValueFacetID    string         `db:"value_facet_id"`
-		ValueTitleCS    string         `db:"value_title_cs"`
-		ValueTitleEN    string         `db:"value_title_en"`
-		ValueDescCS     sql.NullString `db:"value_description_cs"`
-		ValueDescEN     sql.NullString `db:"value_description_en"`
+		CategoryID                  string         `db:"category_id"`
+		CategoryFacetID             string         `db:"category_facet_id"`
+		CategoryTitleCS             string         `db:"category_title_cs"`
+		CategoryTitleEN             string         `db:"category_title_en"`
+		CategoryDescCS              sql.NullString `db:"category_description_cs"`
+		CategoryDescEN              sql.NullString `db:"category_description_en"`
+		CategoryDisplayedValueLimit int            `db:"category_displayed_value_limit"`
+		ValueID                     string         `db:"value_id"`
+		ValueFacetID                string         `db:"value_facet_id"`
+		ValueTitleCS                string         `db:"value_title_cs"`
+		ValueTitleEN                string         `db:"value_title_en"`
+		ValueDescCS                 sql.NullString `db:"value_description_cs"`
+		ValueDescEN                 sql.NullString `db:"value_description_en"`
 	}{}
 	if err := m.DB.Select(&tmpResult, sqlquery.Filters); err != nil {
 		return filter.Filters{}, fmt.Errorf("failed to fetch filters: %w", err)
@@ -66,7 +67,7 @@ func (m DBManager) Filters() (filter.Filters, error) {
 				row.CategoryFacetID,
 				language.MakeLangString(row.CategoryTitleCS, row.CategoryTitleEN),
 				language.MakeLangString(row.CategoryDescCS.String, row.CategoryDescEN.String),
-			))
+			), row.CategoryDisplayedValueLimit)
 		}
 		fb.Value(filter.MakeFilterIdentity(
 			row.ValueID,

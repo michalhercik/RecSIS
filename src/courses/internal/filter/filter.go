@@ -20,10 +20,11 @@ func (fb FilterBuilder) IsLastCategory(categoryID string) bool {
 	return lastID != categoryID
 }
 
-func (fb *FilterBuilder) Category(identity FilterIdentity) {
+func (fb *FilterBuilder) Category(identity FilterIdentity, displayedValueLimit int) {
 	fb.categ = append(fb.categ, FilterCategory{
-		FilterIdentity: identity,
-		values:         []FilterValue{},
+		FilterIdentity:      identity,
+		displayedValueLimit: displayedValueLimit,
+		values:              []FilterValue{},
 	})
 }
 
