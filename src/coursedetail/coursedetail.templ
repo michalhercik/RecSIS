@@ -153,7 +153,7 @@ templ blueprintAssignment(code string, t text) {
     <div class="btn-group">
         <button type="button" class="btn btn-outline-blueprint"
             hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-            hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
+            hx-vals={ `"year": 0, "semester": 0"` }
         >
             { t.Assign }
         </button>
@@ -165,13 +165,13 @@ templ blueprintAssignment(code string, t text) {
             for year := 1; year <= 3; year++ {
                 <li class="mx-3"><button class="dropdown-item text-center"
                     hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` }
+                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1"` }
                 >
                 { t.YearStr(year) + " " + t.WinterAssign }
                 </button></li>
                 <li class="mx-3"><button class="dropdown-item text-center"
                     hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` }
+                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2"` }
                 >
                 { t.YearStr(year) + " " + t.SummerAssign }
                 </button></li>

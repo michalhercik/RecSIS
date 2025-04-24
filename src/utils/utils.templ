@@ -74,7 +74,6 @@ templ langButton(l language.Language) {
     </button>
     <script>
         function changeLanguage(lang) {
-            console.log("Changing language to: " + lang);
             let currentUrl = window.location.pathname;
             let queryParams = window.location.search;
             let newUrl = currentUrl.replace(/^\/(cs|en)/, '') || '';

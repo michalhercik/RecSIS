@@ -35,7 +35,7 @@ templ blueprintAssignment(code string, t text) {
     <div class="btn-group">
         <button type="button" class="btn btn-sm btn-outline-blueprint"
             hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
-            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "lang": "%s"`, t.Language) }
+            hx-vals={ `"year": 0, "semester": 0` }
         >
             { t.Assign }
         </button>
@@ -47,13 +47,13 @@ templ blueprintAssignment(code string, t text) {
             for year := 1; year <= 3; year++ {
                 <li class="mx-3"><button class="dropdown-item text-center"
                     hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
-                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1, "lang": "%s"`, year, t.Language) } 
+                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1`, year) } 
                 >
                 { fmt.Sprintf("%s %s", t.YearStr(year), t.WinterAssign) }
                 </button></li>
                 <li class="mx-3"><button class="dropdown-item text-center"
                     hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
-                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2, "lang": "%s"`, year, t.Language) } 
+                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2`, year) } 
                 >
                 { fmt.Sprintf("%s %s", t.YearStr(year), t.SummerAssign) }
                 </button></li>

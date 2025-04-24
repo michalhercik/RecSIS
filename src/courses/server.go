@@ -88,7 +88,7 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 		log.Printf("search: %v", err)
 		return
 	}
-	res, err := s.search(req, r)
+	coursesPage, err := s.search(req, r)
 	if err != nil {
 		log.Printf("search: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -98,9 +98,6 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	// Set the HX-Push-Url header to update the browser URL without a full reload
 	w.Header().Set("HX-Push-Url", parseUrl(r.URL.Query(), t))
 
-	// coursesPage := createPageContent(res, req)
-	coursesPage := res
-	// TODO: return page
 	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
@@ -206,11 +203,11 @@ func (s Server) facetDistribution(lang language.Language) (coursesPage, error) {
 
 func parseUrl(queryValues url.Values, t text) string {
 	// exclude default values from the URL
-	if queryValues.Get("search") == "" {
-		queryValues.Del("search")
+	if queryValues.Get(searchParam) == "" {
+		queryValues.Del(searchParam)
 	}
-	if queryValues.Get("page") == "1" {
-		queryValues.Del("page")
+	if queryValues.Get(pageParam) == "1" {
+		queryValues.Del(pageParam)
 	}
 	// TODO: possibly add more defaults to exclude
 

@@ -25,9 +25,9 @@ func min(a, b int) int {
 
 func semesterHoursExamsString(course *Course, t text) string {
     result := course.Start.String(t.Language) + " "
-    both := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
-    winter := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
-    summer := strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2)
+    both := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
+    winter := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
+    summer := fmt.Sprintf("%d/%d", course.LectureRange2, course.SeminarRange2)
 
     switch course.Start {
     case teachingWinterOnly:
@@ -154,7 +154,7 @@ templ filterSection(cp *coursesPage, t text) {
             hx-trigger="change"
         >
             for category := range cp.facets {
-                <div x-data="{ expanded: false }">
+                <div x-data={ "{ expanded: JSON.parse(sessionStorage.getItem('expanded-" + category.ID() + "')) || false }" }>
                     <div class="d-flex justify-content-start align-items-end" x-data="{ hoverHelp: false }">
                         <p class="form-label fw-semibold mb-0 mt-2">{ category.Title() }</p>
                         if category.Desc() != "" {
@@ -162,22 +162,25 @@ templ filterSection(cp *coursesPage, t text) {
                         }
                     </div> 
                     for i, value := range category.IterWithFacets() {
-                        <div x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
+                        <div x-cloak x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
                             @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked, t)
                         </div>
                     }
-                    <div x-show={ fmt.Sprintf("%t", category.Size() > category.DisplayedValueLimit()) }>
+                    if category.Size() > category.DisplayedValueLimit() {
+                        // the fixed height is needed to avoid flickering when the page reloads, do not remove
+                        // 26 px is the height of the button, change if the button height changes
                         <button
                             type="button"
                             class="btn btn-link text-secondary p-0"
+                            style="height: 26px;"
                             if others := category.Size() - category.DisplayedValueLimit(); others < 5 {
                                 x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore4Minus, others) }
                             } else {
                                 x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore5Plus, others) }
                             }
-                            @click="expanded = !expanded">
+                            @click={ "expanded = !expanded; sessionStorage.setItem('expanded-" + category.ID() + "', expanded)" }>
                         </button>
-                    </div>
+                    }
                 </div>
             }
         </form>
@@ -242,7 +245,7 @@ templ courseCard(course *Course, t text) {
         x-data="{ expanded: false, showButton: false, isHovered: false }"
         @mouseenter="isHovered = true"
         @mouseleave="isHovered = false"
-        x-init="$nextTick(() => { showButton = $refs.annotation.scrollHeight > 350 })"
+        x-init="showButton = $refs.annotation.scrollHeight > 350"
     >
         <div class="card-header d-flex justify-content-between align-items-center">
             <h6 class="mb-0">{ course.Code }</h6>
@@ -256,8 +259,7 @@ templ courseCard(course *Course, t text) {
                 x-ref="annotation"
             >
                 <h5 class="card-title"><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.Code)) }>{ course.Name }</a></h5>
-                // TODO: take care of no guarantors
-                <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string() }</h6>
+                <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string(t) }</h6>
                 <p class="card-text annotation-text">{ course.Annotation.string() }</p>
             </div>
             <button class="btn btn-link text-secondary" @click="expanded = !expanded" x-show="showButton" x-text={ "expanded ? '" + t.ReadLess + "' : '" + t.ReadMore + "'" }></button>
@@ -372,7 +374,6 @@ templ Courses(cp *coursesPage, t text) {
 }
 
 templ Content(coursesPage *coursesPage, t text) {
-    // TODO: define x-data, x-model and x-init for all filters to survive page reload
     // x-data is needed for x-bind:class to work
     <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" }>
         <div class="filter border-end bg-light">

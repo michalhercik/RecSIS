@@ -53,13 +53,13 @@ func (t Teacher) String() string {
 
 type TeacherSlice []Teacher
 
-func (t TeacherSlice) string() string {
+func (ts TeacherSlice) string(t text) string {
 	names := []string{}
-	for _, teacher := range t {
+	for _, teacher := range ts {
 		names = append(names, teacher.String())
 	}
 	if len(names) == 0 {
-		return "---"
+		return t.NoGuarantors
 	}
 	return strings.Join(names, ", ")
 }
