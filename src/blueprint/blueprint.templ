@@ -19,7 +19,6 @@ func vType(typeStr string) string     { return fmt.Sprintf(`"type": "%s"`, typeS
 func vYear(year int) string           { return fmt.Sprintf(`"year": %d`, year) }
 func vSem(semester int) string        { return fmt.Sprintf(`"semester": %d`, semester) }
 func vPos() string                    { return fmt.Sprintf(`"position": %d`, lastPosition) }
-func vLang(t text) string             { return fmt.Sprintf(`"lang": "%s"`, t.Language) }
 
 func mergeVals(vals ...string) string { return strings.Join(vals, ", ") }
 
@@ -40,7 +39,9 @@ templ adjustCoursesButton(transparent bool, icon, xShow, tooltip, vals, include 
             style="--bs-btn-border-color: transparent;"
         }
         { method... }
-        hx-vals={ vals }
+        if (vals != "") {
+            hx-vals={ vals }
+        }
         if (include != "") {
             hx-include={ include }
         }
@@ -48,16 +49,16 @@ templ adjustCoursesButton(transparent bool, icon, xShow, tooltip, vals, include 
     </button>
 }
 
-templ unassignCoursesButton(transparent bool, tooltip, vals, include string) {
-    @adjustCoursesButton(transparent, "bi-dash-circle", "", tooltip, vals, include, templ.Attributes{"hx-patch": "/blueprint/courses"})
+templ unassignCoursesButton(transparent bool, tooltip, vals, include string, t text) {
+    @adjustCoursesButton(transparent, "bi-dash-circle", "", tooltip, vals, include, templ.Attributes{"hx-patch": t.Utils.LangLink("/blueprint/courses")})
 }
 
-templ removeCoursesButton(transparent bool, tooltip, vals, include string) {
-    @adjustCoursesButton(transparent, "bi-trash-fill", "", tooltip, vals, include, templ.Attributes{"hx-delete": "/blueprint/courses"})
+templ removeCoursesButton(transparent bool, tooltip, vals, include string, t text) {
+    @adjustCoursesButton(transparent, "bi-trash-fill", "", tooltip, vals, include, templ.Attributes{"hx-delete": t.Utils.LangLink("/blueprint/courses")})
 }
 
 templ unassignCourseButton(ID int, t text) {
-    @adjustCoursesButton(true, "bi-dash-circle", "hover && !isSorting", t.TTUnassign, mergeVals(vYear(0), vSem(0), vPos(), vLang(t)), "", templ.Attributes{"hx-patch": fmt.Sprintf("/blueprint/course/%d", ID)})
+    @adjustCoursesButton(true, "bi-dash-circle", "hover && !isSorting", t.TTUnassign, mergeVals(vYear(0), vSem(0), vPos()), "", templ.Attributes{"hx-patch": t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%d", ID))})
 }
 
 templ assignSemesterButton(year, semester int, patch, vals, include, semesterText string, t text) {
@@ -66,7 +67,7 @@ templ assignSemesterButton(year, semester int, patch, vals, include, semesterTex
         class="btn btn-outline-secondary btn-sm text-nowrap"
         style="--bs-btn-border-color: transparent; min-width: 120px;"
         hx-patch={ patch }
-        hx-vals={ mergeVals(vYear(year), vSem(semester), vPos(), vLang(t)) + vals }
+        hx-vals={ mergeVals(vYear(year), vSem(semester), vPos()) + vals }
         if (include != "") {
             hx-include={ include }
         }
@@ -119,15 +120,15 @@ templ assignCourseButtonInternal(transparent bool, tooltip, showCondButton, show
 }
 
 templ assignCoursesButton(yearCount int, t text) {
-    @assignCourseButtonInternal(false, t.TTAssignChecked, "", "", "/blueprint/courses", `, ` + vType(selectedMove), "input[type=checkbox]:checked", yearCount, t)
+    @assignCourseButtonInternal(false, t.TTAssignChecked, "", "", t.Utils.LangLink("/blueprint/courses"), `, ` + vType(selectedMove), "input[type=checkbox]:checked", yearCount, t)
 }
 
 templ assignCourseButton(tooltip string, yearCount, ID int, t text) {
-    @assignCourseButtonInternal(true, tooltip, "hover && !isSorting", " && hover && !isSorting", fmt.Sprintf("/blueprint/course/%d", ID), "", "", yearCount, t)
+    @assignCourseButtonInternal(true, tooltip, "hover && !isSorting", " && hover && !isSorting", t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%d", ID)), "", "", yearCount, t)
 }
 
 templ removeCourseButton(ID int, t text) {
-    @adjustCoursesButton(true, "bi-trash-fill", "hover && !isSorting", t.TTRemove, vLang(t), "", templ.Attributes{"hx-delete": fmt.Sprintf("/blueprint/course/%d", ID)})
+    @adjustCoursesButton(true, "bi-trash-fill", "hover && !isSorting", t.TTRemove, "", "", templ.Attributes{"hx-delete": t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%d", ID))})
 }
 
 templ summarizeFooter(data *Blueprint, t text) {
@@ -226,11 +227,11 @@ templ checkbox(ID, yearCount int, t text) {
                 // take care of checked courses
                 <div class="option-menu">
                     // unassign
-                    @unassignCoursesButton(false, t.TTUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(0), vPos(), vLang(t)), "input[type=checkbox]:checked")
+                    @unassignCoursesButton(false, t.TTUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(0), vPos()), "input[type=checkbox]:checked", t)
                     // assign
                     @assignCoursesButton(yearCount, t)
                     // remove
-                    @removeCoursesButton(false, t.TTRemoveChecked, mergeVals(vType(selectedRemove), vLang(t)), "input[type=checkbox]:checked")
+                    @removeCoursesButton(false, t.TTRemoveChecked, mergeVals(vType(selectedRemove)), "input[type=checkbox]:checked", t)
                 </div>
             </div>
         </div>
@@ -311,7 +312,7 @@ templ unassignHeadline(t text) {
         <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
         <th class="text-end align-middle py-0 lh-1">
             // remove all unassigned courses button
-            @removeCoursesButton(true, t.TTRemoveUnassigned, mergeVals(vType(yearRemove), vYear(0), vLang(t)), "")
+            @removeCoursesButton(true, t.TTRemoveUnassigned, mergeVals(vType(yearRemove), vYear(0)), "", t)
         </th>
     </tr></thead>
 }
@@ -360,9 +361,9 @@ templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, t tex
         <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
         <th class="text-end align-middle py-0 lh-1">
             // unassign all courses button
-            @unassignCoursesButton(true, t.TTUnassignWinter, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentWinter)), vLang(t)), "")
+            @unassignCoursesButton(true, t.TTUnassignWinter, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentWinter))), "", t)
             // remove all courses button
-            @removeCoursesButton(true, t.TTRemoveWinter, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentWinter)), vLang(t)), "")
+            @removeCoursesButton(true, t.TTRemoveWinter, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentWinter))), "", t)
         </th>
     </tr></thead>
 }
@@ -400,9 +401,9 @@ templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, t tex
         <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
         <th class="text-end align-middle py-0 lh-1">
             // unassign all courses button
-            @unassignCoursesButton(true, t.TTUnassignSummer, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentSummer)), vLang(t)), "")
+            @unassignCoursesButton(true, t.TTUnassignSummer, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentSummer))), "", t)
             // remove all courses button
-            @removeCoursesButton(true, t.TTRemoveSummer, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentSummer)), vLang(t)), "")
+            @removeCoursesButton(true, t.TTRemoveSummer, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentSummer))), "", t)
         </th>
     </tr></thead>
 }
@@ -562,9 +563,9 @@ templ Content(data *Blueprint, t text) {
 
         // update position of course in database using dynamic htmx patch
         function sortHxPatch(item, year, semester, position, language) {
-            htmx.ajax('PATCH', '/blueprint/course/' + item, {
+            htmx.ajax('PATCH', '/' + language + '/blueprint/course/' + item, {
                 target: 'main',
-                values: { year: year, semester: semester, position: position + 1, lang: language }
+                values: { year: year, semester: semester, position: position + 1 }
             });
         }
     </script>

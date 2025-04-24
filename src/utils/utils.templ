@@ -72,23 +72,24 @@ templ langButton(l language.Language) {
         @click={ "changeLanguage('" + string(l) + "')" }>
         { string(l) }
     </button>
-}
-
-templ Header(title string, t Text) {
-    <header x-data="{
-        changeLanguage(lang) {
+    <script>
+        function changeLanguage(lang) {
+            console.log("Changing language to: " + lang);
             let currentUrl = window.location.pathname;
             let queryParams = window.location.search;
             let newUrl = currentUrl.replace(/^\/(cs|en)/, '') || '';
             newUrl = '/' + lang + newUrl + queryParams;
             window.location.href = newUrl;
         }
-    }"
-    class="sticky-md-top">
+    </script>
+}
+
+templ Header(title string, t Text) {
+    <header class="sticky-md-top">
         <nav class="navbar navbar-expand-md navbar-light bg-light py-0"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
             <div class="container-fluid">
                 <div style="width: 100px;">
-                    <a class="d-flex align-items-center navbar-brand fs-3" href={ templ.URL("/home") } style="font-family: 'Saira', sans-serif;">
+                    <a class="d-flex align-items-center navbar-brand fs-3" href={ templ.URL(t.LangLink("/home/")) } style="font-family: 'Saira', sans-serif;">
                         <img src="/logo.svg" alt="Logo" style="height: 30px;" class="mb-1 pe-1">
                         RecSIS
                     </a>
@@ -98,12 +99,13 @@ templ Header(title string, t Text) {
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav mx-auto">
-                        @navItem(t.LangLink("/home"), t.Home, title == t.Home)
-                        @navItem(t.LangLink("/courses"), t.Courses, title == t.Courses)
-                        @navItem(t.LangLink("/blueprint"), t.Blueprint, title == t.Blueprint)
-                        @navItem(t.LangLink("/degreeplan"), t.DegreePlan, title == t.DegreePlan)
+                        @navItem(t.LangLink("/home/"), t.Home, title == t.Home)
+                        @navItem(t.LangLink("/courses/"), t.Courses, title == t.Courses)
+                        @navItem(t.LangLink("/blueprint/"), t.Blueprint, title == t.Blueprint)
+                        @navItem(t.LangLink("/degreeplan/"), t.DegreePlan, title == t.DegreePlan)
                     </ul>
-                    <div class="d-flex justify-content-start justify-content-md-end" style="width: 100px;">
+                    // x-data is necessary for x-on:click to work
+                    <div class="d-flex justify-content-start justify-content-md-end" style="width: 100px;" x-data>
                         if t.Language == language.CS {
                             @langButton(language.EN)
                         } else {

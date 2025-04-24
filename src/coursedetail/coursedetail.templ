@@ -152,7 +152,7 @@ templ ratings(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64
 templ blueprintAssignment(code string, t text) {
     <div class="btn-group">
         <button type="button" class="btn btn-outline-blueprint"
-            hx-post={ "/blueprint/course/" + code }
+            hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
             hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
         >
             { t.Assign }
@@ -164,13 +164,13 @@ templ blueprintAssignment(code string, t text) {
         // TODO: make dynamic, NOT 3 fixed years
             for year := 1; year <= 3; year++ {
                 <li class="mx-3"><button class="dropdown-item text-center"
-                    hx-post={ "/blueprint/course/" + code }
+                    hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
                     hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` }
                 >
                 { t.YearStr(year) + " " + t.WinterAssign }
                 </button></li>
                 <li class="mx-3"><button class="dropdown-item text-center"
-                    hx-post={ "/blueprint/course/" + code }
+                    hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
                     hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` }
                 >
                 { t.YearStr(year) + " " + t.SummerAssign }
@@ -194,32 +194,6 @@ func hoursString(course *Course, t text) string {
         result += fmt.Sprintf("%d/%d", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64)
     }
     return result
-    // result := ""
-    // both := strconv.Itoa(course.LectureRangeWinter) + "/" + strconv.Itoa(course.SeminarRangeWinter)
-    // winter := strconv.Itoa(course.LectureRangeWinter) + "/" + strconv.Itoa(course.SeminarRangeWinter)
-    // summer := strconv.Itoa(course.LectureRangeSummer) + "/" + strconv.Itoa(course.SeminarRangeSummer)
-
-    // switch course.Start {
-    // case teachingWinterOnly:
-    //     result += winter
-    // case teachingSummerOnly:
-    //     result += summer
-    // case teachingBoth:
-    //     result += both
-    // }
-
-    // if course.SemesterCount == 2 {
-    //     switch course.Start {
-    //     case teachingWinterOnly:
-    //         result += ", " + summer
-    //     case teachingSummerOnly:
-    //         result += ", " + winter
-    //     case teachingBoth:
-    //         result = "ERROR" // TODO: what should be done in this case? can it even happen?
-    //     }
-    // }
-
-    // return result
 }
 
 func courseSISLink(code string, t text) string {
