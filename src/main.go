@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/michalhercik/RecSIS/auth"
+	"github.com/michalhercik/RecSIS/cas"
 	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/urlparser"
@@ -107,9 +108,12 @@ func main() {
 		Auth: auth.UserIDFromContext{},
 	}
 	degreePlan.Init()
+	cas := cas.Server{}
+	cas.Init()
 	static := http.FileServer(http.Dir("static"))
 
 	router.Handle("/", home.Router())
+	handle(router, "/cas/", cas.Router())
 	handle(router, "/blueprint/", blueprint.Router())
 	handle(router, "/course/", coursedetail.Router())
 	handle(router, "/courses/", courses.Router())
