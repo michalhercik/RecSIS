@@ -2,8 +2,8 @@ package cas
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
+        "fmt"
 )
 
 type Server struct {
@@ -21,12 +21,24 @@ func (s *Server) Router() http.Handler {
 }
 
 func (s *Server) cas(w http.ResponseWriter, r *http.Request) {
-	var data map[string]any
-	err := json.NewDecoder(r.Body).Decode(&data)
-	if err != nil {
-		log.Println("cas:", err)
-	}
+        ticket := r.FormValue("ticket")
+        fmt.Fprintln(w,"ticket: ", ticket)
+        url := "https://acheron.ms.mff.cuni.cz:42050/cas/?format=json&ticket=" + ticket
+        res, err := http.Get(url) 
+        // fmt.Fprintln(w, "Validate through: ", url)
+        if err != nil {
+                fmt.Fprintln(w, err)
+                return
+        }
+        var data map[string]any
+        err = json.NewDecoder(res.Body).Decode(&data)
+        if err != nil {
+                fmt.Fprintln(w, err)
+                return
+        }
+        fmt.Println(data)
 	w.Header().Set("Content-Type", "application/json")
+	// json.NewEncoder(w).Encode(r.URL.Query())
 	json.NewEncoder(w).Encode(data)
 }
 

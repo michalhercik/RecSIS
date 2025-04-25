@@ -50,7 +50,7 @@ func main() {
 
 	// Postgres
 	const (
-		host     = "localhost" // DOCKER, PRODUCTION: when run as docker container change to network name
+		host     = "postgres" // DOCKER, PRODUCTION: when run as docker container change to network name
 		port     = 5432
 		user     = "recsis"
 		password = "recsis"
@@ -66,7 +66,7 @@ func main() {
 
 	// MeiliSearch
 	const (
-		hostMeili = "http://localhost:7700"
+                hostMeili = "http://meilisearch:7700" // "http://localhost:7700"
 		searchKey = "MASTER_KEY"
 	)
 	meiliClient := meilisearch.New(hostMeili, meilisearch.WithAPIKey(searchKey))
@@ -143,7 +143,7 @@ func main() {
 	log.Println("Server starting ...")
 	log.Println("http://localhost:8000/")
 
-	err = server.ListenAndServe()
+	err = server.ListenAndServeTLS("server.crt", "server.key")
 	if err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
