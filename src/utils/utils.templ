@@ -45,7 +45,7 @@ templ Page(title string, t Text) {
             <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;700&display=swap" rel="stylesheet">
         </head>
         <body hx-boost="true">
-            // @watermark()
+            @watermark()
             @Header(title, t)
             <main>
                 { children... }
