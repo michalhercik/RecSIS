@@ -32,26 +32,38 @@ func summerString(course *Course) string {
 }
 
 templ blueprintAssignment(code string, t text) {
-    <div class="btn-group">
-        <button type="button" class="btn btn-sm btn-outline-blueprint"
+    <div class="btn-group w-100" style="height: 32px;" x-data="{ hover: false, hoverSelection: false }" @mouseover="hover = true" @mouseleave="hover = false">
+        <button
+            type="button"
+            class="btn btn-sm btn-outline-blueprint bi bi-plus lh-1 p-0"
+            :class="hover || 'border-0'"
+            style="font-size: 1.75rem;"
             hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
-            hx-vals={ `"year": 0, "semester": 0` }
-        >
-            { t.Assign }
+            hx-vals={ `"year": 0, "semester": 0` }>
         </button>
-        <button type="button" class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-            data-bs-toggle="dropdown" aria-expanded="false">
+        <button
+            type="button"
+            x-cloak
+            x-show="hover"
+            class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+            :class="hoverSelection && 'btn-blueprint-hover'"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            data-bs-offset="0, 0">
         </button>
-        <ul class="dropdown-menu lh-base">
+        <ul
+            class="dropdown-menu dropdown-menu-end" 
+            @mouseover="hoverSelection = true"
+            @mouseleave="hoverSelection = false">
         // TODO: make dynamic, NOT 3 fixed years
             for year := 1; year <= 3; year++ {
-                <li class="mx-3"><button class="dropdown-item text-center"
+                <li class="mx-3"><button class="dropdown-item rounded text-center"
                     hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
                     hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1`, year) } 
                 >
                 { fmt.Sprintf("%s %s", t.YearStr(year), t.WinterAssign) }
                 </button></li>
-                <li class="mx-3"><button class="dropdown-item text-center"
+                <li class="mx-3"><button class="dropdown-item rounded text-center"
                     hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
                     hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2`, year) } 
                 >
@@ -60,15 +72,6 @@ templ blueprintAssignment(code string, t text) {
             }
         </ul>
     </div>
-}
-
-templ headlineBadge(color, text string) {
-    <span class={ "d-none d-xl-inline-block ms-2 rounded-pill badge " + color }>
-        { text }
-    </span>
-    <span class={ "d-inline-flex d-xl-none ms-2 align-center rounded-circle " + color } style="width: 20px; height: 20px;">
-        <span class="visually-hidden">{ text }</span>
-    </span>
 }
 
 templ badge(color, text string) {
@@ -89,11 +92,11 @@ templ Content(dp *DegreePlan, t text) {
                     <span class="d-md-none">{ fmt.Sprintf("(≥%d %s)", bloc.Limit, t.CreditsShort) }</span>
                 }
                 if bloc.completed() {
-                    @headlineBadge("bg-success", t.Completed)
+                    <i class="bi bi-check-lg text-success"></i>
                 } else if bloc.inBlueprint() {
-                    @headlineBadge("bg-blueprint", t.InBlueprint)
+                    <i class="bi bi-basket2 blueprint-color"></i>
                 } else if bloc.hasLimit() {
-                    @headlineBadge("bg-danger", t.NotCompleted)
+                    <i class="bi bi-x-lg text-danger"></i>
                 }
             </h6>
         }
@@ -108,11 +111,11 @@ templ Content(dp *DegreePlan, t text) {
                             <h5 class="mb-0 text-nowrap d-none d-md-block">
                                 { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
                                 if bloc.completed() {
-                                    @headlineBadge("bg-success", t.Completed)
+                                    <i class="bi bi-check-lg text-success"></i>
                                 } else if bloc.inBlueprint() {
-                                    @headlineBadge("bg-blueprint", t.InBlueprint)
+                                    <i class="bi bi-basket2 blueprint-color"></i>
                                 } else if bloc.hasLimit() {
-                                    @headlineBadge("bg-danger", t.NotCompleted)
+                                    <i class="bi bi-x-lg text-danger"></i>
                                 }
                             </h5>
                             <span class="d-md-none">{ t.Code }</span>
@@ -133,7 +136,7 @@ templ Content(dp *DegreePlan, t text) {
                     </th>
                     <th class="d-none d-lg-table-cell">{ t.Winter }</th>
                     <th class="d-none d-lg-table-cell">{ t.Summer }</th>
-                    <th class="text-center">{ t.Blueprint }</th>
+                    <th class="th-overflow">{ t.Blueprint }</th>
                 </tr>
             </thead>
             <tbody>
@@ -161,7 +164,7 @@ templ Content(dp *DegreePlan, t text) {
                     <td class="d-none d-md-table-cell"></td>
                     <td class="d-none d-lg-table-cell">{ winterString(&course) }</td>
                     <td class="d-none d-lg-table-cell">{ summerString(&course) }</td>
-                    <td class="text-center align-middle py-0 lh-1">
+                    <td class="text-start align-middle p-0">
                         @blueprintAssignment(course.Code, t)
                     </td>
                 </tr>

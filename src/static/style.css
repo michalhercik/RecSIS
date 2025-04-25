@@ -24,16 +24,6 @@ body {
     overflow-y: scroll;
 }
 
-/* Blueprint credits div box styles */
-.credits-box {
-    position: absolute;
-    background: white;
-    border: 1px solid #ccc;
-    padding: 10px;
-    z-index: 1000;
-    left: 25px;
-}
-
 /* Blueprint Popover styles */
 .popover-body {
     text-align: right;
@@ -96,7 +86,8 @@ body {
     border-color: rgb(4, 108, 181) !important;
 }
 
-.btn-outline-blueprint:hover {
+.btn-outline-blueprint:hover,
+.btn-blueprint-hover {
     color: #fff !important;
     background-color: rgb(4, 108, 181) !important;
     border-color: rgb(4, 108, 181) !important;
@@ -112,6 +103,11 @@ body {
     color: #fff !important;
     background-color: rgb(4, 54, 90) !important;
     border-color: rgb(3, 87, 146) !important;
+}
+
+/* Icon color */
+.blueprint-color {
+    color: rgb(4, 108, 181) !important;
 }
 
 /* Badges colors */
@@ -132,6 +128,12 @@ body {
 .bg-both {
     background-color: rgb(216, 134, 216);
     color: black !important;
+}
+
+/* Blueprint assign hover styles */
+.dropdown-item:hover {
+    background-color: rgb(4, 108, 181) !important; /* Change to your desired color */
+    color: #fff !important; /* Optional: Change text color */
 }
 
 /* === Blueprint tables styles === */
@@ -187,7 +189,7 @@ body {
     text-overflow: ellipsis;
 }
 
-/* teachers smaller */
+/* guarantors smaller */
 @media (max-width: 1400px) {
     .blueprint-table th:nth-child(7),
     .blueprint-table td:nth-child(7) {
@@ -392,7 +394,7 @@ body {
 /* button */
 .degree-plan-table th:nth-child(8),
 .degree-plan-table td:nth-child(8) {
-    width: 90px;
+    width: 53px;
 }
 
 @media (max-width: 992px) {

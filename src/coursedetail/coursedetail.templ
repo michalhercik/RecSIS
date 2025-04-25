@@ -157,19 +157,23 @@ templ blueprintAssignment(code string, t text) {
         >
             { t.Assign }
         </button>
-        <button type="button" class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-            data-bs-toggle="dropdown" aria-expanded="false">
+        <button
+            type="button"
+            class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            data-bs-offset="0, 0">
         </button>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu dropdown-menu-end">
         // TODO: make dynamic, NOT 3 fixed years
             for year := 1; year <= 3; year++ {
-                <li class="mx-3"><button class="dropdown-item text-center"
+                <li class="mx-3"><button class="dropdown-item rounded text-center"
                     hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
                     hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1"` }
                 >
                 { t.YearStr(year) + " " + t.WinterAssign }
                 </button></li>
-                <li class="mx-3"><button class="dropdown-item text-center"
+                <li class="mx-3"><button class="dropdown-item rounded text-center"
                     hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
                     hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2"` }
                 >
