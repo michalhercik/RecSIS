@@ -205,38 +205,10 @@ func courseSISLink(code string, t text) string {
     return "unsupported language"
 }
 
-templ requisitesLinks(req []string, title string, t text) {
-    if len(req) != 0 {
-        <p class="mb-0 mt-1"><strong>{ title }</strong></p>
-        <p class="mb-0">
-            for i, c := range req {
-                if i != len(req) - 1 {
-                    @utils.CourseLink(c, t.Utils)<span>, </span>
-                } else {
-                    @utils.CourseLink(c, t.Utils)
-                }
-            }
-        </p>
-    }
-}
-
 templ standartBadge(text, bgColor string) {
     <span class={ fmt.Sprintf("badge rounded-pill %s fs-6 me-1", bgColor) }>
         { text }
     </span>
-}
-
-func courseStyleClass(c *Course) string {
-    switch c.Start {
-        case teachingBoth:
-            return "bg-both"
-        case teachingWinterOnly:
-            return "bg-winter"
-        case teachingSummerOnly:
-            return "bg-summer"
-        default:
-            return ""
-    }
 }
 
 func courseStartString(c *Course, t text) string {
@@ -255,9 +227,9 @@ func courseStartString(c *Course, t text) string {
 templ badges(course *Course, t text) {
     <div class="d-flex justify-content-between">
         <div class="text-start">
-            @standartBadge(fmt.Sprintf("%s: %d", t.ECredits, course.Credits), courseStyleClass(course))
-            @standartBadge(courseStartString(course, t), courseStyleClass(course))
-            @standartBadge(fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType), courseStyleClass(course))
+            @standartBadge(fmt.Sprintf("%s: %d", t.ECredits, course.Credits), course.courseStyleClass())
+            @standartBadge(courseStartString(course, t), course.courseStyleClass())
+            @standartBadge(fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType), course.courseStyleClass())
         </div>
         <div class="text-end">
             // TODO: make this dynamic (this just for show)
@@ -274,29 +246,55 @@ templ badges(course *Course, t text) {
     </div>
 }
 
-templ leftColumn(course *Course, t text) {
-    <p class="mb-0 mt-1"><strong>{ t.Faculty }</strong></p> // TODO: plus katedra
-    <p class="mb-0">{ course.Faculty }</p> // TODO: plus katedra
-    <p class="mb-0 mt-1"><strong>{ t.LanguageOfCourse }</strong></p>
-    <p class="mb-0">{ course.Language }</p>
+templ infoRow(title string) {
+    <tr>
+        <td class="text-end align-top fw-semibold p-2">{ title }</td>
+        <td class="border-bottom p-2">{ children... }</td>
+    </tr>
+}
 
-    if len(course.Guarantors) > 0 {
-        <p id="guarantors-part" class="mb-0 mt-1"><strong>{ t.Guarantors }</strong></p>
-        <table id="guarantors-table" class="mb-0">
-            for _, g := range course.Guarantors {
-                @teacherStyledRow(g)
+templ requisitesLinksRow(req []string, title string, t text) {
+    if len(req) != 0 {
+        @infoRow(title) {
+            for i, c := range req {
+                if i != len(req) - 1 {
+                    @utils.CourseLink(c, t.Utils)<span>, </span>
+                } else {
+                    @utils.CourseLink(c, t.Utils)
+                }
             }
-        </table>
+        }
     }
+}
 
-    // TODO: if not default (default=taught) show NOT TAUGHT, else do not show anything
-    <p class="mb-0 mt-1"><strong>{ t.StateOfCourse }</strong></p>
-    <p class="mb-0">{ course.State }</p>
-    // TODO: if unlimited capacity do not show anything, else show capacity
-    <p class="mb-0 mt-1"><strong>{ t.Capacity }</strong></p>
-    <p class="mb-0">{ course.Capacity }</p>
+templ basicInfo(course *Course, t text) {
+    <table class="info-table-borders">
+        @infoRow(t.Faculty){ 
+            <span>{ course.Faculty }</span>
+        } // TODO: plus katedra
+        @infoRow(t.LanguageOfCourse) {
+            <span>{ course.Language }</span>
+        }
+        // TODO: if not default (default=taught) show NOT TAUGHT, else do not show anything
+        @infoRow(t.StateOfCourse) {
+            <span>{ course.State }</span>
+        }
+        // TODO: if unlimited capacity do not show anything, else show capacity
+        @infoRow(t.Capacity) {
+            <span>{ course.Capacity }</span>
+        }
+        @requisitesLinksRow(course.Prereq, t.Prerequisites, t)
+        if len(course.Guarantors) > 0 {
+            @infoRow(t.Guarantors) {
+                <table id="guarantors-table" class="mb-0">
+                    for _, g := range course.Guarantors {
+                        @teacherStyledRow(g)
+                    }
+                </table>
+            }
+        }
+    </table>
 
-    @requisitesLinks(course.Prereq, t.Prerequisites, t)
 }
 
 templ teacherStyledRow(t Teacher) {
@@ -338,9 +336,9 @@ templ descriptionItem(desc NullDescription, id string) {
         <h2>{ utils.CapitalizeFirstLetter(desc.Title) }</h2>
         <div
             id={ "content-" + id }
+            class="border-bottom mb-3"
             x-init={ "insertContent('" + id + "', `" + desc.SanitizeContent(id == "annotation") + "`)" }>
         </div>
-        <hr>
         // inserting content as shadow DOM
         <script>
         function insertContent(id, content) {
@@ -409,37 +407,50 @@ templ survey(surveys []course.Comment, t text) {
 }
 
 templ detailInfo(course *Course, t text) {
-    <div class="d-flex">
-        // left column classes, classification and requisites
-        <div class="flex-grow-1" style="flex: 1;">
-            if len(course.Classes) > 0 {
-                <p class="mb-0"><strong>{ t.Classes }</strong></p>
-                for _, c := range course.Classes {
-                    <p class="mb-0">{ c.Name }</p>
-                }
-            }
-            if len(course.Classifications) > 0 {
-                <p class="mb-0 mt-1"><strong>{ t.Classification }</strong></p>
-                for _, c := range course.Classifications {
-                    <p class="mb-0">{ c.Name }</p>
-                }
-            }
-            @requisitesLinks(course.Coreq, t.Corequisites, t)
-            @requisitesLinks(course.Interchange, t.Interchange, t)
-            @requisitesLinks(course.Incompa, t.Incompatible, t)
+    if len(course.Classes) == 0 && len(course.Classifications) == 0 && len(course.Coreq) == 0 && len(course.Interchange) == 0 && len(course.Incompa) == 0 && len(course.Teachers) == 0 {
+        <div class="alert alert-primary" role="alert">
+            { t.NoDetail }
         </div>
-        // right column teachers
-        <div class="flex-grow-1" style="flex: 1;">
-            if len(course.Teachers) > 0 {
-                <p class="mb-0 mt-1"><strong>{ t.Teachers }</strong></p>
-                <table id="teachers-table" class="mb-0">
-                    for _, teacher := range course.Teachers {
-                        @teacherStyledRow(teacher)
+    } else {
+        <div class="d-flex">
+            // left column classes, classification and requisites
+            <div class="flex-grow-1" style="flex: 1;">
+                <table class="info-table-borders">
+                    if len(course.Classes) > 0 {
+                        @infoRow(t.Classes) {
+                            for _, c := range course.Classes {
+                                <p class="mb-0">{ c.Name }</p>
+                            }
+                        }
+                    }
+                    if len(course.Classifications) > 0 {
+                        @infoRow(t.Classification) {
+                            for _, c := range course.Classifications {
+                                <p class="mb-0">{ c.Name }</p>
+                            }
+                        }
+                    }
+                    @requisitesLinksRow(course.Coreq, t.Corequisites, t)
+                    @requisitesLinksRow(course.Interchange, t.Interchange, t)
+                    @requisitesLinksRow(course.Incompa, t.Incompatible, t)
+                </table>
+            </div>
+            // right column teachers
+            <div class="flex-grow-1" style="flex: 1;">
+                <table class="info-table-borders">
+                    if len(course.Teachers) > 0 {
+                        @infoRow(t.Teachers) {
+                            <table id="teachers-table" class="mb-0">
+                                for _, teacher := range course.Teachers {
+                                    @teacherStyledRow(teacher)
+                                }
+                            </table>
+                        }
                     }
                 </table>
-            }
+            </div>
         </div>
-    </div>
+    }
 }
 
 templ buttons(course *Course, t text) {
@@ -479,13 +490,13 @@ templ details(course *Course, t text) {
         </li>
     </ul>
     <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active pt-2" id="desc-tab-pane" role="tabpanel" tabindex="0">
+        <div class="tab-pane show active pt-2" id="desc-tab-pane" role="tabpanel" tabindex="0">
             @description(course, t)
         </div>
-        <div class="tab-pane fade pt-2" id="survey-tab-pane" role="tabpanel" tabindex="0">
+        <div class="tab-pane pt-2" id="survey-tab-pane" role="tabpanel" tabindex="0">
             @survey(course.Comments.Comments(), t)
         </div>
-        <div class="tab-pane fade pt-2" id="detail-tab-pane" role="tabpanel" tabindex="0">
+        <div class="tab-pane pt-2" id="detail-tab-pane" role="tabpanel" tabindex="0">
             @detailInfo(course, t)
         </div>
     </div>
@@ -502,7 +513,7 @@ templ Content(course *Course, t text) {
     <div class="d-flex pb-4">
         // left column most important information
         <div class="flex-grow-1" style="flex: 1;">
-            @leftColumn(course, t)
+            @basicInfo(course, t)
         </div>
         // right column ratings
         <div class="flex-grow-1" style="flex: 1;">

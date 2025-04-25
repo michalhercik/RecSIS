@@ -119,6 +119,7 @@ templ helpIcon(content string) {
     <i
         class="mx-1 bi"
         :class="hoverHelp ? 'bi-question-circle-fill' : 'bi-question-circle'"
+        style="cursor: help;"
         @mouseover="hoverHelp = true"
         @mouseleave="hoverHelp = false"
         data-bs-toggle="tooltip"

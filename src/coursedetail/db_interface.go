@@ -79,6 +79,19 @@ func (c Course) IsTaughtBoth() bool {
 	return c.IsTaughtInWinter() && c.IsTaughtInSummer()
 }
 
+func (c Course) courseStyleClass() string {
+	switch c.Start {
+	case teachingBoth:
+		return "bg-both"
+	case teachingWinterOnly:
+		return "bg-winter"
+	case teachingSummerOnly:
+		return "bg-summer"
+	default:
+		return ""
+	}
+}
+
 type TeachingSemester int
 
 const (

@@ -44,6 +44,7 @@ type text struct {
 	Survey             string
 	NoSurvey           string
 	Detail             string
+	NoDetail           string
 	CourseWithCode     string
 	NotFound           string
 	// utils
@@ -95,8 +96,9 @@ var texts = map[language.Language]text{
 		Description:        "Popis",
 		NoDescription:      "Pro tento předmět není k dispozici žádný popis.",
 		Survey:             "Anketa",
-		NoSurvey:           "Pro tento předmět nejsou žádné komentáře.",
+		NoSurvey:           "Pro tento předmět nejsou k dispozici žádné komentáře.",
 		Detail:             "Detailní informace",
+		NoDetail:           "Pro tento předmět nejsou k dispozici žádné podrobnosti.",
 		CourseWithCode:     "Předmět s kódem ",
 		NotFound:           " nenalezen.",
 		// utils
@@ -137,8 +139,9 @@ var texts = map[language.Language]text{
 		Description:        "Description",
 		NoDescription:      "No description available for this course.",
 		Survey:             "Survey",
-		NoSurvey:           "No surveys for this course.",
+		NoSurvey:           "No surveys available for this course.",
 		Detail:             "Detailed information",
+		NoDetail:           "No detailed information available for this course.",
 		CourseWithCode:     "Course with code ",
 		NotFound:           " not found.",
 		// utils

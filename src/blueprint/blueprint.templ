@@ -249,7 +249,6 @@ templ coursesBody(courses []Course, canUnassign bool, showCondition, xSortMethod
             x-data="{ hover: false, openAssign: false }"
             @mouseover="hover = true"
             @mouseleave="hover = false, openAssign = false, initializeTooltips()"
-            :style="hover && 'cursor: grab;'"
             x-sort:item={ strconv.Itoa(course.ID) }
         >
             <td class="text-center"> @checkbox(course.ID, yearCount, t) </td>
@@ -269,7 +268,7 @@ templ coursesBody(courses []Course, canUnassign bool, showCondition, xSortMethod
                 // remove course button
                 @removeCourseButton(course.ID, t)
                 // drag button
-                //@dragCourseButton(t) // TODO: delete if current is better 
+                @dragCourseButton(t) 
             </td>
         </tr>
         }
