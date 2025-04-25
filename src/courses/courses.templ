@@ -76,47 +76,9 @@ templ QuickResults(res *QuickResponse, t text) {
     </div>
 }
 
-templ search(coursesPage *coursesPage, t text) {
-    <form
-        id="search-form"
-        hx-get={ t.Utils.LangLink("/courses/search") }
-        hx-target="#courses-page"
-        hx-swap="outerHTML"
-        hx-include="#filter-form"
-        class="py-3"
-        x-data="{ quickResOpen: false, quickResLoaded: false }"
-        @htmx:after-request="quickResLoaded = true"
-    >
-        <div class="justify-content-center mx-5">
-            <div class="dropdown" @click.away="quickResOpen = false">
-                <div class="input-group">
-                    <input type="text" name={ searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
-                        x-model="searchInput"
-                        @click="if (!quickResLoaded && searchInput !== '') $dispatch('triggerSearch'); quickResOpen = true;"
-                        @input="quickResOpen = true"
-                        @keydown.escape="quickResOpen = false"
-                        @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
-                        hx-get={ t.Utils.LangLink("/courses/quicksearch") }
-                        hx-trigger="input changed, triggerSearch from:body"
-                        hx-target="#quick-search-results"
-                        hx-swap="outerHTML"
-                        hx-push-url="false"
-                    />
-                    <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
-                </div>
-                <div x-cloak x-show="quickResOpen && searchInput.length > 0">
-                    @QuickResults(&QuickResponse{
-                        approxHits: -1,
-                        courses: []QuickCourse{},
-                    }, t)
-                </div>
-            </div>
-        </div>
-    </form>
-}
-
 templ helpIcon(content string) {
     <i
+        x-data="{ hoverHelp: false }"
         class="mx-1 bi"
         :class="hoverHelp ? 'bi-question-circle-fill' : 'bi-question-circle'"
         style="cursor: help;"
@@ -134,7 +96,7 @@ templ checkboxInput(name, value, label, desc string, count int, checked bool, t 
     <div class="form-check">
         <input role="button" class="form-check-input" disabled?={ count == 0 }
             type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
-        <label role="button" class="form-check-label" for={ name + "-" + value } x-data="{ hoverHelp: false }">
+        <label role="button" class="form-check-label" for={ name + "-" + value }>
             <span>{ label }</span>
             if desc != "" {
                 @helpIcon(desc)
@@ -156,7 +118,7 @@ templ filterSection(cp *coursesPage, t text) {
         >
             for category := range cp.facets {
                 <div x-data={ "{ expanded: JSON.parse(sessionStorage.getItem('expanded-" + category.ID() + "')) || false }" }>
-                    <div class="d-flex justify-content-start align-items-end" x-data="{ hoverHelp: false }">
+                    <div class="d-flex justify-content-start align-items-end">
                         <p class="form-label fw-semibold mb-0 mt-2">{ category.Title() }</p>
                         if category.Desc() != "" {
                             @helpIcon(category.Desc())
@@ -194,6 +156,95 @@ templ filterSection(cp *coursesPage, t text) {
                 { t.TopFilter }
             </p>
         </div>
+    </div>
+}
+
+templ search(coursesPage *coursesPage, t text) {
+    <form
+        id="search-form"
+        hx-get={ t.Utils.LangLink("/courses/search") }
+        hx-target="#courses-page"
+        hx-swap="outerHTML"
+        hx-include="#filter-form"
+        class="mt-3 mb-2 mx-5"
+        x-data="{ quickResOpen: false, quickResLoaded: false }"
+        @htmx:after-request="quickResLoaded = true"
+    >
+        <div class="justify-content-center">
+            <div class="dropdown" @click.away="quickResOpen = false">
+                <div class="input-group">
+                    <input type="text" name={ searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
+                        x-model="searchInput"
+                        @click="if (!quickResLoaded && searchInput !== '') $dispatch('triggerSearch'); quickResOpen = true;"
+                        @input="quickResOpen = true"
+                        @keydown.escape="quickResOpen = false"
+                        @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
+                        hx-get={ t.Utils.LangLink("/courses/quicksearch") }
+                        hx-trigger="input changed, triggerSearch from:body"
+                        hx-target="#quick-search-results"
+                        hx-swap="outerHTML"
+                        hx-push-url="false"
+                    />
+                    <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
+                </div>
+                <div x-cloak x-show="quickResOpen && searchInput.length > 0">
+                    @QuickResults(&QuickResponse{
+                        approxHits: -1,
+                        courses: []QuickCourse{},
+                    }, t)
+                </div>
+            </div>
+        </div>
+    </form>
+}
+
+templ activeFilters(cp *coursesPage, t text) {
+    <div class="mx-5 mb-3">
+        {{ anyActive := false }}
+        for category := range cp.facets {
+            if category.Active() {
+                {{ anyActive = true }}
+                <div class="d-flex flex-row mb-1" style="width: fit-content;">
+                    <span class="px-2 bg-body border border-end-0 rounded-start">{ category.Title() }</span>
+                    <div class="d-flex flex-row border rounded-end bg-light">
+                    for _, value := range category.IterWithFacets() {
+                        if value.Checked {
+                            <div class="border-start px-2">
+                                <span class="fw-semibold">{ value.Title }</span>
+                                <i
+                                    role="button"
+                                    class="bi bi-x-lg"
+                                    @click={ fmt.Sprintf("uncheck('par%s-%s')", category.ID(), value.ID) }>
+                                </i>
+                            </div>
+                        }
+                    }
+                    </div>
+                </div>
+            }
+        }
+        if anyActive {
+            <button
+                class="btn btn-link text-secondary p-0"
+                hx-get={ t.Utils.LangLink("/courses/search") }
+                hx-target="#courses-page"
+                hx-include="#search-form"
+                hx-swap="outerHTML show:window:top">
+                { t.CancelFilters }
+            </button>
+        }
+        <script>
+        function uncheck(id) {
+            const checkbox = document.getElementById(id);
+            if (checkbox) {
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                });
+                checkbox.dispatchEvent(clickEvent);
+            }
+        }
+        </script>
     </div>
 }
 
@@ -380,6 +431,7 @@ templ Content(coursesPage *coursesPage, t text) {
         </div>
         <div class="main-content">
             @search(coursesPage, t)
+            @activeFilters(coursesPage, t)
             @Courses(coursesPage, t)
         </div>
     </div>

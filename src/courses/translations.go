@@ -23,6 +23,7 @@ type text struct {
 	ShowMore4Minus    string
 	ShowMore5Plus     string
 	ShowLess          string
+	CancelFilters     string
 	Assign            string
 	Year              string
 	WinterAssign      string
@@ -67,6 +68,7 @@ var texts = map[language.Language]text{
 		ShowMore4Minus:    "Další",
 		ShowMore5Plus:     "Dalších",
 		ShowLess:          "Skrýt ostatní",
+		CancelFilters:     "Zrušit vybrané filtry",
 		Assign:            "Přiřadit",
 		Year:              "ročník",
 		WinterAssign:      "ZS",
@@ -100,6 +102,7 @@ var texts = map[language.Language]text{
 		ShowMore4Minus:    "Another",
 		ShowMore5Plus:     "Another",
 		ShowLess:          "Hide others",
+		CancelFilters:     "Cancel selected filters",
 		Assign:            "Assign",
 		Year:              "Year",
 		WinterAssign:      "Winter",

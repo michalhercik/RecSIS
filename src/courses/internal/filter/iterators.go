@@ -79,6 +79,17 @@ func (fi FacetIterator) DisplayedValueLimit() int {
 	return fi.filter.displayedValueLimit
 }
 
+func (fi FacetIterator) Active() bool {
+	active := false
+	for _, v := range fi.checked {
+		if v != "" {
+			active = true
+			break
+		}
+	}
+	return active
+}
+
 type FacetValue struct {
 	ID      string
 	Title   string
