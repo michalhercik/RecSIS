@@ -43,6 +43,24 @@ templ Page(title string, t Text) {
             <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
             // Google Fonts
             <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;700&display=swap" rel="stylesheet">
+            <script>
+            // Clear expanded- from session storage
+            function clearExpanded() {
+                Object.keys(sessionStorage).forEach(key => {
+                    if (key.startsWith('expanded-')) {
+                        sessionStorage.removeItem(key);
+                    }
+                });
+            }
+            // Change language to selected
+            function changeLanguage(lang) {
+                let currentUrl = window.location.pathname;
+                let queryParams = window.location.search;
+                let newUrl = currentUrl.replace(/^\/(cs|en)/, '') || '';
+                newUrl = '/' + lang + newUrl + queryParams;
+                window.location.href = newUrl;
+            }
+            </script>
         </head>
         <body hx-boost="true">
             // @watermark()
@@ -63,7 +81,7 @@ templ navItem(url, text string, active bool) {
             class += " active"
         }
     }}
-    <li class="nav-item"><a class={ class } href={ templ.URL(url) }>{ text }</a></li>
+    <li class="nav-item"><a @click="clearExpanded()" class={ class } href={ templ.URL(url) }>{ text }</a></li>
 }
 
 templ langButton(l language.Language) {
@@ -72,15 +90,6 @@ templ langButton(l language.Language) {
         @click={ "changeLanguage('" + string(l) + "')" }>
         { string(l) }
     </button>
-    <script>
-        function changeLanguage(lang) {
-            let currentUrl = window.location.pathname;
-            let queryParams = window.location.search;
-            let newUrl = currentUrl.replace(/^\/(cs|en)/, '') || '';
-            newUrl = '/' + lang + newUrl + queryParams;
-            window.location.href = newUrl;
-        }
-    </script>
 }
 
 templ Header(title string, t Text) {
@@ -97,7 +106,8 @@ templ Header(title string, t Text) {
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav mx-auto">
+                    // x-data is necessary for x-on:click to work
+                    <ul class="navbar-nav mx-auto" x-data>
                         @navItem(t.LangLink("/home/"), t.Home, title == t.Home)
                         @navItem(t.LangLink("/courses/"), t.Courses, title == t.Courses)
                         @navItem(t.LangLink("/blueprint/"), t.Blueprint, title == t.Blueprint)

@@ -167,12 +167,10 @@ templ filterSection(cp *coursesPage, t text) {
                         </div>
                     }
                     if category.Size() > category.DisplayedValueLimit() {
-                        // the fixed height is needed to avoid flickering when the page reloads, do not remove
-                        // 26 px is the height of the button, change if the button height changes
                         <button
+                            hx-ignore="true"
                             type="button"
                             class="btn btn-link text-secondary p-0"
-                            style="height: 26px;"
                             if others := category.Size() - category.DisplayedValueLimit(); others < 5 {
                                 x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore4Minus, others) }
                             } else {
@@ -388,6 +386,7 @@ templ Content(coursesPage *coursesPage, t text) {
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         initializeTooltips();
+        clearExpanded();
     });
 
     document.addEventListener('htmx:afterSwap', function () {
