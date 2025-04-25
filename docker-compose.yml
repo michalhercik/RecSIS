@@ -6,7 +6,7 @@ services:
       context: ./src/
       target: dev-stage
     ports:
-      - 80:8000
+      - 443:8000
     depends_on:
       postgres:
         condition: service_healthy
