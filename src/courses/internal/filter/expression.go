@@ -59,6 +59,6 @@ type condition struct {
 }
 
 func (c condition) String() string {
-	result := fmt.Sprintf("%s IN [%s]", c.param.facetID, strings.Join(c.values, ","))
+	result := fmt.Sprintf("%s IN [\"%s\"]", c.param.facetID, strings.Join(c.values, "\",\""))
 	return result
 }
