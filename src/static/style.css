@@ -391,9 +391,26 @@ body {
     width: 90px;
 }
 
+/* guarantors */
+.blueprint-table th:nth-child(8),
+.blueprint-table td:nth-child(8) {
+    width: 265px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* guarantors smaller */
+@media (max-width: 1400px) {
+    .blueprint-table th:nth-child(8),
+    .blueprint-table td:nth-child(8) {
+        width: 200px;
+    }
+}
+
 /* button */
-.degree-plan-table th:nth-child(8),
-.degree-plan-table td:nth-child(8) {
+.degree-plan-table th:nth-child(9),
+.degree-plan-table td:nth-child(9) {
     width: 53px;
 }
 

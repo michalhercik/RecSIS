@@ -136,6 +136,7 @@ templ Content(dp *DegreePlan, t text) {
                     </th>
                     <th class="d-none d-lg-table-cell">{ t.Winter }</th>
                     <th class="d-none d-lg-table-cell">{ t.Summer }</th>
+                    <th class="d-none d-lg-table-cell">Garant(i)</th>
                     <th class="th-overflow">{ t.Blueprint }</th>
                 </tr>
             </thead>
@@ -164,6 +165,7 @@ templ Content(dp *DegreePlan, t text) {
                     <td class="d-none d-md-table-cell"></td>
                     <td class="d-none d-lg-table-cell">{ winterString(&course) }</td>
                     <td class="d-none d-lg-table-cell">{ summerString(&course) }</td>
+                    <td class="d-none d-lg-table-cell">M. Hercík, M. Medek, L. Peška</td>
                     <td class="text-start align-middle p-0">
                         @blueprintAssignment(course.Code, t)
                     </td>
