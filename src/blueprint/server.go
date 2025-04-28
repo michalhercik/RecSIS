@@ -28,6 +28,7 @@ func (s *Server) Init() {
 	s.router.HandleFunc("GET /", s.page)
 	s.router.HandleFunc("POST /year", s.yearAddition)
 	s.router.HandleFunc("DELETE /year", s.yearRemoval)
+	s.router.HandleFunc("PATCH /{year}/{semester}", s.foldSemester)
 	s.router.HandleFunc("POST /course/{code}", s.courseAddition)
 	s.router.HandleFunc("PATCH /course/{id}", s.courseMovement)
 	s.router.HandleFunc("PATCH /courses", s.coursesMovement)
@@ -450,4 +451,44 @@ func (s Server) yearAddition(w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO: Render just credits stats with own sql query for performance
 	s.renderBlueprint(w, r, text)
+}
+
+func (s Server) foldSemester(w http.ResponseWriter, r *http.Request) {
+	userID, err := s.Auth.UserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	year, err := strconv.Atoi(r.PathValue("year"))
+	if err != nil {
+		http.Error(w, "Invalid year", http.StatusBadRequest)
+		log.Printf("foldSemester error: %v", err)
+		return
+	}
+	semester, err := SemesterAssignmentFromString(r.PathValue("semester"))
+	if err != nil {
+		http.Error(w, "Invalid semester", http.StatusBadRequest)
+		log.Printf("foldSemester error: %v", err)
+		return
+	}
+	folded, err := strconv.ParseBool(r.FormValue("folded"))
+	if err != nil {
+		http.Error(w, "Invalid folded value", http.StatusBadRequest)
+		log.Printf("foldSemester error: %v", err)
+		return
+	}
+	fmt.Println(userID, year, semester, folded)
+	err = s.Data.FoldSemester(userID, year, semester, folded)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// text, err := parseLanguage(r)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
+	// s.renderBlueprint(w, r, text)
 }

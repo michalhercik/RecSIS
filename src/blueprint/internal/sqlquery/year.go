@@ -42,3 +42,13 @@ WHERE b.user_id = $1
 AND b.academic_year = m.academic_year
 ;
 `
+
+const FoldSemester = `--sql
+UPDATE blueprint_semesters bs
+SET folded = $4
+FROM blueprint_years BY
+WHERE bs.blueprint_year_id = by.id
+AND by.user_id = $1
+AND by.academic_year = $2
+AND bs.semester = $3
+`

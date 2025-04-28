@@ -189,6 +189,7 @@ CREATE TABLE blueprint_semesters(
     id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     blueprint_year_id INT NOT NULL,
     semester INT NOT NULL,
+    folded BOOLEAN NOT NULL DEFAULT false,
     FOREIGN KEY (blueprint_year_id) REFERENCES blueprint_years(id) ON DELETE CASCADE,
     UNIQUE (blueprint_year_id, semester)
 );

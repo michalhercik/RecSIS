@@ -120,3 +120,11 @@ func (m DBManager) RemoveYear(userID string) error {
 
 	return nil
 }
+
+func (m DBManager) FoldSemester(userID string, year int, semester SemesterAssignment, folded bool) error {
+	_, err := m.DB.Exec(sqlquery.FoldSemester, userID, year, int(semester), folded)
+	if err != nil {
+		return err
+	}
+	return nil
+}

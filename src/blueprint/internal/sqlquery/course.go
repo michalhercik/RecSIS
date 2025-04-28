@@ -191,6 +191,7 @@ SELECT
 	bc.id,
 	-- bc.position,
 	bs.semester,
+	bs.folded,
 	c.code,
 	c.title,
 	COALESCE(c.start_semester, -1) start_semester,

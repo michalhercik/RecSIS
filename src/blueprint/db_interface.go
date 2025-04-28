@@ -20,6 +20,7 @@ type DataManager interface {
 	RemoveCoursesByYear(userID string, year int) error
 	AddYear(userID string) error
 	RemoveYear(userID string) error
+	FoldSemester(userID string, year int, semester SemesterAssignment, folded bool) error
 }
 
 type Authentication interface {
@@ -83,6 +84,19 @@ func (sa *SemesterAssignment) Scan(val interface{}) error {
 		return nil
 	default:
 		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+func SemesterAssignmentFromString(s string) (SemesterAssignment, error) {
+	switch s {
+	case "winter":
+		return assignmentWinter, nil
+	case "summer":
+		return assignmentSummer, nil
+	case "unassigned":
+		return assignmentNone, nil
+	default:
+		return 0, fmt.Errorf("unknown semester assignment %s", s)
 	}
 }
 
@@ -170,11 +184,18 @@ type Course struct {
 	Guarantors    TeacherSlice     `db:"guarantors"`
 }
 
+type Semester struct {
+	courses []Course
+	folded  bool
+}
+
 type AcademicYear struct {
-	position   int
-	winter     []Course
-	summer     []Course
-	unassigned []Course
+	position int
+	winter   Semester
+	summer   Semester
+	// winter     []Course
+	// summer     []Course
+	unassigned Semester
 }
 
 func sumCredits(courses []Course) int {
@@ -186,11 +207,11 @@ func sumCredits(courses []Course) int {
 }
 
 func (ay AcademicYear) winterCredits() int {
-	return sumCredits(ay.winter)
+	return sumCredits(ay.winter.courses)
 }
 
 func (ay AcademicYear) summerCredits() int {
-	return sumCredits(ay.summer)
+	return sumCredits(ay.summer.courses)
 }
 
 func (ay AcademicYear) credits() int {
@@ -206,6 +227,7 @@ type insertedCourseInfo struct {
 type BlueprintRecordPosition struct {
 	AcademicYear int                `db:"academic_year"`
 	Semester     SemesterAssignment `db:"semester"`
+	Folded       bool               `db:"folded"`
 }
 
 type BlueprintRecord struct {
@@ -234,16 +256,24 @@ func (b *Blueprint) assign(position BlueprintRecordPosition, course *Course) err
 	}
 	if course != nil {
 		target := &b.years[position.AcademicYear]
+		var semester *Semester
 		switch position.Semester {
 		case assignmentWinter:
-			target.winter = append(target.winter, *course)
+			semester = &target.winter
+			// target.winter.courses = append(target.winter.courses, *course)
 		case assignmentSummer:
-			target.summer = append(target.summer, *course)
+			semester = &target.summer
+			// target.summer.courses = append(target.summer.courses, *course)
 		case assignmentNone:
-			target.unassigned = append(target.unassigned, *course)
+			semester = &target.unassigned
+			// target.unassigned = append(target.unassigned, *course)
 		default:
 			return fmt.Errorf("unknown semester assignment %d", position.Semester)
 		}
+		if len(semester.courses) == 0 {
+			semester.folded = position.Folded
+		}
+		semester.courses = append(semester.courses, *course)
 	}
 	return nil
 }
