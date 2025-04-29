@@ -231,8 +231,6 @@ templ checkbox(ID, yearCount int, t text) {
 
 templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT string, yearCount int, t text) {
     <tbody
-        x-cloak
-        x-show="showCourses"
         x-sort={ xSortMethod }
         x-sort:group="courses"
     >
@@ -290,21 +288,20 @@ func sortHxPatch(year, semester int, t text) string {
     return fmt.Sprintf(`sortHxPatch($item, %d, %d, $position, "%s")`, year, semester, t.Language)
 }
 
-templ showHideCoursesButton(year int, semester string, t text) {
+templ showHideCoursesButton(year int, semester string, folded bool, t text) {
     <button
-        @click="showCourses = !showCourses"
-        class="btn btn-sm btn-outline-secondary w-100 p-0"
-        :class="showCourses ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'"
+        class={ "btn btn-sm btn-outline-secondary w-100 p-0 bi", templ.KV("bi-caret-up-fill", folded), templ.KV("bi-caret-down-fill", !folded) }
         style="--bs-btn-border-color: transparent; aspect-ratio: 1 / 1;"
         hx-patch={ t.Utils.LangLink(fmt.Sprintf("/blueprint/%d/%s", year, semester)) }
-        :hx-vals="JSON.stringify({ folded: !showCourses })">
+        hx-vals={ fmt.Sprintf(`"folded": %t`, !folded) }
+        hx-target="main">
     </button>
 }
 
-templ unassignHeadline(t text) {
+templ unassignHeadline(folded bool, t text) {
     <thead><tr>
         <th class="text-end align-middle p-0 bg-white lh-1">
-            @showHideCoursesButton(0, unassignedStr, t)
+            @showHideCoursesButton(0, unassignedStr, folded, t)
         </th>
         <th><h5 class="mb-0 text-nowrap">{ t.Unassigned }</h5></th>
         <th></th>
@@ -320,12 +317,14 @@ templ unassignHeadline(t text) {
 }
 
 templ unassignedTable(unassigned []Course, folded bool, yearCount int, t text) {
-    <div x-data={ fmt.Sprintf("{ showCourses: %t }", !folded) }>
+    <div>
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
         if len(unassigned) > 0 {
         // if there are unassigned courses
-            @unassignHeadline(t)
-            @coursesBody(unassigned, false, sortHxPatch(0, 0, t), t.TTAssign, yearCount, t)
+            @unassignHeadline(folded, t)
+            if (!folded) {
+                @coursesBody(unassigned, false, sortHxPatch(0, 0, t), t.TTReassign, yearCount, t)
+            }
         } else {
         // if there are no unassigned courses
             @noCoursesTableContent(t.NoUnassignedText, sortHxPatch(0, 0, t))
@@ -348,10 +347,10 @@ templ popoverHeadline(year, runningCredits, yearCredits, semesterCredits int, se
     </h5>
 }
 
-templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, t text) {
+templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, folded bool, t text) {
     <thead><tr>
         <th class="text-end align-middle p-0 bg-white lh-1">
-            @showHideCoursesButton(year, winterStr, t)
+            @showHideCoursesButton(year, winterStr, folded, t)
         </th>
         <th>
             @popoverHeadline(year, runningCredits, yearCredits, winterCredits, t.Winter, t)
@@ -371,12 +370,14 @@ templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, t tex
 }
 
 templ winterTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, winterCredits int, t text) {
-    <div x-data={ fmt.Sprintf("{ showCourses: %t }", !folded) }>
+    <div>
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
         if len(courses) > 0 {
         // if there are some courses
-            @winterHeadline(year, runningCredits, yearCredits, winterCredits, t)
-            @coursesBody(courses, true, sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t)
+            @winterHeadline(year, runningCredits, yearCredits, winterCredits, folded, t)
+            if (!folded) {
+                @coursesBody(courses, true, sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t)
+            }
         } else {
         // if there are no courses
             {{
@@ -388,10 +389,10 @@ templ winterTable(courses []Course, folded bool, year, yearCount, runningCredits
     </div>
 }
 
-templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, t text) {
+templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, folded bool, t text) {
     <thead><tr>
         <th class="text-end align-middle p-0 bg-white lh-1">
-            @showHideCoursesButton(year, summerStr, t)
+            @showHideCoursesButton(year, summerStr, folded, t)
         </th>
         <th>
             @popoverHeadline(year, runningCredits, yearCredits, summerCredits, t.Summer, t)
@@ -411,12 +412,14 @@ templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, t tex
 }
 
 templ summerTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, summerCredits int, t text) {
-    <div x-data={ fmt.Sprintf("{ showCourses: %t }", !folded) }>
+    <div>
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
         if len(courses) > 0 {
         // if there are some courses
-            @summerHeadline(year, runningCredits, yearCredits, summerCredits, t)
-            @coursesBody(courses, true, sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t)
+            @summerHeadline(year, runningCredits, yearCredits, summerCredits, folded, t)
+            if (!folded) {
+                @coursesBody(courses, true, sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t)
+            }
         } else {
         // if there are no courses
             {{
@@ -443,8 +446,6 @@ templ yearsTables(years []AcademicYear, t text) {
 }
 
 templ Content(data *Blueprint, t text) {
-    // TODO: when going back (clicking <- icon in the left top corner) to this page, all x-data must reinitialize
-    // THIS IS VERY PROBLEMATIC, MUST BE FIXED
     <div x-data="data" class="container pt-3">
         @unassignedTable(data.years[0].unassigned.courses, data.years[0].unassigned.folded, len(data.years) - 1, t)
         if len(data.years) > 1 {
@@ -463,6 +464,13 @@ templ Content(data *Blueprint, t text) {
             initializePopovers();
             setupCheckboxShiftClick();
         }
+
+        document.addEventListener('htmx:historyRestore', function () {
+            // Reinitialize Alpine.js when content is restored from history
+            initAll();
+            let initAlpine = new Event('alpine:init');
+            document.dispatchEvent(initAlpine);
+        });
 
         document.addEventListener('htmx:afterSwap', function (e) {
             // Initialize tooltips and popovers after HTMX swaps in new content

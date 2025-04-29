@@ -483,11 +483,11 @@ func (s Server) foldSemester(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// text, err := parseLanguage(r)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	return
-	// }
-	// s.renderBlueprint(w, r, text)
+	text, err := parseLanguage(r)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	s.renderBlueprint(w, r, text)
 }
