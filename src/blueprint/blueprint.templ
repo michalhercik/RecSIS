@@ -176,17 +176,6 @@ templ dragCourseButton(t text) {
     </button>
 }
 
-templ showHideCoursesButton(showVar string, id string, url string) {
-    <button
-        @click={ showVar + " = !" + showVar }
-        class="btn btn-sm btn-outline-secondary w-100 p-0"
-        :class={ showVar + " ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'" }
-        style="--bs-btn-border-color: transparent; aspect-ratio: 1 / 1;"
-        hx-patch={ fmt.Sprintf("/blueprint/%s", url) }
-        hx-vals={ fmt.Sprintf(`js:{folded: document.getElementById("%s-table-body").style.display === 'none' ? false : true}`, id) }>
-    </button>
-}
-
 func winterString(course *Course) string {
     winterText := ""
     if course.Start == teachingWinterOnly || course.Start == teachingBoth {
@@ -240,10 +229,10 @@ templ checkbox(ID, yearCount int, t text) {
     </div>
 }
 
-templ coursesBody(courses []Course, canUnassign bool, showCondition, xSortMethod, assignTT string, yearCount int, t text, id string) {
+templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT string, yearCount int, t text) {
     <tbody
-        id={ id }
-        x-show={ showCondition }
+        x-cloak
+        x-show="showCourses"
         x-sort={ xSortMethod }
         x-sort:group="courses"
     >
@@ -271,7 +260,7 @@ templ coursesBody(courses []Course, canUnassign bool, showCondition, xSortMethod
                 // remove course button
                 @removeCourseButton(course.ID, t)
                 // drag button
-                @dragCourseButton(t)
+                @dragCourseButton(t) 
             </td>
         </tr>
         }
@@ -301,10 +290,21 @@ func sortHxPatch(year, semester int, t text) string {
     return fmt.Sprintf(`sortHxPatch($item, %d, %d, $position, "%s")`, year, semester, t.Language)
 }
 
+templ showHideCoursesButton(year int, semester string, t text) {
+    <button
+        @click="showCourses = !showCourses"
+        class="btn btn-sm btn-outline-secondary w-100 p-0"
+        :class="showCourses ? 'bi bi-caret-down-fill' : 'bi bi-caret-up-fill'"
+        style="--bs-btn-border-color: transparent; aspect-ratio: 1 / 1;"
+        hx-patch={ t.Utils.LangLink(fmt.Sprintf("/blueprint/%d/%s", year, semester)) }
+        :hx-vals="JSON.stringify({ folded: !showCourses })">
+    </button>
+}
+
 templ unassignHeadline(t text) {
     <thead><tr>
         <th class="text-end align-middle p-0 bg-white lh-1">
-            @showHideCoursesButton("showUnassigned", "unassigned", "0/unassigned")
+            @showHideCoursesButton(0, unassignedStr, t)
         </th>
         <th><h5 class="mb-0 text-nowrap">{ t.Unassigned }</h5></th>
         <th></th>
@@ -319,13 +319,13 @@ templ unassignHeadline(t text) {
     </tr></thead>
 }
 
-templ unassignedTable(unassigned []Course, yearCount int, t text, folded bool) {
-    <div class="pt-3" x-data={ fmt.Sprintf("{ showUnassigned: %t }", !folded) }>
+templ unassignedTable(unassigned []Course, folded bool, yearCount int, t text) {
+    <div x-data={ fmt.Sprintf("{ showCourses: %t }", !folded) }>
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
         if len(unassigned) > 0 {
         // if there are unassigned courses
             @unassignHeadline(t)
-            @coursesBody(unassigned, false, "showUnassigned", sortHxPatch(0, 0, t), t.TTAssign, yearCount, t, "unassigned-table-body")
+            @coursesBody(unassigned, false, sortHxPatch(0, 0, t), t.TTAssign, yearCount, t)
         } else {
         // if there are no unassigned courses
             @noCoursesTableContent(t.NoUnassignedText, sortHxPatch(0, 0, t))
@@ -339,7 +339,7 @@ templ popoverHeadline(year, runningCredits, yearCredits, semesterCredits int, se
         class="mb-0 text-nowrap"
         style="cursor: help;"
         data-bs-toggle="popover"
-        data-bs-trigger="hover"
+        data-bs-trigger="hover" 
         data-bs-html="true"
         data-bs-placement="bottom"
         data-bs-title={ t.TTNumberOfCredits }
@@ -348,10 +348,10 @@ templ popoverHeadline(year, runningCredits, yearCredits, semesterCredits int, se
     </h5>
 }
 
-templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, t text, folded bool) {
+templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, t text) {
     <thead><tr>
         <th class="text-end align-middle p-0 bg-white lh-1">
-            @showHideCoursesButton(fmt.Sprintf("winter%d", year), fmt.Sprintf("%d-winter", year), fmt.Sprintf("%d/winter", year))
+            @showHideCoursesButton(year, winterStr, t)
         </th>
         <th>
             @popoverHeadline(year, runningCredits, yearCredits, winterCredits, t.Winter, t)
@@ -370,13 +370,13 @@ templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, t tex
     </tr></thead>
 }
 
-templ winterTable(courses []Course, year, yearCount, runningCredits, yearCredits, winterCredits int, t text, folded bool) {
-    <div x-data={ fmt.Sprintf("{ winter%d: %t }", year, !folded) }>
+templ winterTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, winterCredits int, t text) {
+    <div x-data={ fmt.Sprintf("{ showCourses: %t }", !folded) }>
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
         if len(courses) > 0 {
         // if there are some courses
-            @winterHeadline(year, runningCredits, yearCredits, winterCredits, t, folded)
-            @coursesBody(courses, true, fmt.Sprintf("winter%d", year), sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t, fmt.Sprintf("%d-winter-table-body", year))
+            @winterHeadline(year, runningCredits, yearCredits, winterCredits, t)
+            @coursesBody(courses, true, sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t)
         } else {
         // if there are no courses
             {{
@@ -391,7 +391,7 @@ templ winterTable(courses []Course, year, yearCount, runningCredits, yearCredits
 templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, t text) {
     <thead><tr>
         <th class="text-end align-middle p-0 bg-white lh-1">
-            @showHideCoursesButton(fmt.Sprintf("summer%d", year), fmt.Sprintf("%d-summer", year), fmt.Sprintf("%d/summer", year))
+            @showHideCoursesButton(year, summerStr, t)
         </th>
         <th>
             @popoverHeadline(year, runningCredits, yearCredits, summerCredits, t.Summer, t)
@@ -410,13 +410,13 @@ templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, t tex
     </tr></thead>
 }
 
-templ summerTable(courses []Course, year, yearCount, runningCredits, yearCredits, summerCredits int, t text, folded bool) {
-    <div x-data={ fmt.Sprintf("{ summer%d: %t }", year, !folded) }>
+templ summerTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, summerCredits int, t text) {
+    <div x-data={ fmt.Sprintf("{ showCourses: %t }", !folded) }>
         <table class="table table-sm blueprint-table" :class=" isSorting || 'table-hover' ">
         if len(courses) > 0 {
         // if there are some courses
             @summerHeadline(year, runningCredits, yearCredits, summerCredits, t)
-            @coursesBody(courses, true, fmt.Sprintf("summer%d", year), sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t, fmt.Sprintf("%d-summer-table-body", year))
+            @coursesBody(courses, true, sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t)
         } else {
         // if there are no courses
             {{
@@ -434,17 +434,17 @@ templ yearsTables(years []AcademicYear, t text) {
         <div id={ fmt.Sprintf("blueprint-year-%d", year.position) }>
             // render winter
             {{ runningCredits += year.winterCredits() }}
-            @winterTable(year.winter.courses, year.position, len(years), runningCredits, year.credits(), year.winterCredits(), t, year.winter.folded)
+            @winterTable(year.winter.courses, year.winter.folded, year.position, len(years), runningCredits, year.credits(), year.winterCredits(), t)
             // render summer
             {{ runningCredits += year.summerCredits() }}
-            @summerTable(year.summer.courses, year.position, len(years), runningCredits, year.credits(), year.summerCredits(), t, year.summer.folded)
+            @summerTable(year.summer.courses, year.summer.folded,  year.position, len(years), runningCredits, year.credits(), year.summerCredits(), t)
         </div>
     }
 }
 
 templ Content(data *Blueprint, t text) {
-    <div x-data={ fmt.Sprintf("data(%d)", len(data.years)) } class="container">
-        @unassignedTable(data.years[0].unassigned.courses, len(data.years) - 1, t, data.years[0].unassigned.folded)
+    <div x-data="data" class="container pt-3">
+        @unassignedTable(data.years[0].unassigned.courses, data.years[0].unassigned.folded, len(data.years) - 1, t)
         if len(data.years) > 1 {
             @yearsTables(data.years[1:], t)
         }
@@ -452,10 +452,6 @@ templ Content(data *Blueprint, t text) {
     </div>
 
     <script>
-        function isFolded(id) {
-            console.log("isFolded: " + id); // TODO: remove this log
-            document.getElementById(id).style.display === 'none' ? true : false
-        }
         document.addEventListener('DOMContentLoaded', function () {
             initAll();
         });
@@ -478,31 +474,18 @@ templ Content(data *Blueprint, t text) {
         });
 
         document.addEventListener('alpine:init', () => {
-            Alpine.data('data', (numberOfYears) => {
-                const dynamicData = {};
+            Alpine.data('data', () => ({
+                checkedNumber: 0,
 
-                for (let i = 1; i <= numberOfYears; i++) {
-                    dynamicData[`winter${i}`] = true;
-                    dynamicData[`summer${i}`] = true;
-                }
-
-                return {
-                    checkedNumber: 0,
-                    showUnassigned: true,
-                    ...dynamicData, // Spread the dynamically generated properties
-
-                    // drag&drop (sorting) focus/hover chrome bug (https://alpinejs.dev/plugins/sort#css-hover-bug) solution
-                    isSorting: false,
-                    checkSortingClass() {
-                        this.isSorting = document.body.classList.contains('sorting');
-                    },
-                    init() {
-                        this.checkSortingClass();
-                        const observer = new MutationObserver(() => this.checkSortingClass());
-                        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-                    },
-                };
-            });
+                // drag&drop (sorting) focus/hover chrome bug (https://alpinejs.dev/plugins/sort#css-hover-bug) solution
+                isSorting: false,
+                checkSortingClass() { this.isSorting = document.body.classList.contains('sorting'); },
+                init() {
+                    this.checkSortingClass();
+                    const observer = new MutationObserver(() => this.checkSortingClass());
+                    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+                },
+            }));
         });
 
         // bootstrap tooltip initialization

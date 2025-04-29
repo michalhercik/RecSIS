@@ -39,6 +39,12 @@ const (
 	selectedRemove string = "selected"
 )
 
+const (
+	winterStr     = "winter"
+	summerStr     = "summer"
+	unassignedStr = "unassigned"
+)
+
 type DBLang string
 
 const (
@@ -89,11 +95,11 @@ func (sa *SemesterAssignment) Scan(val interface{}) error {
 
 func SemesterAssignmentFromString(s string) (SemesterAssignment, error) {
 	switch s {
-	case "winter":
+	case winterStr:
 		return assignmentWinter, nil
-	case "summer":
+	case summerStr:
 		return assignmentSummer, nil
-	case "unassigned":
+	case unassignedStr:
 		return assignmentNone, nil
 	default:
 		return 0, fmt.Errorf("unknown semester assignment %s", s)

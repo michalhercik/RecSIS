@@ -477,7 +477,6 @@ func (s Server) foldSemester(w http.ResponseWriter, r *http.Request) {
 		log.Printf("foldSemester error: %v", err)
 		return
 	}
-	fmt.Println(userID, year, semester, folded)
 	err = s.Data.FoldSemester(userID, year, semester, folded)
 	if err != nil {
 		log.Println(err)
