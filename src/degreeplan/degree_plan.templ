@@ -32,21 +32,24 @@ func summerString(course *Course) string {
 }
 
 templ blueprintAssignment(code string, t text) {
-    <div class="btn-group w-100" style="height: 32px;" x-data="{ hover: false, hoverSelection: false }" @mouseover="hover = true" @mouseleave="hover = false">
+    <div
+        class="btn-group w-100"
+        style="height: 32px;"
+        x-data="{ hover: false, hoverSelection: false }"
+        @mouseover="hover = true"
+        @mouseleave="hover = false">
         <button
             type="button"
             class="btn btn-sm btn-outline-blueprint bi bi-plus lh-1 p-0"
-            :class="hover || 'border-0'"
+            :class="{ 'border-0': !hover, 'dp-bp-delimiter': !hover }"
             style="font-size: 1.75rem;"
             hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
             hx-vals={ `"year": 0, "semester": 0` }>
         </button>
         <button
             type="button"
-            x-cloak
-            x-show="hover"
             class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-            :class="hoverSelection && 'btn-blueprint-hover'"
+            :class="{ 'btn-blueprint-hover': hoverSelection, 'border-0': !hover }"
             data-bs-toggle="dropdown"
             aria-expanded="false"
             data-bs-offset="0, 0">
@@ -55,7 +58,7 @@ templ blueprintAssignment(code string, t text) {
             class="dropdown-menu dropdown-menu-end" 
             @mouseover="hoverSelection = true"
             @mouseleave="hoverSelection = false">
-        // TODO: make dynamic, NOT 3 fixed years
+            // TODO: make dynamic, NOT 3 fixed years
             for year := 1; year <= 3; year++ {
                 <li class="mx-3"><button class="dropdown-item rounded text-center"
                     hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
@@ -100,7 +103,7 @@ templ Content(dp *DegreePlan, t text) {
                 }
             </h6>
         }
-        <table class="table table-sm table-hover degree-plan-table">
+        <table class="table table-sm table-hover degree-plan-table" x-data="{ hoverAnyRow: false }">
             <thead>
                 <tr>
                     if bloc.Name == "" {
@@ -136,13 +139,16 @@ templ Content(dp *DegreePlan, t text) {
                     </th>
                     <th class="d-none d-lg-table-cell">{ t.Winter }</th>
                     <th class="d-none d-lg-table-cell">{ t.Summer }</th>
-                    <th class="d-none d-lg-table-cell">Garant(i)</th>
-                    <th class="th-overflow">{ t.Blueprint }</th>
+                    <th class="d-none d-xl-table-cell" :class="{ 'dp-guarantors-hover': hoverAnyRow }">{ t.Guarantors }</th>
+                    <th :class="{ 'dp-buttons-hover': hoverAnyRow }"></th>
                 </tr>
             </thead>
             <tbody>
             for _, course := range bloc.Courses {
-                <tr> 
+                <tr
+                    x-data="{ hoverRow: false }"
+                    @mouseover="hoverRow = true; hoverAnyRow = true;"
+                    @mouseleave="hoverRow = false; hoverAnyRow = false;"> 
                     <td> 
                         @utils.CourseLink(course.Code, t.Utils)
                     </td>
@@ -165,10 +171,12 @@ templ Content(dp *DegreePlan, t text) {
                     <td class="d-none d-md-table-cell"></td>
                     <td class="d-none d-lg-table-cell">{ winterString(&course) }</td>
                     <td class="d-none d-lg-table-cell">{ summerString(&course) }</td>
-                    <td class="d-none d-lg-table-cell">M. Hercík, M. Medek, L. Peška</td>
-                    <td class="text-start align-middle p-0">
-                        @blueprintAssignment(course.Code, t)
-                    </td>
+                    <td class="d-none d-xl-table-cell" :class="{ 'dp-guarantors-hover': hoverRow }" :colspan="hoverRow ? '1' : '2'">M. Hercík, M. Medek, L. Peška, J. Novák</td>
+                    <template x-if="hoverRow">
+                        <td class="text-start align-middle p-0" :class="{ 'dp-buttons-hover': hoverRow }">
+                            @blueprintAssignment(course.Code, t)
+                        </td>
+                    </template>
                 </tr>
             }
             </tbody>

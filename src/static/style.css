@@ -392,26 +392,41 @@ body {
 }
 
 /* guarantors */
-.blueprint-table th:nth-child(8),
-.blueprint-table td:nth-child(8) {
-    width: 265px;
+.degree-plan-table th:nth-child(8),
+.degree-plan-table td:nth-child(8) {
+    width: 320px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+.dp-guarantors-hover {
+    /* 320 (original guarantors) - 55 (buttons)  */
+    width: 265px !important;
+}
+
 /* guarantors smaller */
 @media (max-width: 1400px) {
-    .blueprint-table th:nth-child(8),
-    .blueprint-table td:nth-child(8) {
-        width: 200px;
+    .degree-plan-table th:nth-child(8),
+    .degree-plan-table td:nth-child(8) {
+        width: 255px;
+    }
+
+    .dp-guarantors-hover {
+        /* 255 (original guarantors) - 55 (buttons)  */
+        width: 200px !important;
     }
 }
 
 /* button */
 .degree-plan-table th:nth-child(9),
 .degree-plan-table td:nth-child(9) {
-    width: 53px;
+    width: 0px;
+    padding: 0 !important;
+}
+
+.dp-buttons-hover {
+    width: 55px !important;
 }
 
 @media (max-width: 992px) {
@@ -424,3 +439,19 @@ body {
     }
 }
 /* ============================================== */
+
+/* degree plan BP assign line in middle */
+.dp-bp-delimiter {
+    position: relative;
+}
+
+.dp-bp-delimiter::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 1px;
+    background-color: rgb(4, 108, 181);;
+}

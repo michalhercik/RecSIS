@@ -443,6 +443,8 @@ templ yearsTables(years []AcademicYear, t text) {
 }
 
 templ Content(data *Blueprint, t text) {
+    // TODO: when going back (clicking <- icon in the left top corner) to this page, all x-data must reinitialize
+    // THIS IS VERY PROBLEMATIC, MUST BE FIXED
     <div x-data="data" class="container pt-3">
         @unassignedTable(data.years[0].unassigned.courses, data.years[0].unassigned.folded, len(data.years) - 1, t)
         if len(data.years) > 1 {

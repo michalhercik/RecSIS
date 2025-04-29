@@ -20,6 +20,7 @@ type text struct {
 	Needed       string
 	Winter       string
 	Summer       string
+	Guarantors   string
 	Blueprint    string
 	Assign       string
 	Year         string
@@ -52,6 +53,7 @@ var texts = map[language.Language]text{
 		Needed:       "potřeba",
 		Winter:       "ZS",
 		Summer:       "LS",
+		Guarantors:   "Garant(i)",
 		Blueprint:    "Blueprint",
 		Assign:       "Přiřadit",
 		Year:         "ročník",
@@ -73,6 +75,7 @@ var texts = map[language.Language]text{
 		Needed:       "needed",
 		Winter:       "Winter",
 		Summer:       "Summer",
+		Guarantors:   "Guarantor(s)",
 		Blueprint:    "Blueprint",
 		Assign:       "Assign",
 		Year:         "Year",
