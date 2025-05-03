@@ -394,46 +394,24 @@ body {
 /* guarantors */
 .degree-plan-table th:nth-child(8),
 .degree-plan-table td:nth-child(8) {
-    width: 320px;
+    width: 265px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.dp-guarantors-hover {
-    /* 320 (original guarantors) - 55 (buttons)  */
-    width: 265px !important;
 }
 
 /* guarantors smaller */
 @media (max-width: 1400px) {
     .degree-plan-table th:nth-child(8),
     .degree-plan-table td:nth-child(8) {
-        width: 255px;
-    }
-
-    .dp-guarantors-hover {
-        /* 255 (original guarantors) - 55 (buttons)  */
-        width: 200px !important;
+        width: 200px;
     }
 }
 
 /* button */
 .degree-plan-table th:nth-child(9),
 .degree-plan-table td:nth-child(9) {
-    width: 0px;
-    padding: 0 !important;
-}
-
-.dp-buttons-hover {
-    width: 55px !important;
-}
-
-@media (max-width: 1200px) {
-    .degree-plan-table th:nth-child(9),
-    .degree-plan-table td:nth-child(9) {
-        width: 55px;
-    }
+    width: 55px;
 }
 
 @media (max-width: 992px) {

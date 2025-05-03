@@ -110,7 +110,7 @@ func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request, t text) 
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	data, err := s.Data.Blueprint(userID, DBLang(t.Language))
+	data, err := s.Data.Blueprint(userID, DBLang(t.Utils.Language))
 	if err != nil {
 		log.Println(err)
 		result = InternalServerErrorContent(t)
@@ -129,7 +129,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	data, err := s.Data.Blueprint(userID, DBLang(t.Language))
+	data, err := s.Data.Blueprint(userID, DBLang(t.Utils.Language))
 	if err != nil {
 		log.Println(err)
 		result = InternalServerErrorPage(t)
@@ -407,6 +407,21 @@ func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
 	userID, err := s.Auth.UserID(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	}
+	unassign := r.FormValue("unassign")
+	shouldUnassign, err := strconv.ParseBool(unassign)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if shouldUnassign {
+		err = s.unassignYear(r, userID)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 	if err := s.Data.RemoveYear(userID); err != nil {
 		log.Println(err)

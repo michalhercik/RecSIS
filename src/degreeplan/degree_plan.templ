@@ -5,10 +5,6 @@ import (
     "fmt"
 )
 
-func hoursExamsString(lecture, seminar int, examType string) string {
-    return fmt.Sprintf("%d/%d, %s", lecture, seminar, examType)
-}
-
 func winterString(course *Course) string {
     winterText := ""
     if course.Start == teachingWinterOnly || course.Start == teachingBoth {
@@ -35,6 +31,8 @@ templ blueprintAssignment(code string, t text) {
     <div
         class="btn-group w-100"
         style="height: 32px;"
+        x-cloak
+        x-show="hoverRow"
         x-data="{ hover: false, hoverSelection: false }"
         @mouseover="hover = true"
         @mouseleave="hover = false">
@@ -103,7 +101,7 @@ templ Content(dp *DegreePlan, t text) {
                 }
             </h6>
         }
-        <table class="table table-sm table-hover degree-plan-table" x-data="{ hoverAnyRow: false }">
+        <table class="table table-sm table-hover degree-plan-table">
             <thead>
                 <tr>
                     if bloc.Name == "" {
@@ -130,7 +128,7 @@ templ Content(dp *DegreePlan, t text) {
                     <th></th>
                     <th class="th-overflow pe-0">
                         { fmt.Sprintf("%s:", t.Credits) }
-                        <span style="color: rgb(19, 92, 4);">{ fmt.Sprintf("%d", bloc.completedCredits()) }</span> | <span style="color: rgb(4, 108, 181);">{ fmt.Sprintf("%d", bloc.inBlueprintCredits()) }</span>
+                        <span style="color: rgb(19, 92, 4);">{ fmt.Sprintf("%d", bloc.completedCredits()) }</span> | <span class="blueprint-color">{ fmt.Sprintf("%d", bloc.inBlueprintCredits()) }</span>
                     </th>
                     <th class="d-none d-md-table-cell">
                         if bloc.hasLimit() {
@@ -139,16 +137,16 @@ templ Content(dp *DegreePlan, t text) {
                     </th>
                     <th class="d-none d-lg-table-cell">{ t.Winter }</th>
                     <th class="d-none d-lg-table-cell">{ t.Summer }</th>
-                    <th class="d-none d-xl-table-cell" :class="{ 'dp-guarantors-hover': hoverAnyRow }">{ t.Guarantors }</th>
-                    <th :class="{ 'dp-buttons-hover': hoverAnyRow }"></th>
+                    <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
+                    <th class="th-overflow"><span class="d-none d-lg-inline">{ t.Blueprint }</span></th>
                 </tr>
             </thead>
             <tbody>
             for _, course := range bloc.Courses {
                 <tr
                     x-data="{ hoverRow: false }"
-                    @mouseover="hoverRow = true; hoverAnyRow = true;"
-                    @mouseleave="hoverRow = false; hoverAnyRow = false;"> 
+                    @mouseover="hoverRow = true"
+                    @mouseleave="hoverRow = false"> 
                     <td> 
                         @utils.CourseLink(course.Code, t.Utils)
                     </td>
@@ -171,17 +169,10 @@ templ Content(dp *DegreePlan, t text) {
                     <td class="d-none d-md-table-cell"></td>
                     <td class="d-none d-lg-table-cell">{ winterString(&course) }</td>
                     <td class="d-none d-lg-table-cell">{ summerString(&course) }</td>
-                    <td class="d-none d-xl-table-cell" :class="{ 'dp-guarantors-hover': hoverRow }" :colspan="hoverRow ? '1' : '2'">M. Hercík, M. Medek, L. Peška, J. Novák</td>
-                    <template x-if="hoverRow">
-                        <td class="text-start align-middle p-0" :class="{ 'dp-buttons-hover': hoverRow }">
-                            @blueprintAssignment(course.Code, t)
-                        </td>
-                    </template>
-                    <template x-if="!hoverRow">
-                        <td class="text-start align-middle p-0 hoverRow d-xl-none">
-                            @blueprintAssignment(course.Code, t)
-                        </td>
-                    </template>
+                    <td class="d-none d-xl-table-cell">M. Hercík, M. Medek, L. Peška, J. Novák</td>
+                    <td class="text-start align-middle p-0">
+                        @blueprintAssignment(course.Code, t)
+                    </td>
                 </tr>
             }
             </tbody>

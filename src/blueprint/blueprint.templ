@@ -19,6 +19,7 @@ func vType(typeStr string) string     { return fmt.Sprintf(`"type": "%s"`, typeS
 func vYear(year int) string           { return fmt.Sprintf(`"year": %d`, year) }
 func vSem(semester int) string        { return fmt.Sprintf(`"semester": %d`, semester) }
 func vPos() string                    { return fmt.Sprintf(`"position": %d`, lastPosition) }
+func vUnassign(unassign bool) string  { return fmt.Sprintf(`"unassign": %t`, unassign) }
 
 func mergeVals(vals ...string) string { return strings.Join(vals, ", ") }
 
@@ -91,7 +92,7 @@ templ assignMenu(yearCount int, showCondBox, patch, vals, include string, t text
 }
 
 templ assignCourseButtonInternal(transparent bool, tooltip, showCondButton, showCondBox, patch, vals, include string, yearCount int, t text) {
-    <div style="position: relative; display: inline-block;">
+    <div class="position-relative d-inline-block">
         <button
             if (showCondButton != "") {
                 x-cloak
@@ -150,16 +151,59 @@ templ summarizeFooter(data *Blueprint, t text) {
                     hx-target="main">
                 </button>
                 { strconv.Itoa(len(data.years) - 1) }
-                <button
-                    class="btn btn-outline-secondary btn-sm bi bi-dash"
-                    hx-delete={ t.Utils.LangLink("/blueprint/year") }
-                    hx-target="main"
-                    :disabled={ fmt.Sprintf("%d <= 0", len(data.years) - 1) }>
-                </button>
+                if len(data.years[len(data.years) - 1].winter.courses) > 0 || len(data.years[len(data.years) - 1].summer.courses) > 0 {
+                    // if the last year is non-empty, show modal
+                    <button
+                        class="btn btn-outline-secondary btn-sm bi bi-dash"
+                        data-bs-toggle="modal"
+                        data-bs-target="#coursesOptionModal"
+                        :disabled={ fmt.Sprintf("%d <= 0", len(data.years) - 1) }>
+                    </button>
+                } else {
+                    // if the last year is empty, show delete button
+                    <button
+                        class="btn btn-outline-secondary btn-sm bi bi-dash"
+                        hx-delete={ t.Utils.LangLink("/blueprint/year") }
+                        hx-vals={ vUnassign(false) }
+                        hx-target="main"
+                        :disabled={ fmt.Sprintf("%d <= 0", len(data.years) - 1) }>
+                    </button>
+                }
                 { t.NumOfYears }
             </th>
         </tr></thead>
     </table>
+    // modal for removing non-empty last year
+    <div class="modal fade" id="coursesOptionModal" tabindex="-1" aria-labelledby="coursesOptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="coursesOptionModalLabel">{ t.ModalTitle }</h1>
+                    <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">{ t.ModalContent }</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">{ t.Cancel }</button>
+                    <button
+                        data-bs-dismiss="modal"
+                        class="btn btn-primary"
+                        hx-delete={ t.Utils.LangLink("/blueprint/year") }
+                        hx-vals={ vUnassign(false) }
+                        hx-target="main">
+                        { t.RemoveCourses }
+                    </button>
+                    <button
+                        data-bs-dismiss="modal"
+                        class="btn btn-primary"
+                        hx-delete={ t.Utils.LangLink("/blueprint/year") }
+                        hx-vals={ mergeVals(vUnassign(true), vYear(len(data.years) - 1)) }
+                        hx-target="main">
+                        { t.UnassignCourses }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 templ dragCourseButton(t text) {
@@ -263,7 +307,7 @@ templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT stri
         </tr>
         }
         // dummy row for sorting error (Cannot read properties of null (reading 'nextSibling')) fix
-        <tr class="dummy-row" x-sort:item style="display: none;"></tr>
+        <tr class="dummy-row d-none" x-sort:item></tr>
     </tbody>
 }
 
@@ -280,12 +324,12 @@ templ noCoursesTableContent(text, xSort string) {
     </tr></thead>
     <tbody x-sort={ xSort } x-sort:group="courses">
         // dummy row for sorting error (Cannot read properties of null (reading 'nextSibling')) fix
-        <tr class="dummy-row" x-sort:item style="display: none;"></tr>
+        <tr class="dummy-row d-none" x-sort:item></tr>
     </tbody>
 }
 
 func sortHxPatch(year, semester int, t text) string {
-    return fmt.Sprintf(`sortHxPatch($item, %d, %d, $position, "%s")`, year, semester, t.Language)
+    return fmt.Sprintf(`sortHxPatch($item, %d, %d, $position, "%s")`, year, semester, t.Utils.Language)
 }
 
 templ showHideCoursesButton(year int, semester string, folded bool, t text) {
