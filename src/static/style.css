@@ -429,6 +429,13 @@ body {
     width: 55px !important;
 }
 
+@media (max-width: 1200px) {
+    .degree-plan-table th:nth-child(9),
+    .degree-plan-table td:nth-child(9) {
+        width: 55px;
+    }
+}
+
 @media (max-width: 992px) {
     .degree-plan-table th {
         font-size: 0.9rem !important;

@@ -177,6 +177,11 @@ templ Content(dp *DegreePlan, t text) {
                             @blueprintAssignment(course.Code, t)
                         </td>
                     </template>
+                    <template x-if="!hoverRow">
+                        <td class="text-start align-middle p-0 hoverRow d-xl-none">
+                            @blueprintAssignment(course.Code, t)
+                        </td>
+                    </template>
                 </tr>
             }
             </tbody>
