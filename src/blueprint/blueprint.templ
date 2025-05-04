@@ -349,10 +349,17 @@ templ unassignHeadline(folded bool, t text) {
         </th>
         <th><h5 class="mb-0 text-nowrap">{ t.Unassigned }</h5></th>
         <th></th>
-        <th class="th-overflow credits-column d-none d-md-table-cell">{ t.Credits }</th>
-        <th class="d-none d-md-table-cell">{ t.Winter }</th>
-        <th class="d-none d-md-table-cell">{ t.Summer }</th>
-        <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
+        if folded {
+            <th class="th-overflow credits-column d-none d-md-table-cell"></th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-xl-table-cell"></th>
+        } else {
+            <th class="th-overflow credits-column d-none d-md-table-cell">{ t.Credits }</th>
+            <th class="d-none d-md-table-cell">{ t.Winter }</th>
+            <th class="d-none d-md-table-cell">{ t.Summer }</th>
+            <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
+        }
         <th class="text-end align-middle py-0 lh-1">
             // remove all unassigned courses button
             @removeCoursesButton(true, t.TTRemoveUnassigned, mergeVals(vType(yearRemove), vYear(0)), "", t)
@@ -401,9 +408,15 @@ templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, folde
         </th>
         <th></th>
         <th class="th-overflow credits-column d-none d-md-table-cell">{ fmt.Sprintf("%s: %d", t.Credits, winterCredits) }</th>
-        <th class="d-none d-md-table-cell">{ t.Winter }</th>
-        <th class="d-none d-md-table-cell">{ t.Summer }</th>
-        <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
+        if folded {
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-xl-table-cell"></th>
+        } else {
+            <th class="d-none d-md-table-cell">{ t.Winter }</th>
+            <th class="d-none d-md-table-cell">{ t.Summer }</th>
+            <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
+        }
         <th class="text-end align-middle py-0 lh-1">
             // unassign all courses button
             @unassignCoursesButton(true, t.TTUnassignWinter, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentWinter))), "", t)
@@ -443,9 +456,15 @@ templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, folde
         </th>
         <th></th>
         <th class="th-overflow credits-column d-none d-md-table-cell">{ fmt.Sprintf("%s: %d", t.Credits, summerCredits) }</th>
-        <th class="d-none d-md-table-cell">{ t.Winter }</th>
-        <th class="d-none d-md-table-cell">{ t.Summer }</th>
-        <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
+        if folded {
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-xl-table-cell"></th>
+        } else {
+            <th class="d-none d-md-table-cell">{ t.Winter }</th>
+            <th class="d-none d-md-table-cell">{ t.Summer }</th>
+            <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
+        }
         <th class="text-end align-middle py-0 lh-1">
             // unassign all courses button
             @unassignCoursesButton(true, t.TTUnassignSummer, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentSummer))), "", t)
