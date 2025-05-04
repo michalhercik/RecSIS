@@ -26,28 +26,11 @@ body {
     padding-bottom: 75px; /* Space for the footer */
 }
 
-/* Blueprint Popover styles */
-.popover-body {
-    text-align: right;
+.ratio-1 {
+    aspect-ratio: 1 / 1;
 }
 
-/* Assign box styles */
-.assign-box {
-    position: absolute;
-    top: 100%; /* Position it directly below the parent */
-    left: 50%; /* Center it horizontally */
-    transform: translateX(-50%); /* Adjust for the element's width */
-    background: white;
-    border: 1px solid #ccc;
-    padding: 10px;
-    z-index: 100;
-} 
-
-/* Easier checking of the checkboxes */
-.checkbox-container {
-    position: relative;
-}
-
+/* BP -> Easier checking of the checkboxes */
 .circle-overlay {
     position: absolute;
     top: 50%;
@@ -67,7 +50,18 @@ body {
     display: block;
 }
 
-/* Option menu on checkbox */
+/* BP -> Checkbox styles */
+.form-check-input {
+    border: 1px solid #2c2c2c !important;
+    z-index: 1 !important;
+}
+
+/* BP -> Move course button */
+.move-button-filler {
+    padding: 4px 8px;;
+}
+
+/* BP -> Option menu on checkbox */
 .option-menu {
     position: absolute;
     top: 50%;
@@ -80,6 +74,11 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
+}
+
+/* BP -> Popover headline */
+.popover-headline {
+    cursor: help;
 }
 
 /* Blueprint colored button */
@@ -132,10 +131,10 @@ body {
     color: black !important;
 }
 
-/* Blueprint assign hover styles */
+/* BP -> assign hover styles */
 .dropdown-item:hover {
-    background-color: rgb(4, 108, 181) !important; /* Change to your desired color */
-    color: #fff !important; /* Optional: Change text color */
+    background-color: rgb(4, 108, 181) !important;
+    color: #fff !important;
 }
 
 /* === Blueprint tables styles === */
@@ -220,7 +219,7 @@ body {
 
 /* =============================== */
 
-/* Courses grid styles */
+/* S -> cards grid styles */
 .grid-page {
     display: grid;
     grid-template-columns: 230px 1fr;
@@ -248,7 +247,7 @@ body {
     margin-bottom: 0;
 }
 
-/* Courses annotation styles */
+/* S -> annotation styles */
 .annotation-container {
     max-height: 350px;
     overflow: hidden;
@@ -266,7 +265,7 @@ body {
     font-size: 0.9em;
 }
 
-/* Course card blueprint assignment ribbon styles */
+/* S -> Course card blueprint assignment ribbon styles */
 .ribbon {
     width: 70px;
     height: 70px;
@@ -292,7 +291,7 @@ body {
     z-index: 50;
 }
 
-/* Course detail teachers table styles */
+/* CD -> teachers table styles */
 #teachers-table {
     table-layout: auto;
 }
@@ -303,7 +302,7 @@ body {
     max-width: max-content;
 }
 
-/* Course detail rating form ticks styles */
+/* CD -> rating form ticks styles */
 .tick-container {
     position: relative;
     width: 97%;
@@ -317,12 +316,12 @@ body {
     transform: translateX(-50%);
 }
 
-/* Course detail info tables have no border under itself */
+/* CD -> info tables have no border under itself */
 .info-table-borders tr:last-child td:nth-child(2) {
     border-bottom: none !important;
 }
 
-/* Course detail not rated no thumb range styles */
+/* CD -> not rated no thumb range styles */
 .no-thumb::-webkit-slider-thumb {
     -webkit-appearance: none !important;
     appearance: none !important;

@@ -43,24 +43,7 @@ templ Page(title string, t Text) {
             <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
             // Google Fonts
             <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;700&display=swap" rel="stylesheet">
-            <script>
-            // Clear expanded- from session storage
-            function clearExpanded() {
-                Object.keys(sessionStorage).forEach(key => {
-                    if (key.startsWith('expanded-')) {
-                        sessionStorage.removeItem(key);
-                    }
-                });
-            }
-            // Change language to selected
-            function changeLanguage(lang) {
-                let currentUrl = window.location.pathname;
-                let queryParams = window.location.search;
-                let newUrl = currentUrl.replace(/^\/(cs|en)/, '') || '';
-                newUrl = '/' + lang + newUrl + queryParams;
-                window.location.href = newUrl;
-            }
-            </script>
+            <script src="/js/utils.js"></script>
         </head>
         <body hx-boost="true" class="position-relative">
             // @watermark()

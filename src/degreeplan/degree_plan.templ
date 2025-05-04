@@ -58,18 +58,22 @@ templ blueprintAssignment(code string, t text) {
             @mouseleave="hoverSelection = false">
             // TODO: make dynamic, NOT 3 fixed years
             for year := 1; year <= 3; year++ {
-                <li class="mx-3"><button class="dropdown-item rounded text-center"
-                    hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
-                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1`, year) } 
-                >
-                { fmt.Sprintf("%s %s", t.YearStr(year), t.WinterAssign) }
-                </button></li>
-                <li class="mx-3"><button class="dropdown-item rounded text-center"
-                    hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
-                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2`, year) } 
-                >
-                { fmt.Sprintf("%s %s", t.YearStr(year), t.SummerAssign) }
-                </button></li>
+                <li class="mx-3">
+                    <button
+                        class="dropdown-item rounded text-center"
+                        hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
+                        hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1`, year) }>
+                        { fmt.Sprintf("%s %s", t.YearStr(year), t.WinterAssign) }
+                    </button>
+                </li>
+                <li class="mx-3">
+                    <button
+                        class="dropdown-item rounded text-center"
+                        hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
+                        hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2`, year) }>
+                        { fmt.Sprintf("%s %s", t.YearStr(year), t.SummerAssign) }
+                    </button>
+                </li>
             }
         </ul>
     </div>

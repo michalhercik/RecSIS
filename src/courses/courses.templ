@@ -65,7 +65,7 @@ templ QuickResults(res *QuickResponse, t text) {
             for _, course := range res.courses {
                 <a
                     href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }
-                    class="dropdown-item text-truncate"
+                    class="dropdown-item rounded text-truncate"
                     hx-boost="false"
                     tabindex="0"
                 >
@@ -441,20 +441,20 @@ templ Content(coursesPage *coursesPage, t text) {
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        initializeTooltips();
-        clearExpanded();
-    });
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeTooltips();
+            clearExpanded();
+        });
 
-    document.addEventListener('htmx:afterSwap', function () {
-        initializeTooltips();
-    });
+        document.addEventListener('htmx:afterSwap', function () {
+            initializeTooltips();
+        });
 
-    // bootstrap tooltip initialization
-    function initializeTooltips() {
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-    };
+        // bootstrap tooltip initialization
+        function initializeTooltips() {
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+        };
     </script>
 }
 
