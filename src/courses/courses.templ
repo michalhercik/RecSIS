@@ -183,7 +183,7 @@ templ search(coursesPage *coursesPage, t text) {
                         hx-trigger="input changed, triggerSearch from:body"
                         hx-target="#quick-search-results"
                         hx-swap="outerHTML"
-                        hx-push-url="false"
+                        hx-indicator="#explicit-no-loader"
                     />
                     <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
                 </div>
@@ -429,7 +429,7 @@ templ Courses(cp *coursesPage, t text) {
 
 templ Content(coursesPage *coursesPage, t text) {
     // x-data is needed for x-bind:class to work
-    <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" }>
+    <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" } hx-indicator="#loader">
         <div class="filter border-end bg-light">
             @filterSection(coursesPage, t)
         </div>

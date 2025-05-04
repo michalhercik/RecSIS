@@ -490,7 +490,7 @@ templ yearsTables(years []AcademicYear, t text) {
 }
 
 templ Content(data *Blueprint, t text) {
-    <div x-data="data" class="container pt-3">
+    <div x-data="data" class="container pt-3" hx-indicator="#loader">
         @unassignedTable(data.years[0].unassigned.courses, data.years[0].unassigned.folded, len(data.years) - 1, t)
         if len(data.years) > 1 {
             @yearsTables(data.years[1:], t)

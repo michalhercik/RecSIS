@@ -182,10 +182,8 @@ templ Content(dp *DegreePlan, t text) {
 
 templ Page(dp *DegreePlan, t text) {
     @utils.Page(t.Utils.DegreePlan, t.Utils) {
-        <div class="container">
-            <div class="pt-3">
-                @Content(dp, t)
-            </div>
+        <div class="container pt-3" hx-indicator="#loader">
+            @Content(dp, t)
         </div>
     }
 }
