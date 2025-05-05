@@ -5,6 +5,179 @@ import (
     "fmt"
 )
 
+templ Page(dp *DegreePlan, t text) {
+    @utils.Page(t.Utils.DegreePlan, t.Utils) {
+        <div class="container pt-3" hx-indicator="#loader">
+            @Content(dp, t)
+        </div>
+    }
+}
+
+templ Content(dp *DegreePlan, t text) {
+    for _, bloc := range dp.blocs {
+        if bloc.Name != "" {
+            <h6 class="d-md-none">
+                { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
+                if bloc.hasLimit() {
+                    <span class="d-md-none">{ fmt.Sprintf("(≥%d %s)", bloc.Limit, t.CreditsShort) }</span>
+                }
+                @statusIcon(&bloc, t)
+            </h6>
+        }
+        <table class="table table-sm table-hover degree-plan-table">
+            @tableHeader(&bloc, t)
+            <tbody>
+                for _, course := range bloc.Courses {
+                    @courseRow(&course, &bloc, t)
+                }
+            </tbody>
+        </table>
+    }
+}
+
+templ tableHeader(bloc *Bloc, t text) {
+    <thead>
+        <tr>
+            if bloc.Name == "" {
+                <th>{ t.Code }</th>
+                <th>{ t.Title }</th>
+            } else {
+                <th>
+                    <h5 class="mb-0 text-nowrap d-none d-md-block">
+                        { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
+                        @statusIcon(bloc, t)
+                    </h5>
+                    <span class="d-md-none">{ t.Code }</span>
+                </th>
+                <th>
+                    <span class="d-md-none">{ t.Title }</span>
+                </th>
+            }
+            <th></th>
+            <th class="th-overflow pe-0">
+                @creditsHeader(bloc, t)
+            </th>
+            <th class="d-none d-md-table-cell">
+                if bloc.hasLimit() {
+                    { fmt.Sprintf("(≥%d)", bloc.Limit) }
+                }
+            </th>
+            <th class="d-none d-lg-table-cell">{ t.Winter }</th>
+            <th class="d-none d-lg-table-cell">{ t.Summer }</th>
+            <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
+            <th class="th-overflow"><span class="d-none d-lg-inline">{ t.Blueprint }</span></th>
+        </tr>
+    </thead>
+}
+
+templ creditsHeader(bloc *Bloc, t text) {
+    <span>{ fmt.Sprintf("%s:", t.Credits) }</span>
+    <span class="text-success">{ fmt.Sprintf("%d", bloc.completedCredits()) }</span>
+    <span>|</span>
+    <span class="blueprint-color">{ fmt.Sprintf("%d", bloc.inBlueprintCredits()) }</span>
+}
+
+templ courseRow(course *Course, bloc *Bloc, t text) {
+    <tr
+        x-data="{ hoverRow: false }"
+        @mouseover="hoverRow = true"
+        @mouseleave="hoverRow = false"> 
+        <td> 
+            @utils.CourseLink(course.Code, t.Utils)
+        </td>
+        <td>
+            @utils.TitleCourseLink(course.Code, course.Title, t.Utils)
+        </td>
+        <td class="align-middle lh-1">
+            @statusBadge(course, t)
+        </td>
+        <td class="text-end pe-0">{ fmt.Sprintf("%d", course.Credits) }</td>
+        <td class="d-none d-md-table-cell"></td>
+        <td class="d-none d-lg-table-cell">{ winterString(course) }</td>
+        <td class="d-none d-lg-table-cell">{ summerString(course) }</td>
+        // TODO: here must be { course.Guarantors }
+        <td class="d-none d-xl-table-cell">M. Hercík, M. Medek, L. Peška, J. Novák</td>
+        <td class="text-start align-middle p-0">
+            @blueprintAssignment(course.Code, t)
+        </td>
+    </tr>
+}
+
+templ statusIcon(bloc *Bloc, t text) {
+    if bloc.completed() {
+        <i class="bi bi-check-lg text-success"></i>
+    } else if bloc.inBlueprint() {
+        <i class="bi bi-basket2 blueprint-color"></i>
+    } else if bloc.hasLimit() {
+        <i class="bi bi-x-lg text-danger"></i>
+    }
+}
+
+templ statusBadge(course *Course, t text) {
+    // TODO: add course completion status -> change `false` to `course.Completed`
+    if false {
+        @badge("bg-success", t.Completed)
+    } else if course.InBlueprint {
+        @badge("bg-blueprint", t.InBlueprint)
+    } else {
+        @badge("bg-danger", t.NotCompleted)
+    }
+}
+
+templ badge(color, text string) {
+    <span class={ "d-none d-md-inline-block rounded-pill badge", color }>
+        { text }
+    </span>
+    <span class={ "badge-circle d-inline-flex d-md-none align-center rounded-circle", color }>
+        <span class="visually-hidden">{ text }</span>
+    </span>
+}
+
+templ blueprintAssignment(code string, t text) {
+    <div
+        class="dp-bp-assign-group btn-group w-100"
+        x-cloak
+        x-show="hoverRow"
+        x-data="{ hover: false, hoverSelection: false }"
+        @mouseover="hover = true"
+        @mouseleave="hover = false">
+        <button
+            class="dp-bp-assign-btn btn btn-sm btn-outline-blueprint bi bi-plus lh-1 p-0"
+            :class="{ 'border-0': !hover, 'dp-bp-delimiter': !hover }"
+            hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
+            hx-vals={ `"year": 0, "semester": 0` }>
+        </button>
+        <button
+            class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+            :class="{ 'btn-blueprint-hover': hoverSelection, 'border-0': !hover }"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            data-bs-offset="0, 0">
+        </button>
+        <ul
+            class="dropdown-menu dropdown-menu-end" 
+            @mouseover="hoverSelection = true"
+            @mouseleave="hoverSelection = false">
+            // TODO: make dynamic, NOT 3 fixed years
+            for year := 1; year <= 3; year++ {
+                @assignSemesterButton(code, year, 1, t)
+                @assignSemesterButton(code, year, 2, t)
+            }
+        </ul>
+    </div>
+}
+
+templ assignSemesterButton(code string, year, semester int, t text) {
+    <li class="mx-3">
+        <button
+            class="dropdown-item rounded text-center"
+            hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
+            hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }>
+            { fmt.Sprintf("%s %s", t.YearStr(year), t.SummerAssign) }
+        </button>
+    </li>
+}
+
 func winterString(course *Course) string {
     winterText := ""
     if course.Start == teachingWinterOnly || course.Start == teachingBoth {
@@ -25,169 +198,4 @@ func summerString(course *Course) string {
         summerText = "---"
     }
     return summerText
-}
-
-templ blueprintAssignment(code string, t text) {
-    <div
-        class="btn-group w-100"
-        style="height: 32px;"
-        x-cloak
-        x-show="hoverRow"
-        x-data="{ hover: false, hoverSelection: false }"
-        @mouseover="hover = true"
-        @mouseleave="hover = false">
-        <button
-            type="button"
-            class="btn btn-sm btn-outline-blueprint bi bi-plus lh-1 p-0"
-            :class="{ 'border-0': !hover, 'dp-bp-delimiter': !hover }"
-            style="font-size: 1.75rem;"
-            hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
-            hx-vals={ `"year": 0, "semester": 0` }>
-        </button>
-        <button
-            type="button"
-            class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-            :class="{ 'btn-blueprint-hover': hoverSelection, 'border-0': !hover }"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            data-bs-offset="0, 0">
-        </button>
-        <ul
-            class="dropdown-menu dropdown-menu-end" 
-            @mouseover="hoverSelection = true"
-            @mouseleave="hoverSelection = false">
-            // TODO: make dynamic, NOT 3 fixed years
-            for year := 1; year <= 3; year++ {
-                <li class="mx-3">
-                    <button
-                        class="dropdown-item rounded text-center"
-                        hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
-                        hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1`, year) }>
-                        { fmt.Sprintf("%s %s", t.YearStr(year), t.WinterAssign) }
-                    </button>
-                </li>
-                <li class="mx-3">
-                    <button
-                        class="dropdown-item rounded text-center"
-                        hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
-                        hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2`, year) }>
-                        { fmt.Sprintf("%s %s", t.YearStr(year), t.SummerAssign) }
-                    </button>
-                </li>
-            }
-        </ul>
-    </div>
-}
-
-templ badge(color, text string) {
-    <span class={ "d-none d-md-inline-block rounded-pill badge " + color }>
-        { text }
-    </span>
-    <span class={ "d-inline-flex d-md-none ms-2 align-center rounded-circle " + color } style="width: 20px; height: 20px;">
-        <span class="visually-hidden">{ text }</span>
-    </span>
-}
-
-templ Content(dp *DegreePlan, t text) {
-    for _, bloc := range dp.blocs {
-        if bloc.Name != "" {
-            <h6 class="d-md-none">
-                { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
-                if bloc.hasLimit() {
-                    <span class="d-md-none">{ fmt.Sprintf("(≥%d %s)", bloc.Limit, t.CreditsShort) }</span>
-                }
-                if bloc.completed() {
-                    <i class="bi bi-check-lg text-success"></i>
-                } else if bloc.inBlueprint() {
-                    <i class="bi bi-basket2 blueprint-color"></i>
-                } else if bloc.hasLimit() {
-                    <i class="bi bi-x-lg text-danger"></i>
-                }
-            </h6>
-        }
-        <table class="table table-sm table-hover degree-plan-table">
-            <thead>
-                <tr>
-                    if bloc.Name == "" {
-                        <th>{ t.Code }</th>
-                        <th>{ t.Title }</th>
-                    } else {
-                        <th>
-                            <h5 class="mb-0 text-nowrap d-none d-md-block">
-                                { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
-                                if bloc.completed() {
-                                    <i class="bi bi-check-lg text-success"></i>
-                                } else if bloc.inBlueprint() {
-                                    <i class="bi bi-basket2 blueprint-color"></i>
-                                } else if bloc.hasLimit() {
-                                    <i class="bi bi-x-lg text-danger"></i>
-                                }
-                            </h5>
-                            <span class="d-md-none">{ t.Code }</span>
-                        </th>
-                        <th>
-                            <span class="d-md-none">{ t.Title }</span>
-                        </th>
-                    }
-                    <th></th>
-                    <th class="th-overflow pe-0">
-                        { fmt.Sprintf("%s:", t.Credits) }
-                        <span style="color: rgb(19, 92, 4);">{ fmt.Sprintf("%d", bloc.completedCredits()) }</span> | <span class="blueprint-color">{ fmt.Sprintf("%d", bloc.inBlueprintCredits()) }</span>
-                    </th>
-                    <th class="d-none d-md-table-cell">
-                        if bloc.hasLimit() {
-                            { fmt.Sprintf("(≥%d)", bloc.Limit) }
-                        }
-                    </th>
-                    <th class="d-none d-lg-table-cell">{ t.Winter }</th>
-                    <th class="d-none d-lg-table-cell">{ t.Summer }</th>
-                    <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
-                    <th class="th-overflow"><span class="d-none d-lg-inline">{ t.Blueprint }</span></th>
-                </tr>
-            </thead>
-            <tbody>
-            for _, course := range bloc.Courses {
-                <tr
-                    x-data="{ hoverRow: false }"
-                    @mouseover="hoverRow = true"
-                    @mouseleave="hoverRow = false"> 
-                    <td> 
-                        @utils.CourseLink(course.Code, t.Utils)
-                    </td>
-                    <td>
-                        @utils.TitleCourseLink(course.Code, course.Title, t.Utils)
-                    </td>
-                    <td class="align-middle lh-1">
-                    // TODO: add course completion status -> change `false` to `course.Completed`
-                    if false {
-                        @badge("bg-success", t.Completed)
-                    } else if course.InBlueprint {
-                        @badge("bg-blueprint", t.InBlueprint)
-                    } else {
-                        @badge("bg-danger", t.NotCompleted)
-                    }
-                    </td>
-                    <td class="text-end pe-0">
-                        { fmt.Sprintf("%d", course.Credits) }
-                    </td>
-                    <td class="d-none d-md-table-cell"></td>
-                    <td class="d-none d-lg-table-cell">{ winterString(&course) }</td>
-                    <td class="d-none d-lg-table-cell">{ summerString(&course) }</td>
-                    <td class="d-none d-xl-table-cell">M. Hercík, M. Medek, L. Peška, J. Novák</td>
-                    <td class="text-start align-middle p-0">
-                        @blueprintAssignment(course.Code, t)
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    }
-}
-
-templ Page(dp *DegreePlan, t text) {
-    @utils.Page(t.Utils.DegreePlan, t.Utils) {
-        <div class="container pt-3" hx-indicator="#loader">
-            @Content(dp, t)
-        </div>
-    }
 }

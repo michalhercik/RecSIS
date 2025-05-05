@@ -426,7 +426,23 @@ body {
 }
 /* ============================================== */
 
-/* degree plan BP assign line in middle */
+/* DP -> badge circle */
+.badge-circle {
+    width: 20px;
+    height: 20px;
+}
+
+/* DP -> BP assign button group */
+.dp-bp-assign-group {
+    height: 32px;
+}
+
+/* DP -> plus button is large */
+.dp-bp-assign-btn {
+    font-size: 1.75rem !important;
+}
+
+/* DP -> BP assign line in middle */
 .dp-bp-delimiter {
     position: relative;
 }
@@ -442,13 +458,14 @@ body {
     background-color: rgb(4, 108, 181);;
 }
 
-/* Loader and page overlay styles */
+/* === Loader and page overlay styles === */
 #loader {
     display: none;
     position: fixed;
     text-align: center;
-    top: 50%;
-    left: 50%;
+    top: calc(50% - 18px);
+    left: calc(50% - 18px);
+    font-size: 1.5rem;
     width: 3rem;
     height: 3rem;
     z-index: 9999;
@@ -465,11 +482,13 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.2); /* Semi-transparent black */
-    z-index: 9998; /* Below the loader */
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: 9998;
 }
 
 /* Show overlay when loader is active */
 #loader.htmx-request ~ #page-overlay {
     display: block;
 }
+
+/* ====================================== */
