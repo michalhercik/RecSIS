@@ -26,8 +26,17 @@ body {
     padding-bottom: 75px; /* Space for the footer */
 }
 
-.ratio-1 {
-    aspect-ratio: 1 / 1;
+/* BP -> small screen title */
+.small-screen-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* BP -> fold semester button */
+.hide-semester-btn {
+    width: 28px;
+    height: 28px;
 }
 
 /* BP -> Easier checking of the checkboxes */
@@ -51,9 +60,17 @@ body {
 }
 
 /* BP -> Checkbox styles */
-.form-check-input {
+.bp-checkbox {
     border: 1px solid #2c2c2c !important;
     z-index: 1 !important;
+}
+
+@media (max-width: 767.5px) {
+    .bp-checkbox {
+        margin-top: 2px !important;
+        width: 24px !important;
+        height: 24px !important;
+    }
 }
 
 /* BP -> Move course button */
@@ -61,23 +78,26 @@ body {
     padding: 4px 8px;;
 }
 
-/* BP -> Option menu on checkbox */
-.option-menu {
-    position: absolute;
-    top: 50%;
-    left: 25px;
-    transform: translateY(-50%);
-    z-index: 50;
-    background: white;
-    border: 1px solid #ccc;
-    padding: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
+/* BP -> Checked courses menu with buttons */
+.bp-content-padding {
+    padding-top: 29px;
 }
 
-/* BP -> Popover headline */
-.popover-headline {
+#checked-courses-menu {
+    position: sticky;
+    top: 52px;
+    background-color: white;
+    z-index: 100;
+}
+
+@media (max-width: 767.5px) {
+    .checked-courses-menu {
+        top: 0px;
+    }
+}
+
+/* BP -> Popover on semester title */
+.popover-title {
     cursor: help;
 }
 
@@ -148,6 +168,13 @@ body {
     width: 28px;
 }
 
+@media (max-width: 767.5px) {
+    .blueprint-table th:nth-child(1),
+    .blueprint-table td:nth-child(1) {
+        width: 50px;
+    }
+}
+
 /* code */
 .blueprint-table th:nth-child(2),
 .blueprint-table td:nth-child(2) {
@@ -201,8 +228,16 @@ body {
 /* buttons */
 .blueprint-table th:nth-child(8),
 .blueprint-table td:nth-child(8) {
-    /* 4 * button=32 + 2 * padding=4 */
-    width: 136px;
+    /* 4 * button=30 + 2 * padding=4 */
+    width: 128px;
+}
+
+@media (max-width: 767.5px) {
+    .blueprint-table th:nth-child(8),
+    .blueprint-table td:nth-child(8) {
+        /* 1 * button=30 + 2 * padding=4 */
+        width: 38px;
+    }
 }
 
 /* table header cell overflow */
@@ -361,7 +396,7 @@ body {
     width: 110px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767.5px) {
     .degree-plan-table th:nth-child(3),
     .degree-plan-table td:nth-child(3) {
         width: 30px;
@@ -415,7 +450,7 @@ body {
     width: 55px;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 992.5px) {
     .degree-plan-table th {
         font-size: 0.9rem !important;
     }

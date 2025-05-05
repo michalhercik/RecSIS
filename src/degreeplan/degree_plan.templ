@@ -54,9 +54,7 @@ templ tableHeader(bloc *Bloc, t text) {
                 </th>
             }
             <th></th>
-            <th class="th-overflow pe-0">
-                @creditsHeader(bloc, t)
-            </th>
+            <th class="th-overflow pe-0"> @creditsHeader(bloc, t) </th>
             <th class="d-none d-md-table-cell">
                 if bloc.hasLimit() {
                     { fmt.Sprintf("(≥%d)", bloc.Limit) }
@@ -82,15 +80,9 @@ templ courseRow(course *Course, bloc *Bloc, t text) {
         x-data="{ hoverRow: false }"
         @mouseover="hoverRow = true"
         @mouseleave="hoverRow = false"> 
-        <td> 
-            @utils.CourseLink(course.Code, t.Utils)
-        </td>
-        <td>
-            @utils.TitleCourseLink(course.Code, course.Title, t.Utils)
-        </td>
-        <td class="align-middle lh-1">
-            @statusBadge(course, t)
-        </td>
+        <td> @utils.CourseLink(course.Code, t.Utils) </td>
+        <td> @utils.TitleCourseLink(course.Code, course.Title, t.Utils) </td>
+        <td class="align-middle lh-1"> @statusBadge(course, t) </td>
         <td class="text-end pe-0">{ fmt.Sprintf("%d", course.Credits) }</td>
         <td class="d-none d-md-table-cell"></td>
         <td class="d-none d-lg-table-cell">{ winterString(course) }</td>
@@ -125,9 +117,7 @@ templ statusBadge(course *Course, t text) {
 }
 
 templ badge(color, text string) {
-    <span class={ "d-none d-md-inline-block rounded-pill badge", color }>
-        { text }
-    </span>
+    <span class={ "d-none d-md-inline-block rounded-pill badge", color }> { text } </span>
     <span class={ "badge-circle d-inline-flex d-md-none align-center rounded-circle", color }>
         <span class="visually-hidden">{ text }</span>
     </span>
@@ -160,20 +150,21 @@ templ blueprintAssignment(code string, t text) {
             @mouseleave="hoverSelection = false">
             // TODO: make dynamic, NOT 3 fixed years
             for year := 1; year <= 3; year++ {
-                @assignSemesterButton(code, year, 1, t)
-                @assignSemesterButton(code, year, 2, t)
+                @assignSemesterButton(code, t.WinterAssign, year, 1, t)
+                @assignSemesterButton(code, t.SummerAssign, year, 2, t)
             }
         </ul>
     </div>
 }
 
-templ assignSemesterButton(code string, year, semester int, t text) {
+templ assignSemesterButton(code, semesterText string, year, semester int, t text) {
     <li class="mx-3">
         <button
             class="dropdown-item rounded text-center"
             hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
             hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }>
-            { fmt.Sprintf("%s %s", t.YearStr(year), t.SummerAssign) }
+            // TODO: winter/summer text
+            { fmt.Sprintf("%s %s", t.YearStr(year), semesterText) }
         </button>
     </li>
 }

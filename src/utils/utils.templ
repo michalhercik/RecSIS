@@ -61,24 +61,6 @@ templ Page(title string, t Text) {
     </html>
 }
 
-templ navItem(url, text string, active bool) {
-    {{
-        class := "fs-4 nav-link"
-        if active {
-            class += " active"
-        }
-    }}
-    <li class="nav-item"><a @click="clearExpanded()" class={ class } href={ templ.URL(url) }>{ text }</a></li>
-}
-
-templ langButton(l language.Language) {
-    <button
-        class="fw-semibold btn btn-outline-none ps-0"
-        @click={ "changeLanguage('" + string(l) + "')" }>
-        { string(l) }
-    </button>
-}
-
 templ Header(title string, t Text) {
     <header class="sticky-md-top">
         <nav class="navbar navbar-expand-md navbar-light bg-light py-0" hx-indicator="#loader"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
@@ -112,6 +94,24 @@ templ Header(title string, t Text) {
             </div>
         </nav>
     </header>
+}
+
+templ langButton(l language.Language) {
+    <button
+        class="fw-semibold btn btn-outline-none ps-0 border-0"
+        @click={ "changeLanguage('" + string(l) + "')" }>
+        { string(l) }
+    </button>
+}
+
+templ navItem(url, text string, active bool) {
+    {{
+        class := "fs-4 nav-link"
+        if active {
+            class += " active"
+        }
+    }}
+    <li class="nav-item"><a @click="clearExpanded()" class={ class } href={ templ.URL(url) }>{ text }</a></li>
 }
 
 templ Footer(t Text) {

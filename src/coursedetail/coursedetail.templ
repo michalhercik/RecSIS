@@ -165,23 +165,24 @@ templ blueprintAssignment(code string, t text) {
             data-bs-offset="0, 0">
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
-        // TODO: make dynamic, NOT 3 fixed years
+            // TODO: make dynamic, NOT 3 fixed years
             for year := 1; year <= 3; year++ {
-                <li class="mx-3"><button class="dropdown-item rounded text-center"
-                    hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1"` }
-                >
-                { t.YearStr(year) + " " + t.WinterAssign }
-                </button></li>
-                <li class="mx-3"><button class="dropdown-item rounded text-center"
-                    hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-                    hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2"` }
-                >
-                { t.YearStr(year) + " " + t.SummerAssign }
-                </button></li>
+                @assignSemesterButton(code, t.WinterAssign, year, 1, t)
+                @assignSemesterButton(code, t.SummerAssign, year, 2, t)
             }
         </ul>
     </div>
+}
+
+templ assignSemesterButton(code, semesterText string, year, semester int, t text) {
+    <li class="mx-3">
+        <button
+            class="dropdown-item rounded text-center"
+            hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }  
+            hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }>
+            { fmt.Sprintf("%s %s", t.YearStr(year), semesterText) }
+        </button>
+    </li>
 }
 
 func hoursString(course *Course, t text) string {

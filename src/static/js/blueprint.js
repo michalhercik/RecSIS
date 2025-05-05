@@ -4,6 +4,8 @@ function initAll() {
     initializeTooltips();
     initializePopovers();
     setupCheckboxShiftClick();
+    updateStickyOffset();
+    updateSmallScreen();
 }
 
 // bootstrap tooltip initialization
@@ -55,7 +57,7 @@ function setupCheckboxShiftClick() {
 
 // pass through (shift-)click event to checkbox
 function handleCircleClick(event) {
-    const checkbox = event.target.previousElementSibling;
+    const checkbox = event.target.parentElement.previousElementSibling;
     if (checkbox) {
         // Create a new MouseEvent, preserving shift key and other properties
         const clickEvent = new MouseEvent('click', {
@@ -68,6 +70,22 @@ function handleCircleClick(event) {
     }
 }
 
+// pass through click event to checkbox on small screens
+function handleTdClick(event) {
+    const checkbox = event.target.firstChild.firstChild;
+    if (checkbox) {
+        // Create a new MouseEvent, preserving shift key and other properties
+        const clickEvent = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            shiftKey: event.shiftKey,
+        });
+
+        checkbox.dispatchEvent(clickEvent);
+    }
+}
+
+
 // update position of course in database using dynamic htmx patch
 function sortHxPatch(item, year, semester, position, language) {
     htmx.ajax('PATCH', '/' + language + '/blueprint/course/' + item, {
@@ -75,3 +93,26 @@ function sortHxPatch(item, year, semester, position, language) {
         values: { year: year, semester: semester, position: position + 1 }
     });
 }
+
+// Run on resize
+window.addEventListener('resize', updateStickyOffset);
+
+// Update the sticky offset for the checked-courses-menu based on the navbar height
+function updateStickyOffset() {
+    const navbar = document.getElementById('navbarNav');
+    const menu = document.getElementById('checked-courses-menu');
+    const height = navbar.offsetHeight;
+    menu.style.top = height + 'px';
+}
+
+
+// Update on resize
+window.addEventListener('resize', updateSmallScreen);
+
+// Update the smallScreen property in Alpine.js based on window width
+function updateSmallScreen() {
+    if (window.alpineRef) {
+        window.alpineRef.smallScreen = window.innerWidth < 768;
+    }
+}
+
