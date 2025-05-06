@@ -3,11 +3,17 @@ package home
 import (
 	"net/http"
 
+	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/language"
 )
 
+type Page interface {
+	View(main templ.Component, lang language.Language, title string) templ.Component
+}
+
 type Server struct {
 	router *http.ServeMux
+	Page   Page
 }
 
 func (s *Server) Init() {
@@ -24,5 +30,7 @@ func (s Server) Router() http.Handler {
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	Page(t).Render(r.Context(), w)
+	// Page(t).Render(r.Context(), w)
+	main := Content(t)
+	s.Page.View(main, lang, t.Title).Render(r.Context(), w)
 }

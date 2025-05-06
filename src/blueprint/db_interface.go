@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 type DataManager interface {
@@ -25,6 +28,10 @@ type DataManager interface {
 
 type Authentication interface {
 	UserID(r *http.Request) (string, error)
+}
+
+type Page interface {
+	View(main templ.Component, lang language.Language, title string) templ.Component
 }
 
 const (

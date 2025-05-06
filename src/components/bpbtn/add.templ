@@ -1,0 +1,97 @@
+package bpbtn
+
+import (
+    "fmt"
+)
+
+templ AddBtn(code string, numberOfYears int, t Text, options Options) {
+    <div id={ fmt.Sprintf("%s-blueprint-add", code) } class="btn-group">
+        <button type="button" class="btn btn-outline-blueprint"
+            hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+            hx-vals={ `"year": 0, "semester": 0` }
+            hx-swap={ options.HxSwap }
+            hx-target={ options.HxTarget }
+        >
+            { t.Assign }
+        </button>
+        <button
+            type="button"
+            class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            data-bs-offset="0, 0">
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            for year := 1; year <= numberOfYears; year++ {
+                <li class="mx-3"><button class="dropdown-item rounded text-center"
+                    hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1`, year) }
+                    hx-swap={ options.HxSwap }
+                    hx-target={ options.HxTarget }
+                >
+                { t.YearStr(year) + " " + t.WinterAssign }
+                </button></li>
+                <li class="mx-3"><button class="dropdown-item rounded text-center"
+                    hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2`, year) }
+                    hx-swap={ options.HxSwap }
+                    hx-target={ options.HxTarget }
+                >
+                { t.YearStr(year) + " " + t.SummerAssign }
+                </button></li>
+            }
+        </ul>
+    </div>
+}
+
+templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
+    <div
+        class="btn-group w-100"
+        style="height: 32px;"
+        x-data="{ hover: false, hoverSelection: false }"
+        @mouseover="hover = true"
+        @mouseleave="hover = false">
+        <button
+            type="button"
+            class="btn btn-sm btn-outline-blueprint bi bi-plus lh-1 p-0"
+            :class="{ 'border-0': !hover, 'dp-bp-delimiter': !hover }"
+            style="font-size: 1.75rem;"
+            hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+            hx-vals={ `"year": 0, "semester": 0` }
+            hx-swap={ options.HxSwap }
+            hx-target={ options.HxTarget }
+            >
+        </button>
+        <button
+            type="button"
+            class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+            :class="{ 'btn-blueprint-hover': hoverSelection, 'border-0': !hover }"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            data-bs-offset="0, 0">
+        </button>
+        <ul
+            class="dropdown-menu dropdown-menu-end"
+            @mouseover="hoverSelection = true"
+            @mouseleave="hoverSelection = false">
+            for year := 1; year <= numberOfYears; year++ {
+                <li class="mx-3"><button class="dropdown-item rounded text-center"
+                    hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1`, year) }
+                    hx-swap={ options.HxSwap }
+                    hx-target={ options.HxTarget }
+                >
+                { fmt.Sprintf("%s %s", t.YearStr(year), t.WinterAssign) }
+                </button></li>
+                <li class="mx-3"><button class="dropdown-item rounded text-center"
+                    hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2`, year) }
+                    hx-swap={ options.HxSwap }
+                    hx-target={ options.HxTarget }
+                >
+                { fmt.Sprintf("%s %s", t.YearStr(year), t.SummerAssign) }
+                </button></li>
+            }
+        </ul>
+    </div>
+}

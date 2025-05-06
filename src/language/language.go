@@ -3,6 +3,7 @@ package language
 import (
 	"context"
 	"net/http"
+	"net/url"
 )
 
 type Language string
@@ -13,6 +14,14 @@ const (
 	CS      Language = "cs"
 	EN      Language = "en"
 )
+
+func (l Language) Path(path string) string {
+	path, err := url.JoinPath("/", string(l), path)
+	if err != nil {
+		panic(err)
+	}
+	return path
+}
 
 type LangString struct {
 	CS string `json:"cs"`

@@ -60,6 +60,43 @@ type CourseCategoryRating struct {
 	RatingCount sql.NullInt64   `db:"rating_count"`
 }
 
+type SemesterAssignment int
+
+func (sa *SemesterAssignment) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case int64:
+		*sa = SemesterAssignment(v)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+func SemesterAssignmentFromString(s string) (SemesterAssignment, error) {
+	switch s {
+	case winterStr:
+		return assignmentWinter, nil
+	case summerStr:
+		return assignmentSummer, nil
+	case unassignedStr:
+		return assignmentNone, nil
+	default:
+		return 0, fmt.Errorf("unknown semester assignment %s", s)
+	}
+}
+
+const (
+	assignmentNone SemesterAssignment = iota
+	assignmentWinter
+	assignmentSummer
+)
+
+const (
+	winterStr     = "winter"
+	summerStr     = "summer"
+	unassignedStr = "unassigned"
+)
+
 type Description struct {
 	Title   string `json:"TITLE"`
 	Content string `json:"MEMO"`

@@ -38,6 +38,7 @@ type text struct {
 	Page              string
 	Of                string
 	NoCoursesFound    string
+	Title             string
 	// utils
 	Utils utils.Text
 }
@@ -83,6 +84,7 @@ var texts = map[language.Language]text{
 		Page:              "Strana",
 		Of:                "z",
 		NoCoursesFound:    "Žádné předměty nebyly nalezeny.",
+		Title:             "Hledání",
 		// utils
 		Utils: utils.Texts["cs"],
 	},
@@ -117,6 +119,7 @@ var texts = map[language.Language]text{
 		Page:              "Page",
 		Of:                "of",
 		NoCoursesFound:    "No courses found.",
+		Title:             "Search",
 		// utils
 		Utils: utils.Texts["en"],
 	},

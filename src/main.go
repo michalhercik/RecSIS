@@ -6,6 +6,9 @@ import (
 	"net/http"
 
 	"github.com/michalhercik/RecSIS/auth"
+	"github.com/michalhercik/RecSIS/components/bpbtn"
+	"github.com/michalhercik/RecSIS/components/page"
+	"github.com/michalhercik/RecSIS/components/searchbar"
 	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/urlparser"
@@ -73,12 +76,39 @@ func main() {
 	//////////////////////////////////////////
 	// Handlers
 	//////////////////////////////////////////
-
-	home := home.Server{}
+	pageTempl := page.Page{
+		Home: "/home",
+		NavItems: []page.NavItem{
+			{Title: language.MakeLangString("Domů", "Home"), Path: "/"},
+			{Title: language.MakeLangString("Hledání", "Search"), Path: "/courses/"},
+			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: "/blueprint/"},
+			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: "/degreeplan/"},
+		},
+		QuickSearchPath: "/quicksearch",
+		SearchBar: searchbar.MeiliSearch{
+			Client:            meiliClient,
+			Index:             "courses",
+			Limit:             5,
+			Param:             "search",
+			FiltersSelector:   "#filter-form",
+			SearchEndpoint:    "/courses",
+			QuickEndpoint:     "/page/quicksearch",
+			SearchBarView:     searchbar.SearchBar,
+			SearchResultsView: searchbar.QuickResults,
+			ResultsDetailEndpoint: func(code string) string {
+				return fmt.Sprintf("/course/%s", code)
+			},
+		},
+	}
+	pageTempl.Init()
+	home := home.Server{
+		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+	}
 	home.Init()
 	blueprint := blueprint.Server{
 		Data: blueprint.DBManager{DB: db},
 		Auth: auth.UserIDFromContext{},
+		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
 	blueprint.Init()
 	coursedetail := coursedetail.Server{
@@ -94,17 +124,34 @@ func main() {
 			CourseParam:  params.CourseCode,
 		},
 		Auth: auth.UserIDFromContext{},
+		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
 	coursedetail.Init()
 	courses := courses.Server{
 		Data:   courses.DBManager{DB: db},
 		Search: courses.MeiliSearch{Client: meiliClient, Courses: meilisearch.IndexConfig{Uid: "courses"}},
 		Auth:   auth.UserIDFromContext{},
+		Page:   pageTempl,
+		BpBtn: bpbtn.Add{
+			DB:    db,
+			Templ: bpbtn.AddBtn,
+			Options: bpbtn.Options{
+				HxPostBase: "/courses",
+			},
+		},
 	}
 	courses.Init()
 	degreePlan := degreeplan.Server{
 		Data: degreeplan.DBManager{DB: db},
 		Auth: auth.UserIDFromContext{},
+		BpBtn: bpbtn.Add{
+			DB:    db,
+			Templ: bpbtn.PlusSignBtn,
+			Options: bpbtn.Options{
+				HxPostBase: "/degreeplan",
+			},
+		},
+		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
 	degreePlan.Init()
 	static := http.FileServer(http.Dir("static"))
@@ -114,6 +161,7 @@ func main() {
 	handle(router, "/course/", coursedetail.Router())
 	handle(router, "/courses/", courses.Router())
 	handle(router, "/degreeplan/", degreePlan.Router())
+	handle(router, "/page/", pageTempl.Router())
 	router.Handle("GET /favicon-256x256.ico", static)
 	router.Handle("GET /logo.svg", static)
 	router.Handle("GET /style.css", static)

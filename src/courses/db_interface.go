@@ -7,13 +7,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/courses/internal/filter"
+	"github.com/michalhercik/RecSIS/dbcourse"
 	"github.com/michalhercik/RecSIS/language"
 	//"log"
 )
 
 type DataManager interface {
-	Courses(sessionID string, courseCodes []string, lang language.Language) ([]Course, error)
+	Courses(userID string, courseCodes []string, lang language.Language) ([]Course, error)
 	// ParamLabels(lang language.Language) (map[string][]filter.ParamValue, error)
 	Filters() (filter.Filters, error)
 }
@@ -21,6 +23,20 @@ type DataManager interface {
 type Authentication interface {
 	UserID(r *http.Request) (string, error)
 }
+
+type BlueprintAddButton interface {
+	Component(course string, numberOfYears int, lang language.Language) templ.Component
+	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
+	NumberOfYears(userID string) (int, error)
+	Action(userID, course string, year int, semester dbcourse.SemesterAssignment) (int, error)
+}
+
+type Page interface {
+	View(main templ.Component, lang language.Language, title string, searchParam string) templ.Component
+	SearchParam() string
+}
+
+type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
 
 type SemesterAssignment int
 
@@ -31,12 +47,14 @@ const (
 )
 
 type coursesPage struct {
-	courses    []Course
-	page       int
-	pageSize   int
-	totalPages int
-	search     string
-	facets     iter.Seq[filter.FacetIterator] // func(func(filter.FacetIterator) bool) //filter.Filters //FacetDistribution
+	courses     []Course
+	page        int
+	pageSize    int
+	totalPages  int
+	search      string
+	facets      iter.Seq[filter.FacetIterator] // func(func(filter.FacetIterator) bool) //filter.Filters //FacetDistribution
+	searchParam string
+	templ       PartialBlueprintAdd
 }
 
 type Teacher struct {

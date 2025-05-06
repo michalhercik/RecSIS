@@ -4,23 +4,32 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/dbcourse"
 	"github.com/michalhercik/RecSIS/language"
 )
 
 type DataManager interface {
-	DegreePlan(uid string, lang language.Language) (*DegreePlan, error)
+	DegreePlan(userID string, lang language.Language) (*DegreePlan, error)
+	Course(userID, courseCode string, lang language.Language) (Course, error)
 }
 
 type Authentication interface {
 	UserID(r *http.Request) (string, error)
 }
 
-type DBLang string
+type BlueprintAddButton interface {
+	Component(course string, numberOfYears int, lang language.Language) templ.Component
+	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
+	NumberOfYears(userID string) (int, error)
+	Action(userID, course string, year int, semester dbcourse.SemesterAssignment) (int, error)
+}
 
-const (
-	cs DBLang = "cs"
-	en DBLang = "en"
-)
+type Page interface {
+	View(main templ.Component, lang language.Language, title string) templ.Component
+}
+
+type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
 
 type DegreePlan struct {
 	blocs []Bloc

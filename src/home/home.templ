@@ -1,21 +1,19 @@
 package home
 
-import "github.com/michalhercik/RecSIS/utils"
-
-templ Page(t text) {
-    @utils.Page(t.Utils.Home, t.Utils) {
-        @Content(t)
-    }
-}
+// templ Page(t text) {
+//     @utils.Page(t.Utils.Home, t.Utils) {
+//         @Content(t)
+//     }
+// }
 
 templ Content(t text) {
     <div class="container" id="introduction">
         <h1>{ t.Introduction }</h1>
         <p>{ t.IntroductionText }</p>
-        
+
         <h1>{ t.HowToUse }</h1>
         <p>{ t.HowToUseText }</p>
-        
+
         <h1>{ t.Authors }</h1>
         <p> @templ.Raw(t.AuthorsText) </p> // TODO make not raw!!!
     </div>

@@ -258,7 +258,7 @@ templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT stri
                 // remove course button
                 @removeCourseButton(course.ID, t)
                 // drag button
-                @dragCourseButton(t) 
+                @dragCourseButton(t)
             </td>
         </tr>
         }
@@ -338,7 +338,7 @@ templ popoverHeadline(year, runningCredits, yearCredits, semesterCredits int, se
         class="mb-0 text-nowrap"
         style="cursor: help;"
         data-bs-toggle="popover"
-        data-bs-trigger="hover" 
+        data-bs-trigger="hover"
         data-bs-html="true"
         data-bs-placement="bottom"
         data-bs-title={ t.TTNumberOfCredits }
@@ -570,11 +570,11 @@ templ Content(data *Blueprint, t text) {
     </script>
 }
 
-templ Page(data *Blueprint, t text) {
-    @utils.Page(t.Utils.Blueprint, t.Utils) {
-        @Content(data, t)
-    }
-}
+// templ Page(data *Blueprint, t text) {
+//     @utils.Page(t.Utils.Blueprint, t.Utils) {
+//         @Content(data, t)
+//     }
+// }
 
 templ InternalServerErrorContent(t text) {
     // TODO translate

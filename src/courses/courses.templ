@@ -1,7 +1,6 @@
 package courses
 
 import (
-    "github.com/michalhercik/RecSIS/utils"
 	// "github.com/michalhercik/RecSIS/courses/internal/filter"
     "strconv" // TODO: rewrite all strconv.Itoa to fmt.Sprintf
     "fmt"
@@ -123,7 +122,7 @@ templ filterSection(cp *coursesPage, t text) {
                         if category.Desc() != "" {
                             @helpIcon(category.Desc())
                         }
-                    </div> 
+                    </div>
                     for i, value := range category.IterWithFacets() {
                         <div x-cloak x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
                             @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked, t)
@@ -173,7 +172,7 @@ templ search(coursesPage *coursesPage, t text) {
         <div class="justify-content-center">
             <div class="dropdown" @click.away="quickResOpen = false">
                 <div class="input-group">
-                    <input type="text" name={ searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
+                    <input type="text" name={ coursesPage.searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
                         x-model="searchInput"
                         @click="if (!quickResLoaded && searchInput !== '') $dispatch('triggerSearch'); quickResOpen = true;"
                         @input="quickResOpen = true"
@@ -256,45 +255,47 @@ templ ribbon(ba AssignmentSlice, t text) {
     }
 }
 
-templ blueprintAssignment(code string, t text) {
+templ blueprintAssignment(code string, t text, addBtn PartialBlueprintAdd) {
     <div class="d-flex justify-content-end mt-auto pt-3">
-        <div class="btn-group">
-            <button type="button" class="btn btn-outline-blueprint"
-                hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-                hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
-            >
-                { t.Assign }
-            </button>
-            <button
-                type="button"
-                class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                data-bs-offset="0, 0">
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-            // TODO: make dynamic, NOT 3 fixed years
-                for year := 1; year <= 3; year++ {
-                    <li class="mx-3"><button class="dropdown-item rounded text-center"
-                        hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1"` }
-                    >
-                    { t.YearStr(year) + " " + t.WinterAssign }
-                    </button></li>
-                    <li class="mx-3"><button class="dropdown-item rounded text-center"
-                        hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2"` }
-                    >
-                    { t.YearStr(year) + " " + t.SummerAssign }
-                    </button></li>
-                }
-            </ul>
-        </div>
+        @addBtn(code, "outerHTML", "#" + code)
+        // <div class="btn-group">
+        //     <button type="button" class="btn btn-outline-blueprint"
+        //         hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
+        //         hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
+        //     >
+        //         { t.Assign }
+        //     </button>
+        //     <button
+        //         type="button"
+        //         class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+        //         data-bs-toggle="dropdown"
+        //         aria-expanded="false"
+        //         data-bs-offset="0, 0">
+        //     </button>
+        //     <ul class="dropdown-menu dropdown-menu-end">
+        //     // TODO: make dynamic, NOT 3 fixed years
+        //         for year := 1; year <= 3; year++ {
+        //             <li class="mx-3"><button class="dropdown-item rounded text-center"
+        //                 hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
+        //                 hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1"` }
+        //             >
+        //             { t.YearStr(year) + " " + t.WinterAssign }
+        //             </button></li>
+        //             <li class="mx-3"><button class="dropdown-item rounded text-center"
+        //                 hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
+        //                 hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2"` }
+        //             >
+        //             { t.YearStr(year) + " " + t.SummerAssign }
+        //             </button></li>
+        //         }
+        //     </ul>
+        // </div>
     </div>
 }
 
-templ courseCard(course *Course, t text) {
+templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
     <div
+        id={ course.Code }
         class="card custom-card rounded-0"
         x-data="{ expanded: false, showButton: false, isHovered: false }"
         @mouseenter="isHovered = true"
@@ -317,7 +318,7 @@ templ courseCard(course *Course, t text) {
                 <p class="card-text annotation-text">{ course.Annotation.string() }</p>
             </div>
             <button class="btn btn-link text-secondary" @click="expanded = !expanded" x-show="showButton" x-text={ "expanded ? '" + t.ReadLess + "' : '" + t.ReadMore + "'" }></button>
-            @blueprintAssignment(course.Code, t)
+            @blueprintAssignment(course.Code, t, addBtn)
         </div>
     </div>
 }
@@ -413,7 +414,7 @@ templ Courses(cp *coursesPage, t text) {
                 <p>{ t.NoCoursesFound }</p>
             } else {
                 for _, course := range cp.courses {
-                    @courseCard(&course, t)
+                    @CourseCard(&course, t, cp.templ)
                 }
             }
             // dummy cards for alignment
@@ -429,12 +430,13 @@ templ Courses(cp *coursesPage, t text) {
 
 templ Content(coursesPage *coursesPage, t text) {
     // x-data is needed for x-bind:class to work
-    <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" }>
+    // <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" }>
+    <div id="courses-page" class="grid-page">
         <div class="filter border-end bg-light">
             @filterSection(coursesPage, t)
         </div>
         <div class="main-content">
-            @search(coursesPage, t)
+            // @search(coursesPage, t)
             @activeFilters(coursesPage, t)
             @Courses(coursesPage, t)
         </div>
@@ -458,8 +460,8 @@ templ Content(coursesPage *coursesPage, t text) {
     </script>
 }
 
-templ Page(coursesPage *coursesPage, t text) {
-    @utils.Page(t.Utils.Courses, t.Utils) {
-        @Content(coursesPage, t)
-    }
-}
+// templ Page(coursesPage *coursesPage, t text) {
+//     @utils.Page(t.Utils.Courses, t.Utils) {
+//         @Content(coursesPage, t)
+//     }
+// }

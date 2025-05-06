@@ -273,7 +273,7 @@ templ requisitesLinksRow(req []string, title string, t text) {
 
 templ basicInfo(course *Course, t text) {
     <table class="info-table-borders">
-        @infoRow(t.Faculty){ 
+        @infoRow(t.Faculty){
             <span>{ course.Faculty }</span>
         } // TODO: plus katedra
         @infoRow(t.LanguageOfCourse) {
@@ -507,38 +507,40 @@ templ details(course *Course, t text) {
 }
 
 templ Content(course *Course, t text) {
-    // code and title
-    <h1 class="text-center pt-3">{ course.Code + " - " + course.Name }</h1>
-    // badges with information
-    <div class="text-center pb-4">
-        @badges(course, t)
-    </div>
-    // two columns
-    <div class="d-flex pb-4">
-        // left column most important information
-        <div class="flex-grow-1" style="flex: 1;">
-            @basicInfo(course, t)
+    <div class="container">
+        // code and title
+        <h1 class="text-center pt-3">{ course.Code + " - " + course.Name }</h1>
+        // badges with information
+        <div class="text-center pb-4">
+            @badges(course, t)
         </div>
-        // right column ratings
-        <div class="flex-grow-1" style="flex: 1;">
-            @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
+        // two columns
+        <div class="d-flex pb-4">
+            // left column most important information
+            <div class="flex-grow-1" style="flex: 1;">
+                @basicInfo(course, t)
+            </div>
+            // right column ratings
+            <div class="flex-grow-1" style="flex: 1;">
+                @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
+            </div>
         </div>
+        // buttons
+        <div class="d-flex justify-content-center gap-1 pb-2">
+            @buttons(course, t)
+        </div>
+        // switch between description, survey and detailed information
+        @details(course, t)
     </div>
-    // buttons
-    <div class="d-flex justify-content-center gap-1 pb-2">
-        @buttons(course, t)
-    </div>
-    // switch between description, survey and detailed information
-    @details(course, t)
 }
 
-templ Page(course *Course, t text) {
-    @utils.Page(course.Code + " - " + course.Name, t.Utils) {
-        <div class="container">
-            @Content(course, t)
-        </div>
-    }
-}
+// templ Page(course *Course, t text) {
+//     @utils.Page(course.Code + " - " + course.Name, t.Utils) {
+//         <div class="container">
+//             @Content(course, t)
+//         </div>
+//     }
+// }
 
 templ PageNotFound(code string, t text) {
     @utils.Page("Course not found", t.Utils) {

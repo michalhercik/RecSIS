@@ -21,6 +21,7 @@ type Server struct {
 	router *http.ServeMux
 	Data   DataManager
 	Auth   Authentication
+	Page   Page
 }
 
 func (s *Server) Init() {
@@ -134,9 +135,9 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		result = InternalServerErrorPage(t)
 	} else {
-		result = Page(data, t)
+		result = Content(data, t)
 	}
-	result.Render(r.Context(), w)
+	s.Page.View(result, lang, t.Title).Render(r.Context(), w)
 }
 
 // ===============================================================================================================================

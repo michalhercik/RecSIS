@@ -15,6 +15,7 @@ type Server struct {
 	Data           DataManager
 	CourseComments search.SearchEngine
 	Auth           Authentication
+	Page           Page
 }
 
 func (s *Server) Init() {
@@ -45,7 +46,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		log.Printf("HandlePage error %s: %v", code, err)
 		PageNotFound(code, t).Render(r.Context(), w)
 	} else {
-		Page(course, t).Render(r.Context(), w)
+		main := Content(course, t)
+		s.Page.View(main, lang, course.Code+" - "+course.Name).Render(r.Context(), w)
 	}
 }
 

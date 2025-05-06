@@ -1,0 +1,68 @@
+package searchbar
+
+templ SearchBar(model searchBarModel) {
+    <form
+        id="search-form"
+        hx-get={ model.lang.Path(model.searchEndpoint) }
+        hx-target="body"
+        hx-push-url="true"
+        if model.includeFilters {
+            hx-include={ model.filtersSelector }
+        }
+        x-data="{ quickResOpen: false, quickResLoaded: false }"
+        @htmx:after-request="quickResLoaded = true"
+        x-data="{ searchInput: '' }" x-init={ "searchInput = '" + model.searchInput + "';" }
+        style="width: 100%;"
+    >
+        <div class="justify-content-center">
+            <div class="dropdown" @click.away="quickResOpen = false">
+                <div class="input-group">
+                    <input type="text" name={ model.searchParam } id="search" class="form-control" placeholder={ model.t.SearchPlaceholder } autocomplete="off"
+                        x-model="searchInput"
+                        @click="if (!quickResLoaded && searchInput !== '') $dispatch('triggerSearch'); quickResOpen = true;"
+                        @input="quickResOpen = true"
+                        @keydown.escape="quickResOpen = false"
+                        @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
+                        hx-get={ model.lang.Path(model.quickSearchEndpoint) }
+                        hx-trigger="input changed, triggerSearch from:body"
+                        hx-target="#quick-search-results"
+                        hx-swap="outerHTML"
+                        hx-push-url="false"
+                    />
+                    <button type="submit" class="btn btn-primary" style="background-color:#8AC75A;border-color:#8AC75A" @click="quickResOpen = false">{ model.t.SearchButton }</button>
+                </div>
+                <div x-cloak x-show="quickResOpen && searchInput.length > 0">
+                    @quickResults()
+                </div>
+            </div>
+        </div>
+    </form>
+}
+
+templ QuickResults(model quickResultsModel) {
+    @quickResults() {
+        if len(model.courses) == 0 {
+            <div class="dropdown-item text-muted">{ model.t.NoCoursesFound }</div>
+        } else {
+            for _, course := range model.courses {
+                <a
+                    href={ templ.URL(model.lang.Path(model.resultDetailEndpoint(course.code))) }
+                    class="dropdown-item text-truncate"
+                    hx-boost="false"
+                    tabindex="0"
+                >
+                    { course.code + " - " + course.name }
+                </a>
+            }
+        }
+    }
+}
+
+templ quickResults() {
+    <div
+        id="quick-search-results"
+        class="dropdown-menu w-100 shadow-sm show"
+    >
+        { children... }
+    </div>
+}
