@@ -16,7 +16,12 @@ const ttDelay = "600"
 // }
 
 templ Content(data *Blueprint, t text) {
-    <div x-data="{ checkedNumber: 0, isSorting: false, smallScreen: window.innerWidth < 768 }" x-init="window.alpineRef = $data" class="container" hx-indicator="#loader" :class="checkedNumber > 0 || 'bp-content-padding'">
+    <div
+        x-data="{ checkedNumber: 0, isSorting: false, smallScreen: window.innerWidth < 768 }"
+        class="container"
+        :class="checkedNumber > 0 || 'bp-content-padding'"
+        @resize.window="smallScreen = window.innerWidth < 768"
+        hx-indicator="#loader">
         @checkedCoursesMenu(len(data.years) - 1, t)
         @unassignedTable(data.years[0].unassigned.courses, data.years[0].unassigned.folded, len(data.years) - 1, t)
         if len(data.years) > 1 {
@@ -29,7 +34,7 @@ templ Content(data *Blueprint, t text) {
 
 templ checkedCoursesMenu(yearCount int, t text) {
     // take care of checked courses
-    <div id="checked-courses-menu">
+    <div id="checked-courses-menu" @resize.window="updateStickyOffset">
         <div x-cloak x-show="checkedNumber > 0">
             // unassign
             @unassignCoursesButton(t.TTUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(0), vPos()), "input[type=checkbox]:checked", t)
@@ -237,7 +242,7 @@ templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT stri
             <td class="d-none d-md-table-cell"> @utils.CourseLink(course.Code, t.Utils) </td>
             <td>
                 <span class="d-none d-md-inline"> @utils.TitleCourseLink(course.Code, course.Title, t.Utils) </span>
-                <div class="d-flex flex-column d-md-none w-100">
+                <div class="d-flex flex-column d-md-none">
                     <span class="text-muted small lh-1">{ course.Code }</span>
                     <span class="fw-bold small small-screen-title">
                         @utils.TitleCourseLink(course.Code, course.Title, t.Utils)
@@ -378,8 +383,7 @@ templ deleteYearModal(lastYear int, t text) {
                     <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">{ t.ModalContent }</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">{ t.Cancel }</button>
+                <div class="modal-footer d-flex justify-content-center">
                     <button
                         data-bs-dismiss="modal"
                         class="btn btn-primary"
@@ -396,6 +400,7 @@ templ deleteYearModal(lastYear int, t text) {
                         hx-target="main">
                         { t.UnassignCourses }
                     </button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">{ t.Cancel }</button>
                 </div>
             </div>
         </div>
