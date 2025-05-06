@@ -64,7 +64,7 @@ templ QuickResults(res *QuickResponse, t text) {
             for _, course := range res.courses {
                 <a
                     href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }
-                    class="dropdown-item text-truncate"
+                    class="dropdown-item rounded text-truncate"
                     hx-boost="false"
                     tabindex="0"
                 >
@@ -182,7 +182,7 @@ templ search(coursesPage *coursesPage, t text) {
                         hx-trigger="input changed, triggerSearch from:body"
                         hx-target="#quick-search-results"
                         hx-swap="outerHTML"
-                        hx-push-url="false"
+                        hx-indicator="#explicit-no-loader"
                     />
                     <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
                 </div>
@@ -431,7 +431,8 @@ templ Courses(cp *coursesPage, t text) {
 templ Content(coursesPage *coursesPage, t text) {
     // x-data is needed for x-bind:class to work
     // <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" }>
-    <div id="courses-page" class="grid-page">
+    // <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" } hx-indicator="#loader">
+    <div id="courses-page" class="grid-page" hx-indicator="#loader">
         <div class="filter border-end bg-light">
             @filterSection(coursesPage, t)
         </div>
@@ -443,20 +444,20 @@ templ Content(coursesPage *coursesPage, t text) {
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        initializeTooltips();
-        clearExpanded();
-    });
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeTooltips();
+            clearExpanded();
+        });
 
-    document.addEventListener('htmx:afterSwap', function () {
-        initializeTooltips();
-    });
+        document.addEventListener('htmx:afterSwap', function () {
+            initializeTooltips();
+        });
 
-    // bootstrap tooltip initialization
-    function initializeTooltips() {
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-    };
+        // bootstrap tooltip initialization
+        function initializeTooltips() {
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+        };
     </script>
 }
 

@@ -8,8 +8,6 @@ import (
 )
 
 type text struct {
-	Language         string
-	NumOfYears       string
 	Total            string
 	Code             string
 	Title            string
@@ -25,6 +23,13 @@ type text struct {
 	Year             string
 	YearBig          string
 	Semester         string
+	NumOfYears       string
+	// modal
+	ModalTitle      string
+	ModalContent    string
+	Cancel          string
+	RemoveCourses   string
+	UnassignCourses string
 	// tooltips
 	TTUnassignChecked  string
 	TTAssignChecked    string
@@ -54,9 +59,9 @@ type text struct {
 }
 
 func (t text) YearStr(year int) string {
-	if t.Language == "cs" {
+	if t.Utils.Language == language.CS {
 		return strconv.Itoa(year) + ". " + t.Year
-	} else if t.Language == "en" {
+	} else if t.Utils.Language == language.EN {
 		return t.Year + " " + strconv.Itoa(year)
 	}
 	return ""
@@ -64,8 +69,6 @@ func (t text) YearStr(year int) string {
 
 var texts = map[language.Language]text{
 	language.CS: {
-		Language:         "cs",
-		NumOfYears:       "Počet ročníků",
 		Total:            "Celkem",
 		Code:             "Kód",
 		Title:            "Název",
@@ -81,6 +84,13 @@ var texts = map[language.Language]text{
 		Year:             "ročník",
 		YearBig:          "Ročník",
 		Semester:         "Semestr",
+		NumOfYears:       "Počet ročníků",
+		// modal
+		ModalTitle:      "Chystáte se odstranit neprázdný ročník",
+		ModalContent:    "Ročník, který se chystáte odstranit, obsahuje předměty. Můžete je odstranit, přesunout do nezařazených nebo tuto akci zrušit.",
+		Cancel:          "Zrušit",
+		RemoveCourses:   "Odstranit",
+		UnassignCourses: "Přesunout do nezařazených",
 		// tooltips
 		TTUnassignChecked:  "Přesunout vybrané předměty do nezařazených",
 		TTAssignChecked:    "Zařadit vybrané předměty",
@@ -109,8 +119,6 @@ var texts = map[language.Language]text{
 		Utils: utils.Texts["cs"],
 	},
 	language.EN: {
-		Language:         "en",
-		NumOfYears:       "Number of years",
 		Total:            "Total",
 		Code:             "Code",
 		Title:            "Title",
@@ -126,6 +134,13 @@ var texts = map[language.Language]text{
 		Year:             "Year",
 		YearBig:          "Year",
 		Semester:         "Semester",
+		NumOfYears:       "Number of years",
+		// modal
+		ModalTitle:      "You are about to remove a non-empty year",
+		ModalContent:    "The year you are about to remove contains courses. You can remove them, unassign them or cancel this action.",
+		Cancel:          "Cancel",
+		RemoveCourses:   "Remove",
+		UnassignCourses: "Unassign",
 		// tooltips
 		TTUnassignChecked:  "Unassign all selected courses",
 		TTAssignChecked:    "Assign all selected courses",

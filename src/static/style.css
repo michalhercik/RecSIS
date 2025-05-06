@@ -19,33 +19,27 @@
     background: #555;
 }
 
-/* Ensure space for scrollbar on every page */
+/* space for scrollbar & footer */
 body {
     overflow-y: scroll;
+    min-height: 100vh;
+    padding-bottom: 75px; /* Space for the footer */
 }
 
-/* Blueprint Popover styles */
-.popover-body {
-    text-align: right;
+/* BP -> small screen title */
+.small-screen-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* Assign box styles */
-.assign-box {
-    position: absolute;
-    top: 100%; /* Position it directly below the parent */
-    left: 50%; /* Center it horizontally */
-    transform: translateX(-50%); /* Adjust for the element's width */
-    background: white;
-    border: 1px solid #ccc;
-    padding: 10px;
-    z-index: 100;
-} 
-
-/* Easier checking of the checkboxes */
-.checkbox-container {
-    position: relative;
+/* BP -> fold semester button */
+.hide-semester-btn {
+    width: 28px;
+    height: 28px;
 }
 
+/* BP -> Easier checking of the checkboxes */
 .circle-overlay {
     position: absolute;
     top: 50%;
@@ -65,19 +59,46 @@ body {
     display: block;
 }
 
-/* Option menu on checkbox */
-.option-menu {
-    position: absolute;
-    top: 50%;
-    left: 25px;
-    transform: translateY(-50%);
-    z-index: 50;
-    background: white;
-    border: 1px solid #ccc;
-    padding: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
+/* BP -> Checkbox styles */
+.bp-checkbox {
+    border: 1px solid #2c2c2c !important;
+    z-index: 1 !important;
+}
+
+@media (max-width: 767.5px) {
+    .bp-checkbox {
+        margin-top: 2px !important;
+        width: 24px !important;
+        height: 24px !important;
+    }
+}
+
+/* BP -> Move course button */
+.move-button-filler {
+    padding: 4px 8px;;
+}
+
+/* BP -> Checked courses menu with buttons */
+.bp-content-padding {
+    padding-top: 29px;
+}
+
+#checked-courses-menu {
+    position: sticky;
+    top: 52px;
+    background-color: white;
+    z-index: 100;
+}
+
+@media (max-width: 767.5px) {
+    .checked-courses-menu {
+        top: 0px;
+    }
+}
+
+/* BP -> Popover on semester title */
+.popover-title {
+    cursor: help;
 }
 
 /* Blueprint colored button */
@@ -130,10 +151,10 @@ body {
     color: black !important;
 }
 
-/* Blueprint assign hover styles */
+/* BP -> assign hover styles */
 .dropdown-item:hover {
-    background-color: rgb(4, 108, 181) !important; /* Change to your desired color */
-    color: #fff !important; /* Optional: Change text color */
+    background-color: rgb(4, 108, 181) !important;
+    color: #fff !important;
 }
 
 /* === Blueprint tables styles === */
@@ -145,6 +166,13 @@ body {
 .blueprint-table th:nth-child(1),
 .blueprint-table td:nth-child(1) {
     width: 28px;
+}
+
+@media (max-width: 767.5px) {
+    .blueprint-table th:nth-child(1),
+    .blueprint-table td:nth-child(1) {
+        width: 50px;
+    }
 }
 
 /* code */
@@ -200,8 +228,16 @@ body {
 /* buttons */
 .blueprint-table th:nth-child(8),
 .blueprint-table td:nth-child(8) {
-    /* 4 * button=32 + 2 * padding=4 */
-    width: 136px;
+    /* 4 * button=30 + 2 * padding=4 */
+    width: 128px;
+}
+
+@media (max-width: 767.5px) {
+    .blueprint-table th:nth-child(8),
+    .blueprint-table td:nth-child(8) {
+        /* 1 * button=30 + 2 * padding=4 */
+        width: 38px;
+    }
 }
 
 /* table header cell overflow */
@@ -218,7 +254,7 @@ body {
 
 /* =============================== */
 
-/* Courses grid styles */
+/* S -> cards grid styles */
 .grid-page {
     display: grid;
     grid-template-columns: 230px 1fr;
@@ -246,7 +282,7 @@ body {
     margin-bottom: 0;
 }
 
-/* Courses annotation styles */
+/* S -> annotation styles */
 .annotation-container {
     max-height: 350px;
     overflow: hidden;
@@ -264,7 +300,7 @@ body {
     font-size: 0.9em;
 }
 
-/* Course card blueprint assignment ribbon styles */
+/* S -> Course card blueprint assignment ribbon styles */
 .ribbon {
     width: 70px;
     height: 70px;
@@ -290,7 +326,7 @@ body {
     z-index: 50;
 }
 
-/* Course detail teachers table styles */
+/* CD -> teachers table styles */
 #teachers-table {
     table-layout: auto;
 }
@@ -301,7 +337,7 @@ body {
     max-width: max-content;
 }
 
-/* Course detail rating form ticks styles */
+/* CD -> rating form ticks styles */
 .tick-container {
     position: relative;
     width: 97%;
@@ -315,12 +351,12 @@ body {
     transform: translateX(-50%);
 }
 
-/* Course detail info tables have no border under itself */
+/* CD -> info tables have no border under itself */
 .info-table-borders tr:last-child td:nth-child(2) {
     border-bottom: none !important;
 }
 
-/* Course detail not rated no thumb range styles */
+/* CD -> not rated no thumb range styles */
 .no-thumb::-webkit-slider-thumb {
     -webkit-appearance: none !important;
     appearance: none !important;
@@ -360,7 +396,7 @@ body {
     width: 110px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767.5px) {
     .degree-plan-table th:nth-child(3),
     .degree-plan-table td:nth-child(3) {
         width: 30px;
@@ -394,42 +430,27 @@ body {
 /* guarantors */
 .degree-plan-table th:nth-child(8),
 .degree-plan-table td:nth-child(8) {
-    width: 320px;
+    width: 265px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.dp-guarantors-hover {
-    /* 320 (original guarantors) - 55 (buttons)  */
-    width: 265px !important;
 }
 
 /* guarantors smaller */
 @media (max-width: 1400px) {
     .degree-plan-table th:nth-child(8),
     .degree-plan-table td:nth-child(8) {
-        width: 255px;
-    }
-
-    .dp-guarantors-hover {
-        /* 255 (original guarantors) - 55 (buttons)  */
-        width: 200px !important;
+        width: 200px;
     }
 }
 
 /* button */
 .degree-plan-table th:nth-child(9),
 .degree-plan-table td:nth-child(9) {
-    width: 0px;
-    padding: 0 !important;
+    width: 55px;
 }
 
-.dp-buttons-hover {
-    width: 55px !important;
-}
-
-@media (max-width: 992px) {
+@media (max-width: 992.5px) {
     .degree-plan-table th {
         font-size: 0.9rem !important;
     }
@@ -440,7 +461,23 @@ body {
 }
 /* ============================================== */
 
-/* degree plan BP assign line in middle */
+/* DP -> badge circle */
+.badge-circle {
+    width: 20px;
+    height: 20px;
+}
+
+/* DP -> BP assign button group */
+.dp-bp-assign-group {
+    height: 32px;
+}
+
+/* DP -> plus button is large */
+.dp-bp-assign-btn {
+    font-size: 1.75rem !important;
+}
+
+/* DP -> BP assign line in middle */
 .dp-bp-delimiter {
     position: relative;
 }
@@ -455,3 +492,38 @@ body {
     width: 1px;
     background-color: rgb(4, 108, 181);;
 }
+
+/* === Loader and page overlay styles === */
+#loader {
+    display: none;
+    position: fixed;
+    text-align: center;
+    top: calc(50% - 18px);
+    left: calc(50% - 18px);
+    font-size: 1.5rem;
+    width: 3rem;
+    height: 3rem;
+    z-index: 9999;
+}
+
+#loader.htmx-request {
+    display: inline;
+}
+
+#page-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: 9998;
+}
+
+/* Show overlay when loader is active */
+#loader.htmx-request ~ #page-overlay {
+    display: block;
+}
+
+/* ====================================== */

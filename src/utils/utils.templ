@@ -43,58 +43,27 @@ templ Page(title string, t Text) {
             <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
             // Google Fonts
             <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;700&display=swap" rel="stylesheet">
-            <script>
-            // Clear expanded- from session storage
-            function clearExpanded() {
-                Object.keys(sessionStorage).forEach(key => {
-                    if (key.startsWith('expanded-')) {
-                        sessionStorage.removeItem(key);
-                    }
-                });
-            }
-            // Change language to selected
-            function changeLanguage(lang) {
-                let currentUrl = window.location.pathname;
-                let queryParams = window.location.search;
-                let newUrl = currentUrl.replace(/^\/(cs|en)/, '') || '';
-                newUrl = '/' + lang + newUrl + queryParams;
-                window.location.href = newUrl;
-            }
-            </script>
+            <script src="/js/utils.js"></script>
         </head>
-        <body hx-boost="true">
+        <body hx-boost="true" class="position-relative">
             // @watermark()
             @Header(title, t)
             <main>
                 { children... }
             </main>
-            <hr/>
             @Footer(t)
+            <div id="loader" class="spinner-border text-dark" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div id="page-overlay"></div>
+            <div id="explicit-no-loader"></div>
         </body>
     </html>
 }
 
-templ navItem(url, text string, active bool) {
-    {{
-        class := "fs-4 nav-link"
-        if active {
-            class += " active"
-        }
-    }}
-    <li class="nav-item"><a @click="clearExpanded()" class={ class } href={ templ.URL(url) }>{ text }</a></li>
-}
-
-templ langButton(l language.Language) {
-    <button
-        class="fw-semibold btn btn-outline-none ps-0"
-        @click={ "changeLanguage('" + string(l) + "')" }>
-        { string(l) }
-    </button>
-}
-
 templ Header(title string, t Text) {
     <header class="sticky-md-top">
-        <nav class="navbar navbar-expand-md navbar-light bg-light py-0"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
+        <nav class="navbar navbar-expand-md navbar-light bg-light py-0" hx-indicator="#loader"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
             <div class="container-fluid">
                 <div style="width: 100px;">
                     <a class="d-flex align-items-center navbar-brand fs-3" href={ templ.URL(t.LangLink("/home/")) } style="font-family: 'Saira', sans-serif;">
@@ -127,8 +96,27 @@ templ Header(title string, t Text) {
     </header>
 }
 
+templ langButton(l language.Language) {
+    <button
+        class="fw-semibold btn btn-outline-none ps-0 border-0"
+        @click={ "changeLanguage('" + string(l) + "')" }>
+        { string(l) }
+    </button>
+}
+
+templ navItem(url, text string, active bool) {
+    {{
+        class := "fs-4 nav-link"
+        if active {
+            class += " active"
+        }
+    }}
+    <li class="nav-item"><a @click="clearExpanded()" class={ class } href={ templ.URL(url) }>{ text }</a></li>
+}
+
 templ Footer(t Text) {
-    <footer class="text-center my-3">
+    <footer class="text-center text-body-secondary pb-3 position-absolute bottom-0 w-100">
+        <hr/>
         { t.Contact }
         <a href="mailto:TODO@TODO.com">TODO@TODO.com</a>
     </footer>

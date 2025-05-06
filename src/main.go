@@ -165,6 +165,7 @@ func main() {
 	router.Handle("GET /favicon-256x256.ico", static)
 	router.Handle("GET /logo.svg", static)
 	router.Handle("GET /style.css", static)
+	router.Handle("GET /js/", static)
 
 	//////////////////////////////////////////
 	// Server setup

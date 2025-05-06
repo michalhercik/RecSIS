@@ -93,6 +93,5 @@ func (s Server) AddCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		log.Printf("HandlePage error: %v", err)
 		return
 	}
-	CourseRecord(course, t, btn).Render(r.Context(), w)
-	// btn.Render(r.Context(), w)
+	CourseRow(&course, t, btn).Render(r.Context(), w)
 }

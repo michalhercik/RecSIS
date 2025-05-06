@@ -58,6 +58,12 @@ templ PageView(model pageModel) {
             </main>
             <hr/>
             @Footer(model)
+            // TODO: quick fix for the loader, change it later
+            <div id="loader" class="spinner-border text-dark" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div id="page-overlay"></div>
+            <div id="explicit-no-loader"></div>
         </body>
     </html>
 }
