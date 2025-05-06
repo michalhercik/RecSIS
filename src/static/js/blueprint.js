@@ -5,7 +5,6 @@ function initAll() {
     initializePopovers();
     setupCheckboxShiftClick();
     updateStickyOffset();
-    updateSmallScreen();
 }
 
 // bootstrap tooltip initialization
@@ -94,25 +93,12 @@ function sortHxPatch(item, year, semester, position, language) {
     });
 }
 
-// Run on resize
-window.addEventListener('resize', updateStickyOffset);
-
 // Update the sticky offset for the checked-courses-menu based on the navbar height
 function updateStickyOffset() {
     const navbar = document.getElementById('navbarNav');
     const menu = document.getElementById('checked-courses-menu');
-    const height = navbar.offsetHeight;
-    menu.style.top = height + 'px';
-}
-
-
-// Update on resize
-window.addEventListener('resize', updateSmallScreen);
-
-// Update the smallScreen property in Alpine.js based on window width
-function updateSmallScreen() {
-    if (window.alpineRef) {
-        window.alpineRef.smallScreen = window.innerWidth < 768;
+    if (navbar && menu) {
+        const height = navbar.offsetHeight;
+        menu.style.top = height + 'px';
     }
 }
-

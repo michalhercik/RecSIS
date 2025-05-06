@@ -4,6 +4,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/coursedetail/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/dbcourse"
+	"github.com/michalhercik/RecSIS/internal/interface/teacher"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -85,32 +86,32 @@ func intoCourse(course *courseDetail) Course {
 		State:               course.State,
 		Start:               TeachingSemester(course.Start),
 		// SemesterCount:         course.SemesterCount,
-		Language:              course.Language.String,
-		LectureRangeWinter:    course.LectureRangeWinter,
-		SeminarRangeWinter:    course.SeminarRangeWinter,
-		LectureRangeSummer:    course.LectureRangeSummer,
-		SeminarRangeSummer:    course.SeminarRangeSummer,
-		ExamType:              course.ExamType,
-		Credits:               course.Credits,
-		Guarantors:            intoTeacherSlice(course.Guarantors),
-		Teachers:              intoTeacherSlice(course.Teachers),
-		MinEnrollment:         Capacity(course.MinOccupancy.Int64),
-		Capacity:              course.MaxOccupancy.String,
-		Annotation:            intoNullDesc(course.Annotation),
-		Syllabus:              intoNullDesc(course.Syllabus),
-		PassingTerms:          intoNullDesc(course.PassingTerms),
-		Literature:            intoNullDesc(course.Literature),
-		AssesmentRequirements: intoNullDesc(course.AssesmentRequirements),
-		EntryRequirements:     intoNullDesc(course.EntryRequirements),
-		Aim:                   intoNullDesc(course.Aim),
-		Prereq:                []string(course.Prereq),
-		Coreq:                 []string(course.Coreq),
-		Incompa:               []string(course.Incompa),
-		Interchange:           []string(course.Interchange),
-		Classes:               intoClassSlice(course.Classes),
-		Classifications:       intoClassSlice(course.Classifications),
-		CourseRating:          intoCourseRating(course.OverallRating),
-		CategoryRatings:       intoCategoryRatingSlice(course.categoryRatings),
+		Language:               course.Language.String,
+		LectureRangeWinter:     course.LectureRangeWinter,
+		SeminarRangeWinter:     course.SeminarRangeWinter,
+		LectureRangeSummer:     course.LectureRangeSummer,
+		SeminarRangeSummer:     course.SeminarRangeSummer,
+		ExamType:               course.ExamType,
+		Credits:                course.Credits,
+		Guarantors:             intoTeacherSlice(course.Guarantors),
+		Teachers:               intoTeacherSlice(course.Teachers),
+		MinEnrollment:          Capacity(course.MinOccupancy.Int64),
+		Capacity:               course.MaxOccupancy.String,
+		Annotation:             intoNullDesc(course.Annotation),
+		Syllabus:               intoNullDesc(course.Syllabus),
+		PassingTerms:           intoNullDesc(course.PassingTerms),
+		Literature:             intoNullDesc(course.Literature),
+		AssessmentRequirements: intoNullDesc(course.AssesmentRequirements),
+		EntryRequirements:      intoNullDesc(course.EntryRequirements),
+		Aim:                    intoNullDesc(course.Aim),
+		Prereq:                 []string(course.Prereq),
+		Coreq:                  []string(course.Coreq),
+		Incompa:                []string(course.Incompa),
+		Interchange:            []string(course.Interchange),
+		Classes:                intoClassSlice(course.Classes),
+		Classifications:        intoClassSlice(course.Classifications),
+		CourseRating:           intoCourseRating(course.OverallRating),
+		CategoryRatings:        intoCategoryRatingSlice(course.categoryRatings),
 	}
 }
 
@@ -153,10 +154,10 @@ func intoNullDesc(from dbcourse.NullDescription) NullDescription {
 	}
 }
 
-func intoTeacherSlice(from dbcourse.TeacherSlice) []Teacher {
-	result := make([]Teacher, len(from))
+func intoTeacherSlice(from dbcourse.TeacherSlice) []teacher.Teacher {
+	result := make([]teacher.Teacher, len(from))
 	for i, t := range from {
-		result[i] = Teacher(t)
+		result[i] = teacher.Teacher(t)
 	}
 	return result
 }

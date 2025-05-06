@@ -26,6 +26,20 @@ body {
     padding-bottom: 75px; /* Space for the footer */
 }
 
+/* text justify class */
+.text-justify {
+    text-align: justify;
+}
+
+/* font sizes */
+.font08 {
+    font-size: 0.8rem !important;
+}
+
+.font06 {
+    font-size: 0.6rem !important;
+}
+
 /* BP -> small screen title */
 .small-screen-title {
     overflow: hidden;

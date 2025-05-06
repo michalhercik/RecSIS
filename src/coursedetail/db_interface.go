@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/michalhercik/RecSIS/internal/course/comments/search"
+	"github.com/michalhercik/RecSIS/internal/interface/teacher"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -36,30 +37,30 @@ type Course struct {
 	State               string
 	Start               TeachingSemester
 	// SemesterCount         int
-	Language              string
-	LectureRangeWinter    sql.NullInt64
-	SeminarRangeWinter    sql.NullInt64
-	LectureRangeSummer    sql.NullInt64
-	SeminarRangeSummer    sql.NullInt64
-	ExamType              string
-	Credits               int
-	Guarantors            TeacherSlice
-	Teachers              TeacherSlice
-	MinEnrollment         Capacity
-	Capacity              string
-	Annotation            NullDescription
-	Syllabus              NullDescription
-	PassingTerms          NullDescription
-	Literature            NullDescription
-	AssesmentRequirements NullDescription
-	EntryRequirements     NullDescription
-	Aim                   NullDescription
-	Prereq                []string
-	Coreq                 []string
-	Incompa               []string
-	Interchange           []string
-	Classes               []Class
-	Classifications       []Class
+	Language               string
+	LectureRangeWinter     sql.NullInt64
+	SeminarRangeWinter     sql.NullInt64
+	LectureRangeSummer     sql.NullInt64
+	SeminarRangeSummer     sql.NullInt64
+	ExamType               string
+	Credits                int
+	Guarantors             TeacherSlice
+	Teachers               TeacherSlice
+	MinEnrollment          Capacity
+	Capacity               string
+	Annotation             NullDescription
+	Syllabus               NullDescription
+	PassingTerms           NullDescription
+	Literature             NullDescription
+	AssessmentRequirements NullDescription
+	EntryRequirements      NullDescription
+	Aim                    NullDescription
+	Prereq                 []string
+	Coreq                  []string
+	Incompa                []string
+	Interchange            []string
+	Classes                []Class
+	Classifications        []Class
 	CourseRating
 	Link                 string // link to course webpage (not SIS)
 	BlueprintAssignments []Assignment
@@ -100,42 +101,7 @@ const (
 	teachingBoth
 )
 
-type Teacher struct {
-	SisID       string
-	FirstName   string
-	LastName    string
-	TitleBefore string
-	TitleAfter  string
-}
-
-func (t Teacher) String() string {
-	if t.TitleBefore == "" && t.TitleAfter == "" {
-		return fmt.Sprintf("%s %s", t.FirstName, t.LastName)
-	}
-	if t.TitleBefore == "" {
-		return fmt.Sprintf("%s %s, %s",
-			t.FirstName, t.LastName, t.TitleAfter)
-	}
-	if t.TitleAfter == "" {
-		return fmt.Sprintf("%s %s %s",
-			t.TitleBefore, t.FirstName, t.LastName)
-	}
-	return fmt.Sprintf("%s %s %s, %s",
-		t.TitleBefore, t.FirstName, t.LastName, t.TitleAfter)
-}
-
-type TeacherSlice []Teacher
-
-func (t TeacherSlice) string() string {
-	names := []string{}
-	for _, teacher := range t {
-		names = append(names, teacher.String())
-	}
-	if len(names) == 0 {
-		return "---"
-	}
-	return strings.Join(names, ", ")
-}
+type TeacherSlice []teacher.Teacher
 
 type Description struct {
 	Title   string

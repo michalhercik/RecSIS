@@ -34,6 +34,7 @@ type text struct {
 	Classification     string
 	Guarantors         string
 	Teachers           string
+	CourseGlobalNotes  string
 	NotRated           string
 	NoRatings          string
 	AdditionalRatings  string
@@ -88,6 +89,7 @@ var texts = map[language.Language]text{
 		Classification:     "Klasifikace",
 		Guarantors:         "Garant(i)",
 		Teachers:           "Vyučující",
+		CourseGlobalNotes:  "Poznámky k předmětu",
 		NotRated:           "Nehodnoceno",
 		NoRatings:          "Žádná hodnocení",
 		AdditionalRatings:  "Rozšířené hodnocení",
@@ -131,6 +133,7 @@ var texts = map[language.Language]text{
 		Classification:     "Classification",
 		Guarantors:         "Guarantor(s)",
 		Teachers:           "Teacher(s)",
+		CourseGlobalNotes:  "Course notes",
 		NotRated:           "Not rated",
 		NoRatings:          "No ratings",
 		AdditionalRatings:  "Additional ratings",

@@ -4,149 +4,359 @@ import (
     "github.com/michalhercik/RecSIS/utils"
     "github.com/michalhercik/RecSIS/internal/interface/teacher"
     "github.com/michalhercik/RecSIS/internal/interface/course"
-    "strconv"
     "fmt"
 )
 
-templ rateModal(categories []CourseCategoryRating, code string, t text) {
-    <div class="modal fade" id="rate-modal" tabindex="-1" aria-labelledby="category-modal-title">
-    <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-    <div class="modal-header">
-        <h5 class="modal-title" id="category-modal-title">{ t.CategoricalRatings }</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-    </div>
-    <div class="modal-body m-2">
-        for _, c := range categories {
-            <div class="d-flex align-items-center gap-2 pb-3" x-data={ fmt.Sprintf("{ value: %d, valid: %t}", c.UserRating.Int64, c.UserRating.Valid) }>
-                <button
-                    class="btn btn-outline-none bi bi-trash-fill p-0"
-                    hx-delete={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
-                    hx-target="#category-rating"
-                    hx-swap="outerHTML"
-                    @click="valid = false">
-                </button>
-                <div class="flex-grow-1">
-                    <label for={ c.Title + "-range" } class="form-label d-flex justify-content-between mb-0">
-                        <span class="fw-semibold">{ c.Title }</span>
-                        <template x-if="valid">
-                            <span x-text="value" class="fw-semibold"></span>
-                        </template>
-                        <template x-if="!valid">
-                            <span class="fw-semibold">{ t.NotRated }</span>
-                        </template>
-                    </label>
-                    <input
-                        type="range"
-                        name="rating"
-                        class="form-range"
-                        :class="valid || 'no-thumb'"
-                        id={ c.Title + "-range" }
-                        min="0" max="10" step="1"
-                        x-model="value"
-                        @click="valid = true"
-                        hx-put={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
-                        hx-target="#category-rating"
-                        hx-swap="outerHTML"
-                        hx-trigger="click">
-                    <div class="tick-container m-auto">
-                        for i := 0; i <= 10; i++ {
-                            <span
-                                class="tick"
-                                { templ.Attributes{"style": "left: " + strconv.Itoa(i * 10) + "%;" }... }>
-                                { strconv.Itoa(i) }
-                            </span>
-                        }
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-    </div>
-    </div>
-    </div>
-}
-
-templ rateButton(rating NullInt64, icon, position, pos, code string, rate int64, t text) {
-    <button
-        class={
-            "rounded-" + position + "-pill p" + pos + "-3 btn btn-outline-dark bi",
-            templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
-            templ.KV(icon, !rating.Valid || rating.Int64 != rate),
-        }
-        if rating.Valid && rating.Int64 == rate {
-        hx-delete={ t.Utils.LangLink("/course/rating/" + code) }
-        } else {
-        hx-put={ t.Utils.LangLink("/course/rating/" + code) }
-        hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
-        }
-        hx-target="#simple-rating"
-        hx-swap="outerHTML">
-        { children... }
-    </button>
-}
-
-templ likeButton(rating NullInt64, avgRating NullFloat64, numberOfRatings NullInt64, code string, t text) {
-    @rateButton(rating, "bi-hand-thumbs-up", "start", "s", code, positiveRating, t) {
-        if avgRating.Valid {
-            <span>{ " " + fmt.Sprintf("%.0f", avgRating.Float64 * 100) + "% (" + fmt.Sprintf("%d", numberOfRatings.Int64) + ")" }</span>
-        } else {
-            <span>{ " " + t.NoRatings }</span>
-        }
+templ Page(course *Course, t text) {
+    @utils.Page(course.Code + " - " + course.Name, t.Utils) {
+        <div class="container">
+            @Content(course, t)
+        </div>
     }
 }
 
-templ dislikeButton(rating NullInt64, code string, t text) {
-    @rateButton(rating, "bi-hand-thumbs-down", "end", "e", code, negativeRating, t)
+templ Content(course *Course, t text) {
+    // code and title
+    <h1 class="text-center pt-3">{ course.Code + " - " + course.Name }</h1>
+    // badges with information
+    <div class="text-center pb-4">
+        @badges(course, t)
+    </div>
+    // two columns
+    <div class="row justify-items-center pb-4">
+        // left column most important information
+        <div class="col-12 col-md-6">
+            @basicInfo(course, t)
+        </div>
+        // right column ratings
+        <div class="col-12 col-md-6">
+            @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
+        </div>
+    </div>
+    // buttons
+    <div class="pb-2">
+        @buttons(course, t)
+    </div>
+    // switch between description, survey and detailed information
+    <div class="pt-3 pt-md-0">
+        @details(course, t)
+    </div>
 }
 
-templ OverallRating(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, code string, t text) {
-    <div id="simple-rating">
-        <div class="btn-group" role="group">
-            @likeButton(userRating, avgRating, ratingCount, code, t)
-            @dislikeButton(userRating, code, t)
+templ badges(course *Course, t text) {
+    <div class="row">
+        <div class="col-12 col-md-6 d-flex justify-content-center gap-1">
+            @standartBadge(course.courseStyleClass()) { 
+                <span>{ fmt.Sprintf("%s: %d", t.ECredits, course.Credits) }</span>
+            }
+            @standartBadge(course.courseStyleClass()) {
+                <span>{ courseStartString(course, t) }</span>
+            }
+            @standartBadge(course.courseStyleClass()) {
+                <span>{ fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType) }</span>
+            }
+        </div>
+        <div class="col-12 col-md-6 d-flex justify-content-center gap-1">
+            // TODO: make this dynamic (this just for show)
+            @standartBadge("bg-blueprint") {
+                <i class="bi bi-basket2"></i> in blueprint
+            }
+            @standartBadge("text-bg-success") {
+                <i class="bi bi-check-lg"></i> completed
+            }
+            @standartBadge("text-bg-danger") {
+                <i class="bi bi-stickies"></i> in degree plan
+            }
         </div>
     </div>
 }
 
-templ CategoryRating(categories []CourseCategoryRating, code string, t text) {
-    <div id="category-rating">
-        for _, c := range categories {
-            <div class="mb-2">
-                <div class="d-flex justify-content-between">
-                    <span class="fw-semibold">{ c.Title }</span>
-                    <span class="fw-semibold">
-                        if c.AvgRating.Valid && c.RatingCount.Valid {
-                            { fmt.Sprintf("%.1f (%d)", c.AvgRating.Float64, c.RatingCount.Int64) }
-                        } else {
-                            { t.NoRatings }
-                        }
-                    </span>
-                </div>
-                <div class="progress" role="progressbar" style="height: 10px;">
-                    // this div needs width style for bootstrap progress bar
-                    // golang template for some reason do not allow dynamic style atribute
-                    // so this is one of the few known workarounds - DO NOT TOUCH
-                    <div
-                        class="progress-bar rounded-pill"
-                        { templ.Attributes{"style": fmt.Sprintf("width: %.2f%%;", c.AvgRating.Float64 * 10)}... }>
-                    </div>
-                </div>
-            </div>
+templ standartBadge(bgColor string) {
+    <span class={ "badge rounded-pill fs-6 mb-1", bgColor }>
+        { children... }
+    </span>
+}
+
+templ basicInfo(course *Course, t text) {
+    <table class="info-table-borders m-auto">
+        @infoRow(t.Faculty){ 
+            <span>{ course.Faculty }</span>
+        } // TODO: plus katedra
+        @infoRow(t.LanguageOfCourse) {
+            <span>{ course.Language }</span>
         }
+        // TODO: if not default (default=taught) show NOT TAUGHT, else do not show anything
+        @infoRow(t.StateOfCourse) {
+            <span>{ course.State }</span>
+        }
+        // TODO: if unlimited capacity do not show anything, else show capacity
+        @infoRow(t.Capacity) {
+            <span>{ course.Capacity }</span>
+        }
+        @requisitesLinksRow(course.Prereq, t.Prerequisites, t)
+        if len(course.Guarantors) > 0 {
+            @infoRow(t.Guarantors) {
+                <table id="guarantors-table" class="mb-0">
+                    for _, g := range course.Guarantors {
+                        @teacherStyledRow(g)
+                    }
+                </table>
+            }
+        }
+    </table>
+}
+
+templ buttons(course *Course, t text) {
+    <div class="d-flex flex-wrap justify-content-center gap-1">
+        // link to additional information
+        if course.Link != "" {
+            <a class="btn btn-outline-secondary" href={ templ.SafeURL(course.Link) } role="button">
+                { t.AdditionalInfo }
+            </a>
+        }
+        // SIS link
+        <a class="btn btn-outline-secondary" href={ templ.SafeURL(courseSISLink(course.Code, t)) } target="_blank" role="button">
+            { t.SISLink }
+        </a>
+        // TODO: zapsat button
+        <a class="btn btn-outline-secondary text-decoration-line-through" href="#" role="button">
+            zapsat
+        </a>
+        // TODO: rozvrh buttons
+        // for NDMI002 https://is.cuni.cz/studium/rozvrhng/roz_predmet_macro.php?fak=11320&skr=2024&sem=1&predmet=NDMI002
+        <a class="btn btn-outline-secondary text-decoration-line-through" href="#" role="button">
+            rozvrh
+        </a>
+        // button to assign course to blueprint
+        @blueprintAssignment(course.Code, t)
     </div>
 }
 
-templ ratings(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, categories []CourseCategoryRating, code string, t text) {
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        @OverallRating(userRating, avgRating, ratingCount, code, t)
-        <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#rate-modal">
-            { t.AdditionalRatings }
-        </button>
+templ details(course *Course, t text) {
+    <ul class="nav nav-tabs justify-content-center justify-content-md-start" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#desc-tab-pane" type="button" role="tab" aria-controls="desc-tab-pane" aria-selected="true">{ t.Description }</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#survey-tab-pane" type="button" role="tab" aria-controls="survey-tab-pane" aria-selected="false">{ t.Survey }</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#detail-tab-pane" type="button" role="tab" aria-controls="detail-tab-pane" aria-selected="false">{ t.Detail }</button>
+        </li>
+    </ul>
+    <div
+        class="tab-content" id="myTabContent"
+        x-data x-init="$el.style.minHeight = window.innerHeight - 73 + 'px';"
+        @resize.window="$el.style.minHeight = window.innerHeight - 73 + 'px'">
+        <div class="tab-pane show active pt-2" id="desc-tab-pane" role="tabpanel" tabindex="0">
+            @description(course, t)
+        </div>
+        <div class="tab-pane pt-2" id="survey-tab-pane" role="tabpanel" tabindex="0">
+            @survey(course.Comments.Comments(), t)
+        </div>
+        <div class="tab-pane pt-2" id="detail-tab-pane" role="tabpanel" tabindex="0">
+            @detailInfo(course, t)
+        </div>
     </div>
-    @CategoryRating(categories, code, t)
-    // Modal with rating categories
-    @rateModal(categories, code, t)
+}
+
+templ description(course *Course, t text) {
+    if !course.Annotation.Valid && !course.Syllabus.Valid && !course.PassingTerms.Valid && !course.Literature.Valid && !course.AssessmentRequirements.Valid && !course.EntryRequirements.Valid && !course.Aim.Valid {
+        <div class="alert alert-primary" role="alert">
+            { t.NoDescription }
+        </div>
+    } else {
+        <div>
+            @descriptionItem(course.Annotation, "annotation")
+            @descriptionItem(course.Syllabus, "syllabus")
+            @descriptionItem(course.PassingTerms, "passing-terms")
+            @descriptionItem(course.Literature, "literature")
+            @descriptionItem(course.AssessmentRequirements, "assessment-requirements")
+            @descriptionItem(course.EntryRequirements, "entry-requirements")
+            @descriptionItem(course.Aim, "aim")
+        </div>
+    }
+}
+
+templ descriptionItem(desc NullDescription, id string) {
+    if desc.Valid {
+    <div>
+        <h2>{ utils.CapitalizeFirstLetter(desc.Title) }</h2>
+        <div
+            id={ "content-" + id }
+            class="border-bottom mb-3"
+            x-init={ fmt.Sprintf("insertContent('%s', `%s`)", id, desc.SanitizeContent(id == "annotation")) }>
+        </div>
+        // inserting content as shadow DOM
+        <script>
+            function insertContent(id, content) {
+                const shadowRoot = document.getElementById("content-" + id).attachShadow({ mode: 'open' });
+
+                // Create a wrapper to safely manipulate the DOM before injecting
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = content;
+
+                // make all links open in new tab and add rel attribute for security
+                wrapper.querySelectorAll('a').forEach(a => {
+                    a.setAttribute('target', '_blank');
+                    a.setAttribute('rel', 'noopener noreferrer nofollow');
+                });
+
+                shadowRoot.innerHTML = `
+                    <style>
+                        ul {
+                            margin: 0;
+                            padding-left: 30px;
+                        }
+                        p:first-of-type {
+                            margin-top: 0.5rem;
+                        }
+                    </style>
+                    ${wrapper.innerHTML}
+                `;
+            }
+        </script>
+    </div>
+    }
+}
+
+templ survey(surveys []course.Comment, t text) {
+    if len(surveys) == 0 {
+        <div class="alert alert-primary" role="alert">
+            { t.NoSurvey }
+        </div>
+    } else {
+        for _, s := range surveys {
+            <div class="card mb-1">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between lh-1">
+                        <span class="text-muted small font08">{ s.AcademicYearString() + " " + s.Type }</span>
+                        <span class="small">{ s.Study.Name }</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        @teacherStyled(s.TargetTeacher, t)
+                        <span class="small text-end mt-auto mb-0">{ t.YearStr(s.StudyYear) + ", " + s.StudyField }</span>
+                    </div>
+                </div>
+                <div class="card-body text-justify py-2">
+                    { s.Content }
+                </div>
+            </div>
+        }
+    }
+}
+
+templ teacherStyled(tt teacher.Teacher, t text) {
+    if len(tt.SISID) == 0 {
+        <span class="fs-6 text-dark fw-semibold">{ t.CourseGlobalNotes }</span>
+    } else {
+        <span>
+            @teacherTitleBefore(tt)
+            @teacherNameTitleAfter(tt)
+        </span>
+    }
+}
+
+templ detailInfo(course *Course, t text) {
+    if len(course.Classes) == 0 && len(course.Classifications) == 0 && len(course.Coreq) == 0 && len(course.Interchange) == 0 && len(course.Incompa) == 0 && len(course.Teachers) == 0 {
+        <div class="alert alert-primary" role="alert">
+            { t.NoDetail }
+        </div>
+    } else {
+        <div class="row">
+            // left column classes, classification and requisites
+            <div class="col-12 col-md-6">
+                <table class="info-table-borders m-auto">
+                    if len(course.Classes) > 0 {
+                        @infoRow(t.Classes) {
+                            for _, c := range course.Classes {
+                                <p class="mb-0">{ c.Name }</p>
+                            }
+                        }
+                    }
+                    if len(course.Classifications) > 0 {
+                        @infoRow(t.Classification) {
+                            for _, c := range course.Classifications {
+                                <p class="mb-0">{ c.Name }</p>
+                            }
+                        }
+                    }
+                    @requisitesLinksRow(course.Coreq, t.Corequisites, t)
+                    @requisitesLinksRow(course.Interchange, t.Interchange, t)
+                    @requisitesLinksRow(course.Incompa, t.Incompatible, t)
+                </table>
+            </div>
+            // right column teachers
+            <div class="col-12 col-md-6">
+                <table class="info-table-borders m-auto">
+                    if len(course.Teachers) > 0 {
+                        @infoRow(t.Teachers) {
+                            <table id="teachers-table" class="mb-0">
+                                for _, teacher := range course.Teachers {
+                                    @teacherStyledRow(teacher)
+                                }
+                            </table>
+                        }
+                    }
+                </table>
+            </div>
+        </div>
+    }
+}
+
+templ requisitesLinksRow(req []string, title string, t text) {
+    if len(req) != 0 {
+        @infoRow(title) {
+            for i, c := range req {
+                if i != len(req) - 1 {
+                    @utils.CourseLink(c, t.Utils)<span>, </span>
+                } else {
+                    @utils.CourseLink(c, t.Utils)
+                }
+            }
+        }
+    }
+}
+
+templ infoRow(title string) {
+    <tr>
+        <td class="text-end align-top fw-semibold p-2">{ title }</td>
+        <td class="border-bottom p-2">{ children... }</td>
+    </tr>
+}
+
+
+templ teacherStyledRow(t teacher.Teacher) {
+    <tr>
+        <td class="text-end teachers-first-column">
+            @teacherTitleBefore(t)
+        </td>
+        <td>
+            @teacherNameTitleAfter(t)
+        </td>
+    </tr>
+}
+
+templ teacherTitleBefore(t teacher.Teacher) {
+    if t.TitleBefore != "" {
+        <small class="font06">{ t.TitleBefore + " " }</small>
+    }
+}
+
+templ teacherName(t teacher.Teacher) {
+    <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span>
+}
+
+templ teacherTitleAfter(t teacher.Teacher) {
+    <small class="font06">{ ", " + t.TitleAfter }</small>
+}
+
+templ teacherNameTitleAfter(t teacher.Teacher) {
+    if t.TitleAfter != "" {
+        @teacherName(t)@teacherTitleAfter(t)
+    } else {
+        @teacherName(t)
+    }
 }
 
 templ blueprintAssignment(code string, t text) {
@@ -185,6 +395,173 @@ templ assignSemesterButton(code, semesterText string, year, semester int, t text
     </li>
 }
 
+templ ratings(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, categories []CourseCategoryRating, code string, t text) {
+    <div class="mx-2 mx-md-0 mx-lg-3">
+        <div class="d-flex flex-wrap justify-content-center justify-content-sm-between gap-1 mb-3">
+            @OverallRating(userRating, avgRating, ratingCount, code, t)
+            <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#rate-modal">
+                { t.AdditionalRatings }
+            </button>
+        </div>
+        @CategoryRating(categories, code, t)
+    </div>
+    // Modal with rating categories
+    @rateModal(categories, code, t)
+}
+
+templ OverallRating(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, code string, t text) {
+    <div id="simple-rating">
+        <div class="btn-group" role="group">
+            @likeButton(userRating, avgRating, ratingCount, code, t)
+            @dislikeButton(userRating, code, t)
+        </div>
+    </div>
+}
+
+templ likeButton(rating NullInt64, avgRating NullFloat64, numberOfRatings NullInt64, code string, t text) {
+    @rateButton(rating, "bi-hand-thumbs-up", code, positiveRating, t, "rounded-start-pill", "ps-3") {
+        if avgRating.Valid {
+            <span>{ fmt.Sprintf(" %.0f%% (%d)", avgRating.Float64 * 100, numberOfRatings.Int64) }</span>
+        } else {
+            <span>{ " " + t.NoRatings }</span>
+        }
+    }
+}
+
+templ dislikeButton(rating NullInt64, code string, t text) {
+    @rateButton(rating, "bi-hand-thumbs-down", code, negativeRating, t, "rounded-end-pill", "pe-3")
+}
+
+templ rateButton(rating NullInt64, icon, code string, rate int64, t text, classes ...string) {
+    <button
+        class={
+            classes,
+            "btn btn-outline-dark bi",
+            templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
+            templ.KV(icon, !rating.Valid || rating.Int64 != rate),
+        }
+        if rating.Valid && rating.Int64 == rate {
+        hx-delete={ t.Utils.LangLink("/course/rating/" + code) }
+        } else {
+        hx-put={ t.Utils.LangLink("/course/rating/" + code) }
+        hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
+        }
+        hx-target="#simple-rating"
+        hx-swap="outerHTML">
+        { children... }
+    </button>
+}
+
+templ CategoryRating(categories []CourseCategoryRating, code string, t text) {
+    <div id="category-rating">
+        for _, c := range categories {
+            <div class="mb-2">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-semibold">{ c.Title }</span>
+                    <span class="fw-semibold">
+                        if c.AvgRating.Valid && c.RatingCount.Valid {
+                            { fmt.Sprintf("%.1f (%d)", c.AvgRating.Float64, c.RatingCount.Int64) }
+                        } else {
+                            { t.NoRatings }
+                        }
+                    </span>
+                </div>
+                <div class="progress" role="progressbar" style="height: 10px;">
+                    // this div needs width style for bootstrap progress bar - DO NOT TOUCH
+                    <div
+                        class="progress-bar rounded-pill"
+                        { templ.Attributes{"style": fmt.Sprintf("width: %.2f%%;", c.AvgRating.Float64 * 10)}... }>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+//TODO: make this smaller
+templ rateModal(categories []CourseCategoryRating, code string, t text) {
+    <div class="modal fade" id="rate-modal" tabindex="-1" aria-labelledby="category-modal-title">
+    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title" id="category-modal-title">{ t.CategoricalRatings }</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body m-2">
+        for _, c := range categories {
+            <div class="d-flex align-items-center gap-2 pb-3" x-data={ fmt.Sprintf("{ value: %d, valid: %t}", c.UserRating.Int64, c.UserRating.Valid) }>
+                <button
+                    class="btn btn-outline-none bi bi-trash-fill p-0"
+                    hx-delete={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
+                    hx-target="#category-rating"
+                    hx-swap="outerHTML"
+                    @click="valid = false">
+                </button>
+                <div class="flex-grow-1">
+                    <label for={ c.Title + "-range" } class="form-label d-flex justify-content-between mb-0">
+                        <span class="fw-semibold">{ c.Title }</span>
+                        <template x-if="valid"><span x-text="value" class="fw-semibold"></span></template>
+                        <template x-if="!valid"><span class="fw-semibold">{ t.NotRated }</span></template>
+                    </label>
+                    <input
+                        type="range"
+                        name="rating"
+                        class="form-range"
+                        :class="valid || 'no-thumb'"
+                        id={ c.Title + "-range" }
+                        min="0" max="10" step="1"
+                        x-model="value"
+                        @click="valid = true"
+                        hx-put={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
+                        hx-target="#category-rating"
+                        hx-swap="outerHTML"
+                        :hx-trigger="valid ? 'change' : 'click'">
+                    @ticks()
+                </div>
+            </div>
+        }
+    </div>
+    </div>
+    </div>
+    </div>
+}
+
+templ ticks() {
+    <div class="tick-container m-auto">
+        for i := 0; i <= 10; i++ {
+            // dynamically generated styles for ticks - DO NOT TOUCH
+            <span
+                class="tick"
+                { templ.Attributes{"style": fmt.Sprintf("left: %d%%;",  i * 10) }... }>
+                { fmt.Sprintf("%d", i) }
+            </span>
+        }
+    </div>
+}
+
+templ PageNotFound(code string, t text) {
+    @utils.Page("Course not found", t.Utils) {
+        @ContentNotFound(code, t)
+    }
+}
+
+templ ContentNotFound(code string, t text) {
+    <h1>{ t.CourseWithCode + code + t.NotFound }</h1>
+}
+
+func courseStartString(c *Course, t text) string {
+    switch c.Start {
+        case teachingBoth:
+            return t.Both
+        case teachingWinterOnly:
+            return t.Winter
+        case teachingSummerOnly:
+            return t.Summer
+        default:
+            return ""
+    }
+}
+
 func hoursString(course *Course, t text) string {
     result := ""
     winter := course.LectureRangeWinter.Valid && course.SeminarRangeWinter.Valid
@@ -208,345 +585,4 @@ func courseSISLink(code string, t text) string {
         return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
     }
     return "unsupported language"
-}
-
-templ standartBadge(text, bgColor string) {
-    <span class={ fmt.Sprintf("badge rounded-pill %s fs-6 me-1", bgColor) }>
-        { text }
-    </span>
-}
-
-func courseStartString(c *Course, t text) string {
-    switch c.Start {
-        case teachingBoth:
-            return t.Both
-        case teachingWinterOnly:
-            return t.Winter
-        case teachingSummerOnly:
-            return t.Summer
-        default:
-            return ""
-    }
-}
-
-templ badges(course *Course, t text) {
-    <div class="d-flex justify-content-between">
-        <div class="text-start">
-            @standartBadge(fmt.Sprintf("%s: %d", t.ECredits, course.Credits), course.courseStyleClass())
-            @standartBadge(courseStartString(course, t), course.courseStyleClass())
-            @standartBadge(fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType), course.courseStyleClass())
-        </div>
-        <div class="text-end">
-            // TODO: make this dynamic (this just for show)
-            <span class="badge rounded-pill bg-blueprint fs-6">
-                <i class="bi bi-basket2"></i> in blueprint
-            </span>
-            <span class="badge rounded-pill text-bg-success fs-6">
-                <i class="bi bi-check-lg"></i> completed
-            </span>
-            <span class="badge rounded-pill text-bg-danger fs-6">
-                <i class="bi bi-stickies"></i> in degree plan
-            </span>
-        </div>
-    </div>
-}
-
-templ infoRow(title string) {
-    <tr>
-        <td class="text-end align-top fw-semibold p-2">{ title }</td>
-        <td class="border-bottom p-2">{ children... }</td>
-    </tr>
-}
-
-templ requisitesLinksRow(req []string, title string, t text) {
-    if len(req) != 0 {
-        @infoRow(title) {
-            for i, c := range req {
-                if i != len(req) - 1 {
-                    @utils.CourseLink(c, t.Utils)<span>, </span>
-                } else {
-                    @utils.CourseLink(c, t.Utils)
-                }
-            }
-        }
-    }
-}
-
-templ basicInfo(course *Course, t text) {
-    <table class="info-table-borders">
-        @infoRow(t.Faculty){ 
-            <span>{ course.Faculty }</span>
-        } // TODO: plus katedra
-        @infoRow(t.LanguageOfCourse) {
-            <span>{ course.Language }</span>
-        }
-        // TODO: if not default (default=taught) show NOT TAUGHT, else do not show anything
-        @infoRow(t.StateOfCourse) {
-            <span>{ course.State }</span>
-        }
-        // TODO: if unlimited capacity do not show anything, else show capacity
-        @infoRow(t.Capacity) {
-            <span>{ course.Capacity }</span>
-        }
-        @requisitesLinksRow(course.Prereq, t.Prerequisites, t)
-        if len(course.Guarantors) > 0 {
-            @infoRow(t.Guarantors) {
-                <table id="guarantors-table" class="mb-0">
-                    for _, g := range course.Guarantors {
-                        @teacherStyledRow(g)
-                    }
-                </table>
-            }
-        }
-    </table>
-
-}
-
-templ teacherStyledRow(t Teacher) {
-    <tr>
-        <td class="text-end teachers-first-column">
-            if t.TitleBefore != "" {
-                <small style="font-size: 0.6rem;">{ t.TitleBefore + " " }</small>
-            }
-        </td>
-        <td>
-            if t.TitleAfter != "" {
-                <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span><small style="font-size: 0.6rem;">{ ", " + t.TitleAfter }</small>
-            } else {
-                <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span>
-            }
-        </td>
-    </tr>
-}
-
-templ teacherStyled(t teacher.Teacher) {
-    if len(t.SISID) == 0 {
-        // TODO: pripominky k predmetu (as text), if not valid than this text, add to translate
-        <span class="fs-6 text-dark fw-semibold">GLOBAL</span>
-    } else {
-        if t.TitleBefore != "" {
-            <small style="font-size: 0.6rem;">{ t.TitleBefore + " " }</small>
-        }
-        if t.TitleAfter != "" {
-            <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span><small style="font-size: 0.6rem;">{ ", " + t.TitleAfter }</small>
-        } else {
-            <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span>
-        }
-    }
-}
-
-templ descriptionItem(desc NullDescription, id string) {
-    if desc.Valid {
-    <div>
-        <h2>{ utils.CapitalizeFirstLetter(desc.Title) }</h2>
-        <div
-            id={ "content-" + id }
-            class="border-bottom mb-3"
-            x-init={ "insertContent('" + id + "', `" + desc.SanitizeContent(id == "annotation") + "`)" }>
-        </div>
-        // inserting content as shadow DOM
-        <script>
-        function insertContent(id, content) {
-            const shadowRoot = document.getElementById("content-" + id).attachShadow({ mode: 'open' });
-            shadowRoot.innerHTML = `
-                <style>
-                    ul {
-                        margin: 0;
-                        padding-left: 30px;
-                    }
-                    p:first-of-type {
-                        margin-top: 0.5rem;
-                    }
-                </style>
-                ${content}
-            `;
-        }
-        </script>
-    </div>
-    }
-}
-
-templ description(course *Course, t text) {
-    if !course.Annotation.Valid && !course.Syllabus.Valid && !course.PassingTerms.Valid && !course.Literature.Valid && !course.AssesmentRequirements.Valid && !course.EntryRequirements.Valid && !course.Aim.Valid {
-        <div class="alert alert-primary" role="alert">
-            { t.NoDescription }
-        </div>
-    } else {
-        <div>
-            @descriptionItem(course.Annotation, "annotation")
-            @descriptionItem(course.Syllabus, "syllabus")
-            @descriptionItem(course.PassingTerms, "passing-terms")
-            @descriptionItem(course.Literature, "literature")
-            @descriptionItem(course.AssesmentRequirements, "assesment-requirements")
-            @descriptionItem(course.EntryRequirements, "entry-requirements")
-            @descriptionItem(course.Aim, "aim")
-        </div>
-    }
-}
-
-templ survey(surveys []course.Comment, t text) {
-    if len(surveys) == 0 {
-        <div class="alert alert-primary" role="alert">
-            { t.NoSurvey }
-        </div>
-    } else {
-        for _, s := range surveys {
-            <div class="card mb-1">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center mb-0">
-                        <div style="width: 115px;">{ s.AcademicYearString() + " " + s.Type + " " }</div>
-                        <div class="ms-2">
-                            @teacherStyled(s.TargetTeacher)
-                        </div>
-                    </div>
-                    <p class="mb-0">
-                        { fmt.Sprintf("%s, %s, %s", t.YearStr(s.StudyYear), s.Study.Name, s.StudyField) }
-                    </p>
-                </div>
-                <div class="card-body" style="text-align: justify">
-                    { s.Content }
-                </div>
-            </div>
-        }
-    }
-}
-
-templ detailInfo(course *Course, t text) {
-    if len(course.Classes) == 0 && len(course.Classifications) == 0 && len(course.Coreq) == 0 && len(course.Interchange) == 0 && len(course.Incompa) == 0 && len(course.Teachers) == 0 {
-        <div class="alert alert-primary" role="alert">
-            { t.NoDetail }
-        </div>
-    } else {
-        <div class="d-flex">
-            // left column classes, classification and requisites
-            <div class="flex-grow-1" style="flex: 1;">
-                <table class="info-table-borders">
-                    if len(course.Classes) > 0 {
-                        @infoRow(t.Classes) {
-                            for _, c := range course.Classes {
-                                <p class="mb-0">{ c.Name }</p>
-                            }
-                        }
-                    }
-                    if len(course.Classifications) > 0 {
-                        @infoRow(t.Classification) {
-                            for _, c := range course.Classifications {
-                                <p class="mb-0">{ c.Name }</p>
-                            }
-                        }
-                    }
-                    @requisitesLinksRow(course.Coreq, t.Corequisites, t)
-                    @requisitesLinksRow(course.Interchange, t.Interchange, t)
-                    @requisitesLinksRow(course.Incompa, t.Incompatible, t)
-                </table>
-            </div>
-            // right column teachers
-            <div class="flex-grow-1" style="flex: 1;">
-                <table class="info-table-borders">
-                    if len(course.Teachers) > 0 {
-                        @infoRow(t.Teachers) {
-                            <table id="teachers-table" class="mb-0">
-                                for _, teacher := range course.Teachers {
-                                    @teacherStyledRow(teacher)
-                                }
-                            </table>
-                        }
-                    }
-                </table>
-            </div>
-        </div>
-    }
-}
-
-templ buttons(course *Course, t text) {
-    // link to additional information
-    if course.Link != "" {
-        <a class="btn btn-outline-secondary" href={ templ.SafeURL(course.Link) } role="button">
-            { t.AdditionalInfo }
-        </a>
-    }
-    // SIS link
-    <a class="btn btn-outline-secondary" href={ templ.SafeURL(courseSISLink(course.Code, t)) } target="_blank" role="button">
-        { t.SISLink }
-    </a>
-    // TODO: zapsat button
-    <a class="btn btn-outline-secondary" href="#" role="button">
-        zapsat
-    </a>
-    // TODO: rozvrh buttons
-    // for NDMI002 https://is.cuni.cz/studium/rozvrhng/roz_predmet_macro.php?fak=11320&skr=2024&sem=1&predmet=NDMI002
-    <a class="btn btn-outline-secondary" href="#" role="button">
-        rozvrh
-    </a>
-    // button to assign course to blueprint
-    @blueprintAssignment(course.Code, t)
-}
-
-templ details(course *Course, t text) {
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#desc-tab-pane" type="button" role="tab" aria-controls="desc-tab-pane" aria-selected="true">{ t.Description }</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#survey-tab-pane" type="button" role="tab" aria-controls="survey-tab-pane" aria-selected="false">{ t.Survey }</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#detail-tab-pane" type="button" role="tab" aria-controls="detail-tab-pane" aria-selected="false">{ t.Detail }</button>
-        </li>
-    </ul>
-    <div class="tab-content" id="myTabContent">
-        <div class="tab-pane show active pt-2" id="desc-tab-pane" role="tabpanel" tabindex="0">
-            @description(course, t)
-        </div>
-        <div class="tab-pane pt-2" id="survey-tab-pane" role="tabpanel" tabindex="0">
-            @survey(course.Comments.Comments(), t)
-        </div>
-        <div class="tab-pane pt-2" id="detail-tab-pane" role="tabpanel" tabindex="0">
-            @detailInfo(course, t)
-        </div>
-    </div>
-}
-
-templ Content(course *Course, t text) {
-    // code and title
-    <h1 class="text-center pt-3">{ course.Code + " - " + course.Name }</h1>
-    // badges with information
-    <div class="text-center pb-4">
-        @badges(course, t)
-    </div>
-    // two columns
-    <div class="d-flex pb-4">
-        // left column most important information
-        <div class="flex-grow-1" style="flex: 1;">
-            @basicInfo(course, t)
-        </div>
-        // right column ratings
-        <div class="flex-grow-1" style="flex: 1;">
-            @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
-        </div>
-    </div>
-    // buttons
-    <div class="d-flex justify-content-center gap-1 pb-2">
-        @buttons(course, t)
-    </div>
-    // switch between description, survey and detailed information
-    @details(course, t)
-}
-
-templ Page(course *Course, t text) {
-    @utils.Page(course.Code + " - " + course.Name, t.Utils) {
-        <div class="container">
-            @Content(course, t)
-        </div>
-    }
-}
-
-templ PageNotFound(code string, t text) {
-    @utils.Page("Course not found", t.Utils) {
-        @ContentNotFound(code, t)
-    }
-}
-
-templ ContentNotFound(code string, t text) {
-    <h1>{ t.CourseWithCode + code + t.NotFound }</h1>
 }

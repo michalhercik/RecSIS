@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+
+	"github.com/michalhercik/RecSIS/internal/interface/teacher"
 )
 
 type Faculty struct {
@@ -99,7 +101,7 @@ func (d *NullDescription) Scan(val any) error {
 	return nil
 }
 
-type TeacherSlice []Teacher
+type TeacherSlice []teacher.Teacher
 
 func (ts *TeacherSlice) Scan(val interface{}) error {
 	switch v := val.(type) {
@@ -112,14 +114,6 @@ func (ts *TeacherSlice) Scan(val interface{}) error {
 	default:
 		return fmt.Errorf("unsupported type: %T", v)
 	}
-}
-
-type Teacher struct {
-	SisID       string `json:"KOD"`
-	FirstName   string `json:"JMENO"`
-	LastName    string `json:"PRIJMENI"`
-	TitleBefore string `json:"TITULPRED"`
-	TitleAfter  string `json:"TITULZA"`
 }
 
 type JSONStringArray []string
