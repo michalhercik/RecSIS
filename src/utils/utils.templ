@@ -96,12 +96,12 @@ templ Header(title string, t Text) {
     </header>
 }
 
-templ langButton(l language.Language) {
-    <button
-        class="fw-semibold btn btn-outline-none ps-0 border-0"
-        @click={ "changeLanguage('" + string(l) + "')" }>
-        { string(l) }
-    </button>
+templ Footer(t Text) {
+    <footer class="text-center text-body-secondary pb-3 position-absolute bottom-0 w-100">
+        <hr/>
+        { t.Contact }
+        <a href="mailto:TODO@TODO.com">TODO@TODO.com</a>
+    </footer>
 }
 
 templ navItem(url, text string, active bool) {
@@ -114,12 +114,12 @@ templ navItem(url, text string, active bool) {
     <li class="nav-item"><a @click="clearExpanded()" class={ class } href={ templ.URL(url) }>{ text }</a></li>
 }
 
-templ Footer(t Text) {
-    <footer class="text-center text-body-secondary pb-3 position-absolute bottom-0 w-100">
-        <hr/>
-        { t.Contact }
-        <a href="mailto:TODO@TODO.com">TODO@TODO.com</a>
-    </footer>
+templ langButton(l language.Language) {
+    <button
+        class="fw-semibold btn btn-outline-none ps-0 border-0"
+        @click={ "changeLanguage('" + string(l) + "')" }>
+        { string(l) }
+    </button>
 }
 
 templ CourseLink(code string, t Text) {

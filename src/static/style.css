@@ -40,6 +40,16 @@ body {
     font-size: 0.6rem !important;
 }
 
+/* navbar input submit button color */
+.btn-submit-input-green {
+    background-color: rgb(138, 199, 90) !important;
+    color: black !important;
+}
+
+.btn-submit-input-green:hover {
+    background-color: rgb(101, 168, 50) !important;
+}
+
 /* BP -> small screen title */
 .small-screen-title {
     overflow: hidden;
@@ -166,7 +176,7 @@ body {
 }
 
 /* BP -> assign hover styles */
-.dropdown-item:hover {
+.dropdown-item-blueprint:hover {
     background-color: rgb(4, 108, 181) !important;
     color: #fff !important;
 }

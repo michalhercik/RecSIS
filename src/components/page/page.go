@@ -55,7 +55,7 @@ func (p Page) view(main templ.Component, lang language.Language, title string, s
 		title:    title,
 		main:     main,
 		lang:     lang,
-		text:     Text{},
+		text:     texts[lang],
 		search:   searchBarView,
 		home:     p.Home,
 		navItems: p.NavItems,

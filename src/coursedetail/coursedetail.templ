@@ -9,37 +9,37 @@ import (
 
 // templ Page(course *Course, t text) {
 //     @utils.Page(course.Code + " - " + course.Name, t.Utils) {
-//         <div class="container">
-//             @Content(course, t)
-//         </div>
+//         @Content(course, t)
 //     }
 // }
 
 templ Content(course *Course, t text) {
-    // code and title
-    <h1 class="text-center pt-3">{ course.Code + " - " + course.Name }</h1>
-    // badges with information
-    <div class="text-center pb-4">
-        @badges(course, t)
-    </div>
-    // two columns
-    <div class="row justify-items-center pb-4">
-        // left column most important information
-        <div class="col-12 col-md-6">
-            @basicInfo(course, t)
+    <div class="container">
+        // code and title
+        <h1 class="text-center pt-3">{ course.Code + " - " + course.Name }</h1>
+        // badges with information
+        <div class="text-center pb-4">
+            @badges(course, t)
         </div>
-        // right column ratings
-        <div class="col-12 col-md-6">
-            @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
+        // two columns
+        <div class="row justify-items-center pb-4">
+            // left column most important information
+            <div class="col-12 col-md-6 pb-3 pb-md-0">
+                @basicInfo(course, t)
+            </div>
+            // right column ratings
+            <div class="col-12 col-md-6">
+                @ratings(course.UserRating, course.AvgRating, course.RatingCount, course.CategoryRatings, course.Code, t)
+            </div>
         </div>
-    </div>
-    // buttons
-    <div class="pb-2">
-        @buttons(course, t)
-    </div>
-    // switch between description, survey and detailed information
-    <div class="pt-3 pt-md-0">
-        @details(course, t)
+        // buttons
+        <div class="pb-2">
+            @buttons(course, t)
+        </div>
+        // switch between description, survey and detailed information
+        <div class="pt-3 pt-md-0">
+            @details(course, t)
+        </div>
     </div>
 }
 

@@ -23,22 +23,8 @@ templ AddBtn(code string, numberOfYears int, t Text, options Options) {
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
             for year := 1; year <= numberOfYears; year++ {
-                <li class="mx-3"><button class="dropdown-item rounded text-center"
-                    hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
-                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1`, year) }
-                    hx-swap={ options.HxSwap }
-                    hx-target={ options.HxTarget }
-                >
-                { t.YearStr(year) + " " + t.WinterAssign }
-                </button></li>
-                <li class="mx-3"><button class="dropdown-item rounded text-center"
-                    hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
-                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2`, year) }
-                    hx-swap={ options.HxSwap }
-                    hx-target={ options.HxTarget }
-                >
-                { t.YearStr(year) + " " + t.SummerAssign }
-                </button></li>
+                @assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
+                @assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
             }
         </ul>
     </div>
@@ -46,16 +32,15 @@ templ AddBtn(code string, numberOfYears int, t Text, options Options) {
 
 templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
     <div
-        class="btn-group w-100"
-        style="height: 32px;"
+        class="dp-bp-assign-group btn-group w-100"
+        x-cloak
+        x-show="hoverRow"
         x-data="{ hover: false, hoverSelection: false }"
         @mouseover="hover = true"
         @mouseleave="hover = false">
         <button
-            type="button"
-            class="btn btn-sm btn-outline-blueprint bi bi-plus lh-1 p-0"
+            class="dp-bp-assign-btn btn btn-sm btn-outline-blueprint bi bi-plus lh-1 p-0"
             :class="{ 'border-0': !hover, 'dp-bp-delimiter': !hover }"
-            style="font-size: 1.75rem;"
             hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
             hx-vals={ `"year": 0, "semester": 0` }
             hx-swap={ options.HxSwap }
@@ -63,7 +48,6 @@ templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
             >
         </button>
         <button
-            type="button"
             class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
             :class="{ 'btn-blueprint-hover': hoverSelection, 'border-0': !hover }"
             data-bs-toggle="dropdown"
@@ -75,23 +59,22 @@ templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
             @mouseover="hoverSelection = true"
             @mouseleave="hoverSelection = false">
             for year := 1; year <= numberOfYears; year++ {
-                <li class="mx-3"><button class="dropdown-item rounded text-center"
-                    hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
-                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 1`, year) }
-                    hx-swap={ options.HxSwap }
-                    hx-target={ options.HxTarget }
-                >
-                { fmt.Sprintf("%s %s", t.YearStr(year), t.WinterAssign) }
-                </button></li>
-                <li class="mx-3"><button class="dropdown-item rounded text-center"
-                    hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
-                    hx-vals={ fmt.Sprintf(`"year": %d, "semester": 2`, year) }
-                    hx-swap={ options.HxSwap }
-                    hx-target={ options.HxTarget }
-                >
-                { fmt.Sprintf("%s %s", t.YearStr(year), t.SummerAssign) }
-                </button></li>
+                @assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
+                @assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
             }
         </ul>
     </div>
+}
+
+templ assignSemesterButton(code, semesterText string, year, semester int, t Text, options Options) {
+    <li class="mx-3">
+        <button
+            class="dropdown-item rounded text-center dropdown-item-blueprint"
+            hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+            hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }
+            hx-swap={ options.HxSwap }
+            hx-target={ options.HxTarget }>
+            { fmt.Sprintf("%s %s", t.YearStr(year), semesterText) }
+        </button>
+    </li>
 }

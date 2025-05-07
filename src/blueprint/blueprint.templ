@@ -78,7 +78,7 @@ templ unassignHeadline(folded bool, t text) {
             <th class="d-none d-md-table-cell">{ t.Summer }</th>
             <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
         }
-        <th class="text-end align-middle py-0 lh-1">
+        <th class="d-none d-md-table-cell text-end align-middle py-0 lh-1">
             // remove all unassigned courses button
             @removeCoursesButton(t.TTRemoveUnassigned, mergeVals(vType(yearRemove), vYear(0)), "", t)
         </th>
@@ -123,7 +123,7 @@ templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, folde
             <th class="d-none d-md-table-cell">{ t.Summer }</th>
             <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
         }
-        <th class="th-overflow text-end align-middle py-0 lh-1">
+        <th class="d-none d-md-table-cell th-overflow text-end align-middle py-0 lh-1">
             // remove all courses button
             @removeCoursesButton(t.TTRemoveWinter, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentWinter))), "", t)
             // unassign all courses button
@@ -173,7 +173,7 @@ templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, folde
             <th class="d-none d-md-table-cell">{ t.Summer }</th>
             <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
         }
-        <th class="th-overflow text-end align-middle py-0 lh-1">
+        <th class="d-none d-md-table-cell th-overflow text-end align-middle py-0 lh-1">
             // remove all courses button
             @removeCoursesButton(t.TTRemoveSummer, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentSummer))), "", t)
             // unassign all courses button
@@ -244,7 +244,7 @@ templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT stri
                 <span class="d-none d-md-inline"> @utils.TitleCourseLink(course.Code, course.Title, t.Utils) </span>
                 <div class="d-flex flex-column d-md-none">
                     <span class="text-muted small lh-1">{ course.Code }</span>
-                    <span class="fw-bold small small-screen-title">
+                    <span class="fw-bold small-screen-title">
                         @utils.TitleCourseLink(course.Code, course.Title, t.Utils)
                     </span>
                 </div>
@@ -253,7 +253,7 @@ templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT stri
             <td class="d-none d-md-table-cell">{ winterString(&course) }</td>
             <td class="d-none d-md-table-cell">{ summerString(&course) }</td>
             <td class="d-none d-xl-table-cell">{ course.Guarantors.string() }</td>
-            <td class="text-end align-middle py-0">
+            <td class="d-none d-md-table-cell text-end align-middle py-0">
                 <div class="d-none d-md-inline">
                     if canUnassign {
                         // unassign button

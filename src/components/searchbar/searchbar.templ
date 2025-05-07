@@ -1,8 +1,13 @@
 package searchbar
 
+import (
+    "fmt"
+)
+
 templ SearchBar(model searchBarModel) {
     <form
         id="search-form"
+        class="w-100"
         hx-get={ model.lang.Path(model.searchEndpoint) }
         hx-target="body"
         hx-push-url="true"
@@ -10,30 +15,27 @@ templ SearchBar(model searchBarModel) {
             hx-include={ model.filtersSelector }
         }
         @submit="document.activeElement.blur()"
-        style="width: 100%;"
-        x-data="{ searchInput: '', quickResOpen: false }" x-init={ "searchInput = '" + model.searchInput + "';" }
+        x-data="{ searchInput: '', quickResOpen: false }"
+        x-init={ fmt.Sprintf("searchInput = '%s'", model.searchInput) }
     >
         <div class="justify-content-center">
             <div class="dropdown"
                 @click.outside="quickResOpen = false"
             >
                 <div class="input-group">
-                    <input type="text" name={ model.searchParam } id="search" class="form-control" placeholder={ model.t.SearchPlaceholder } value={model.searchInput} autocomplete="off"
-                        @keyup.slash.outside="
-                            e = document.getElementById('search');
-                            e.focus();
-                            e.selectionStart = e.selectionEnd = e.value.length;
-                        "
+                    <input type="text" name={ model.searchParam } id="search" class="form-control" placeholder={ model.t.SearchPlaceholder } autocomplete="off"
+                        x-model="searchInput"
+                        @keyup.slash.outside="$el.focus(); $el.selectionStart = $el.selectionEnd = $el.value.length;"
                         @keyup.escape="document.activeElement.blur(); quickResOpen = false"
                         @focus="quickResOpen = true"
-                        x-model="searchInput"
                         hx-get={ model.lang.Path(model.quickSearchEndpoint) }
                         hx-trigger="input changed delay:200ms, focus once"
                         hx-target="#quick-search-results"
                         hx-swap="outerHTML"
                         hx-push-url="false"
+                        hx-indicator="#explicit-no-loader"
                     />
-                    <button type="submit" class="btn btn-primary" style="background-color:#8AC75A;border-color:#8AC75A" @click="quickResOpen = false">{ model.t.SearchButton }</button>
+                    <button type="submit" class="btn btn-submit-input-green" @click="quickResOpen = false">{ model.t.SearchButton }</button>
                 </div>
                 @quickResults()
             </div>
@@ -45,8 +47,8 @@ templ QuickResults(model quickResultsModel) {
     @quickResults() {
         <div
             class="dropdown-menu w-100 shadow-sm show"
-            x-show="quickResOpen && searchInput.length > 0"
             x-cloak
+            x-show="quickResOpen && searchInput.length > 0"
         >
             if len(model.courses) == 0 {
                 <div class="dropdown-item text-muted">{ model.t.NoCoursesFound }</div>
@@ -68,9 +70,7 @@ templ QuickResults(model quickResultsModel) {
 }
 
 templ quickResults() {
-    <div
-        id="quick-search-results"
-    >
-            { children... }
+    <div id="quick-search-results">
+        { children... }
     </div>
 }

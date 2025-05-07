@@ -62,11 +62,14 @@ func (s Server) course(userID, code string, lang language.Language, r *http.Requ
 	if err != nil {
 		return nil, err
 	}
-	searchQuery := r.FormValue("q")
+	// TODO: jako GitHub searchbar, filters
+	// TODO: paginace prev/next (nic vic)
+	// TODO: alterative -> only load more (hx-trigger revealed) lazy loading
+	searchQuery := r.FormValue("q") // TODO: input text name=q (RENAME)
 	br = br.SetQuery(searchQuery)
 	br = br.AddCourse(code)
-	br = br.SetLimit(20)
-	br = br.SetOffset(0)
+	br = br.SetLimit(20) // TODO: pocet komentaru na stranku
+	br = br.SetOffset(0) // TODO: offset komentaru
 	br = br.AddSort(params.AcademicYear, params.Desc)
 	req, err := br.Build()
 	if err != nil {
