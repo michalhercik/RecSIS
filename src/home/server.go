@@ -32,5 +32,5 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	t := texts[lang]
 	// Page(t).Render(r.Context(), w)
 	main := Content(t)
-	s.Page.View(main, lang, t.Title).Render(r.Context(), w)
+	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
 }

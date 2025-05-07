@@ -13,15 +13,14 @@ templ SearchBar(model searchBarModel) {
         hx-push-url="true"
         if model.includeFilters {
             hx-include={ model.filtersSelector }
+            
         }
         @submit="document.activeElement.blur()"
         x-data="{ searchInput: '', quickResOpen: false }"
         x-init={ fmt.Sprintf("searchInput = '%s'", model.searchInput) }
     >
         <div class="justify-content-center">
-            <div class="dropdown"
-                @click.outside="quickResOpen = false"
-            >
+            <div class="dropdown" @click.outside="quickResOpen = false">
                 <div class="input-group">
                     <input type="text" name={ model.searchParam } id="search" class="form-control" placeholder={ model.t.SearchPlaceholder } autocomplete="off"
                         x-model="searchInput"

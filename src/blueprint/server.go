@@ -137,7 +137,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	} else {
 		result = Content(data, t)
 	}
-	s.Page.View(result, lang, t.Title).Render(r.Context(), w)
+	s.Page.View(result, lang, t.PageTitle).Render(r.Context(), w)
 }
 
 // ===============================================================================================================================

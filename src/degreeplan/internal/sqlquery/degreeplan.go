@@ -6,6 +6,7 @@ WITH user_blueprint_courses AS (
 	LEFT JOIN blueprint_semesters bs ON bs.blueprint_year_id = y.id
 	LEFT JOIN blueprint_courses bc ON bc.blueprint_semester_id = bs.id
 	WHERE y.user_id = $1
+	GROUP BY course_code
 )
 SELECT
 	dp.bloc_subject_code,
