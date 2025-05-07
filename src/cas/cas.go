@@ -3,6 +3,7 @@ package cas
 import (
 	"encoding/json"
 	"net/http"
+        "net/url"
         "fmt"
 )
 
@@ -22,10 +23,22 @@ func (s *Server) Router() http.Handler {
 
 func (s *Server) cas(w http.ResponseWriter, r *http.Request) {
         ticket := r.FormValue("ticket")
-        fmt.Fprintln(w,"ticket: ", ticket)
-        url := "https://acheron.ms.mff.cuni.cz:42050/cas/?format=json&ticket=" + ticket
-        res, err := http.Get(url) 
-        // fmt.Fprintln(w, "Validate through: ", url)
+        // fmt.Fprintln(w,"ticket: ", ticket)
+        fmt.Println("ticket: ", ticket)
+        // url := "https://acheron.ms.mff.cuni.cz:42050/cas/?format=json&ticket=" + ticket
+        // url := https://cas.cuni.cz/cas/serviceValidate?service=https%3A%2F%2Facheron.ms.mff.cuni.cz%3A42050%2Fcas%2F&format=json&ticket=ST-90478-nyhtZ0UOtTBx2OvMh4-0-LkcF9A-idp2
+        validateReq := url.URL{
+                Scheme: "https",
+                Host: "cas.cuni.cz",
+                Path: "/cas/serviceValidate",
+                RawQuery: url.Values{
+                        "format": []string{"json"},
+                        "service": []string{"https://acheron.ms.mff.cuni.cz:42050/cas/"},
+                        "ticket": []string{ticket},
+                }.Encode(),
+        }
+        fmt.Println("validateReq: ", validateReq.String())
+        res, err := http.Get(validateReq.String()) 
         if err != nil {
                 fmt.Fprintln(w, err)
                 return
@@ -36,7 +49,7 @@ func (s *Server) cas(w http.ResponseWriter, r *http.Request) {
                 fmt.Fprintln(w, err)
                 return
         }
-        fmt.Println(data)
+        // fmt.Println(data)
 	w.Header().Set("Content-Type", "application/json")
 	// json.NewEncoder(w).Encode(r.URL.Query())
 	json.NewEncoder(w).Encode(data)

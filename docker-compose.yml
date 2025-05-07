@@ -14,6 +14,7 @@ services:
       - recsis-network
     volumes:
       - ./utils/:/app/utils/
+      - /var/recsis-cert/:/app/recsis-cert/:ro
       # - ./log:/app/log
     develop:
       watch:

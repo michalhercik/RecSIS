@@ -143,7 +143,7 @@ func main() {
 	log.Println("Server starting ...")
 	log.Println("http://localhost:8000/")
 
-	err = server.ListenAndServeTLS("server.crt", "server.key")
+	err = server.ListenAndServeTLS("recsis-cert/fullchain.pem", "recsis-cert/privkey.pem")
 	if err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
