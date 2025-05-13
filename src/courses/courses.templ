@@ -51,30 +51,6 @@ func semesterHoursExamsString(course *Course, t text) string {
     return result + ", " + course.ExamType
 }
 
-templ QuickResults(res *QuickResponse, t text) {
-    <div
-        id="quick-search-results"
-        class="dropdown-menu w-100 shadow-sm show"
-    >
-        if res.approxHits == -1 {
-            // Don't render anything if approxHits is -1
-        } else if len(res.courses) == 0 {
-            <div class="dropdown-item text-muted">{ t.NoCoursesFound }</div>
-        } else {
-            for _, course := range res.courses {
-                <a
-                    href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }
-                    class="dropdown-item rounded text-truncate"
-                    hx-boost="false"
-                    tabindex="0"
-                >
-                    { course.code + " - " + course.name }
-                </a>
-            }
-        }
-    </div>
-}
-
 templ helpIcon(content string) {
     <i
         x-data="{ hoverHelp: false }"
@@ -145,10 +121,11 @@ templ filterSection(cp *coursesPage, t text) {
             }
         </form>
         // move to the top of the page button
-        <div class="text-center justify-content-center d-flex mt-3" style="position: sticky; top: 72px;">
+        // x-data is necessary for x-on:click to work
+        <div class="text-center justify-content-center d-flex mt-3" style="position: sticky; top: 72px;" x-data>
             <p
                 role="button"
-                @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                @click="window.scrollTo({ top: 0, behavior: 'smooth' }); console.log('scrolling to top');"
                 class="link-primary"
             >
                 <i class="bi bi-chevron-up"></i>
@@ -156,45 +133,6 @@ templ filterSection(cp *coursesPage, t text) {
             </p>
         </div>
     </div>
-}
-
-templ search(coursesPage *coursesPage, t text) {
-    <form
-        id="search-form"
-        hx-get={ t.Utils.LangLink("/courses/search") }
-        hx-target="#courses-page"
-        hx-swap="outerHTML"
-        hx-include="#filter-form"
-        class="mt-3 mb-2 mx-5"
-        x-data="{ quickResOpen: false, quickResLoaded: false }"
-        @htmx:after-request="quickResLoaded = true"
-    >
-        <div class="justify-content-center">
-            <div class="dropdown" @click.away="quickResOpen = false">
-                <div class="input-group">
-                    <input type="text" name={ coursesPage.searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
-                        x-model="searchInput"
-                        @click="if (!quickResLoaded && searchInput !== '') $dispatch('triggerSearch'); quickResOpen = true;"
-                        @input="quickResOpen = true"
-                        @keydown.escape="quickResOpen = false"
-                        @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
-                        hx-get={ t.Utils.LangLink("/courses/quicksearch") }
-                        hx-trigger="input changed, triggerSearch from:body"
-                        hx-target="#quick-search-results"
-                        hx-swap="outerHTML"
-                        hx-indicator="#explicit-no-loader"
-                    />
-                    <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
-                </div>
-                <div x-cloak x-show="quickResOpen && searchInput.length > 0">
-                    @QuickResults(&QuickResponse{
-                        approxHits: -1,
-                        courses: []QuickCourse{},
-                    }, t)
-                </div>
-            </div>
-        </div>
-    </form>
 }
 
 templ activeFilters(cp *coursesPage, t text) {
@@ -233,16 +171,16 @@ templ activeFilters(cp *coursesPage, t text) {
             </button>
         }
         <script>
-        function uncheck(id) {
-            const checkbox = document.getElementById(id);
-            if (checkbox) {
-                const clickEvent = new MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true,
-                });
-                checkbox.dispatchEvent(clickEvent);
+            function uncheck(id) {
+                const checkbox = document.getElementById(id);
+                if (checkbox) {
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                    });
+                    checkbox.dispatchEvent(clickEvent);
+                }
             }
-        }
         </script>
     </div>
 }
@@ -258,38 +196,6 @@ templ ribbon(ba AssignmentSlice, t text) {
 templ blueprintAssignment(code string, t text, addBtn PartialBlueprintAdd) {
     <div class="d-flex justify-content-end mt-auto pt-3">
         @addBtn(code, "outerHTML", "#" + code)
-        // <div class="btn-group">
-        //     <button type="button" class="btn btn-outline-blueprint"
-        //         hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-        //         hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
-        //     >
-        //         { t.Assign }
-        //     </button>
-        //     <button
-        //         type="button"
-        //         class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-        //         data-bs-toggle="dropdown"
-        //         aria-expanded="false"
-        //         data-bs-offset="0, 0">
-        //     </button>
-        //     <ul class="dropdown-menu dropdown-menu-end">
-        //     // TODO: make dynamic, NOT 3 fixed years
-        //         for year := 1; year <= 3; year++ {
-        //             <li class="mx-3"><button class="dropdown-item rounded text-center"
-        //                 hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-        //                 hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1"` }
-        //             >
-        //             { t.YearStr(year) + " " + t.WinterAssign }
-        //             </button></li>
-        //             <li class="mx-3"><button class="dropdown-item rounded text-center"
-        //                 hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-        //                 hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2"` }
-        //             >
-        //             { t.YearStr(year) + " " + t.SummerAssign }
-        //             </button></li>
-        //         }
-        //     </ul>
-        // </div>
     </div>
 }
 

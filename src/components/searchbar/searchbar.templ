@@ -13,19 +13,19 @@ templ SearchBar(model searchBarModel) {
         hx-push-url="true"
         if model.includeFilters {
             hx-include={ model.filtersSelector }
-            
         }
-        @submit="document.activeElement.blur()"
+        @submit="$refs.searchInput.blur()"
         x-data="{ searchInput: '', quickResOpen: false }"
         x-init={ fmt.Sprintf("searchInput = '%s'", model.searchInput) }
     >
         <div class="justify-content-center">
             <div class="dropdown" @click.outside="quickResOpen = false">
                 <div class="input-group">
-                    <input type="text" name={ model.searchParam } id="search" class="form-control" placeholder={ model.t.SearchPlaceholder } autocomplete="off"
+                    <input type="text" name={ model.searchParam } id="search" class="form-control responsive-font" placeholder={ model.t.SearchPlaceholder } autocomplete="off"
                         x-model="searchInput"
+                        x-ref="searchInput"
                         @keyup.slash.outside="$el.focus(); $el.selectionStart = $el.selectionEnd = $el.value.length;"
-                        @keyup.escape="document.activeElement.blur(); quickResOpen = false"
+                        @keyup.escape="$el.blur(); quickResOpen = false"
                         @focus="quickResOpen = true"
                         hx-get={ model.lang.Path(model.quickSearchEndpoint) }
                         hx-trigger="input changed delay:200ms, focus once"
@@ -34,7 +34,14 @@ templ SearchBar(model searchBarModel) {
                         hx-push-url="false"
                         hx-indicator="#explicit-no-loader"
                     />
-                    <button type="submit" class="btn btn-submit-input-green" @click="quickResOpen = false">{ model.t.SearchButton }</button>
+                    // TODO: this might reload results as empty search query
+                    <button x-cloak x-show="searchInput.length > 0" type="reset" class="btn bg-white border-top border-bottom border-start-0" @click="searchInput = ''; quickResOpen = false; $refs.searchInput.focus();">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                    <button type="submit" class="btn btn-submit-input-green responsive-font" @click="quickResOpen = false">
+                        <span class="d-none d-sm-inline">{ model.t.SearchButton }</span>
+                        <i class="bi bi-search d-inline d-sm-none"></i>
+                    </button>
                 </div>
                 @quickResults()
             </div>
@@ -45,9 +52,9 @@ templ SearchBar(model searchBarModel) {
 templ QuickResults(model quickResultsModel) {
     @quickResults() {
         <div
-            class="dropdown-menu w-100 shadow-sm show"
             x-cloak
             x-show="quickResOpen && searchInput.length > 0"
+            class="dropdown-menu w-100 shadow-sm show"
         >
             if len(model.courses) == 0 {
                 <div class="dropdown-item text-muted">{ model.t.NoCoursesFound }</div>
@@ -55,7 +62,7 @@ templ QuickResults(model quickResultsModel) {
                 for _, course := range model.courses {
                     <a
                         href={ templ.URL(model.lang.Path(model.resultDetailEndpoint(course.code))) }
-                        class="dropdown-item text-truncate"
+                        class="dropdown-item text-truncate responsive-font"
                         hx-boost="false"
                         tabindex="0"
                         @click="quickResOpen = false"

@@ -121,25 +121,25 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
-func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
-	lang := language.FromContext(r.Context())
-	t := texts[lang]
-	query := r.FormValue(s.Page.SearchParam())
-	req := QuickRequest{
-		query:    query,
-		indexUID: courseIndex,
-		limit:    5,
-		offset:   0,
-		lang:     lang,
-	}
-	res, err := s.Search.QuickSearch(req)
-	if err != nil {
-		log.Printf("quickSearch: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	QuickResults(&res, t).Render(r.Context(), w)
-}
+// func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
+// 	lang := language.FromContext(r.Context())
+// 	t := texts[lang]
+// 	query := r.FormValue(s.Page.SearchParam())
+// 	req := QuickRequest{
+// 		query:    query,
+// 		indexUID: courseIndex,
+// 		limit:    5,
+// 		offset:   0,
+// 		lang:     lang,
+// 	}
+// 	res, err := s.Search.QuickSearch(req)
+// 	if err != nil {
+// 		log.Printf("quickSearch: %v", err)
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		return
+// 	}
+// 	QuickResults(&res, t).Render(r.Context(), w)
+// }
 
 func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Request, error) {
 	var req Request

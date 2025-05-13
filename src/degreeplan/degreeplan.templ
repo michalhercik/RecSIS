@@ -9,13 +9,13 @@ templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
     <div class="container pt-3" hx-indicator="#loader">
         for _, bloc := range dp.blocs {
             if bloc.Name != "" {
-                <h6 class="d-md-none">
+                <h5 class="d-md-none">
                     { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
                     if bloc.hasLimit() {
                         <span class="d-md-none">{ fmt.Sprintf("(≥%d %s)", bloc.Limit, t.CreditsShort) }</span>
                     }
                     @statusIcon(&bloc, t)
-                </h6>
+                </h5>
             }
             <table class="table table-sm table-hover degree-plan-table">
                 @tableHeader(&bloc, t)
@@ -92,11 +92,11 @@ templ CourseRow(course *Course, bpBtn PartialBlueprintAdd, t text) {
 
 templ statusIcon(bloc *Bloc, t text) {
     if bloc.completed() {
-        <i class="bi bi-check-lg text-success"></i>
+        <i class="bi bi-check-lg text-success ps-2"></i>
     } else if bloc.inBlueprint() {
-        <i class="bi bi-basket2 blueprint-color"></i>
+        <i class="bi bi-basket2 blueprint-color ps-2"></i>
     } else if bloc.hasLimit() {
-        <i class="bi bi-x-lg text-danger"></i>
+        <i class="bi bi-x-lg text-danger ps-2"></i>
     }
 }
 

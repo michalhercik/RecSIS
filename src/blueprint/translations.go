@@ -32,6 +32,7 @@ type text struct {
 	RemoveCourses   string
 	UnassignCourses string
 	// tooltips
+	TTUncheckAll       string
 	TTUnassignChecked  string
 	TTAssignChecked    string
 	TTRemoveChecked    string
@@ -94,6 +95,7 @@ var texts = map[language.Language]text{
 		RemoveCourses:   "Odstranit",
 		UnassignCourses: "Přesunout do nezařazených",
 		// tooltips
+		TTUncheckAll:       "Odznačit všechny označené předměty",
 		TTUnassignChecked:  "Přesunout vybrané předměty do nezařazených",
 		TTAssignChecked:    "Zařadit vybrané předměty",
 		TTRemoveChecked:    "Odstranit vybrané předměty",
@@ -145,6 +147,7 @@ var texts = map[language.Language]text{
 		RemoveCourses:   "Remove",
 		UnassignCourses: "Unassign",
 		// tooltips
+		TTUncheckAll:       "Uncheck all selected courses",
 		TTUnassignChecked:  "Unassign all selected courses",
 		TTAssignChecked:    "Assign all selected courses",
 		TTRemoveChecked:    "Remove all selected courses",
