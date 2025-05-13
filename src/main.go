@@ -2,10 +2,12 @@ package main
 
 import (
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/BurntSushi/toml"
 	"github.com/michalhercik/RecSIS/cas"
 	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
@@ -26,57 +28,49 @@ import (
 	// template
 )
 
-func logging(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, r)
-		// PRODUCTION: remove condition -> log everything
-		if r.Method != "HEAD" {
-			log.Println(r.Method, r.URL.Path)
-		}
-	})
-}
-
-func handle(router *http.ServeMux, prefix string, handler http.Handler) {
-	router.Handle(prefix, http.StripPrefix(prefix[:len(prefix)-1], handler))
-}
-
 func main() {
-	// DANGER: this is a test code, remove it
-	//===============================================================================
-	// TODO: remove this
-	//===============================================================================
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	// DANGER
-	//===============================================================================
+	configPath := flag.String("config", "", "Path to the config file")
+	flag.Parse()
+	if len(*configPath) == 0 {
+		log.Fatal("Config file path is required")
+	}
+
+	var conf config
+	_, err := toml.DecodeFile(*configPath, &conf)
+	if err != nil {
+		log.Fatalf("Failed to load config file: %v", err)
+	}
+
+	switch conf.Environment {
+	case productionEnvironment:
+		log.Println("WARNING: Running in production mode.")
+	case developmentEnvironment:
+		log.Println("WARNING: Running in development mode.")
+		// Allow self-signed certificates
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		log.Println("WARNING: Insecure TLS configuration for development environment.")
+	default:
+		log.Fatalf("Invalid environment: %s", conf.Environment)
+	}
 
 	//////////////////////////////////////////
 	// Database setup
 	//////////////////////////////////////////
 
-	// Postgres
-	const (
-		// host     = "postgres" // DOCKER, PRODUCTION: when run as docker container change to network name
-		host     = "localhost" // DOCKER, PRODUCTION: when run as docker container change to network name
-		port     = 5432
-		user     = "recsis"
-		password = "recsis"
-		dbname   = "recsis"
-	)
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+		conf.Postgres.Host, conf.Postgres.Port, conf.Postgres.User, conf.Postgres.Password, conf.Postgres.DBName)
 	db, err := sqlx.Open("postgres", psqlInfo)
-
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 	}
+	if err = db.Ping(); err != nil {
+		log.Fatalf("Database ping failed: %v", err)
+	}
 
-	// MeiliSearch
-	const (
-		// hostMeili = "http://meilisearch:7700" // "http://localhost:7700"
-		hostMeili = "http://localhost:7700"
-		searchKey = "MASTER_KEY"
-	)
-	meiliClient := meilisearch.New(hostMeili, meilisearch.WithAPIKey(searchKey))
+	meiliClient := meilisearch.New(conf.MeiliSearch.Host, meilisearch.WithAPIKey(conf.MeiliSearch.Key))
+	if !meiliClient.IsHealthy() {
+		log.Fatalf("MeiliSearch connection failed")
+	}
 
 	//////////////////////////////////////////
 	// Handlers
@@ -131,15 +125,14 @@ func main() {
 	// Server setup
 	//////////////////////////////////////////
 	authentication := cas.Authentication{
-		Data: cas.DBManager{DB: db},
-		CAS:  cas.CAS{Host: "localhost:8001"},
-		// CAS:            cas.CAS{Host: "cas.cuni.cz"},
+		Data:           cas.DBManager{DB: db},
+		CAS:            cas.CAS{Host: conf.CAS.Host},
 		AfterLoginPath: "/",
 	}
 	var handler, unprotectedHandler, protectedHandler http.Handler
 	protectedHandler = protectedRouter
 	protectedHandler = authentication.AuthenticateHTTP(protectedHandler)
-	// handler = auth.NoAuth(handler)
+
 	unprotectedRouter := http.NewServeMux()
 	unprotectedRouter.Handle("/", protectedHandler)
 	unprotectedRouter.Handle("GET /favicon.ico", static)
@@ -150,17 +143,83 @@ func main() {
 	unprotectedHandler = logging(unprotectedHandler)
 	handler = unprotectedHandler
 
-	server := http.Server{
-		Addr:    ":8000", // DOCKER, PRODUCTION: when run as docker container remove localhost
-		Handler: handler,
-	}
+	// Redirect http to https
+	go func() {
+		httpServer := http.Server{
+			Addr:    fmt.Sprintf(":%d", conf.Server.HTTP.Port),
+			Handler: http.HandlerFunc(redirectToTLS(conf.Server.HTTPS.Port)),
+		}
+		if err = httpServer.ListenAndServe(); err != nil {
+			log.Fatalf("HTTP server failed: %v", err)
+		}
+	}()
 
 	log.Println("Server starting ...")
-	log.Println("http://localhost:8000/")
-
-	// err = server.ListenAndServeTLS("recsis-cert/fullchain.pem", "recsis-cert/privkey.pem")
-	err = server.ListenAndServeTLS("server.crt", "server.key")
+	if conf.Environment == developmentEnvironment {
+		log.Printf("https://localhost:%d/", conf.Server.HTTPS.Port)
+	}
+	server := http.Server{
+		Addr:    fmt.Sprintf(":%d", conf.Server.HTTPS.Port),
+		Handler: handler,
+	}
+	err = server.ListenAndServeTLS(conf.SSL.Certificate, conf.SSL.Key)
 	if err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
+}
+
+func redirectToTLS(port int) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		url := fmt.Sprintf("https://%s:%d%s", r.Host, port, r.URL.String())
+		http.Redirect(w, r, url, http.StatusMovedPermanently)
+	}
+}
+
+func logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+		// PRODUCTION: remove condition -> log everything
+		if r.Method != "HEAD" {
+			log.Println(r.Method, r.URL.Path)
+		}
+	})
+}
+
+func handle(router *http.ServeMux, prefix string, handler http.Handler) {
+	router.Handle(prefix, http.StripPrefix(prefix[:len(prefix)-1], handler))
+}
+
+const (
+	productionEnvironment  = "production"
+	developmentEnvironment = "development"
+)
+
+type config struct {
+	Environment string `toml:"environment"`
+	Server      struct {
+		HTTP struct {
+			Port int `toml:"port"`
+		} `toml:"http"`
+		HTTPS struct {
+			Port int `toml:"port"`
+		} `toml:"https"`
+	} `toml:"server"`
+	Postgres struct {
+		Host     string `toml:"host"`
+		Port     int    `toml:"port"`
+		User     string `toml:"user"`
+		Password string `toml:"password"`
+		DBName   string `toml:"dbname"`
+	} `toml:"postgres"`
+	MeiliSearch struct {
+		Host string `toml:"host"`
+		Key  string `toml:"key"`
+	} `toml:"meilisearch"`
+	CAS struct {
+		Host string `toml:"host"`
+	} `toml:"cas"`
+	SSL struct {
+		Certificate string `toml:"certificate"`
+		Key         string `toml:"key"`
+	} `toml:"ssl"`
 }

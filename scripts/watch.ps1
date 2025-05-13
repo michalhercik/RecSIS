@@ -1,1 +1,1 @@
-wgo -file='.go' -file='.templ' -xfile='_templ.go' templ generate :: go build -o RecSIS.exe :: ./RecSIS.exe
+wgo -file='.go' -file='.templ' -xfile='_templ.go' templ generate :: go build -o RecSIS.exe :: ./RecSIS.exe --config config.dev.toml
