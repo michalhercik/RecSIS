@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"log"
 	"net/http"
 	"net/url"
@@ -66,15 +67,20 @@ func main() {
 	})
 
 	server := http.Server{
-		Addr:    ":8001", // DOCKER, PRODUCTION: when run as docker container remove localhost
+		Addr:    ":8001",
 		Handler: logging(handler),
 	}
 
 	log.Println("Server starting ...")
 	log.Println("http://localhost:8001/")
 
-	// err = server.ListenAndServeTLS("recsis-cert/fullchain.pem", "recsis-cert/privkey.pem")
-	err := server.ListenAndServeTLS("../src/server.crt", "../src/server.key")
+	cert := flag.String("cert", "", "Path to the server certificate")
+	key := flag.String("key", "", "Path to the server key")
+	flag.Parse()
+	if *cert == "" || *key == "" {
+		log.Fatal("Certificate and key must be provided")
+	}
+	err := server.ListenAndServeTLS(*cert, *key)
 	if err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}

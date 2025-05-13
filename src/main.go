@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 	"github.com/michalhercik/RecSIS/cas"
@@ -157,7 +159,8 @@ func main() {
 	}
 	degreePlan.Init()
 
-	static := http.FileServer(http.Dir("static"))
+	exePath, err := os.Executable()
+	static := http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "static")))
 
 	protectedRouter := http.NewServeMux()
 	protectedRouter.Handle("/", home.Router())
