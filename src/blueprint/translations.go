@@ -8,6 +8,7 @@ import (
 )
 
 type text struct {
+	PageTitle        string
 	Total            string
 	Code             string
 	Title            string
@@ -69,6 +70,7 @@ func (t text) YearStr(year int) string {
 
 var texts = map[language.Language]text{
 	language.CS: {
+		PageTitle:        "Blueprint",
 		Total:            "Celkem",
 		Code:             "Kód",
 		Title:            "Název",
@@ -119,6 +121,7 @@ var texts = map[language.Language]text{
 		Utils: utils.Texts["cs"],
 	},
 	language.EN: {
+		PageTitle:        "Blueprint",
 		Total:            "Total",
 		Code:             "Code",
 		Title:            "Title",

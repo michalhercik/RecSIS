@@ -8,6 +8,7 @@ import (
 )
 
 type text struct {
+	PageTitle         string
 	Language          string
 	Winter            string
 	Summer            string
@@ -38,7 +39,6 @@ type text struct {
 	Page              string
 	Of                string
 	NoCoursesFound    string
-	Title             string
 	// utils
 	Utils utils.Text
 }
@@ -54,6 +54,7 @@ func (t text) YearStr(year int) string {
 
 var texts = map[language.Language]text{
 	language.CS: {
+		PageTitle:         "Hledání",
 		Language:          "cs",
 		Winter:            "Zimní",
 		Summer:            "Letní",
@@ -84,11 +85,11 @@ var texts = map[language.Language]text{
 		Page:              "Strana",
 		Of:                "z",
 		NoCoursesFound:    "Žádné předměty nebyly nalezeny.",
-		Title:             "Hledání",
 		// utils
 		Utils: utils.Texts["cs"],
 	},
 	language.EN: {
+		PageTitle:         "Search",
 		Language:          "en",
 		Winter:            "Winter",
 		Summer:            "Summer",
@@ -119,7 +120,6 @@ var texts = map[language.Language]text{
 		Page:              "Page",
 		Of:                "of",
 		NoCoursesFound:    "No courses found.",
-		Title:             "Search",
 		// utils
 		Utils: utils.Texts["en"],
 	},

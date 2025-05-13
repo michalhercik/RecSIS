@@ -89,7 +89,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 	result.templ = s.BpBtn.PartialComponent(numberOfBlueprintYears, lang)
 	main := Content(&result, t)
-	s.Page.View(main, lang, t.Title, req.query).Render(r.Context(), w)
+	s.Page.View(main, lang, t.PageTitle, req.query).Render(r.Context(), w)
 }
 
 func (s Server) content(w http.ResponseWriter, r *http.Request) {

@@ -37,13 +37,13 @@ func (m MeiliSearch) QuickSearchEndpoint() string {
 
 func (m MeiliSearch) View(searchInput string, lang language.Language, includeFilters bool) templ.Component {
 	model := searchBarModel{
-		t:              texts[lang],
-		lang:           lang,
-		searchInput:    searchInput,
-		searchParam:    m.Param,
-		searchEndpoint: m.SearchEndpoint, // "/courses/search",
-
-		quickSearchEndpoint: m.QuickEndpoint, // "page/quicksearch",
+		t:                   texts[lang],
+		lang:                lang,
+		searchInput:         searchInput,
+		searchParam:         m.Param,
+		searchEndpoint:      m.SearchEndpoint,  // "/courses/search",
+		filtersSelector:     m.FiltersSelector, // "#filter-form",
+		quickSearchEndpoint: m.QuickEndpoint,   // "page/quicksearch",
 		includeFilters:      includeFilters,
 	}
 	return m.SearchBarView(model)

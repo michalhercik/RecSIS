@@ -50,7 +50,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 	partialComponent := s.BpBtn.PartialComponent(numberOfYears, lang)
 	main := Content(dp, t, partialComponent)
-	s.Page.View(main, lang, t.Title).Render(r.Context(), w)
+	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
 }
 
 func (s Server) AddCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
@@ -93,5 +93,5 @@ func (s Server) AddCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		log.Printf("HandlePage error: %v", err)
 		return
 	}
-	CourseRow(&course, t, btn).Render(r.Context(), w)
+	CourseRow(&course, btn, t).Render(r.Context(), w)
 }

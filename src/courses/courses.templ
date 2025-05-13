@@ -429,14 +429,11 @@ templ Courses(cp *coursesPage, t text) {
 }
 
 templ Content(coursesPage *coursesPage, t text) {
-    // x-data is needed for x-bind:class to work
-    // <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" }>
-    // <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" } hx-indicator="#loader">
     <div id="courses-page" class="grid-page" hx-indicator="#loader">
         <div class="filter border-end bg-light">
             @filterSection(coursesPage, t)
         </div>
-        <div class="main-content">
+        <div class="main-content mt-3">
             // @search(coursesPage, t)
             @activeFilters(coursesPage, t)
             @Courses(coursesPage, t)
@@ -460,9 +457,3 @@ templ Content(coursesPage *coursesPage, t text) {
         };
     </script>
 }
-
-// templ Page(coursesPage *coursesPage, t text) {
-//     @utils.Page(t.Utils.Courses, t.Utils) {
-//         @Content(coursesPage, t)
-//     }
-// }
