@@ -31,6 +31,11 @@ body {
     text-align: justify;
 }
 
+/* MatFyz font family */
+.mff-font {
+    font-family: 'Saira', sans-serif;
+}
+
 /* font sizes */
 .font08 {
     font-size: 0.8rem !important;
@@ -38,6 +43,33 @@ body {
 
 .font06 {
     font-size: 0.6rem !important;
+}
+
+.responsive-font {
+    font-size: 1rem !important;
+}
+
+@media (max-width: 767.5px) {
+    .responsive-font {
+        font-size: 0.9rem !important;
+    }
+}
+
+@media (max-width: 575.5px) {
+    .responsive-font {
+        font-size: 0.8rem !important;
+    }
+}
+
+/* navbar nav items font size */
+.nav-item-font {
+    font-size: calc(1.275rem + .3vw) !important; /* ~ bootstrap fs-4 */
+}
+
+@media (max-width: 1199.5px) {
+    .nav-item-font {
+        font-size: 1.25rem !important; /* ~ bootstrap fs-5 */
+    }
 }
 
 /* navbar input submit button color */
@@ -98,13 +130,23 @@ body {
 }
 
 /* BP -> Move course button */
-.move-button-filler {
-    padding: 4px 8px;;
+.move-button-filler-sm {
+    padding: 4px 8px;
+}
+
+.move-button-filler-bg {
+    padding: 6px 12px;
 }
 
 /* BP -> Checked courses menu with buttons */
 .bp-content-padding {
-    padding-top: 29px;
+    padding-top: 36px; /* size of btn-lg */
+}
+
+@media (max-width: 767.5px) {
+    .bp-content-padding {
+        padding-top: 47px;
+    }
 }
 
 #checked-courses-menu {
@@ -117,6 +159,14 @@ body {
 @media (max-width: 767.5px) {
     .checked-courses-menu {
         top: 0px;
+    }
+}
+
+/* BP -> Checked courses big buttons on mobile */
+@media (max-width: 767.5px) {
+    .big-mobile-btn {
+        font-size: 1.3rem !important;
+        padding: 8px 12px !important;
     }
 }
 
@@ -182,19 +232,22 @@ body {
 }
 
 /* === Blueprint tables styles === */
-.blueprint-table {
+.blueprint-table,
+.blueprint-empty-table {
     table-layout: fixed;
 }
 
 /* checkbox */
 .blueprint-table th:nth-child(1),
-.blueprint-table td:nth-child(1) {
+.blueprint-table td:nth-child(1),
+.blueprint-empty-table th:nth-child(1) {
     width: 28px;
 }
 
 @media (max-width: 767.5px) {
     .blueprint-table th:nth-child(1),
-    .blueprint-table td:nth-child(1) {
+    .blueprint-table td:nth-child(1),
+    .blueprint-empty-table th:nth-child(1) {
         width: 50px;
     }
 }
@@ -203,6 +256,13 @@ body {
 .blueprint-table th:nth-child(2),
 .blueprint-table td:nth-child(2) {
     width: 85px;
+}
+
+.blueprint-empty-table th:nth-child(2) {
+    width: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* title */
@@ -242,7 +302,7 @@ body {
 }
 
 /* guarantors smaller */
-@media (max-width: 1400px) {
+@media (max-width: 1399.5px) {
     .blueprint-table th:nth-child(7),
     .blueprint-table td:nth-child(7) {
         width: 200px;
@@ -277,6 +337,31 @@ body {
 }
 
 /* =============================== */
+
+/* S -> search bar styles */
+#search-bar-container {
+    width: 500px;
+    top: 8px;
+    right: 58px;
+}
+
+@media (max-width: 1199.5px) {
+    #search-bar-container {
+        width: 400px;
+    }
+}
+
+@media (max-width: 991.5px) {
+    #search-bar-container {
+        width: calc(100% - 202px);
+    }
+}
+
+@media (max-width: 767.5px) {
+    #search-bar-container {
+        width: calc(100% - 108px);
+    }
+}
 
 /* S -> cards grid styles */
 .grid-page {
@@ -461,7 +546,7 @@ body {
 }
 
 /* guarantors smaller */
-@media (max-width: 1400px) {
+@media (max-width: 1399.5px) {
     .degree-plan-table th:nth-child(8),
     .degree-plan-table td:nth-child(8) {
         width: 200px;
@@ -474,7 +559,7 @@ body {
     width: 55px;
 }
 
-@media (max-width: 992.5px) {
+@media (max-width: 991.5px) {
     .degree-plan-table th {
         font-size: 0.9rem !important;
     }
