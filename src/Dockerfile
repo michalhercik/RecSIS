@@ -19,6 +19,8 @@ FROM alpine AS dev-stage
 WORKDIR /app
 COPY --from=build-stage /recsis /recsis
 COPY ./static ./static
+# COPY ./server.crt ./server.crt
+# COPY ./server.key ./server.key
 EXPOSE 8000
 ENTRYPOINT ["/recsis"]
 
@@ -29,6 +31,8 @@ FROM gcr.io/distroless/base-debian11 AS deploy-stage
 WORKDIR /app
 COPY --from=build-stage /recsis /recsis
 COPY ./static ./static
+# COPY ./server.crt ./server.crt
+# COPY ./server.key ./server.key
 EXPOSE 8000
 USER nonroot:nonroot
 ENTRYPOINT ["/recsis"]

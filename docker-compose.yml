@@ -6,7 +6,7 @@ services:
       context: ./src/
       target: dev-stage
     ports:
-      - 80:8000
+      - 443:8000
     depends_on:
       postgres:
         condition: service_healthy
@@ -14,6 +14,7 @@ services:
       - recsis-network
     volumes:
       - ./utils/:/app/utils/
+      - /var/recsis-cert/:/app/recsis-cert/:ro
       # - ./log:/app/log
     develop:
       watch:

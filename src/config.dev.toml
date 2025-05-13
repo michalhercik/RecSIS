@@ -1,0 +1,27 @@
+environment = "development"
+
+[server]
+
+[server.https]
+port = 8000
+
+[server.http]
+port = 80
+
+[postgres]
+host     = "localhost"
+port     = 5432
+user     = "recsis"
+password = "recsis"
+dbname   = "recsis"
+
+[meilisearch]
+host = "http://localhost:7700"
+key  = "MASTER_KEY"
+
+[cas]
+host = "localhost:8001"
+
+[ssl]
+certificate = "server.crt"
+key 	    = "server.key"

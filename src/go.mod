@@ -11,6 +11,7 @@ require (
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.3 // indirect
+	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/alvaroloes/enumer v1.1.2 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
