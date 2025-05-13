@@ -161,6 +161,7 @@ func main() {
 
 	protectedRouter := http.NewServeMux()
 	protectedRouter.Handle("/", home.Router())
+	handle(protectedRouter, "/page/", pageTempl.Router())
 	handle(protectedRouter, "/blueprint/", blueprint.Router())
 	handle(protectedRouter, "/course/", coursedetail.Router())
 	handle(protectedRouter, "/courses/", courses.Router())
