@@ -9,12 +9,6 @@ import (
 const lastPosition = -1
 const ttDelay = "600"
 
-// templ Page(data *Blueprint, t text) {
-//     @utils.Page(t.Utils.Blueprint, t.Utils) {
-//         @Content(data, t)
-//     }
-// }
-
 templ Content(data *Blueprint, t text) {
     <div
         x-data="{ checkedNumber: 0, isSorting: false, smallScreen: window.innerWidth < 768 }"
@@ -36,6 +30,15 @@ templ checkedCoursesMenu(yearCount int, t text) {
     // take care of checked courses
     <div id="checked-courses-menu" @resize.window="updateStickyOffset">
         <div x-cloak x-show="checkedNumber > 0">
+            // uncheck all checkboxes
+            <button
+                class="btn btn-bg btn-mobile-bg btn-outline-secondary border-0 bi bi-dash-square"
+                @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur()"
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                data-bs-delay={ ttDelay }
+                data-bs-title={ t.TTUncheckAll }>
+            </button>
             // unassign
             @unassignCoursesButton(t.TTUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(0), vPos()), "input[type=checkbox]:checked", true, t)
             // assign
@@ -300,6 +303,7 @@ templ checkbox(ID int) {
             name="selected"
             value={ fmt.Sprintf("%d", ID) }
             @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1;"
+            @uncheck-all.window="$el.checked = false;"
         />
         // circle overlay for easier clicking
         <div class="d-none d-md-inline">
