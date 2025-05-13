@@ -1,11 +1,11 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/michalhercik/RecSIS/auth"
 	"github.com/michalhercik/RecSIS/cas"
 	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
@@ -41,8 +41,13 @@ func handle(router *http.ServeMux, prefix string, handler http.Handler) {
 }
 
 func main() {
-
-	router := http.NewServeMux()
+	// DANGER: this is a test code, remove it
+	//===============================================================================
+	// TODO: remove this
+	//===============================================================================
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	// DANGER
+	//===============================================================================
 
 	//////////////////////////////////////////
 	// Database setup
@@ -50,7 +55,8 @@ func main() {
 
 	// Postgres
 	const (
-		host     = "postgres" // DOCKER, PRODUCTION: when run as docker container change to network name
+		// host     = "postgres" // DOCKER, PRODUCTION: when run as docker container change to network name
+		host     = "localhost" // DOCKER, PRODUCTION: when run as docker container change to network name
 		port     = 5432
 		user     = "recsis"
 		password = "recsis"
@@ -66,7 +72,8 @@ func main() {
 
 	// MeiliSearch
 	const (
-                hostMeili = "http://meilisearch:7700" // "http://localhost:7700"
+		// hostMeili = "http://meilisearch:7700" // "http://localhost:7700"
+		hostMeili = "http://localhost:7700"
 		searchKey = "MASTER_KEY"
 	)
 	meiliClient := meilisearch.New(hostMeili, meilisearch.WithAPIKey(searchKey))
@@ -79,7 +86,7 @@ func main() {
 	home.Init()
 	blueprint := blueprint.Server{
 		Data: blueprint.DBManager{DB: db},
-		Auth: auth.UserIDFromContext{},
+		Auth: cas.UserIDFromContext{},
 	}
 	blueprint.Init()
 	coursedetail := coursedetail.Server{
@@ -94,47 +101,55 @@ func main() {
 			TeacherParam: params.TeacherCode,
 			CourseParam:  params.CourseCode,
 		},
-		Auth: auth.UserIDFromContext{},
+		Auth: cas.UserIDFromContext{},
 	}
 	coursedetail.Init()
 	courses := courses.Server{
 		Data:   courses.DBManager{DB: db},
 		Search: courses.MeiliSearch{Client: meiliClient, Courses: meilisearch.IndexConfig{Uid: "courses"}},
-		Auth:   auth.UserIDFromContext{},
+		Auth:   cas.UserIDFromContext{},
 	}
 	courses.Init()
 	degreePlan := degreeplan.Server{
 		Data: degreeplan.DBManager{DB: db},
-		Auth: auth.UserIDFromContext{},
+		Auth: cas.UserIDFromContext{},
 	}
 	degreePlan.Init()
-	cas := cas.Server{}
-	cas.Init()
+
 	static := http.FileServer(http.Dir("static"))
 
-	router.Handle("/", home.Router())
-	handle(router, "/cas/", cas.Router())
-	handle(router, "/blueprint/", blueprint.Router())
-	handle(router, "/course/", coursedetail.Router())
-	handle(router, "/courses/", courses.Router())
-	handle(router, "/degreeplan/", degreePlan.Router())
-	router.Handle("GET /favicon-256x256.ico", static)
-	router.Handle("GET /logo.svg", static)
-	router.Handle("GET /style.css", static)
+	protectedRouter := http.NewServeMux()
+	protectedRouter.Handle("/", home.Router())
+	handle(protectedRouter, "/blueprint/", blueprint.Router())
+	handle(protectedRouter, "/course/", coursedetail.Router())
+	handle(protectedRouter, "/courses/", courses.Router())
+	handle(protectedRouter, "/degreeplan/", degreePlan.Router())
+	protectedRouter.Handle("GET /logo.svg", static)
+	protectedRouter.Handle("GET /style.css", static)
 
 	//////////////////////////////////////////
 	// Server setup
 	//////////////////////////////////////////
-	authentication := auth.Authentication{
-		Authenticate: auth.DBManager{DB: db}.Authenticate,
+	authentication := cas.Authentication{
+		Data: cas.DBManager{DB: db},
+		CAS:  cas.CAS{Host: "localhost:8001"},
+		// CAS:            cas.CAS{Host: "cas.cuni.cz"},
+		AfterLoginPath: "/",
 	}
-	var handler http.Handler
-	handler = router
-	handler = language.SetAndStripLanguage(handler)
-	// handler = authentication.AuthenticateHTTP(handler)
-	_ = authentication
-	handler = auth.NoAuth(handler)
-	handler = logging(handler)
+	var handler, unprotectedHandler, protectedHandler http.Handler
+	protectedHandler = protectedRouter
+	protectedHandler = authentication.AuthenticateHTTP(protectedHandler)
+	// handler = auth.NoAuth(handler)
+	unprotectedRouter := http.NewServeMux()
+	unprotectedRouter.Handle("/", protectedHandler)
+	unprotectedRouter.Handle("GET /favicon.ico", static)
+	unprotectedRouter.Handle("GET /logo.svg", static)
+
+	unprotectedHandler = unprotectedRouter
+	unprotectedHandler = language.SetAndStripLanguage(unprotectedHandler)
+	unprotectedHandler = logging(unprotectedHandler)
+	handler = unprotectedHandler
+
 	server := http.Server{
 		Addr:    ":8000", // DOCKER, PRODUCTION: when run as docker container remove localhost
 		Handler: handler,
@@ -143,7 +158,8 @@ func main() {
 	log.Println("Server starting ...")
 	log.Println("http://localhost:8000/")
 
-	err = server.ListenAndServeTLS("recsis-cert/fullchain.pem", "recsis-cert/privkey.pem")
+	// err = server.ListenAndServeTLS("recsis-cert/fullchain.pem", "recsis-cert/privkey.pem")
+	err = server.ListenAndServeTLS("server.crt", "server.key")
 	if err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}

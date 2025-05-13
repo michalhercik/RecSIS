@@ -3,62 +3,74 @@ package cas
 import (
 	"encoding/json"
 	"net/http"
-        "net/url"
-        "fmt"
+	"net/url"
 )
 
-type Server struct {
-	router *http.ServeMux
+type CAS struct {
+	Host string
 }
 
-func (s *Server) Init() {
-	router := http.NewServeMux()
-	router.HandleFunc("/", s.cas)
-	s.router = router
+func (c CAS) loginURLToCAS(service string) string {
+	url := url.URL{
+		Scheme:   "https",
+		Host:     c.Host,
+		Path:     "cas/login",
+		RawQuery: url.Values{"service": []string{service}}.Encode(),
+	}
+	return url.String()
 }
 
-func (s *Server) Router() http.Handler {
-	return s.router
+func (c CAS) validateTicket(r *http.Request, service string) (string, error) {
+	validateReq := c.validateTicketURLToCAS(r, service)
+	res, err := http.Get(validateReq)
+	if err != nil {
+		return "", err
+	}
+	var valRes validationResponse
+	err = json.NewDecoder(res.Body).Decode(&valRes)
+	if err != nil {
+		return "", err
+	}
+	return valRes.ServiceResponse.AuthenticationSuccess.User, nil
 }
 
-func (s *Server) cas(w http.ResponseWriter, r *http.Request) {
-        ticket := r.FormValue("ticket")
-        // fmt.Fprintln(w,"ticket: ", ticket)
-        fmt.Println("ticket: ", ticket)
-        // url := "https://acheron.ms.mff.cuni.cz:42050/cas/?format=json&ticket=" + ticket
-        // url := https://cas.cuni.cz/cas/serviceValidate?service=https%3A%2F%2Facheron.ms.mff.cuni.cz%3A42050%2Fcas%2F&format=json&ticket=ST-90478-nyhtZ0UOtTBx2OvMh4-0-LkcF9A-idp2
-        validateReq := url.URL{
-                Scheme: "https",
-                Host: "cas.cuni.cz",
-                Path: "/cas/serviceValidate",
-                RawQuery: url.Values{
-                        "format": []string{"json"},
-                        "service": []string{"https://acheron.ms.mff.cuni.cz:42050/cas/"},
-                        "ticket": []string{ticket},
-                }.Encode(),
-        }
-        fmt.Println("validateReq: ", validateReq.String())
-        res, err := http.Get(validateReq.String()) 
-        if err != nil {
-                fmt.Fprintln(w, err)
-                return
-        }
-        var data map[string]any
-        err = json.NewDecoder(res.Body).Decode(&data)
-        if err != nil {
-                fmt.Fprintln(w, err)
-                return
-        }
-        // fmt.Println(data)
-	w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode(r.URL.Query())
-	json.NewEncoder(w).Encode(data)
+func (c CAS) validateTicketURLToCAS(r *http.Request, service string) string {
+	query := url.Values{}
+	query.Add("service", service)
+	query.Add("ticket", r.FormValue("ticket"))
+	query.Add("format", "json")
+	validateReq := url.URL{
+		Scheme:   "https",
+		Host:     c.Host,
+		Path:     "/cas/serviceValidate",
+		RawQuery: query.Encode(),
+	}
+	return validateReq.String()
 }
 
-func Cas() {
-	// res, err := http.Get("https://jsonplaceholder.typicode.com/todos/1")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer res.Body.Close()
+type validationResponse struct {
+	ServiceResponse struct {
+		AuthenticationSuccess struct {
+			Attributes struct {
+				// 	AuthenticationDate                     []float64 `json:"authenticationDate"`
+				// 	AuthenticationMethod                   []string  `json:"authenticationMethod"`
+				// 	ClientIPAddress                        []string  `json:"clientIpAddress"`
+				// 	CN                                     []string  `json:"cn"`
+				// 	CredentialType                         []string  `json:"credentialType"`
+				// 	CuniPersonalID                         []string  `json:"cunipersonalid"`
+				EduPersonScopedAffiliation []string `json:"edupersonscopedaffiliation"`
+				// 	GivenName                              []string  `json:"givenname"`
+				// 	IsFromNewLogin                         []bool    `json:"isFromNewLogin"`
+				// 	LongTermAuthenticationRequestTokenUsed []bool    `json:"longTermAuthenticationRequestTokenUsed"`
+				// 	Mail                                   []string  `json:"mail"`
+				// 	SAMLAuthenticationStatementAuthMethod  []string  `json:"samlAuthenticationStatementAuthMethod"`
+				// 	ServerIPAddress                        []string  `json:"serverIpAddress"`
+				// 	SN                                     []string  `json:"sn"`
+				// 	SuccessfulAuthenticationHandlers       []string  `json:"successfulAuthenticationHandlers"`
+				// 	UID                                    []string  `json:"uid"`
+				// 	UserAgent                              []string  `json:"userAgent"`
+			} `json:"attributes"`
+			User string `json:"user"`
+		} `json:"authenticationSuccess"`
+	} `json:"serviceResponse"`
 }
