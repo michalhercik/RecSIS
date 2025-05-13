@@ -67,7 +67,7 @@ templ helpIcon(content string) {
     </i>
 }
 
-templ checkboxInput(name, value, label, desc string, count int, checked bool, t text) {
+templ checkboxInput(name, value, label, desc string, count int, checked bool) {
     <div class="form-check">
         <input role="button" class="form-check-input" disabled?={ count == 0 }
             type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
@@ -101,7 +101,7 @@ templ filterSection(cp *coursesPage, t text) {
                     </div>
                     for i, value := range category.IterWithFacets() {
                         <div x-cloak x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
-                            @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked, t)
+                            @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
                         </div>
                     }
                     if category.Size() > category.DisplayedValueLimit() {
