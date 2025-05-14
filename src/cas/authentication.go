@@ -34,8 +34,9 @@ func (a Authentication) AuthenticateHTTP(next http.Handler) http.Handler {
 	a.loginPath = "/cas/login"
 	router := http.NewServeMux()
 	router.HandleFunc("/", a.authenticate(next))
-	router.HandleFunc(a.loginPath, a.login)
-	router.HandleFunc("/logout", a.logout)
+	router.HandleFunc("GET "+a.loginPath, a.login)
+	router.HandleFunc("POST "+a.loginPath, a.logoutFromCAS)
+	router.HandleFunc("/logout", a.logoutFromUser)
 	return router
 }
 
@@ -75,7 +76,7 @@ func (a Authentication) login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, a.AfterLoginPath, http.StatusFound)
 }
 
-func (a Authentication) logout(w http.ResponseWriter, r *http.Request) {
+func (a Authentication) logoutFromUser(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	sessionID, err := r.Cookie(sessionCookieName)
@@ -89,13 +90,27 @@ func (a Authentication) logout(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	err = a.Data.Logout(userID, sessionID.Value)
+	err = a.Data.LogoutWithSession(userID, sessionID.Value)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	a.deleteSessionCookie(w)
 	Logout(a.CAS.loginURLToCAS(a.loginURL(r)), t).Render(r.Context(), w)
+}
+
+func (a Authentication) logoutFromCAS(w http.ResponseWriter, r *http.Request) {
+        userID, ticket, err := a.CAS.UserIDTicketFromCASLogoutRequest(r)
+        if err != nil {
+                log.Println(err)
+        }
+        _ = ticket
+        _ = userID
+	// err = a.Data.LogoutWithTicket(userID, ticket)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return
+	// }
 }
 
 func (a Authentication) setSessionCookie(w http.ResponseWriter, sessionID string) {

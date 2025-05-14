@@ -2,8 +2,10 @@ package cas
 
 import (
 	"encoding/json"
+        "encoding/xml"
 	"net/http"
 	"net/url"
+        "fmt"
 )
 
 type CAS struct {
@@ -46,6 +48,21 @@ func (c CAS) validateTicketURLToCAS(r *http.Request, service string) string {
 		RawQuery: query.Encode(),
 	}
 	return validateReq.String()
+}
+
+func (c CAS) UserIDTicketFromCASLogoutRequest(r *http.Request) (string, string, error) {
+        rawPayload := r.FormValue("logoutRequest")
+        var payload logoutRequest
+        err := xml.Unmarshal([]byte(rawPayload), &payload)
+        if err != nil {
+                return "", "", fmt.Errorf("UserIDTicketFromCASLogoutRequest: %w", err)
+        }
+        return payload.UserID, payload.Ticket, nil
+}
+
+type logoutRequest struct {
+        UserID string `xml:"NameID"`
+        Ticket string `xml:"SessionIndex"`
 }
 
 type validationResponse struct {
