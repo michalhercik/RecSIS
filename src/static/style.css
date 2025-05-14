@@ -340,26 +340,27 @@ body {
 
 /* S -> search bar styles */
 #search-bar-container {
-    width: 500px;
-    top: 8px;
-    right: 58px;
+    width: 490px;
+    top: 7px;
+    right: 106px;
 }
-
+/* TODO set the widths correctly */
 @media (max-width: 1199.5px) {
     #search-bar-container {
-        width: 400px;
+        width: 352px;
     }
 }
 
 @media (max-width: 991.5px) {
     #search-bar-container {
-        width: calc(100% - 202px);
+        width: calc(100% - 206px);
+        right: 62px;
     }
 }
 
 @media (max-width: 767.5px) {
     #search-bar-container {
-        width: calc(100% - 108px);
+        width: calc(100% - 112px);
     }
 }
 

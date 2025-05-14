@@ -127,7 +127,7 @@ templ buttons(course *Course, t text) {
 }
 
 templ details(course *Course, t text) {
-    <ul class="nav nav-tabs justify-content-center justify-content-md-start" role="tablist">
+    <ul id="details-nav-tabs" class="nav nav-tabs justify-content-center justify-content-md-start" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#desc-tab-pane" type="button" role="tab" aria-controls="desc-tab-pane" aria-selected="true">{ t.Description }</button>
         </li>
@@ -215,12 +215,60 @@ templ descriptionItem(desc NullDescription, id string) {
 }
 
 templ survey(surveys []course.Comment, code string, t text) {
-    if len(surveys) == 0 {
-        <div class="alert alert-primary" role="alert">
-            { t.NoSurvey }
-        </div>
-    } else {
-        @searchInSurvey(code, t)
+        if len(surveys) == 0 {
+            <div class="alert alert-primary" role="alert">
+                { t.NoSurvey }
+            </div>
+        } else {
+            @surveySearch(code, t)
+            @SurveysContent(surveys, code, false, t)
+        }
+}
+
+// TODO: this is just a proof of concept, make it better, add texts
+templ surveySearch(code string, t text) {
+    <form
+        id="survey-search-form"
+        class="input-group mb-3"
+        hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", code)) }
+        hx-target="#surveys-content"
+        hx-swap="outerHTML"
+        x-data="{ surveySearchInput: '' }"
+    >
+        <input type="text" class="form-control" placeholder="search in survey" name="survey-search" autocomplete="off" x-model="surveySearchInput" x-ref="surveySearchInput">
+        // TODO: this might reload results as empty search query
+        <button x-cloak x-show="surveySearchInput.length > 0" type="reset" class="btn bg-white border-top border-bottom border-start-0" @click="$refs.surveySearchInput.focus();">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <button class="btn btn-outline-secondary bi bi-search" type="submit"></button>
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Teacher</button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            @dropdownFilter("M. Medek", 1)
+            @dropdownFilter("M Hercík", 2)
+            @dropdownFilter("L. Peška", 3)
+            @dropdownFilter("J. Novák", 4)
+            @dropdownFilter("=GLOBAL=", 5)
+        </ul>
+    </form>
+}
+
+// TODO: this is just a proof of concept, make it better, add texts
+templ dropdownFilter(label string, ID int) {
+    <li>
+        <label class="dropdown-item rounded user-select-none" for={ fmt.Sprintf("checkbox-teacher-%d", ID) }>
+            <input
+                class="form-check-input me-2"
+                type="checkbox"
+                value=""
+                id={ fmt.Sprintf("checkbox-teacher-%d", ID) }>
+            { label }
+        </label>
+    </li>
+}
+
+// TODO: this is just a proof of concept, make it better, add texts
+templ SurveysContent(surveys []course.Comment, code string, end bool, t text) {
+    <div id="surveys-content">
         for _, s := range surveys {
             <div class="card mb-1">
                 <div class="card-header">
@@ -238,48 +286,35 @@ templ survey(surveys []course.Comment, code string, t text) {
                 </div>
             </div>
         }
-    }
-}
-
-// TODO: this is just a proof of concept, make it better, make it work
-templ searchInSurvey(code string, t text) {
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" placeholder="search in survey" name="survey-search" autocomplete="off"
-            hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/%s", code)) }
-            hx-target="main"
-            hx-swap="outerHTML">
-        <button class="btn btn-outline-secondary bi bi-search" type="submit"></button>
-        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Teacher</button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            @dropdownFilter("M. Medek", 1)
-            @dropdownFilter("M Hercík", 2)
-            @dropdownFilter("L. Peška", 3)
-            @dropdownFilter("J. Novák", 4)
-        </ul>
-    </div>
-}
-
-templ dropdownFilter(label string, ID int) {
-    <li>
-        <button
-            class="dropdown-item rounded"
-            x-data="{ checked: false }"
-            @click="checked = !checked; $refs.checkbox.click()">
-            <div class="form-check" @click.stop>
-                <input
-                    role="button"
-                    class="form-check-input"
-                    type="checkbox"
-                    value=""
-                    id={ fmt.Sprintf("checkbox-teacher-%d", ID) }
-                    x-ref="checkbox"
-                    x-model="checked">
-                <label role="button" class="form-check-label" for={ fmt.Sprintf("checkbox-teacher-%d", ID) }>
-                    { label }
-                </label>
+        // TODO: might add empty result info
+        if (!end) {
+            // lazy loading of more surveys
+            <div
+                hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", code)) }
+                hx-trigger="intersect"
+                hx-include="#survey-search-form"
+                hx-target="#surveys-content"
+                hx-swap="outerHTML"
+                hx-vals={ fmt.Sprintf(`"%s": %d`, nOCommentsQuery, len(surveys) + numberOfComments) }>
             </div>
-        </button>
-    </li>
+        } else {
+            // if no more surveys, scroll to search
+            <span
+                role="button"
+                class="link-primary justify-content-center d-flex mt-3"
+                x-data
+                @click="
+                    const navbarHeight = document.getElementById('navbarNav')?.offsetHeight || 0;
+                    const target = document.getElementById('details-nav-tabs');
+                    if (target) {
+                        const targetPosition = target.getBoundingClientRect().top + window.scrollY - navbarHeight - 2;
+                        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                    }
+                ">
+                scroll to search
+            </span>
+        }
+    </div>
 }
 
 templ teacherStyled(tt teacher.Teacher, t text) {
