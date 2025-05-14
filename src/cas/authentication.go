@@ -36,7 +36,7 @@ func (a Authentication) AuthenticateHTTP(next http.Handler) http.Handler {
 	router.HandleFunc("/", a.authenticate(next))
 	router.HandleFunc("GET "+a.loginPath, a.login)
 	router.HandleFunc("POST "+a.loginPath, a.logoutFromCAS)
-	router.HandleFunc("/logout", a.logoutFromUser)
+	router.HandleFunc("POST /logout", a.logoutFromUser)
 	return router
 }
 
