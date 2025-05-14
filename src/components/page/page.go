@@ -85,6 +85,8 @@ type pageModel struct {
 }
 
 type NavItem struct {
-	Title language.LangString
-	Path  string
+	Title     language.LangString
+	Path      string
+	Skeleton  func() templ.Component
+	Indicator string
 }

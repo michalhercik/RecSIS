@@ -32,7 +32,7 @@ templ checkedCoursesMenu(yearCount int, t text) {
         <div x-cloak x-show="checkedNumber > 0">
             // uncheck all checkboxes
             <button
-                class="btn btn-bg btn-mobile-bg btn-outline-secondary border-0 bi bi-dash-square"
+                class="btn btn-bg big-mobile-btn btn-outline-secondary border-0 bi bi-dash-square"
                 @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur()"
                 data-bs-toggle="tooltip"
                 data-bs-placement="bottom"
@@ -89,20 +89,18 @@ templ unassignHeadline(folded bool, t text) {
 }
 
 templ unassignedTable(unassigned []Course, folded bool, yearCount int, t text) {
-    <div>
+    <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
         if len(unassigned) > 0 {
             // if there are unassigned courses
-            <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
-                @unassignHeadline(folded, t)
-                if (!folded) {
-                    @coursesBody(unassigned, false, sortHxPatch(0, 0, t), t.TTReassign, yearCount, t)
-                }
-            </table>
+            @unassignHeadline(folded, t)
+            if (!folded) {
+                @coursesBody(unassigned, false, sortHxPatch(0, 0, t), t.TTReassign, yearCount, t)
+            }
         } else {
             // if there are no unassigned courses
-            @noCoursesTable(t.NoUnassignedText, sortHxPatch(0, 0, t))
+            @noCoursesTableContent(t.NoUnassignedText, sortHxPatch(0, 0, t))
         }
-    </div>
+    </table>
 }
 
 templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, folded bool, t text) {
@@ -136,23 +134,21 @@ templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, folde
 }
 
 templ winterTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, winterCredits int, t text) {
-    <div>
+    <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
         if len(courses) > 0 {
             // if there are some courses
-            <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
-                @winterHeadline(year, runningCredits, yearCredits, winterCredits, folded, t)
-                if (!folded) {
-                    @coursesBody(courses, true, sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t)
-                }
-            </table>
+            @winterHeadline(year, runningCredits, yearCredits, winterCredits, folded, t)
+            if (!folded) {
+                @coursesBody(courses, true, sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t)
+            }
         } else {
             // if there are no courses
             {{
                 text := t.YearStr(year) + " " + t.Winter + " - " + t.EmptySemester
             }}
-            @noCoursesTable(text, sortHxPatch(year, int(assignmentWinter), t))
+            @noCoursesTableContent(text, sortHxPatch(year, int(assignmentWinter), t))
         }
-    </div>
+    </table>
 }
 
 templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, folded bool, t text) {
@@ -186,23 +182,21 @@ templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, folde
 }
 
 templ summerTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, summerCredits int, t text) {
-    <div>
+    <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
         if len(courses) > 0 {
             // if there are some courses
-            <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
-                @summerHeadline(year, runningCredits, yearCredits, summerCredits, folded, t)
-                if (!folded) {
-                    @coursesBody(courses, true, sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t)
-                }
-            </table>
+            @summerHeadline(year, runningCredits, yearCredits, summerCredits, folded, t)
+            if (!folded) {
+                @coursesBody(courses, true, sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t)
+            }
         } else {
             // if there are no courses
             {{
                 text := t.YearStr(year) + " " + t.Summer + " - " + t.EmptySemester
             }}
-            @noCoursesTable(text, sortHxPatch(year, int(assignmentSummer), t))
+            @noCoursesTableContent(text, sortHxPatch(year, int(assignmentSummer), t))
         }
-    </div>
+    </table>
 }
 
 templ popoverTitle(year, runningCredits, yearCredits, semesterCredits int, semester string, t text) {
@@ -237,8 +231,8 @@ templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT stri
             x-data="{ hover: false }"
             @mouseover="hover = true"
             @mouseleave="hover = false; initializeTooltips()"
-            @dragstart="isSorting = true;"
-            @dragend="isSorting = false"
+            @dragstart="isSorting = true; removeAllTooltips()"
+            @dragend="isSorting = false; initializeTooltips()"
             x-sort:item={ fmt.Sprintf("%d", course.ID) }
         >
             <td class="text-center align-middle" @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)"> @checkbox(course.ID) </td>
@@ -281,17 +275,21 @@ templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT stri
     </tbody>
 }
 
-templ noCoursesTable(text, xSort string) {
-    <table class="table table-sm blueprint-empty-table">
-        <thead><tr>
-            <th></th> // spacing for checkbox
-            <th><h5 class="mb-0 text-nowrap text-secondary">{ text }</h5></th>
-        </tr></thead>
-        <tbody x-sort={ xSort } x-sort:group="courses">
-            // dummy row for sorting error (Cannot read properties of null (reading 'nextSibling')) fix
-            <tr class="dummy-row d-none" x-sort:item></tr>
-        </tbody>
-    </table>
+templ noCoursesTableContent(text, xSort string) {
+    <thead><tr>
+        <th></th> // checkbox
+        <th class="d-none d-md-table-cell"><h5 class="mb-0 text-nowrap text-secondary">{ text }</h5></th> // text (or code)
+        <th><h5 class="d-md-none mb-0 text-secondary">{ text }</h5></th> // title
+        <th class="d-none d-md-table-cell"></th> // credits
+        <th class="d-none d-md-table-cell"></th> // winter
+        <th class="d-none d-md-table-cell"></th> // summer
+        <th class="d-none d-xl-table-cell"></th> // guarantors
+        <th class="d-none d-md-table-cell"></th> // buttons
+    </tr></thead>
+    <tbody x-sort={ xSort } x-sort:group="courses">
+        // dummy row for sorting error (Cannot read properties of null (reading 'nextSibling')) fix
+        <tr class="dummy-row d-none" x-sort:item></tr>
+    </tbody>
 }
 
 templ checkbox(ID int) {
@@ -416,7 +414,9 @@ templ assignCoursesButton(yearCount int, t text) {
 }
 
 templ assignCourseButtonInternal(tooltip, showCondButton, patch, vals, include string, yearCount int, big bool, t text) {
-    <div class="dropdown-center position-relative d-inline-block" @mouseleave="bootstrap.Dropdown.getOrCreateInstance($refs.dropdown).hide(); initializeTooltips()">
+    <div
+        class="dropdown-center position-relative d-inline-block"
+        @mouseleave="bootstrap.Dropdown.getOrCreateInstance($refs.dropdown).hide(); initializeTooltips()">
         <button
             if (showCondButton != "") {
                 x-cloak
