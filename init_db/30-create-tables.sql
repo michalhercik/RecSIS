@@ -175,12 +175,12 @@ CREATE TABLE studies(
 );
 
 CREATE TABLE users (
-    id INT PRIMARY KEY
+    id VARCHAR(8) PRIMARY KEY
 );
 
 CREATE TABLE blueprint_years(
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(id),
+    user_id VARCHAR(8) NOT NULL REFERENCES users(id),
     academic_year INT NOT NULL,
     UNIQUE (user_id, academic_year)
 );
@@ -246,7 +246,7 @@ WHEN (pg_trigger_depth() = 0)
 EXECUTE FUNCTION blueprint_course_reordering();
 
 CREATE TABLE bla_blueprints (
-    user_id INT REFERENCES users(id),
+    user_id VARCHAR(8) REFERENCES users(id),
     lang CHAR(2) NOT NULL,
     blueprint JSONB NOT NULL
 );
@@ -254,7 +254,7 @@ CREATE TABLE bla_blueprints (
 -- TODO: rename
 CREATE TABLE bla_studies (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id INT REFERENCES users(id) NOT NULL,
+    user_id VARCHAR(8) REFERENCES users(id) NOT NULL,
     degree_plan_code VARCHAR(15) NOT NULL,
     start_year INT NOT NULL
 );
@@ -262,7 +262,8 @@ CREATE TABLE bla_studies (
 -- TODO: Clean up expired sessions
 CREATE TABLE sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id INT REFERENCES users(id),
+    user_id VARCHAR(8) REFERENCES users(id),
+    ticket VARCHAR(42) NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL
 );
 
@@ -275,7 +276,7 @@ CREATE TABLE course_rating_categories (
 CREATE DOMAIN course_overall_rating_domain AS INT CHECK (VALUE = 0 OR VALUE = 1);
 
 CREATE TABLE course_overall_ratings (
-    user_id INT NOT NULL REFERENCES users(id),
+    user_id VARCHAR(8) NOT NULL REFERENCES users(id),
     course_code VARCHAR(10) NOT NULL,
     rating course_overall_rating_domain NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -285,7 +286,7 @@ CREATE TABLE course_overall_ratings (
 CREATE DOMAIN course_rating_domain AS INT CHECK (VALUE > 0 OR VALUE <= 5);
 
 CREATE TABLE course_ratings (
-    user_id INT NOT NULL REFERENCES users(id),
+    user_id VARCHAR(8) NOT NULL REFERENCES users(id),
     course_code VARCHAR(10) NOT NULL,
     category_code INT NOT NULL,
     rating course_rating_domain NOT NULL,

@@ -60,7 +60,7 @@ FROM '/docker-entrypoint-initdb.d/courses_transformed.csv'
 DELIMITER ','
 CSV HEADER;
 
-INSERT INTO users (id) VALUES (81411247), (73291111);
+INSERT INTO users (id) VALUES ('81411247'), ('73291111');
 
 COPY blueprint_years(user_id,academic_year)
 FROM '/docker-entrypoint-initdb.d/blueprint_years.csv'
@@ -93,18 +93,18 @@ CSV HEADER;
 
 INSERT INTO blueprint_semesters(blueprint_year_id, semester)
 VALUES
-((SELECT id FROM blueprint_years WHERE user_id=81411247 AND academic_year=0), 0),
-((SELECT id FROM blueprint_years WHERE user_id=81411247 AND academic_year=1), 1),
-((SELECT id FROM blueprint_years WHERE user_id=81411247 AND academic_year=1), 2),
-((SELECT id FROM blueprint_years WHERE user_id=81411247 AND academic_year=2), 1),
-((SELECT id FROM blueprint_years WHERE user_id=81411247 AND academic_year=2), 2),
-((SELECT id FROM blueprint_years WHERE user_id=81411247 AND academic_year=3), 1),
-((SELECT id FROM blueprint_years WHERE user_id=81411247 AND academic_year=3), 2);
+((SELECT id FROM blueprint_years WHERE user_id='81411247' AND academic_year=0), 0),
+((SELECT id FROM blueprint_years WHERE user_id='81411247' AND academic_year=1), 1),
+((SELECT id FROM blueprint_years WHERE user_id='81411247' AND academic_year=1), 2),
+((SELECT id FROM blueprint_years WHERE user_id='81411247' AND academic_year=2), 1),
+((SELECT id FROM blueprint_years WHERE user_id='81411247' AND academic_year=2), 2),
+((SELECT id FROM blueprint_years WHERE user_id='81411247' AND academic_year=3), 1),
+((SELECT id FROM blueprint_years WHERE user_id='81411247' AND academic_year=3), 2);
 
 WITH year_semester AS (
     SELECT s.id AS semester_id, y.academic_year, s.semester FROM blueprint_years y
     LEFT JOIN blueprint_semesters s ON y.id = s.blueprint_year_id
-    WHERE y.user_id = 81411247
+    WHERE y.user_id = '81411247'
 )
 
 INSERT INTO blueprint_courses(blueprint_semester_id,course_code,course_valid_from,position)
@@ -164,14 +164,14 @@ VALUES
 
 INSERT INTO bla_studies(user_id, degree_plan_code, start_year)
 VALUES
-    (81411247, 'NIPVS19B', 2020),
-    (81411247, 'NISD23N', 2023),
-    (73291111, 'NIPVS19B', 2020);
+    ('81411247', 'NIPVS19B', 2020),
+    ('81411247', 'NISD23N', 2023),
+    ('73291111', 'NIPVS19B', 2020);
 
-INSERT INTO sessions(id, user_id, expires_at)
-VALUES
-    ('977e69df-0b48-4790-a409-b86656ff86bc', 81411247, '2200-01-01 00:00:00-00'::timestamptz),
-    ('17924537-c555-4fc7-b83c-f1e839cfee61', 73291111, '2200-01-01 00:00:00-00'::timestamptz);
+-- INSERT INTO sessions(id, user_id, expires_at)
+-- VALUES
+--     ('977e69df-0b48-4790-a409-b86656ff86bc', '81411247', '2200-01-01 00:00:00-00'::timestamptz),
+--     ('17924537-c555-4fc7-b83c-f1e839cfee61', '73291111', '2200-01-01 00:00:00-00'::timestamptz);
 
 INSERT INTO start_semester_to_desc(id, lang, semester_description) VALUES
     (1, 'cs', 'Zimní'),
@@ -183,10 +183,10 @@ INSERT INTO start_semester_to_desc(id, lang, semester_description) VALUES
 
 INSERT INTO course_overall_ratings(user_id, course_code, rating)
 VALUES
-    (81411247, 'NDMI002', 1),
-    (81411247, 'NDMI050', 0),
-    (73291111, 'NDMI002', 1),
-    (73291111, 'NDMI050', 0);
+    ('81411247', 'NDMI002', 1),
+    ('81411247', 'NDMI050', 0),
+    ('73291111', 'NDMI002', 1),
+    ('73291111', 'NDMI050', 0);
 
 INSERT INTO course_rating_categories(code, lang, title)
 VALUES
@@ -203,23 +203,23 @@ VALUES
 
 INSERT INTO course_ratings(user_id, course_code, category_code, rating)
 VALUES
-    (81411247, 'NDMI002', 1, 1),
-    (81411247, 'NDMI002', 2, 4),
-    (81411247, 'NDMI002', 3, 3),
-    (81411247, 'NDMI002', 4, 2),
-    (81411247, 'NDMI002', 5, 1),
-    (81411247, 'NDMI050', 1, 0),
-    (81411247, 'NDMI050', 2, 1),
-    (81411247, 'NDMI050', 3, 5),
-    (81411247, 'NDMI050', 4, 4),
-    (81411247, 'NDMI050', 5, 3),
-    (73291111, 'NDMI002', 1, 1),
-    (73291111, 'NDMI002', 2, 4),
-    (73291111, 'NDMI002', 3, 3),
-    (73291111, 'NDMI002', 4, 2),
-    (73291111, 'NDMI002', 5, 1),
-    (73291111, 'NDMI050', 1, 0),
-    (73291111, 'NDMI050', 2, 1),
-    (73291111, 'NDMI050', 3, 5),
-    (73291111, 'NDMI050', 4, 4),
-    (73291111, 'NDMI050', 5, 3);
+    ('81411247', 'NDMI002', 1, 1),
+    ('81411247', 'NDMI002', 2, 4),
+    ('81411247', 'NDMI002', 3, 3),
+    ('81411247', 'NDMI002', 4, 2),
+    ('81411247', 'NDMI002', 5, 1),
+    ('81411247', 'NDMI050', 1, 0),
+    ('81411247', 'NDMI050', 2, 1),
+    ('81411247', 'NDMI050', 3, 5),
+    ('81411247', 'NDMI050', 4, 4),
+    ('81411247', 'NDMI050', 5, 3),
+    ('73291111', 'NDMI002', 1, 1),
+    ('73291111', 'NDMI002', 2, 4),
+    ('73291111', 'NDMI002', 3, 3),
+    ('73291111', 'NDMI002', 4, 2),
+    ('73291111', 'NDMI002', 5, 1),
+    ('73291111', 'NDMI050', 1, 0),
+    ('73291111', 'NDMI050', 2, 1),
+    ('73291111', 'NDMI050', 3, 5),
+    ('73291111', 'NDMI050', 4, 4),
+    ('73291111', 'NDMI050', 5, 3);

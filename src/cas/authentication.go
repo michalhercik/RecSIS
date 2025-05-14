@@ -61,13 +61,13 @@ func (a Authentication) authenticate(next http.Handler) func(w http.ResponseWrit
 }
 
 func (a Authentication) login(w http.ResponseWriter, r *http.Request) {
-	userID, err := a.CAS.validateTicket(r, a.loginURL(r))
+	userID, ticket, err := a.CAS.validateTicket(r, a.loginURL(r))
 	if err != nil {
 		http.Redirect(w, r, a.CAS.loginURLToCAS(a.loginURL(r)), http.StatusFound)
 		log.Println(err)
 		return
 	}
-	sessionID, err := a.Data.Login(userID)
+	sessionID, err := a.Data.Login(userID, ticket)
 	if err != nil {
 		log.Println(err)
 		return
@@ -100,12 +100,12 @@ func (a Authentication) logoutFromUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a Authentication) logoutFromCAS(w http.ResponseWriter, r *http.Request) {
-        userID, ticket, err := a.CAS.UserIDTicketFromCASLogoutRequest(r)
-        if err != nil {
-                log.Println(err)
-        }
-        _ = ticket
-        _ = userID
+	userID, ticket, err := a.CAS.UserIDTicketFromCASLogoutRequest(r)
+	if err != nil {
+		log.Println(err)
+	}
+	_ = ticket
+	_ = userID
 	// err = a.Data.LogoutWithTicket(userID, ticket)
 	// if err != nil {
 	// 	log.Println(err)
