@@ -1,0 +1,205 @@
+package blueprint
+
+templ Skeleton() {
+    <div
+        id="blueprint-skeleton"
+        class="container bp-content-padding"
+        x-data>
+        // unassigned
+        <table class="table table-sm blueprint-table">
+            @skeletonFullHeader(1)
+            <tbody>                
+                @skeletonRow1(true)
+                @skeletonRow2(false)
+            </tbody>
+        </table>
+        // first year
+        <div>
+            // winter
+            <table class="table table-sm blueprint-table">
+                @skeletonFullHeader(2)
+                <tbody>
+                    for i := 0; i < 3; i++ {
+                        @skeletonRow1(true)
+                        @skeletonRow2(true)
+                        @skeletonRow3(true)
+                    }
+                </tbody>
+            </table>
+            // summer
+            <table class="table table-sm blueprint-table">
+                @skeletonFullHeader(2)
+                <tbody>
+                    for i := 0; i < 3; i++ {
+                        @skeletonRow3(false)
+                        @skeletonRow2(false)
+                        @skeletonRow1(false)
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+templ skeletonFullHeader(buttons int) {
+    <thead><tr class="placeholder-wave">
+        // hide/show button
+        <th></th>
+        // title
+        <th class="d-none d-md-table-cell">
+            <h5 class="mb-0 text-nowrap popover-title">
+                <span class="placeholder col-12"></span>
+            </h5>
+        </th>
+        // code
+        <th>
+            <span class="d-md-none">
+                <h5 class="mb-0 text-nowrap popover-title">
+                    <span class="placeholder col-12"></span>
+                </h5>
+            </span>
+        </th>
+        // credits
+        <th class="th-overflow credits-column d-none d-md-table-cell"><span class="placeholder" style="width: 80px"></span></th>
+        // winter
+        <th class="d-none d-md-table-cell"><span class="placeholder col-4"></span></th>
+        // summer
+        <th class="d-none d-md-table-cell"><span class="placeholder col-4"></span></th>
+        // guarantors
+        <th class="d-none d-xl-table-cell"><span class="placeholder col-3"></span></th>
+        // buttons
+        <th class="d-none d-md-table-cell text-end">
+            for i := 0; i < buttons; i++ {
+                <span class="placeholder col-2"> </span>
+            }
+        </th>
+    </tr></thead>
+}
+
+templ skeletonRow1(winter bool) {
+    <tr class="placeholder-glow">
+        <td class="text-center align-middle p-0 lh-1">
+            <span class="placeholder col-8"></span>
+        </td>
+        <td class="d-none d-md-table-cell">
+            <span class="placeholder col-10"></span>
+        </td>
+        <td>
+            <span class="d-none d-md-inline">
+                <span class="placeholder col-8"></span>
+            </span>
+            <div class="d-flex flex-column d-md-none">
+                <span class="text-muted small lh-1"><span class="placeholder col-2"></span></span>
+                <span class="fw-bold small-screen-title">
+                    <span class="placeholder col-8"></span>
+                </span>
+            </div>
+        </td>
+        <td class="credits-column text-end d-none d-md-table-cell"><span class="placeholder col-8"></span></td>
+        if (winter) {
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-8"></span>
+            </td>
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-4"></span>
+            </td>
+        }else {
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-4"></span>
+            </td>
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-8"></span>
+            </td>
+        }         
+        <td class="d-none d-xl-table-cell">
+            <span class="placeholder col-4"></span>
+            <span class="placeholder col-6"></span>
+        </td>
+        <td class="d-none d-md-table-cell text-end align-middle py-0"></td>
+    </tr>
+}
+
+templ skeletonRow2(winter bool) {
+    <tr class="placeholder-glow">
+        <td class="text-center align-middle p-0 lh-1">
+            <span class="placeholder col-8"></span>
+        </td>
+        <td class="d-none d-md-table-cell">
+            <span class="placeholder col-9"></span>
+        </td>
+        <td>
+            <span class="d-none d-md-inline">
+                <span class="placeholder col-6"></span>
+            </span>
+            <div class="d-flex flex-column d-md-none">
+                <span class="text-muted small lh-1"><span class="placeholder col-2"></span></span>
+                <span class="fw-bold small-screen-title">
+                    <span class="placeholder col-8"></span>
+                </span>
+            </div>
+        </td>
+        <td class="credits-column text-end d-none d-md-table-cell"><span class="placeholder col-8"></span></td>
+        if (winter) {
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-8"></span>
+            </td>
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-4"></span>
+            </td>
+        }else {
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-4"></span>
+            </td>
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-8"></span>
+            </td>
+        }   
+        <td class="d-none d-xl-table-cell">
+            <span class="placeholder col-4"></span>
+            <span class="placeholder col-4"></span>
+        </td>
+        <td class="d-none d-md-table-cell text-end align-middle py-0"></td>
+    </tr>
+}
+
+templ skeletonRow3(winter bool) {
+    <tr class="placeholder-glow">
+        <td class="text-center align-middle p-0 lh-1">
+            <span class="placeholder col-8"></span>
+        </td>
+        <td class="d-none d-md-table-cell">
+            <span class="placeholder col-11"></span>
+        </td>
+        <td>
+            <span class="d-none d-md-inline">
+                <span class="placeholder col-7"></span>
+            </span>
+            <div class="d-flex flex-column d-md-none">
+                <span class="text-muted small lh-1"><span class="placeholder col-2"></span></span>
+                <span class="fw-bold small-screen-title">
+                    <span class="placeholder col-8"></span>
+                </span>
+            </div>
+        </td>
+        <td class="credits-column text-end d-none d-md-table-cell"><span class="placeholder col-8"></span></td>
+        if (winter) {
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-8"></span>
+            </td>
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-4"></span>
+            </td>
+        }else {
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-4"></span>
+            </td>
+            <td class="d-none d-md-table-cell">
+                <span class="placeholder col-8"></span>
+            </td>
+        }   
+        <td class="d-none d-xl-table-cell">
+            <span class="placeholder col-6"></span>
+        </td>
+        <td class="d-none d-md-table-cell text-end align-middle py-0"></td>
+    </tr>
+}

@@ -232,22 +232,19 @@ body {
 }
 
 /* === Blueprint tables styles === */
-.blueprint-table,
-.blueprint-empty-table {
+.blueprint-table {
     table-layout: fixed;
 }
 
 /* checkbox */
 .blueprint-table th:nth-child(1),
-.blueprint-table td:nth-child(1),
-.blueprint-empty-table th:nth-child(1) {
+.blueprint-table td:nth-child(1) {
     width: 28px;
 }
 
 @media (max-width: 767.5px) {
     .blueprint-table th:nth-child(1),
-    .blueprint-table td:nth-child(1),
-    .blueprint-empty-table th:nth-child(1) {
+    .blueprint-table td:nth-child(1){
         width: 50px;
     }
 }
@@ -256,13 +253,6 @@ body {
 .blueprint-table th:nth-child(2),
 .blueprint-table td:nth-child(2) {
     width: 85px;
-}
-
-.blueprint-empty-table th:nth-child(2) {
-    width: auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* title */
@@ -635,5 +625,14 @@ body {
 #loader.htmx-request ~ #page-overlay {
     display: block;
 }
+
+#blueprint-skeleton {
+    display: none;
+}
+
+#blueprint-skeleton.htmx-request {
+    display: block;
+}
+
 
 /* ====================================== */

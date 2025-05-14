@@ -83,10 +83,10 @@ func main() {
 	pageTempl := page.Page{
 		Home: "/home",
 		NavItems: []page.NavItem{
-			{Title: language.MakeLangString("Domů", "Home"), Path: "/"},
-			{Title: language.MakeLangString("Hledání", "Search"), Path: "/courses/"},
-			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: "/blueprint/"},
-			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: "/degreeplan/"},
+			{Title: language.MakeLangString("Domů", "Home"), Path: "/", Indicator: "#loader"},
+			{Title: language.MakeLangString("Hledání", "Search"), Path: "/courses/", Indicator: "#loader"},
+			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: "/blueprint/", Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
+			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: "/degreeplan/", Indicator: "#loader"},
 		},
 		QuickSearchPath: "/quicksearch",
 		SearchBar: searchbar.MeiliSearch{
