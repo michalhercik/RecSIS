@@ -215,12 +215,53 @@ templ descriptionItem(desc NullDescription, id string) {
 }
 
 templ survey(surveys []course.Comment, code string, t text) {
-    if len(surveys) == 0 {
-        <div class="alert alert-primary" role="alert">
-            { t.NoSurvey }
-        </div>
-    } else {
-        @searchInSurvey(code, t)
+        if len(surveys) == 0 {
+            <div class="alert alert-primary" role="alert">
+                { t.NoSurvey }
+            </div>
+        } else {
+            @surveySearch(code, t)
+            @SurveysContent(surveys, code, false, t)
+        }
+}
+
+// TODO: this is just a proof of concept, make it better, make it work, add texts
+templ surveySearch(code string, t text) {
+    <form
+        id="survey-search-form"
+        class="input-group mb-3"
+        hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", code)) }
+        hx-target="#surveys-content"
+        hx-swap="outerHTML"
+    >
+        <input type="text" class="form-control" placeholder="search in survey" name="survey-search" autocomplete="off">
+        <button class="btn btn-outline-secondary bi bi-search" type="submit"></button>
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Teacher</button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            @dropdownFilter("M. Medek", 1)
+            @dropdownFilter("M Hercík", 2)
+            @dropdownFilter("L. Peška", 3)
+            @dropdownFilter("J. Novák", 4)
+            @dropdownFilter("=GLOBAL=", 5)
+        </ul>
+    </form>
+}
+
+templ dropdownFilter(label string, ID int) {
+    <li>
+        <label class="dropdown-item rounded user-select-none" for={ fmt.Sprintf("checkbox-teacher-%d", ID) }>
+            <input
+                class="form-check-input me-2"
+                type="checkbox"
+                value=""
+                id={ fmt.Sprintf("checkbox-teacher-%d", ID) }>
+            { label }
+        </label>
+    </li>
+}
+
+templ SurveysContent(surveys []course.Comment, code string, end bool, t text) {
+    <div id="surveys-content">
         for _, s := range surveys {
             <div class="card mb-1">
                 <div class="card-header">
@@ -238,48 +279,18 @@ templ survey(surveys []course.Comment, code string, t text) {
                 </div>
             </div>
         }
-    }
-}
-
-// TODO: this is just a proof of concept, make it better, make it work
-templ searchInSurvey(code string, t text) {
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" placeholder="search in survey" name="survey-search" autocomplete="off"
-            hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/%s", code)) }
-            hx-target="main"
-            hx-swap="outerHTML">
-        <button class="btn btn-outline-secondary bi bi-search" type="submit"></button>
-        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Teacher</button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            @dropdownFilter("M. Medek", 1)
-            @dropdownFilter("M Hercík", 2)
-            @dropdownFilter("L. Peška", 3)
-            @dropdownFilter("J. Novák", 4)
-        </ul>
-    </div>
-}
-
-templ dropdownFilter(label string, ID int) {
-    <li>
-        <button
-            class="dropdown-item rounded"
-            x-data="{ checked: false }"
-            @click="checked = !checked; $refs.checkbox.click()">
-            <div class="form-check" @click.stop>
-                <input
-                    role="button"
-                    class="form-check-input"
-                    type="checkbox"
-                    value=""
-                    id={ fmt.Sprintf("checkbox-teacher-%d", ID) }
-                    x-ref="checkbox"
-                    x-model="checked">
-                <label role="button" class="form-check-label" for={ fmt.Sprintf("checkbox-teacher-%d", ID) }>
-                    { label }
-                </label>
+        // lazy loading of more surveys
+        if (!end) {
+            <div
+                hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", code)) }
+                hx-trigger="intersect"
+                hx-include="#survey-search-form"
+                hx-target="#surveys-content"
+                hx-swap="outerHTML"
+                hx-vals={ fmt.Sprintf(`"%s": %d`, nOCommentsQuery, len(surveys) + numberOfComments) }>
             </div>
-        </button>
-    </li>
+        }
+    </div>
 }
 
 templ teacherStyled(tt teacher.Teacher, t text) {

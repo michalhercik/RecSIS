@@ -21,6 +21,7 @@ type Server struct {
 func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{code}", s.page)
+	router.HandleFunc("GET /survey/{code}", s.survey)
 	router.HandleFunc("PUT /rating/{code}/{category}", s.rateCategory)
 	router.HandleFunc("DELETE /rating/{code}/{category}", s.deleteCategoryRating)
 	router.HandleFunc("PUT /rating/{code}", s.rate)
@@ -62,15 +63,10 @@ func (s Server) course(userID, code string, lang language.Language, r *http.Requ
 	if err != nil {
 		return nil, err
 	}
-	// TODO: jako GitHub searchbar, filters
-	// TODO: paginace prev/next (nic vic)
-	// TODO: alterative -> only load more (hx-trigger revealed) lazy loading
-	// TODO: if alterative -> add top button
-	searchQuery := r.FormValue("survey-search") // TODO: input text name=q (RENAME)
-	br = br.SetQuery(searchQuery)
+	br = br.SetQuery("") // default query is empty
 	br = br.AddCourse(code)
-	br = br.SetLimit(20) // TODO: pocet komentaru na stranku
-	br = br.SetOffset(0) // TODO: offset komentaru
+	br = br.SetLimit(numberOfComments)
+	br = br.SetOffset(0)
 	br = br.AddSort(params.AcademicYear, params.Desc)
 	req, err := br.Build()
 	if err != nil {
@@ -81,6 +77,46 @@ func (s Server) course(userID, code string, lang language.Language, r *http.Requ
 		return nil, err
 	}
 	return result, nil
+}
+
+func (s Server) survey(w http.ResponseWriter, r *http.Request) {
+	// language
+	lang := language.FromContext(r.Context())
+	// code
+	code := r.PathValue("code")
+	// number of comments
+	numberOfCommentsStr := r.FormValue(nOCommentsQuery)
+	numberOfComments, err := strconv.Atoi(numberOfCommentsStr)
+	if err != nil {
+		log.Printf("HandlePage error %s: %v", code, err)
+	}
+	// survey
+	br := s.CourseComments.BuildRequest(lang)
+	br, err = br.ParseURLQuery(r.URL.Query())
+	if err != nil {
+		log.Printf("HandlePage error %s: %v", code, err)
+	}
+	// TODO: paginace prev/next (nic vic)
+	// TODO: alterative -> only load more (hx-trigger revealed) lazy loading
+	// TODO: if alterative -> add top button
+	searchQuery := r.FormValue("survey-search")
+	br = br.SetQuery(searchQuery)
+	br = br.AddCourse(code)
+	br = br.SetLimit(numberOfComments)
+	br = br.SetOffset(0)
+	br = br.AddSort(params.AcademicYear, params.Desc)
+	req, err := br.Build()
+	if err != nil {
+		log.Printf("HandlePage error %s: %v", code, err)
+	}
+	surveyRes, err := s.CourseComments.Comments(req)
+	if err != nil {
+		log.Printf("HandlePage error %s: %v", code, err)
+	}
+	survey := surveyRes.Comments()
+	noMoreComments := len(survey) < numberOfComments
+	// render the survey
+	SurveysContent(survey, code, noMoreComments, texts[lang]).Render(r.Context(), w)
 }
 
 func (s Server) rate(w http.ResponseWriter, r *http.Request) {

@@ -30,8 +30,10 @@ type Page interface {
 }
 
 const (
-	positiveRating = 1
-	negativeRating = 0
+	positiveRating   = 1
+	negativeRating   = 0
+	numberOfComments = 20
+	nOCommentsQuery  = "number-of-comments"
 )
 
 type Course struct {

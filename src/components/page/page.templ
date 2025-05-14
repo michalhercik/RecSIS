@@ -100,7 +100,7 @@ templ profileBtn(model pageModel) {
             <li><span class="dropdown-item disabled">Jan Novák</span></li>
             <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item" href="#">Reload from SIS</button></li>
-            <li><a class="dropdown-item" href={ templ.URL(model.lang.Path("/logout")) }><i class="bi bi-box-arrow-right"></i> Log out</a></li>
+            <li><a class="dropdown-item" href={ templ.URL(model.lang.Path("/logout")) } hx-boost="false"><i class="bi bi-box-arrow-right"></i> Log out</a></li>
         </ul>
     </div>
 }
