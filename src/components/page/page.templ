@@ -65,13 +65,14 @@ templ Header(model pageModel) {
                             @navItemView(navItem, model)
                         }
                     </div>
+                    @profileBtn(model)
                     // x-data is necessary for x-on:click to work
                     <div class="d-flex" x-data>
                         switch model.lang {
                             case language.CS:
-                                @langButton(language.EN)
+                                @langBtn(language.EN)
                             case language.EN:
-                                @langButton(language.CS)
+                                @langBtn(language.CS)
                         }
                     </div>
                 </div>
@@ -91,6 +92,19 @@ templ navItemView(nav NavItem, model pageModel) {
     </a>
 }
 
+// TODO: put real data here
+templ profileBtn(model pageModel) {
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary bi bi-person-circle border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><span class="dropdown-item disabled">Jan Novák</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item" href="#">Reload from SIS</button></li>
+            <li><a class="dropdown-item" href={ templ.URL(model.lang.Path("/logout")) }><i class="bi bi-box-arrow-right"></i> Log out</a></li>
+        </ul>
+    </div>
+}
+
 templ searchBar(model pageModel) {
     <div
         x-cloak
@@ -100,9 +114,9 @@ templ searchBar(model pageModel) {
     </div>
 }
 
-templ langButton(l language.Language) {
+templ langBtn(l language.Language) {
     <button
-        class="btn btn-outline-none text-secondary px-0 px-lg-2 border-0 fs-5"
+        class="btn btn-outline-secondary border-0"
         @click={ "changeLanguage('" + string(l) + "')" }>
         { string(l) }
     </button>
