@@ -65,7 +65,8 @@ func (s Server) course(userID, code string, lang language.Language, r *http.Requ
 	// TODO: jako GitHub searchbar, filters
 	// TODO: paginace prev/next (nic vic)
 	// TODO: alterative -> only load more (hx-trigger revealed) lazy loading
-	searchQuery := r.FormValue("q") // TODO: input text name=q (RENAME)
+	// TODO: if alterative -> add top button
+	searchQuery := r.FormValue("survey-search") // TODO: input text name=q (RENAME)
 	br = br.SetQuery(searchQuery)
 	br = br.AddCourse(code)
 	br = br.SetLimit(20) // TODO: pocet komentaru na stranku

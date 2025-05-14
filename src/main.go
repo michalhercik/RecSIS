@@ -171,6 +171,7 @@ func main() {
 	handle(protectedRouter, "/degreeplan/", degreePlan.Router())
 	protectedRouter.Handle("GET /logo.svg", static)
 	protectedRouter.Handle("GET /style.css", static)
+	protectedRouter.Handle("GET /js/", static)
 
 	//////////////////////////////////////////
 	// Server setup
