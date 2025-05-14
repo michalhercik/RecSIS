@@ -86,7 +86,7 @@ func main() {
 			{Title: language.MakeLangString("Domů", "Home"), Path: "/", Indicator: "#loader"},
 			{Title: language.MakeLangString("Hledání", "Search"), Path: "/courses/", Indicator: "#loader"},
 			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: "/blueprint/", Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
-			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: "/degreeplan/", Indicator: "#loader"},
+			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: "/degreeplan/", Skeleton: degreeplan.Skeleton, Indicator: "#degreeplan-skeleton"},
 		},
 		QuickSearchPath: "/quicksearch",
 		SearchBar: searchbar.MeiliSearch{

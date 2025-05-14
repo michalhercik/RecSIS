@@ -626,11 +626,14 @@ body {
     display: block;
 }
 
-#blueprint-skeleton {
+/* Skeleton styles */
+#blueprint-skeleton,
+#degreeplan-skeleton {
     display: none;
 }
 
-#blueprint-skeleton.htmx-request {
+#blueprint-skeleton.htmx-request,
+#degreeplan-skeleton.htmx-request {
     display: block;
 }
 
