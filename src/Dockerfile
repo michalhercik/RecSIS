@@ -19,10 +19,10 @@ FROM alpine AS dev-stage
 WORKDIR /app
 COPY --from=build-stage /recsis /recsis
 COPY ./static ./static
-# COPY ./server.crt ./server.crt
-# COPY ./server.key ./server.key
+COPY ./config.prod.toml ./config.prod.toml
 EXPOSE 8000
-ENTRYPOINT ["/recsis"]
+EXPOSE 80
+ENTRYPOINT ["/recsis", "--config", "/app/config.prod.toml"]
 
 #############################################################################################
 # Deploy stage
@@ -31,8 +31,8 @@ FROM gcr.io/distroless/base-debian11 AS deploy-stage
 WORKDIR /app
 COPY --from=build-stage /recsis /recsis
 COPY ./static ./static
-# COPY ./server.crt ./server.crt
-# COPY ./server.key ./server.key
+COPY ./config.prod.toml ./config.prod.toml
 EXPOSE 8000
+EXPOSE 80
 USER nonroot:nonroot
-ENTRYPOINT ["/recsis"]
+ENTRYPOINT ["/recsis --config /app/config.prod.toml"]
