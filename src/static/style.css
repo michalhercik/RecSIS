@@ -26,6 +26,11 @@ body {
     padding-bottom: 75px; /* Space for the footer */
 }
 
+/* Help cursor for popovers/tooltips */
+.cursor-help {
+    cursor: help;
+}
+
 /* text justify class */
 .text-justify {
     text-align: justify;
@@ -168,11 +173,6 @@ body {
         font-size: 1.3rem !important;
         padding: 8px 12px !important;
     }
-}
-
-/* BP -> Popover on semester title */
-.popover-title {
-    cursor: help;
 }
 
 /* Blueprint colored button */
@@ -334,7 +334,7 @@ body {
     top: 7px;
     right: 106px;
 }
-/* TODO set the widths correctly */
+
 @media (max-width: 1199.5px) {
     #search-bar-container {
         width: 352px;
@@ -355,13 +355,13 @@ body {
 }
 
 /* S -> cards grid styles */
-.grid-page {
+#courses-page {
     display: grid;
     grid-template-columns: 230px 1fr;
     gap: 1rem; /* Space between columns */
 }
 
-.filter {
+#filter-section {
     width: 230px; /* Ensure the width stays fixed */
     padding: 1rem;
 }
@@ -380,6 +380,17 @@ body {
     padding-left: 0;
     padding-right: 0;
     margin-bottom: 0;
+}
+
+/* S -> filters wrapper */
+#filters-wrapper {
+    height: 100%;
+}
+
+/* S -> move to top button */
+#move-to-filters-btn {
+    position: sticky;
+    top: 72px;
 }
 
 /* S -> annotation styles */

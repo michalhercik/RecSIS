@@ -123,11 +123,19 @@ templ langButton(l language.Language) {
 }
 
 templ CourseLink(code string, t Text) {
-    <a class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover" href={ templ.URL(t.LangLink("/course/" + code)) }>{ code }</a>
+    <a
+        class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+        href={ templ.URL(t.LangLink("/course/" + code)) }>
+        { code }
+    </a>
 }
 
-templ TitleCourseLink(code, title string, t Text) {
-    <a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.LangLink("/course/" + code)) }>{ title }</a>
+templ TitleCourseLink(code, title string, lowUnderline bool, t Text) {
+    <a
+        class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover", templ.KV("link-offset-2", lowUnderline) }
+        href={ templ.URL(t.LangLink("/course/" + code)) }>
+        { title }
+    </a>
 }
 
 func CapitalizeFirstLetter(s string) string {

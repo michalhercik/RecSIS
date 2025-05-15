@@ -52,6 +52,14 @@ func (t text) YearStr(year int) string {
 	return ""
 }
 
+func (t text) ShowMore(rest int) string {
+	if rest < 5 {
+		return t.ShowMore4Minus
+	} else {
+		return t.ShowMore5Plus
+	}
+}
+
 var texts = map[language.Language]text{
 	language.CS: {
 		PageTitle:         "Hledání",

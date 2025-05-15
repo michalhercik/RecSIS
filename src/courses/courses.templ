@@ -2,24 +2,302 @@ package courses
 
 import (
 	// "github.com/michalhercik/RecSIS/courses/internal/filter"
-    "strconv" // TODO: rewrite all strconv.Itoa to fmt.Sprintf
+	"github.com/michalhercik/RecSIS/utils"
     "fmt"
 )
 
 const coursesPerPage = 30
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
+templ Content(coursesPage *coursesPage, t text) {
+    <div id="courses-page" hx-indicator="#loader">
+        <div id="filter-section" class="border-end bg-light">
+            @filterSection(coursesPage, t)
+        </div>
+        <div class="mt-3">
+            @activeFilters(coursesPage, t)
+            @Courses(coursesPage, t)
+        </div>
+    </div>
+    <script defer src="/js/courses.js"></script>
 }
 
-func min(a, b int) int {
-    if a < b {
-        return a
+templ filterSection(cp *coursesPage, t text) {
+    <div id="filters-wrapper">
+        <form
+            id="filter-form"
+            hx-get={ t.Utils.LangLink("/courses/search") }
+            hx-target="#courses-page"
+            hx-swap="outerHTML"
+            hx-include="#search-form"
+            hx-trigger="change"
+        >
+            for category := range cp.facets {
+                <div x-data={ fmt.Sprintf("{ expanded: JSON.parse(sessionStorage.getItem('expanded-%s')) || false }", category.ID()) }>
+                    // category title (with help icon)
+                    <div class="d-flex justify-content-start align-items-end">
+                        <p class="form-label fw-semibold mb-0 mt-2">{ category.Title() }</p>
+                        if category.Desc() != "" {
+                            @helpIcon(category.Desc())
+                        }
+                    </div>
+                    // checkboxes with values
+                    for i, value := range category.IterWithFacets() {
+                        <div x-cloak x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
+                            @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
+                        </div>
+                    }
+                    if limit := category.DisplayedValueLimit(); category.Size() > limit {
+                        // show more/less button
+                        <button
+                            hx-ignore="true"
+                            type="button"
+                            class="btn btn-link text-secondary p-0"
+                            x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore(category.Size() - limit), category.Size() - limit) }
+                            @click={ fmt.Sprintf("expanded = !expanded; sessionStorage.setItem('expanded-%s', expanded)", category.ID()) }>
+                        </button>
+                    }
+                </div>
+            }
+        </form>
+        // move to the top of the page button
+        @moveToTopButton(t)
+    </div>
+}
+
+templ checkboxInput(name, value, label, desc string, count int, checked bool) {
+    <div class="form-check">
+        <input role="button" class="form-check-input" disabled?={ count == 0 }
+            type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
+        <label role="button" class="form-check-label" for={ name + "-" + value }>
+            <span>{ label }</span>
+            if desc != "" {
+                @helpIcon(desc)
+            }
+            <span>{ fmt.Sprintf("(%d)", count) }</span>
+        </label>
+    </div>
+}
+
+templ moveToTopButton(t text) {
+    // x-data is necessary for x-on:click to work
+    <div id="move-to-filters-btn" class="text-center d-flex justify-content-center mt-3" x-data>
+        <p
+            role="button"
+            @click="window.scrollTo({ top: 0, behavior: 'smooth' });"
+            class="link-primary"
+        >
+            <i class="bi bi-chevron-up"></i>
+            { t.TopFilter }
+        </p>
+    </div>
+}
+
+templ helpIcon(content string) {
+    <i
+        x-data="{ hoverHelp: false }"
+        class="mx-1 cursor-help bi"
+        :class="hoverHelp ? 'bi-question-circle-fill' : 'bi-question-circle'"
+        @mouseover="hoverHelp = true"
+        @mouseleave="hoverHelp = false"
+        data-bs-toggle="tooltip"
+        data-bs-placement="right"
+        data-bs-delay="200"
+        data-bs-title={ content }>
+    </i>
+}
+
+templ activeFilters(cp *coursesPage, t text) {
+    <div class="mx-5 mb-3">
+        {{ anyActive := false }}
+        for category := range cp.facets {
+            if category.Active() {
+                {{ anyActive = true }}
+                <div class="d-flex flex-row mb-1 w-auto">
+                    <span class="px-2 bg-body border border-end-0 rounded-start">{ category.Title() }</span>
+                    <div class="d-flex flex-row border rounded-end bg-light">
+                    for _, value := range category.IterWithFacets() {
+                        if value.Checked {
+                            <div class="border-start px-2">
+                                <span class="fw-semibold">{ value.Title }</span>
+                                <i
+                                    role="button"
+                                    class="bi bi-x-lg"
+                                    @click={ fmt.Sprintf("uncheck('par%s-%s')", category.ID(), value.ID) }>
+                                </i>
+                            </div>
+                        }
+                    }
+                    </div>
+                </div>
+            }
+        }
+        if anyActive {
+            <button
+                class="btn btn-link text-secondary p-0"
+                hx-get={ t.Utils.LangLink("/courses/search") }
+                hx-target="#courses-page"
+                hx-include="#search-form"
+                hx-swap="outerHTML show:window:top">
+                { t.CancelFilters }
+            </button>
+        }
+    </div>
+}
+
+templ Courses(cp *coursesPage, t text) {
+    <div id="courses">
+        <div class="grid-cards">
+            if cp.totalPages == 0 {
+                <p>{ t.NoCoursesFound }</p>
+            } else {
+                for _, course := range cp.courses {
+                    @CourseCard(&course, t, cp.templ)
+                }
+            }
+            // dummy cards for alignment
+            for i := 0; i < 10; i++ {
+                <div class="card custom-card border-0"></div>
+            }
+        </div>
+        if cp.totalPages > 1 {
+            @pagination(cp, t)
+        }
+    </div>
+}
+
+templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
+    <div
+        id={ fmt.Sprintf("course-card-%s", course.Code) }
+        class="card custom-card rounded-0"
+        x-data="{ expanded: false, isLong: false }"
+        x-init="isLong = $refs.annotation.scrollHeight > 350; console.log($refs.annotation, isLong);"
+    > // TODO: x-init is not working when changing the page
+        // header
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">{ course.Code }</h6> // code
+            <small>{ semesterHoursExamsString(course, t) }</small> // semester, hours, exams
+            <small>{ fmt.Sprintf("%s: %d", t.Credits, course.Credits) }</small> // credits
+        </div>
+        // body
+        <div class="card-body d-flex flex-column position-relative">
+            @ribbon(course.BlueprintAssignments, t)
+            <div
+                :class="{ 'expanded': expanded, 'annotation-container': isLong }"
+                x-ref="annotation"
+            >
+                // course title (link to detail page)
+                <h5 class="card-title">
+                    @utils.TitleCourseLink(course.Code, course.Name, false, t.Utils)
+                </h5>
+                // guarantors
+                <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string(t) }</h6>
+                // course description (annotation)
+                <p class="card-text annotation-text">{ course.Annotation.string() }</p>
+            </div>
+            // show rest/less of annotation button 
+            <button
+                class="btn btn-link text-secondary"
+                @click="expanded = !expanded"
+                x-show="isLong"
+                x-text={ fmt.Sprintf("expanded ? '%s' : '%s'", t.ReadLess, t.ReadMore) }>
+            </button>
+            // add to blueprint button
+            <div class="d-flex justify-content-end mt-auto pt-3">
+                @addBtn(course.Code, "outerHTML", "#course-card-" + course.Code)
+            </div>
+        </div>
+    </div>
+}
+
+// TODO: change to badges
+templ ribbon(ba AssignmentSlice, t text) {
+    if len(ba) > 0 {
+        <div class="ribbon">
+            <span>{ ba.String(t.Language) }</span>
+        </div>
     }
-    return b
+}
+
+templ pagination(cp *coursesPage, t text) {
+    // disable pagination if loaded more courses
+    if cp.pageSize == coursesPerPage {
+        <div class="mt-3 d-flex justify-content-center">
+            <ul
+                class="pagination mt-3"
+                hx-target="#courses-page"
+                hx-include="#filter-form, #search-form"
+                hx-swap="outerHTML show:window:top"
+                hx-trigger="click"
+            >
+                @paginationIconButton(cp.page - 1, "bi bi-chevron-left", cp, t)
+                @paginationNumberButton(1, cp, t)
+                if cp.page > 4 {
+                    @threeDots()
+                }
+                for i := max(2, cp.page - 2); i <= min(cp.page + 2, cp.totalPages - 1); i++ {
+                    @paginationNumberButton(i, cp, t)
+                }
+                if cp.page < cp.totalPages - 3 {
+                    @threeDots()
+                }
+                @paginationNumberButton(cp.totalPages, cp, t)
+                @paginationIconButton(cp.page + 1, "bi bi-chevron-right", cp, t)
+            </ul>
+        </div>
+    }
+    // disable load more button if it is not the first page
+    if cp.page == 1 {
+        <div class="mt-3 d-flex justify-content-center">
+            @loadMoreButton(cp.pageSize + coursesPerPage, cp, t)
+        </div>
+    }
+}
+
+templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
+    <li class="page-item">
+        <div
+            role="button"
+            class={ "page-link", templ.KV("disabled", cp.page == page || page < 1 || page > cp.totalPages) }
+            hx-get={ t.Utils.LangLink("/courses/search") }
+            hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
+        >
+            <i class={ icon }></i>
+        </div>
+    </li>
+}
+
+templ paginationNumberButton(page int, cp *coursesPage, t text) {
+    <li class="page-item">
+        <div
+            role="button"
+            class={ "page-link", templ.KV("active", cp.page == page) }
+            hx-get={ t.Utils.LangLink("/courses/search") }
+            hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
+        >
+            { fmt.Sprintf("%d", page) }
+        </div>
+    </li>
+}
+
+templ threeDots() {
+    <li class="page-item">
+        <div class="page-link">
+            <i class="bi bi-three-dots"></i>
+        </div>
+    </li>
+}
+
+templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
+    <button
+        class="btn btn-outline-primary"
+        hx-get={ t.Utils.LangLink("/courses/search") }
+        hx-target="#courses-page"
+        hx-include="#filter-form, #search-form"
+        hx-swap="outerHTML"
+        hx-vals={ fmt.Sprintf(`"%s": %d`, hitsPerPageParam, newPageSize) }
+    >
+        { t.LoadMore }
+    </button>
 }
 
 func semesterHoursExamsString(course *Course, t text) string {
@@ -51,315 +329,16 @@ func semesterHoursExamsString(course *Course, t text) string {
     return result + ", " + course.ExamType
 }
 
-templ helpIcon(content string) {
-    <i
-        x-data="{ hoverHelp: false }"
-        class="mx-1 bi"
-        :class="hoverHelp ? 'bi-question-circle-fill' : 'bi-question-circle'"
-        style="cursor: help;"
-        @mouseover="hoverHelp = true"
-        @mouseleave="hoverHelp = false"
-        data-bs-toggle="tooltip"
-        data-bs-placement="right"
-        data-bs-delay="200"
-        data-bs-title={ content }
-        >
-    </i>
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
-templ checkboxInput(name, value, label, desc string, count int, checked bool) {
-    <div class="form-check">
-        <input role="button" class="form-check-input" disabled?={ count == 0 }
-            type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
-        <label role="button" class="form-check-label" for={ name + "-" + value }>
-            <span>{ label }</span>
-            if desc != "" {
-                @helpIcon(desc)
-            }
-            <span>{ "(" + strconv.Itoa(count) + ")" } </span>
-        </label>
-    </div>
-}
-
-templ filterSection(cp *coursesPage, t text) {
-    <div class="form-group" style="height: 100%;">
-        <form
-            id="filter-form"
-            hx-get={ t.Utils.LangLink("/courses/search") }
-            hx-target="#courses-page"
-            hx-swap="outerHTML"
-            hx-include="#search-form"
-            hx-trigger="change"
-        >
-            for category := range cp.facets {
-                <div x-data={ "{ expanded: JSON.parse(sessionStorage.getItem('expanded-" + category.ID() + "')) || false }" }>
-                    <div class="d-flex justify-content-start align-items-end">
-                        <p class="form-label fw-semibold mb-0 mt-2">{ category.Title() }</p>
-                        if category.Desc() != "" {
-                            @helpIcon(category.Desc())
-                        }
-                    </div>
-                    for i, value := range category.IterWithFacets() {
-                        <div x-cloak x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
-                            @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
-                        </div>
-                    }
-                    if category.Size() > category.DisplayedValueLimit() {
-                        <button
-                            hx-ignore="true"
-                            type="button"
-                            class="btn btn-link text-secondary p-0"
-                            if others := category.Size() - category.DisplayedValueLimit(); others < 5 {
-                                x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore4Minus, others) }
-                            } else {
-                                x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore5Plus, others) }
-                            }
-                            @click={ "expanded = !expanded; sessionStorage.setItem('expanded-" + category.ID() + "', expanded)" }>
-                        </button>
-                    }
-                </div>
-            }
-        </form>
-        // move to the top of the page button
-        // x-data is necessary for x-on:click to work
-        <div class="text-center justify-content-center d-flex mt-3" style="position: sticky; top: 72px;" x-data>
-            <p
-                role="button"
-                @click="window.scrollTo({ top: 0, behavior: 'smooth' });"
-                class="link-primary"
-            >
-                <i class="bi bi-chevron-up"></i>
-                { t.TopFilter }
-            </p>
-        </div>
-    </div>
-}
-
-templ activeFilters(cp *coursesPage, t text) {
-    <div class="mx-5 mb-3">
-        {{ anyActive := false }}
-        for category := range cp.facets {
-            if category.Active() {
-                {{ anyActive = true }}
-                <div class="d-flex flex-row mb-1" style="width: fit-content;">
-                    <span class="px-2 bg-body border border-end-0 rounded-start">{ category.Title() }</span>
-                    <div class="d-flex flex-row border rounded-end bg-light">
-                    for _, value := range category.IterWithFacets() {
-                        if value.Checked {
-                            <div class="border-start px-2">
-                                <span class="fw-semibold">{ value.Title }</span>
-                                <i
-                                    role="button"
-                                    class="bi bi-x-lg"
-                                    @click={ fmt.Sprintf("uncheck('par%s-%s')", category.ID(), value.ID) }>
-                                </i>
-                            </div>
-                        }
-                    }
-                    </div>
-                </div>
-            }
-        }
-        if anyActive {
-            <button
-                class="btn btn-link text-secondary p-0"
-                hx-get={ t.Utils.LangLink("/courses/search") }
-                hx-target="#courses-page"
-                hx-include="#search-form"
-                hx-swap="outerHTML show:window:top">
-                { t.CancelFilters }
-            </button>
-        }
-        <script>
-            function uncheck(id) {
-                const checkbox = document.getElementById(id);
-                if (checkbox) {
-                    const clickEvent = new MouseEvent('click', {
-                        bubbles: true,
-                        cancelable: true,
-                    });
-                    checkbox.dispatchEvent(clickEvent);
-                }
-            }
-        </script>
-    </div>
-}
-
-templ ribbon(ba AssignmentSlice, t text) {
-    if len(ba) > 0 {
-        <div class="ribbon">
-            <span>{ ba.String(t.Language) }</span>
-        </div>
+func min(a, b int) int {
+    if a < b {
+        return a
     }
-}
-
-templ blueprintAssignment(code string, t text, addBtn PartialBlueprintAdd) {
-    <div class="d-flex justify-content-end mt-auto pt-3">
-        @addBtn(code, "outerHTML", "#" + code)
-    </div>
-}
-
-templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
-    <div
-        id={ course.Code }
-        class="card custom-card rounded-0"
-        x-data="{ expanded: false, showButton: false, isHovered: false }"
-        @mouseenter="isHovered = true"
-        @mouseleave="isHovered = false"
-        x-init="showButton = $refs.annotation.scrollHeight > 350"
-    >
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">{ course.Code }</h6>
-            <small>{ semesterHoursExamsString(course, t) }</small>
-            <small>{ t.Credits + ": " + strconv.Itoa(course.Credits) }</small>
-        </div>
-        <div class="card-body d-flex flex-column position-relative">
-            @ribbon(course.BlueprintAssignments, t)
-            <div
-                :class="{ 'expanded': expanded, 'annotation-container': showButton }" :style="isHovered && { 'z-index': '100' }"
-                x-ref="annotation"
-            >
-                <h5 class="card-title"><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.Code)) }>{ course.Name }</a></h5>
-                <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string(t) }</h6>
-                <p class="card-text annotation-text">{ course.Annotation.string() }</p>
-            </div>
-            <button class="btn btn-link text-secondary" @click="expanded = !expanded" x-show="showButton" x-text={ "expanded ? '" + t.ReadLess + "' : '" + t.ReadMore + "'" }></button>
-            @blueprintAssignment(course.Code, t, addBtn)
-        </div>
-    </div>
-}
-
-templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
-    <li class="page-item">
-        <div
-            role="button"
-            class="page-link"
-            :class={ strconv.FormatBool(cp.page == page || page < 1 || page > cp.totalPages) + " && 'disabled'" }
-            hx-get={ t.Utils.LangLink("/courses/search") }
-            hx-vals={ `"` + pageParam + `": ` + strconv.Itoa(page) }
-        >
-            <i class={ icon }></i>
-        </div>
-    </li>
-}
-
-templ paginationNumberButton(page int, cp *coursesPage, t text) {
-    <li class="page-item">
-        <div
-            role="button"
-            class="page-link"
-            :class={ strconv.FormatBool(cp.page == page) + " && 'active'" }
-            hx-get={ t.Utils.LangLink("/courses/search") }
-            hx-vals={ `"` + pageParam + `": ` + strconv.Itoa(page) }
-        >
-            { strconv.Itoa(page) }
-        </div>
-    </li>
-}
-
-templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
-    <button
-        class="btn btn-outline-primary"
-        hx-get={ t.Utils.LangLink("/courses/search") }
-        hx-vals={ `"` + hitsPerPageParam + `": ` + strconv.Itoa(newPageSize) }
-        hx-target="#courses-page"
-        hx-include="#filter-form, #search-form"
-        hx-swap="outerHTML"
-    >
-        { t.LoadMore }
-    </button>
-}
-
-templ threeDots() {
-    <li class="page-item">
-        <div class="page-link">
-            <i class="bi bi-three-dots"></i>
-        </div>
-    </li>
-}
-
-templ pagination(cp *coursesPage, t text) {
-    // disable pagination if loaded more courses
-    if cp.pageSize == coursesPerPage {
-        <div class="mt-3 d-flex justify-content-center">
-            <ul
-                class="pagination justify-content-center mt-3"
-                hx-target="#courses-page"
-                hx-include="#filter-form, #search-form"
-                hx-swap="outerHTML show:window:top"
-                hx-trigger="click"
-            >
-                @paginationIconButton(cp.page - 1, "bi bi-chevron-left", cp, t)
-                @paginationNumberButton(1, cp, t)
-                if cp.page > 4 {
-                    @threeDots()
-                }
-                for i := max(2, cp.page - 2); i <= min(cp.page + 2, cp.totalPages - 1); i++ {
-                    @paginationNumberButton(i, cp, t)
-                }
-                if cp.page < cp.totalPages - 3 {
-                    @threeDots()
-                }
-                @paginationNumberButton(cp.totalPages, cp, t)
-                @paginationIconButton(cp.page + 1, "bi bi-chevron-right", cp, t)
-            </ul>
-        </div>
-    }
-    // disable load more button if it is not the first page
-    if cp.page == 1 {
-        <div class="d-flex justify-content-center mt-3">
-            @loadMoreButton(cp.pageSize + coursesPerPage, cp, t)
-        </div>
-    }
-}
-
-templ Courses(cp *coursesPage, t text) {
-    <div id="courses">
-        <div class="grid-cards">
-            if cp.totalPages == 0 {
-                <p>{ t.NoCoursesFound }</p>
-            } else {
-                for _, course := range cp.courses {
-                    @CourseCard(&course, t, cp.templ)
-                }
-            }
-            // dummy cards for alignment
-            for i := 0; i < 10; i++ {
-                <div class="card custom-card border-0"></div>
-            }
-        </div>
-        if cp.totalPages > 1 {
-            @pagination(cp, t)
-        }
-    </div>
-}
-
-templ Content(coursesPage *coursesPage, t text) {
-    <div id="courses-page" class="grid-page" hx-indicator="#loader">
-        <div class="filter border-end bg-light">
-            @filterSection(coursesPage, t)
-        </div>
-        <div class="main-content mt-3">
-            // @search(coursesPage, t)
-            @activeFilters(coursesPage, t)
-            @Courses(coursesPage, t)
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            initializeTooltips();
-            clearExpanded();
-        });
-
-        document.addEventListener('htmx:afterSwap', function () {
-            initializeTooltips();
-        });
-
-        // bootstrap tooltip initialization
-        function initializeTooltips() {
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-        };
-    </script>
+    return b
 }

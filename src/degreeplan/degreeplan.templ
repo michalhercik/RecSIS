@@ -76,7 +76,7 @@ templ CourseRow(course *Course, bpBtn PartialBlueprintAdd, t text) {
         @mouseover="hoverRow = true"
         @mouseleave="hoverRow = false">
         <td> @utils.CourseLink(course.Code, t.Utils) </td>
-        <td> @utils.TitleCourseLink(course.Code, course.Title, t.Utils) </td>
+        <td> @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils) </td>
         <td class="align-middle lh-1"> @statusBadge(course, t) </td>
         <td class="text-end pe-0">{ fmt.Sprintf("%d", course.Credits) }</td>
         <td class="d-none d-md-table-cell"></td>

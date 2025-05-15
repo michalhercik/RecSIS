@@ -201,7 +201,7 @@ templ summerTable(courses []Course, folded bool, year, yearCount, runningCredits
 
 templ popoverTitle(year, runningCredits, yearCredits, semesterCredits int, semester string, t text) {
     <h5
-        class="mb-0 text-nowrap popover-title"
+        class="mb-0 text-nowrap cursor-help"
         data-bs-toggle="popover"
         data-bs-trigger="hover"
         data-bs-html="true"
@@ -238,11 +238,11 @@ templ coursesBody(courses []Course, canUnassign bool, xSortMethod, assignTT stri
             <td class="text-center align-middle" @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)"> @checkbox(course.ID) </td>
             <td class="d-none d-md-table-cell"> @utils.CourseLink(course.Code, t.Utils) </td>
             <td>
-                <span class="d-none d-md-inline"> @utils.TitleCourseLink(course.Code, course.Title, t.Utils) </span>
+                <span class="d-none d-md-inline"> @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils) </span>
                 <div class="d-flex flex-column d-md-none">
                     <span class="text-muted small lh-1">{ course.Code }</span>
                     <span class="fw-bold small-screen-title">
-                        @utils.TitleCourseLink(course.Code, course.Title, t.Utils)
+                        @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils)
                     </span>
                 </div>
             </td>
