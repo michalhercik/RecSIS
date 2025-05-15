@@ -627,11 +627,15 @@ body {
 }
 
 /* Skeleton styles */
+#home-skeleton,
+#course-skeleton,
 #blueprint-skeleton,
 #degreeplan-skeleton {
     display: none;
 }
 
+#home-skeleton.htmx-request,
+#course-skeleton.htmx-request,
 #blueprint-skeleton.htmx-request,
 #degreeplan-skeleton.htmx-request {
     display: block;

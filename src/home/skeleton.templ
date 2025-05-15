@@ -1,0 +1,48 @@
+package home
+
+import (
+    "github.com/michalhercik/RecSIS/language"
+
+    "fmt"
+)
+
+templ Skeleton(lang language.Language) {
+    <div
+        id="home-skeleton"
+        class="container placeholder-glow"
+        x-data
+        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].PageTitle) }>
+        <h1>@placeholder(1)</h1>
+        @placeholder(1)&nbsp;
+        @placeholder(2)&nbsp;
+        @placeholder(3)&nbsp;
+        @placeholder(1)&nbsp;
+        @placeholder(1)
+
+        <h1>@placeholder(3)</h1>
+        @placeholder(1)&nbsp;
+        @placeholder(5)&nbsp;
+        @placeholder(1)&nbsp;
+        @placeholder(3)&nbsp;
+        @placeholder(4)&nbsp;
+        @placeholder(9)
+
+        <h1>@placeholder(2)</h1>
+        @placeholder(1)&nbsp;
+        @placeholder(1)&nbsp;
+        @placeholder(3)&nbsp;
+        @placeholder(4)&nbsp;
+        @placeholder(9)&nbsp;
+        @placeholder(1)&nbsp;
+        @placeholder(2)&nbsp;
+        @placeholder(3)&nbsp;
+        @placeholder(1)&nbsp;
+        @placeholder(2)&nbsp;
+        @placeholder(5)&nbsp;
+        @placeholder(8)
+    </div>
+}
+
+templ placeholder(size int) {
+    <span class={ fmt.Sprintf("placeholder bg-secondary col-%d", size) }></span>
+}

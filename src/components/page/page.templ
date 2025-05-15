@@ -38,9 +38,11 @@ templ PageView(model pageModel) {
                 <div id="main-content">
                     @model.main
                 </div>
-                // TODO: here should be all skeletons
-                @model.navItems[2].Skeleton(model.lang)
-                @model.navItems[3].Skeleton(model.lang)
+                for _, navItem := range model.navItems {
+                    if navItem.Skeleton != nil {
+                        @navItem.Skeleton(model.lang)
+                    }
+                }
             </main>
             @Footer(model)
             // TODO: quick fix for the loader, change it later

@@ -75,7 +75,7 @@ templ skeletonFullHeader(buttons int) {
             </span>
         </th>
         // credits
-        <th class="th-overflow credits-column d-none d-md-table-cell"><span class="placeholder bg-secondary" style="width: 80px"></span></th>
+        <th class="th-overflow credits-column d-none d-md-table-cell">@placeholderAbsolute(80)</th>
         // winter
         <th class="d-none d-md-table-cell">@placeholder(4)</th>
         // summer
@@ -94,13 +94,9 @@ templ skeletonFullHeader(buttons int) {
 templ skeletonRow(title, code, credits, winter, summer, guarantor1, guarantor2, guarantor3 int) {
     <tr>
         // checkbox
-        <td class="text-center align-middle p-0 lh-1">
-            @placeholder(8)
-        </td>
+        <td class="text-center align-middle p-0 lh-1">@placeholder(8)</td>
         // title
-        <td class="d-none d-md-table-cell">
-            @placeholder(title)
-        </td>
+        <td class="d-none d-md-table-cell">@placeholder(title)</td>
         // code
         <td>
             <span class="d-none d-md-inline">
@@ -114,17 +110,11 @@ templ skeletonRow(title, code, credits, winter, summer, guarantor1, guarantor2, 
             </div>
         </td>
         // credits
-        <td class="credits-column text-end d-none d-md-table-cell">
-            @placeholder(credits)
-        </td>
+        <td class="credits-column text-end d-none d-md-table-cell">@placeholder(credits)</td>
         // winter
-        <td class="d-none d-md-table-cell">
-            @placeholder(winter)
-        </td>
+        <td class="d-none d-md-table-cell">@placeholder(winter)</td>
         //summer
-        <td class="d-none d-md-table-cell">
-            @placeholder(summer)
-        </td>
+        <td class="d-none d-md-table-cell">@placeholder(summer)</td>
         // guarantors   
         <td class="d-none d-xl-table-cell">
             @placeholder(guarantor1)&nbsp;
@@ -138,4 +128,8 @@ templ skeletonRow(title, code, credits, winter, summer, guarantor1, guarantor2, 
 
 templ placeholder(size int) {
     <span class={ fmt.Sprintf("placeholder bg-secondary col-%d", size) }></span>
+}
+
+templ placeholderAbsolute(width int) {
+    <span class="placeholder bg-secondary" { templ.Attributes{"style": fmt.Sprintf("width: %dpx;",  width) }... }></span>
 }
