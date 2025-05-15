@@ -2,6 +2,7 @@ package page
 
 import (
 	"github.com/michalhercik/RecSIS/language"
+    "fmt"
 )
 
 // title string, search, main templ.Component) {
@@ -68,7 +69,7 @@ templ Header(model pageModel) {
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     // x-data is necessary for x-on:click to work
-                    <div class="navbar-nav me-auto" x-data={ "{ title: '" + model.title + "' }" }>
+                    <div class="navbar-nav me-auto" x-data={ fmt.Sprintf("{ title: '%s' }", model.title) }>
                         for _, navItem := range model.navItems {
                             @navItemView(navItem, model)
                         }
@@ -91,9 +92,9 @@ templ Header(model pageModel) {
 templ navItemView(nav NavItem, model pageModel) {
     <a
         class="nav-item nav-link nav-item-font pb-0 pb-lg-2"
-        :class={ "{ 'active': title == '" + nav.Title.String(model.lang) + "' }" }
+        :class={ fmt.Sprintf("{ 'active': title == '%s' }", nav.Title.String(model.lang)) }
         href={ templ.URL(model.lang.Path(nav.Path)) }
-        @click={ "clearExpanded(); title = '" + nav.Title.String(model.lang) + "'; document.getElementById('main-content').style.display = 'none'" }
+        @click={ fmt.Sprintf("clearExpanded(); title = '%s'; document.getElementById('main-content').style.display = 'none'", nav.Title.String(model.lang)) }
         hx-indicator={ nav.Indicator }>
         { nav.Title.String(model.lang) }
     </a>
@@ -108,8 +109,8 @@ templ profileBtn(model pageModel) {
             <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item" href="#">Reload from SIS</button></li>
             <li>
-                <form hx-boost="false" method="POST" action="/logout">
-                    <button type="sumbit" class="dropdown-item" ><i class="bi bi-box-arrow-right"></i> Log out</button>
+                <form hx-boost="false" method="POST" action={ templ.URL(model.lang.Path("/logout")) }>
+                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Log out</button>
                 </form>
             </li>
         </ul>
@@ -128,8 +129,7 @@ templ searchBar(model pageModel) {
 templ langBtn(l language.Language) {
     <button
         class="btn btn-outline-secondary border-0"
-        x-data
-        @click={ "changeLanguage('" + string(l) + "')" }>
+        x-data @click={ "changeLanguage('" + string(l) + "')" }>
         { string(l) }
     </button>
 }

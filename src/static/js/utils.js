@@ -23,3 +23,8 @@ document.addEventListener('htmx:afterSwap', function (e) {
         document.dispatchEvent(initAlpine);
     }
 });
+
+window.addEventListener('htmx:historyRestore', () => {
+    console.log(document.getElementById('main-content'));
+    document.getElementById('main-content').style.display = 'inline';
+});
