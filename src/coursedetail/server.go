@@ -45,7 +45,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	course, err := s.course(userID, code, lang, r)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", code, err)
-		PageNotFound(code, t).Render(r.Context(), w)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	} else {
 		main := Content(course, t)
 		s.Page.View(main, lang, course.Code+" - "+course.Name).Render(r.Context(), w)

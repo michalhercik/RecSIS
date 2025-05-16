@@ -431,6 +431,8 @@ templ teacherNameTitleAfter(t teacher.Teacher) {
 }
 
 templ blueprintAssignment(code string, t text) {
+    // TODO: make dynamic, NOT 3 fixed years
+    {{ numberOfYears := 3 }}
     <div class="btn-group">
         <button type="button" class="btn btn-outline-blueprint"
             hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
@@ -438,20 +440,21 @@ templ blueprintAssignment(code string, t text) {
         >
             { t.Assign }
         </button>
-        <button
-            type="button"
-            class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            data-bs-offset="0, 0">
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            // TODO: make dynamic, NOT 3 fixed years
-            for year := 1; year <= 3; year++ {
-                @assignSemesterButton(code, t.WinterAssign, year, 1, t)
-                @assignSemesterButton(code, t.SummerAssign, year, 2, t)
-            }
-        </ul>
+        if numberOfYears > 1 {
+            <button
+                type="button"
+                class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                data-bs-offset="0, 0">
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                for year := 1; year <= numberOfYears; year++ {
+                    @assignSemesterButton(code, t.WinterAssign, year, 1, t)
+                    @assignSemesterButton(code, t.SummerAssign, year, 2, t)
+                }
+            </ul>
+        }
     </div>
 }
 
@@ -608,16 +611,6 @@ templ ticks() {
             </span>
         }
     </div>
-}
-
-templ PageNotFound(code string, t text) {
-    @utils.Page("Course not found", t.Utils) {
-        @ContentNotFound(code, t)
-    }
-}
-
-templ ContentNotFound(code string, t text) {
-    <h1>{ t.CourseWithCode + code + t.NotFound }</h1>
 }
 
 func courseStartString(c *Course, t text) string {

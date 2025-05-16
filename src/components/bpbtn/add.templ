@@ -14,19 +14,21 @@ templ AddBtn(code string, numberOfYears int, t Text, options Options) {
         >
             { t.Assign }
         </button>
-        <button
-            type="button"
-            class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            data-bs-offset="0, 0">
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            for year := 1; year <= numberOfYears; year++ {
-                @assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
-                @assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
-            }
-        </ul>
+        if (numberOfYears > 1) {
+            <button
+                type="button"
+                class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                data-bs-offset="0, 0">
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                for year := 1; year <= numberOfYears; year++ {
+                    @assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
+                    @assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
+                }
+            </ul>
+        }
     </div>
 }
 
@@ -40,29 +42,35 @@ templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
         @mouseleave="hover = false">
         <button
             class="dp-bp-assign-btn btn btn-sm btn-outline-blueprint bi bi-plus lh-1 p-0"
-            :class="{ 'border-0': !hover, 'dp-bp-delimiter': !hover }"
+            if numberOfYears > 1 {
+                :class="{ 'border-0': !hover, 'dp-bp-delimiter': !hover }"
+            } else {
+                :class="{ 'border-0': !hover }"
+            }
             hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
             hx-vals={ `"year": 0, "semester": 0` }
             hx-swap={ options.HxSwap }
             hx-target={ options.HxTarget }
             >
         </button>
-        <button
-            class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-            :class="{ 'btn-blueprint-hover': hoverSelection, 'border-0': !hover }"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            data-bs-offset="0, 0">
-        </button>
-        <ul
-            class="dropdown-menu dropdown-menu-end"
-            @mouseover="hoverSelection = true"
-            @mouseleave="hoverSelection = false">
-            for year := 1; year <= numberOfYears; year++ {
-                @assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
-                @assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
-            }
-        </ul>
+        if (numberOfYears > 1) {
+            <button
+                class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
+                :class="{ 'btn-blueprint-hover': hoverSelection, 'border-0': !hover }"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                data-bs-offset="0, 0">
+            </button>
+            <ul
+                class="dropdown-menu dropdown-menu-end"
+                @mouseover="hoverSelection = true"
+                @mouseleave="hoverSelection = false">
+                for year := 1; year <= numberOfYears; year++ {
+                    @assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
+                    @assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
+                }
+            </ul>
+        }
     </div>
 }
 
