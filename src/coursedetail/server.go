@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/michalhercik/RecSIS/dbcourse"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
 	"github.com/michalhercik/RecSIS/internal/course/comments/search"
 	"github.com/michalhercik/RecSIS/language"
@@ -16,6 +17,7 @@ type Server struct {
 	CourseComments search.SearchEngine
 	Auth           Authentication
 	Page           Page
+	BpBtn          BlueprintAddButton
 }
 
 func (s *Server) Init() {
@@ -26,6 +28,7 @@ func (s *Server) Init() {
 	router.HandleFunc("DELETE /rating/{code}/{category}", s.deleteCategoryRating)
 	router.HandleFunc("PUT /rating/{code}", s.rate)
 	router.HandleFunc("DELETE /rating/{code}", s.deleteRating)
+	router.HandleFunc("POST /blueprint/{coursecode}", s.addCourseToBlueprint)
 	s.router = router
 }
 
@@ -47,7 +50,14 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		log.Printf("HandlePage error %s: %v", code, err)
 		PageNotFound(code, t).Render(r.Context(), w)
 	} else {
-		main := Content(course, t)
+		numberOfYears, err := s.BpBtn.NumberOfYears(userID)
+		if err != nil {
+			http.Error(w, "Unable to retrieve number of years", http.StatusInternalServerError)
+			log.Printf("HandlePage error: %v", err)
+			return
+		}
+		btn := s.BpBtn.PartialComponent(numberOfYears, lang)
+		main := Content(course, t, btn)
 		s.Page.View(main, lang, course.Code+" - "+course.Name).Render(r.Context(), w)
 	}
 }
@@ -198,4 +208,55 @@ func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
 	}
 	// render category rating
 	CategoryRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
+}
+
+func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	userID, err := s.Auth.UserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	courseCode := r.PathValue("coursecode")
+	year, err := strconv.Atoi(r.FormValue("year"))
+	if err != nil {
+		http.Error(w, "Invalid year", http.StatusBadRequest)
+		return
+	}
+
+	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+	if err != nil {
+		http.Error(w, "Invalid semester", http.StatusBadRequest)
+		return
+	}
+	semester := dbcourse.SemesterAssignment(semesterInt)
+	_, err = s.BpBtn.Action(userID, courseCode, year, semester)
+	if err != nil {
+		http.Error(w, "Unable to add course to blueprint", http.StatusInternalServerError)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
+	numberOfYears, err := s.BpBtn.NumberOfYears(userID)
+	if err != nil {
+		http.Error(w, "Unable to retrieve number of years", http.StatusInternalServerError)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
+	t := texts[lang]
+	btn := s.BpBtn.PartialComponent(numberOfYears, lang)
+	// course, err := s.Data.Course(userID, courseCode, lang)
+	// if err != nil {
+	// 	http.Error(w, "Unable to retrieve course", http.StatusInternalServerError)
+	// 	log.Printf("HandlePage error: %v", err)
+	// 	return
+	// }
+	// CourseRow(&course, btn, t).Render(r.Context(), w)
+	course, err := s.course(userID, courseCode, lang, r)
+	if err != nil {
+		log.Printf("HandlePage error %s: %v", courseCode, err)
+		http.Error(w, "Course not found", http.StatusNotFound)
+	} else {
+		main := Content(course, t, btn)
+		s.Page.View(main, lang, course.Code+" - "+course.Name).Render(r.Context(), w)
+	}
 }

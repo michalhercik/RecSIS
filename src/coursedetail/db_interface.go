@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/dbcourse"
 	"github.com/michalhercik/RecSIS/internal/course/comments/search"
 	"github.com/michalhercik/RecSIS/internal/interface/teacher"
 	"github.com/michalhercik/RecSIS/language"
@@ -28,6 +29,14 @@ type Authentication interface {
 type Page interface {
 	View(templ.Component, language.Language, string) templ.Component
 }
+
+type BlueprintAddButton interface {
+	Component(course string, numberOfYears int, lang language.Language) templ.Component
+	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
+	NumberOfYears(userID string) (int, error)
+	Action(userID, course string, year int, semester dbcourse.SemesterAssignment) (int, error)
+}
+type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
 
 const (
 	positiveRating   = 1
