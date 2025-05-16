@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/michalhercik/RecSIS/dbcourse"
+	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
 	"github.com/michalhercik/RecSIS/internal/course/comments/search"
 	"github.com/michalhercik/RecSIS/language"
@@ -229,7 +229,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid semester", http.StatusBadRequest)
 		return
 	}
-	semester := dbcourse.SemesterAssignment(semesterInt)
+	semester := dbds.SemesterAssignment(semesterInt)
 	_, err = s.BpBtn.Action(userID, courseCode, year, semester)
 	if err != nil {
 		http.Error(w, "Unable to add course to blueprint", http.StatusInternalServerError)

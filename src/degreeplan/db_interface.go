@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/a-h/templ"
-	"github.com/michalhercik/RecSIS/dbcourse"
+	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -22,7 +22,7 @@ type BlueprintAddButton interface {
 	Component(course string, numberOfYears int, lang language.Language) templ.Component
 	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
 	NumberOfYears(userID string) (int, error)
-	Action(userID, course string, year int, semester dbcourse.SemesterAssignment) (int, error)
+	Action(userID, course string, year int, semester dbds.SemesterAssignment) (int, error)
 }
 
 type Page interface {
@@ -33,26 +33,6 @@ type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
 
 type DegreePlan struct {
 	blocs []Bloc
-}
-
-func (dp *DegreePlan) add(record DegreePlanRecord) {
-	blocIndex := -1
-	for i, b := range dp.blocs {
-		if b.Code == record.BlocCode {
-			blocIndex = i
-			break
-		}
-	}
-	if blocIndex == -1 {
-		dp.blocs = append(dp.blocs, Bloc{
-			Name:  record.BlocName,
-			Code:  record.BlocCode,
-			Note:  record.BlocNote,
-			Limit: record.BlocLimit,
-		})
-		blocIndex = len(dp.blocs) - 1
-	}
-	dp.blocs[blocIndex].Courses = append(dp.blocs[blocIndex].Courses, record.Course)
 }
 
 type Bloc struct {
@@ -77,8 +57,11 @@ func (b *Bloc) inBlueprint() bool {
 func (b *Bloc) inBlueprintCredits() int {
 	credits := 0
 	for _, c := range b.Courses {
-		if c.InBlueprint {
-			credits += c.Credits
+		for _, year := range c.BlueprintYears {
+			if year > 0 {
+				credits += c.Credits
+				break
+			}
 		}
 	}
 	return credits
@@ -125,26 +108,35 @@ const (
 	teachingBoth
 )
 
-type Course struct {
-	Code          string           `db:"code"`
-	Title         string           `db:"title"`
-	Note          string           `db:"note"`
-	Credits       int              `db:"credits"`
-	Start         TeachingSemester `db:"start_semester"`
-	LectureRange1 int              `db:"lecture_range1"`
-	SeminarRange1 int              `db:"seminar_range1"`
-	LectureRange2 int              `db:"lecture_range2"`
-	SeminarRange2 int              `db:"seminar_range2"`
-	SemesterCount int              `db:"semester_count"`
-	ExamType      string           `db:"exam_type"`
-	InBlueprint   bool             `db:"in_blueprint"`
+type Teacher struct {
+	SISID       string
+	LastName    string
+	FirstName   string
+	TitleBefore string
+	TitleAfter  string
 }
 
-type DegreePlanRecord struct {
-	BlocCode  int    `db:"bloc_subject_code"`
-	BlocLimit int    `db:"bloc_limit"`
-	BlocName  string `db:"bloc_name"`
-	BlocNote  string `db:"bloc_note"`
-	Note      string `db:"note"`
-	Course
+type Course struct {
+	Code           string
+	Title          string
+	Note           string
+	Credits        int
+	Start          TeachingSemester
+	Guarantors     []Teacher
+	LectureRange1  int
+	SeminarRange1  int
+	LectureRange2  int
+	SeminarRange2  int
+	SemesterCount  int
+	ExamType       string
+	BlueprintYears []int64
+}
+
+func (c *Course) assignedInBlueprint() bool {
+	for _, year := range c.BlueprintYears {
+		if year > 0 {
+			return true
+		}
+	}
+	return false
 }

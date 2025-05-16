@@ -104,7 +104,7 @@ templ statusBadge(course *Course, t text) {
     // TODO: add course completion status -> change `false` to `course.Completed`
     if false {
         @badge("bg-success", t.Completed)
-    } else if course.InBlueprint {
+    } else if course.assignedInBlueprint() {
         @badge("bg-blueprint", t.InBlueprint)
     } else {
         @badge("bg-danger", t.NotCompleted)

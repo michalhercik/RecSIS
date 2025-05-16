@@ -1,11 +1,12 @@
 package degreeplan
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
-	"github.com/michalhercik/RecSIS/dbcourse"
+	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -37,6 +38,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dp, err := s.Data.DegreePlan(userID, lang)
+	fmt.Println(dp)
 	if err != nil {
 		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
 		log.Printf("HandlePage error: %v", err)
@@ -72,7 +74,7 @@ func (s Server) AddCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid semester", http.StatusBadRequest)
 		return
 	}
-	semester := dbcourse.SemesterAssignment(semesterInt)
+	semester := dbds.SemesterAssignment(semesterInt)
 	_, err = s.BpBtn.Action(userID, courseCode, year, semester)
 	if err != nil {
 		http.Error(w, "Unable to add course to blueprint", http.StatusInternalServerError)

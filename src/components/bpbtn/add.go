@@ -3,7 +3,7 @@ package bpbtn
 import (
 	"github.com/a-h/templ"
 	"github.com/jmoiron/sqlx"
-	"github.com/michalhercik/RecSIS/dbcourse"
+	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -37,7 +37,7 @@ func (b Add) NumberOfYears(userID string) (int, error) {
 	return numberOfYears, nil
 }
 
-func (b Add) Action(userID, course string, year int, semester dbcourse.SemesterAssignment) (int, error) {
+func (b Add) Action(userID, course string, year int, semester dbds.SemesterAssignment) (int, error) {
 	const InsertCourse = `--sql
 		WITH target_position AS (
 			SELECT bs.id AS blueprint_semester_id, COALESCE(bc.position, 0) + 1 AS position FROM blueprint_years y

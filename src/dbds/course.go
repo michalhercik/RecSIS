@@ -1,11 +1,9 @@
-package dbcourse
+package dbds
 
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-
-	"github.com/michalhercik/RecSIS/internal/interface/teacher"
 )
 
 type Faculty struct {
@@ -64,7 +62,7 @@ type CourseCategoryRating struct {
 
 type SemesterAssignment int
 
-func (sa *SemesterAssignment) Scan(val interface{}) error {
+func (sa *SemesterAssignment) Scan(val any) error {
 	switch v := val.(type) {
 	case int64:
 		*sa = SemesterAssignment(v)
@@ -138,24 +136,9 @@ func (d *NullDescription) Scan(val any) error {
 	return nil
 }
 
-type TeacherSlice []teacher.Teacher
-
-func (ts *TeacherSlice) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case []byte:
-		json.Unmarshal(v, &ts)
-		return nil
-	case string:
-		json.Unmarshal([]byte(v), &ts)
-		return nil
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
-}
-
 type JSONStringArray []string
 
-func (jsa *JSONStringArray) Scan(val interface{}) error {
+func (jsa *JSONStringArray) Scan(val any) error {
 	switch v := val.(type) {
 	case nil:
 		jsa = nil
@@ -174,7 +157,7 @@ func (jsa *JSONStringArray) Scan(val interface{}) error {
 
 type ClassSlice []Class
 
-func (cs *ClassSlice) Scan(val interface{}) error {
+func (cs *ClassSlice) Scan(val any) error {
 	switch v := val.(type) {
 	case nil:
 		*cs = nil
