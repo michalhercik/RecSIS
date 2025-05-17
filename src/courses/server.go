@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/michalhercik/RecSIS/courses/internal/filter"
-	"github.com/michalhercik/RecSIS/dbcourse"
+	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -276,7 +276,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	// btn.Render(r.Context(), w)
 }
 
-func parseYearSemester(r *http.Request) (int, dbcourse.SemesterAssignment, error) {
+func parseYearSemester(r *http.Request) (int, dbds.SemesterAssignment, error) {
 	year, err := parseYear(r)
 	if err != nil {
 		return 0, 0, err
@@ -296,11 +296,11 @@ func parseYear(r *http.Request) (int, error) {
 	return year, nil
 }
 
-func parseSemester(r *http.Request) (dbcourse.SemesterAssignment, error) {
+func parseSemester(r *http.Request) (dbds.SemesterAssignment, error) {
 	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
 	if err != nil {
 		return 0, err
 	}
-	semester := dbcourse.SemesterAssignment(semesterInt)
+	semester := dbds.SemesterAssignment(semesterInt)
 	return semester, nil
 }

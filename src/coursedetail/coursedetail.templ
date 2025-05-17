@@ -7,8 +7,8 @@ import (
     "fmt"
 )
 
-templ Content(course *Course, t text) {
-    <div class="container">
+templ Content(course *Course, t text, bpBtn PartialBlueprintAdd) {
+    <div class="container" hx-indicator="#loader">
         // code and title
         <h1 class="text-center pt-3">{ course.Code + " - " + course.Name }</h1>
         // badges with information
@@ -28,7 +28,7 @@ templ Content(course *Course, t text) {
         </div>
         // buttons
         <div class="pb-2">
-            @buttons(course, t)
+            @buttons(course, t, bpBtn)
         </div>
         // switch between description, survey and detailed information
         <div class="pt-3 pt-md-0">
@@ -103,7 +103,7 @@ templ basicInfo(course *Course, t text) {
     </table>
 }
 
-templ buttons(course *Course, t text) {
+templ buttons(course *Course, t text, bpBtn PartialBlueprintAdd) {
     <div class="d-flex flex-wrap justify-content-center gap-1">
         // link to additional information
         if course.Link != "" {
@@ -125,7 +125,8 @@ templ buttons(course *Course, t text) {
             rozvrh
         </a>
         // button to assign course to blueprint
-        @blueprintAssignment(course.Code, t)
+        // @blueprintAssignment(course.Code, t)
+        @bpBtn(course.Code, "outerHTML", "body")
     </div>
 }
 

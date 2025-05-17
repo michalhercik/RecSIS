@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/internal/course/comments/search"
 	"github.com/michalhercik/RecSIS/internal/interface/teacher"
 	"github.com/michalhercik/RecSIS/language"
@@ -28,6 +28,14 @@ type Authentication interface {
 type Page interface {
 	View(templ.Component, language.Language, string) templ.Component
 }
+
+type BlueprintAddButton interface {
+	Component(course string, numberOfYears int, lang language.Language) templ.Component
+	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
+	NumberOfYears(userID string) (int, error)
+	Action(userID, course string, year int, semester dbds.SemesterAssignment) (int, error)
+}
+type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
 
 const (
 	positiveRating   = 1
@@ -71,6 +79,7 @@ type Course struct {
 	CourseRating
 	Link                 string // link to course webpage (not SIS)
 	BlueprintAssignments []Assignment
+	InDegreePlan         bool
 	CategoryRatings      []CourseCategoryRating
 	Comments             search.SearchResult
 }
@@ -118,6 +127,33 @@ type Description struct {
 type NullDescription struct {
 	Description
 	Valid bool
+}
+
+type Assignment struct {
+	id       int
+	year     int
+	semester string
+}
+
+func (a Assignment) String(lang string) string {
+	// semester := ""
+	// switch a.semester {
+	// case assignmentNone:
+	// 	semester = texts[lang].N
+	// case assignmentWinter:
+	// 	semester = texts[lang].W
+	// case assignmentSummer:
+	// 	semester = texts[lang].S
+	// default:
+	// 	semester = texts[lang].ER
+	// }
+
+	// result := fmt.Sprintf("%d%s", a.year, semester)
+	// if a.year == 0 {
+	// 	result = texts[lang].UN
+	// }
+	// return result
+	return "TODO" // TODO NOT IMPLEMENTED
 }
 
 // type Faculty struct {
@@ -177,44 +213,18 @@ type NullDescription struct {
 // 	}
 // }
 
-type Assignment struct {
-	// year     int
-	// semester Semester
-}
+// type Assignments []Assignment
 
-func (a Assignment) String(lang string) string {
-	// semester := ""
-	// switch a.semester {
-	// case assignmentNone:
-	// 	semester = texts[lang].N
-	// case assignmentWinter:
-	// 	semester = texts[lang].W
-	// case assignmentSummer:
-	// 	semester = texts[lang].S
-	// default:
-	// 	semester = texts[lang].ER
-	// }
-
-	// result := fmt.Sprintf("%d%s", a.year, semester)
-	// if a.year == 0 {
-	// 	result = texts[lang].UN
-	// }
-	// return result
-	return "TODO" // TODO NOT IMPLEMENTED
-}
-
-type Assignments []Assignment
-
-func (a Assignments) String(lang string) string {
-	assignments := []string{}
-	for _, assignment := range a {
-		assignments = append(assignments, assignment.String(lang))
-	}
-	if len(assignments) == 0 {
-		return "TODO"
-	}
-	return strings.Join(assignments, " ")
-}
+// func (a Assignments) String(lang string) string {
+// 	assignments := []string{}
+// 	for _, assignment := range a {
+// 		assignments = append(assignments, assignment.String(lang))
+// 	}
+// 	if len(assignments) == 0 {
+// 		return "TODO"
+// 	}
+// 	return strings.Join(assignments, " ")
+// }
 
 // func (d *NullDescription) Scan(val interface{}) error {
 // 	if val == nil {

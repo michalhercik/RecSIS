@@ -2,7 +2,7 @@ package sqlquery
 
 const DegreePlan = `
 WITH user_blueprint_courses AS (
-	SELECT course_code FROM blueprint_years y
+	SELECT course_code, ARRAY_AGG(y.academic_year) AS academic_years FROM blueprint_years y
 	LEFT JOIN blueprint_semesters bs ON bs.blueprint_year_id = y.id
 	LEFT JOIN blueprint_courses bc ON bc.blueprint_semester_id = bs.id
 	WHERE y.user_id = $1
@@ -22,9 +22,10 @@ SELECT
 	COALESCE(c.lecture_range2, -1) lecture_range2,
 	COALESCE(c.seminar_range1, -1) seminar_range1,
 	COALESCE(c.seminar_range2, -1) seminar_range2,
-	c.semester_count,
 	c.exam_type,
-	ubc.course_code IS NOT NULL in_blueprint
+	c.guarantors,
+	ubc.academic_years,
+	CASE WHEN dp.bloc_type = 'A' THEN TRUE WHEN dp.bloc_type = 'B' THEN FALSE END AS is_compulsory
 FROM bla_studies bs
 LEFT JOIN degree_plans dp ON bs.degree_plan_code = dp.plan_code AND bs.start_year = dp.plan_year
 LEFT JOIN courses c ON dp.course_code = c.code

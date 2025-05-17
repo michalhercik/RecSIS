@@ -129,6 +129,13 @@ func main() {
 		},
 		Auth: cas.UserIDFromContext{},
 		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		BpBtn: bpbtn.Add{
+			DB:    db,
+			Templ: bpbtn.AddBtn,
+			Options: bpbtn.Options{
+				HxPostBase: "/course",
+			},
+		},
 	}
 	coursedetail.Init()
 	courses := courses.Server{

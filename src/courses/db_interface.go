@@ -10,7 +10,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/courses/internal/filter"
-	"github.com/michalhercik/RecSIS/dbcourse"
+	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
 	//"log"
 )
@@ -29,7 +29,7 @@ type BlueprintAddButton interface {
 	Component(course string, numberOfYears int, lang language.Language) templ.Component
 	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
 	NumberOfYears(userID string) (int, error)
-	Action(userID, course string, year int, semester dbcourse.SemesterAssignment) (int, error)
+	Action(userID, course string, year int, semester dbds.SemesterAssignment) (int, error)
 }
 
 type Page interface {
