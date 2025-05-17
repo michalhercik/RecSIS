@@ -9,7 +9,7 @@ import (
 templ Skeleton(lang language.Language) {
     <div
         id="home-skeleton"
-        class="container placeholder-glow"
+        class="container pt-3 placeholder-glow"
         x-data
         x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].PageTitle) }>
         <h1>@placeholder(1)</h1>

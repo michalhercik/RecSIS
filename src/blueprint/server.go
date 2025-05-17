@@ -114,7 +114,8 @@ func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request, t text) 
 	data, err := s.Data.Blueprint(userID, DBLang(t.Utils.Language))
 	if err != nil {
 		log.Println(err)
-		result = InternalServerErrorContent(t)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	} else {
 		result = Content(data, t)
 	}
@@ -133,7 +134,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	data, err := s.Data.Blueprint(userID, DBLang(t.Utils.Language))
 	if err != nil {
 		log.Println(err)
-		result = InternalServerErrorPage(t)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	} else {
 		result = Content(data, t)
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"iter"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -138,7 +139,7 @@ func (a Assignment) String(lang string) string {
 		semester = texts[l].ER
 	}
 
-	result := fmt.Sprintf("%d%s", a.Year, semester)
+	result := fmt.Sprintf("%d. %s", a.Year, semester)
 	if a.Year == 0 {
 		result = texts[l].UN
 	}
@@ -170,6 +171,16 @@ func (a AssignmentSlice) String(lang string) string {
 		return ""
 	}
 	return strings.Join(assignments, " ")
+}
+
+func (a AssignmentSlice) Sort() AssignmentSlice {
+	sort.Slice(a, func(i, j int) bool {
+		if a[i].Year == a[j].Year {
+			return a[i].Semester < a[j].Semester
+		}
+		return a[i].Year < a[j].Year
+	})
+	return a
 }
 
 type Description struct {

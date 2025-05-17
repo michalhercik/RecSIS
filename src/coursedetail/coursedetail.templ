@@ -75,7 +75,10 @@ templ basicInfo(course *Course, t text) {
     <table class="info-table-borders m-auto">
         @infoRow(t.Faculty){
             <span>{ course.Faculty }</span>
-        } // TODO: plus katedra
+        }
+        @infoRow(t.Department) {
+            <span>{ course.GuarantorDepartment }</span>
+        }
         @infoRow(t.LanguageOfCourse) {
             <span>{ course.Language }</span>
         }

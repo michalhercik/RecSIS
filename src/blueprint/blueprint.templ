@@ -15,15 +15,16 @@ templ Content(data *Blueprint, t text) {
         class="container"
         :class="checkedNumber > 0 || 'bp-content-padding'"
         @resize.window="smallScreen = window.innerWidth < 768"
-        hx-indicator="#loader">
+        hx-indicator="#loader"
+    >
         @checkedCoursesMenu(len(data.years) - 1, t)
         @unassignedTable(data.years[0].unassigned.courses, data.years[0].unassigned.folded, len(data.years) - 1, t)
         if len(data.years) > 1 {
             @yearsTables(data.years[1:], t)
         }
         @summarizeFooter(data, t)
+        <script defer src="/js/blueprint.js"></script>
     </div>
-    <script defer src="/js/blueprint.js"></script>
 }
 
 templ checkedCoursesMenu(yearCount int, t text) {
@@ -537,18 +538,5 @@ func vPos() string                    { return fmt.Sprintf(`"position": %d`, las
 func vUnassign(unassign bool) string  { return fmt.Sprintf(`"unassign": %t`, unassign) }
 
 func mergeVals(vals ...string) string { return strings.Join(vals, ", ") }
-
-templ InternalServerErrorContent(t text) {
-    // TODO translate
-    <h1>Internal Server Error</h1>
-    <p>Something went wrong</p>
-}
-
-templ InternalServerErrorPage(t text) {
-    // TODO translate
-    @utils.Page("Internal Server Error", t.Utils) {
-        @InternalServerErrorContent(t)
-    }
-}
 
 templ DefaultCourseAdditionPresenter(info insertedCourseInfo) {}

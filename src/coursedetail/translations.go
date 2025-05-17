@@ -10,6 +10,7 @@ import (
 type text struct {
 	Language           string
 	Faculty            string
+	Department         string
 	Semester           string
 	Winter             string
 	Summer             string
@@ -65,6 +66,7 @@ var texts = map[language.Language]text{
 	language.CS: {
 		Language:           "cs",
 		Faculty:            "Fakulta",
+		Department:         "Katedra",
 		Semester:           "Semestr",
 		Winter:             "Zimní",
 		Summer:             "Letní",
@@ -109,6 +111,7 @@ var texts = map[language.Language]text{
 	language.EN: {
 		Language:           "en",
 		Faculty:            "Faculty",
+		Department:         "Department",
 		Semester:           "Semester",
 		Winter:             "Winter",
 		Summer:             "Summer",

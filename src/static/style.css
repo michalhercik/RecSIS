@@ -26,6 +26,18 @@ body {
     padding-bottom: 75px; /* Space for the footer */
 }
 
+@media (max-width: 575.5px) {
+    body {
+        padding-bottom: 100px; /* Space for the footer */
+    }
+}
+
+@media (max-width: 308.5px) {
+    body {
+        padding-bottom: 121px; /* Space for the footer */
+    }
+}
+
 /* Help cursor for popovers/tooltips */
 .cursor-help {
     cursor: help;
@@ -66,7 +78,7 @@ body {
     }
 }
 
-/* navbar nav items font size */
+/* NAV -> nav items font size */
 .nav-item-font {
     font-size: calc(1.275rem + .3vw) !important; /* ~ bootstrap fs-4 */
 }
@@ -77,7 +89,7 @@ body {
     }
 }
 
-/* navbar input submit button color */
+/* NAV -> input submit button color */
 .btn-submit-input-green {
     background-color: rgb(138, 199, 90) !important;
     color: black !important;
@@ -85,6 +97,203 @@ body {
 
 .btn-submit-input-green:hover {
     background-color: rgb(101, 168, 50) !important;
+}
+
+/* NAV -> search bar styles */
+#search-bar-container {
+    width: 500px;
+    top: 7px;
+    right: 106px;
+}
+
+@media (max-width: 1399.5px) {
+    #search-bar-container {
+        width: 430px;
+    }
+}
+
+@media (max-width: 1199.5px) {
+    #search-bar-container {
+        width: 320px;
+    }
+}
+
+@media (max-width: 991.5px) {
+    #search-bar-container {
+        width: calc(100% - 206px);
+        top: 5px;
+        right: 62px;
+    }
+}
+
+@media (max-width: 767.5px) {
+    #search-bar-container {
+        width: calc(100% - 112px);
+        top: 3px;
+    }
+}
+
+/* NAV -> rounded border */
+@media (max-width: 575.5px) {
+    .rounded-input > input,
+    button.rounded-input {
+        border-top-right-radius: 0.375rem !important;
+        border-bottom-right-radius: 0.375rem !important;
+    }
+}
+
+/* S -> cards grid styles */
+#filter-section {
+    max-width: 185px;
+    width: 185px;
+}
+
+@media (max-width: 575.5px) {
+    #filter-section {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+.custom-card {
+    width: 300px;
+    min-width: 300px;
+}
+
+/* S -> filters wrapper */
+#filters-wrapper {
+    height: 100%;
+}
+
+/* S -> move to top button */
+#move-to-filters-btn {
+    position: sticky;
+    top: 72px;
+}
+
+/* S -> background for filter */
+.bg-filters {
+    background-color: white !important;
+}
+
+@media (max-width: 575.5px) {
+    .bg-filters {
+        background-color: rgba(101, 168, 50, 0.2) !important;
+    }
+}
+
+.bg-filters-buttons { 
+    background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* S -> active filters rounding */
+.rounded-row-end div:last-child {
+    border-top-right-radius: 0.375rem !important;
+    border-bottom-right-radius: 0.375rem !important;
+}
+
+/* S -> annotation styles */
+.annotation-container {
+    max-height: 300px;
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(180deg, #000 80%, transparent);
+}
+
+.annotation-container.expanded {
+    max-height: none;
+    mask-image: none;
+}
+
+.annotation-text {
+    text-align: justify;
+    font-size: 0.9em;
+}
+
+/* S -> Course card blueprint assignment ribbon styles */
+.ribbon {
+    width: 70px;
+    height: 70px;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.ribbon span {
+    position: absolute;
+    display: block;
+    width: 99px;
+    padding: 5px 0;
+    background: rgb(4, 108, 181);
+    color: white;
+    text-align: center;
+    font-size: 15px;
+    font-weight: bold;
+    transform: rotate(45deg);
+    top: 7px;
+    right: -28px;
+    z-index: 50;
+}
+
+/* CD -> badges colors */
+.bg-winter {
+    background-color: rgb(113, 180, 206);
+    color: black !important;
+}
+
+.bg-summer {
+    background-color: rgb(255, 222, 16);
+    color: black !important;
+}
+
+.bg-both {
+    background-color: rgb(216, 134, 216);
+    color: black !important;
+}
+
+/* CD -> teachers table styles */
+#teachers-table {
+    table-layout: auto;
+}
+
+.teachers-first-column {
+    white-space: nowrap;
+    width: 1px;
+    max-width: max-content;
+}
+
+/* CD -> rating form ticks styles */
+.tick-container {
+    position: relative;
+    width: 97%;
+    top: -5px;
+}
+
+.tick {
+    position: absolute;
+    text-align: center;
+    font-size: 12px;
+    transform: translateX(-50%);
+}
+
+/* CD -> info tables have no border under itself */
+.info-table-borders tr:last-child td:nth-child(2) {
+    border-bottom: none !important;
+}
+
+/* CD -> not rated no thumb range styles */
+.no-thumb::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.no-thumb::-moz-range-thumb {
+    width: 0 !important;
+    height: 0 !important;
+    border: none !important;
 }
 
 /* BP -> small screen title */
@@ -210,21 +419,6 @@ body {
     background-color: rgb(4, 108, 181);
 }
 
-.bg-winter {
-    background-color: rgb(113, 180, 206);
-    color: black !important;
-}
-
-.bg-summer {
-    background-color: rgb(255, 222, 16);
-    color: black !important;
-}
-
-.bg-both {
-    background-color: rgb(216, 134, 216);
-    color: black !important;
-}
-
 /* BP -> assign hover styles */
 .dropdown-item-blueprint:hover {
     background-color: rgb(4, 108, 181) !important;
@@ -327,159 +521,6 @@ body {
 }
 
 /* =============================== */
-
-/* S -> search bar styles */
-#search-bar-container {
-    width: 490px;
-    top: 7px;
-    right: 106px;
-}
-
-@media (max-width: 1199.5px) {
-    #search-bar-container {
-        width: 352px;
-    }
-}
-
-@media (max-width: 991.5px) {
-    #search-bar-container {
-        width: calc(100% - 206px);
-        right: 62px;
-    }
-}
-
-@media (max-width: 767.5px) {
-    #search-bar-container {
-        width: calc(100% - 112px);
-    }
-}
-
-/* S -> cards grid styles */
-#courses-page {
-    display: grid;
-    grid-template-columns: 230px 1fr;
-    gap: 1rem; /* Space between columns */
-}
-
-#filter-section {
-    width: 230px; /* Ensure the width stays fixed */
-    padding: 1rem;
-}
-
-.grid-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, 300px);
-    gap: 0;
-    max-width: 100%;
-    justify-content: center;
-}
-
-.custom-card {
-    width: 300px;
-    min-width: 300px;
-    padding-left: 0;
-    padding-right: 0;
-    margin-bottom: 0;
-}
-
-/* S -> filters wrapper */
-#filters-wrapper {
-    height: 100%;
-}
-
-/* S -> move to top button */
-#move-to-filters-btn {
-    position: sticky;
-    top: 72px;
-}
-
-/* S -> annotation styles */
-.annotation-container {
-    max-height: 350px;
-    overflow: hidden;
-    position: relative;
-    mask-image: linear-gradient(180deg, #000 80%, transparent);
-}
-
-.annotation-container.expanded {
-    max-height: none;
-    mask-image: none;
-}
-
-.annotation-text {
-    text-align: justify;
-    font-size: 0.9em;
-}
-
-/* S -> Course card blueprint assignment ribbon styles */
-.ribbon {
-    width: 70px;
-    height: 70px;
-    overflow: hidden;
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-
-.ribbon span {
-    position: absolute;
-    display: block;
-    width: 99px;
-    padding: 5px 0;
-    background: rgb(4, 108, 181);
-    color: white;
-    text-align: center;
-    font-size: 15px;
-    font-weight: bold;
-    transform: rotate(45deg);
-    top: 7px;
-    right: -28px;
-    z-index: 50;
-}
-
-/* CD -> teachers table styles */
-#teachers-table {
-    table-layout: auto;
-}
-
-.teachers-first-column {
-    white-space: nowrap;
-    width: 1px;
-    max-width: max-content;
-}
-
-/* CD -> rating form ticks styles */
-.tick-container {
-    position: relative;
-    width: 97%;
-    top: -5px;
-}
-
-.tick {
-    position: absolute;
-    text-align: center;
-    font-size: 12px;
-    transform: translateX(-50%);
-}
-
-/* CD -> info tables have no border under itself */
-.info-table-borders tr:last-child td:nth-child(2) {
-    border-bottom: none !important;
-}
-
-/* CD -> not rated no thumb range styles */
-.no-thumb::-webkit-slider-thumb {
-    -webkit-appearance: none !important;
-    appearance: none !important;
-    width: 0 !important;
-    height: 0 !important;
-}
-
-.no-thumb::-moz-range-thumb {
-    width: 0 !important;
-    height: 0 !important;
-    border: none !important;
-}
 
 /* === Degree plan table columns width styles === */
 .degree-plan-table {

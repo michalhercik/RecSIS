@@ -20,6 +20,8 @@ type text struct {
 	UN                string
 	SearchPlaceholder string
 	SearchButton      string
+	FilterButton      string
+	ShowResults       string
 	TopFilter         string
 	ShowMore4Minus    string
 	ShowMore5Plus     string
@@ -67,13 +69,15 @@ var texts = map[language.Language]text{
 		Winter:            "Zimní",
 		Summer:            "Letní",
 		Both:              "Oba",
-		W:                 "Z",
-		S:                 "L",
+		W:                 "ZS",
+		S:                 "LS",
 		N:                 "ER",
 		ER:                "ER",
-		UN:                "NE",
+		UN:                "NEZAŘ.",
 		SearchPlaceholder: "Hledej...",
 		SearchButton:      "Hledej",
+		FilterButton:      "Zobrazit filtrování",
+		ShowResults:       "Zobrazit výsledky",
 		TopFilter:         "Filtrovat",
 		ShowMore4Minus:    "Další",
 		ShowMore5Plus:     "Dalších",
@@ -102,13 +106,15 @@ var texts = map[language.Language]text{
 		Winter:            "Winter",
 		Summer:            "Summer",
 		Both:              "Both",
-		W:                 "W",
-		S:                 "S",
-		N:                 "N",
+		W:                 "WIN",
+		S:                 "SUM",
+		N:                 "ER",
 		ER:                "ER",
-		UN:                "UN",
+		UN:                "UNASS.",
 		SearchPlaceholder: "Search...",
 		SearchButton:      "Search",
+		FilterButton:      "Show filters",
+		ShowResults:       "Show results",
 		TopFilter:         "Filter",
 		ShowMore4Minus:    "Another",
 		ShowMore5Plus:     "Another",
