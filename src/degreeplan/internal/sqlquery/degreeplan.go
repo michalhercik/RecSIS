@@ -22,11 +22,10 @@ SELECT
 	COALESCE(c.lecture_range2, -1) lecture_range2,
 	COALESCE(c.seminar_range1, -1) seminar_range1,
 	COALESCE(c.seminar_range2, -1) seminar_range2,
-	-- c.semester_count,
 	c.exam_type,
 	c.guarantors,
-	-- ubc.course_code IS NOT NULL in_blueprint
-	ubc.academic_years
+	ubc.academic_years,
+	CASE WHEN dp.bloc_type = 'A' THEN TRUE WHEN dp.bloc_type = 'B' THEN FALSE END AS is_compulsory
 FROM bla_studies bs
 LEFT JOIN degree_plans dp ON bs.degree_plan_code = dp.plan_code AND bs.start_year = dp.plan_year
 LEFT JOIN courses c ON dp.course_code = c.code

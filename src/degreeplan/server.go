@@ -1,7 +1,6 @@
 package degreeplan
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -38,7 +37,6 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dp, err := s.Data.DegreePlan(userID, lang)
-	fmt.Println(dp)
 	if err != nil {
 		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
 		log.Printf("HandlePage error: %v", err)

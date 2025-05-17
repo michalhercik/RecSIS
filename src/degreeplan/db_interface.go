@@ -36,11 +36,12 @@ type DegreePlan struct {
 }
 
 type Bloc struct {
-	Name    string
-	Code    int
-	Note    string
-	Limit   int
-	Courses []Course
+	Name         string
+	Code         int
+	Note         string
+	Limit        int
+	IsCompulsory bool
+	Courses      []Course
 }
 
 func (bloc *Bloc) hasLimit() bool {

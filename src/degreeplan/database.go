@@ -44,10 +44,11 @@ func add(dp *DegreePlan, record dbds.DegreePlanRecord) {
 	}
 	if blocIndex == -1 {
 		dp.blocs = append(dp.blocs, Bloc{
-			Name:  record.BlocName,
-			Code:  record.BlocCode,
-			Note:  record.BlocNote,
-			Limit: record.BlocLimit,
+			Name:         record.BlocName,
+			Code:         record.BlocCode,
+			Note:         record.BlocNote,
+			Limit:        record.BlocLimit,
+			IsCompulsory: record.IsBlocCompulsory,
 		})
 		blocIndex = len(dp.blocs) - 1
 	}
