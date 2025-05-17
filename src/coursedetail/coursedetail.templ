@@ -125,7 +125,6 @@ templ buttons(course *Course, t text, bpBtn PartialBlueprintAdd) {
             rozvrh
         </a>
         // button to assign course to blueprint
-        // @blueprintAssignment(course.Code, t)
         @bpBtn(course.Code, "outerHTML", "body")
     </div>
 }
@@ -432,45 +431,6 @@ templ teacherNameTitleAfter(t teacher.Teacher) {
     } else {
         @teacherName(t)
     }
-}
-
-templ blueprintAssignment(code string, t text) {
-    // TODO: make dynamic, NOT 3 fixed years
-    {{ numberOfYears := 3 }}
-    <div class="btn-group">
-        <button type="button" class="btn btn-outline-blueprint"
-            hx-post={ t.Utils.LangLink("/blueprint/course/" + code) }
-            hx-vals={ `"year": 0, "semester": 0"` }
-        >
-            { t.Assign }
-        </button>
-        if numberOfYears > 1 {
-            <button
-                type="button"
-                class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                data-bs-offset="0, 0">
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                for year := 1; year <= numberOfYears; year++ {
-                    @assignSemesterButton(code, t.WinterAssign, year, 1, t)
-                    @assignSemesterButton(code, t.SummerAssign, year, 2, t)
-                }
-            </ul>
-        }
-    </div>
-}
-
-templ assignSemesterButton(code, semesterText string, year, semester int, t text) {
-    <li class="mx-3">
-        <button
-            class="dropdown-item rounded text-center"
-            hx-post={ t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%s", code)) }
-            hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }>
-            { fmt.Sprintf("%s %s", t.YearStr(year), semesterText) }
-        </button>
-    </li>
 }
 
 templ ratings(userRating NullInt64, avgRating NullFloat64, ratingCount NullInt64, categories []CourseCategoryRating, code string, t text) {
