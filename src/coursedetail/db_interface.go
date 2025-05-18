@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"sort"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/dbds"
@@ -45,13 +46,12 @@ const (
 )
 
 type Course struct {
-	Code                string
-	Name                string
-	Faculty             string
-	GuarantorDepartment string
-	State               string
-	Start               TeachingSemester
-	// SemesterCount         int
+	Code                   string
+	Name                   string
+	Faculty                string
+	GuarantorDepartment    string
+	State                  string
+	Start                  TeachingSemester
 	Language               string
 	LectureRangeWinter     sql.NullInt64
 	SeminarRangeWinter     sql.NullInt64
@@ -78,7 +78,7 @@ type Course struct {
 	Classifications        []Class
 	CourseRating
 	Link                 string // link to course webpage (not SIS)
-	BlueprintAssignments []Assignment
+	BlueprintAssignments AssignmentSlice
 	InDegreePlan         bool
 	CategoryRatings      []CourseCategoryRating
 	Comments             search.SearchResult
@@ -129,114 +129,52 @@ type NullDescription struct {
 	Valid bool
 }
 
+type SemesterAssignment int
+
+const (
+	assignmentNone SemesterAssignment = iota
+	assignmentWinter
+	assignmentSummer
+)
+
 type Assignment struct {
 	id       int
 	year     int
-	semester string
+	semester SemesterAssignment
 }
 
-func (a Assignment) String(lang string) string {
-	// semester := ""
-	// switch a.semester {
-	// case assignmentNone:
-	// 	semester = texts[lang].N
-	// case assignmentWinter:
-	// 	semester = texts[lang].W
-	// case assignmentSummer:
-	// 	semester = texts[lang].S
-	// default:
-	// 	semester = texts[lang].ER
-	// }
+func (a Assignment) String(lang language.Language) string {
+	t := texts[lang]
+	semester := ""
+	switch a.semester {
+	case assignmentNone:
+		semester = "unsupported"
+	case assignmentWinter:
+		semester = t.WinterAssign
+	case assignmentSummer:
+		semester = t.SummerAssign
+	default:
+		semester = "unsupported"
+	}
 
-	// result := fmt.Sprintf("%d%s", a.year, semester)
-	// if a.year == 0 {
-	// 	result = texts[lang].UN
-	// }
-	// return result
-	return "TODO" // TODO NOT IMPLEMENTED
+	result := fmt.Sprintf("%s %s", t.YearStr(a.year), semester)
+	if a.year == 0 {
+		result = t.Unassigned
+	}
+	return result
 }
 
-// type Faculty struct {
-// 	SisID int
-// 	Name  string
-// 	Abbr  string
-// }
+type AssignmentSlice []Assignment
 
-// type Semester int
-
-// const (
-// 	winter Semester = iota + 1
-// 	summer
-// 	both
-// )
-
-// func (s Semester) String(lang string) string {
-// 	l := language.Language(lang)
-// 	switch s {
-// 	case winter:
-// 		return texts[l].Winter
-// 	case summer:
-// 		return texts[l].Summer
-// 	case both:
-// 		return texts[l].Both
-// 	default:
-// 		return "unknown"
-// 	}
-// }
-
-// func (ts *TeachingSemester) String(lang string) string {
-// 	semester := ""
-// 	l := language.Language(lang)
-// 	switch *ts {
-// 	case teachingWinterOnly:
-// 		semester = texts[l].Winter
-// 	case teachingSummerOnly:
-// 		semester = texts[l].Summer
-// 	case teachingBoth:
-// 		semester = texts[l].Both
-// 	default:
-// 		semester = "unsupported"
-// 	}
-// 	return semester
-// }
-
-// func (ts *TeachingSemester) Color() string {
-// 	switch *ts {
-// 	case teachingWinterOnly:
-// 		return "bg-winter"
-// 	case teachingSummerOnly:
-// 		return "bg-summer"
-// 	case teachingBoth:
-// 		return "bg-both"
-// 	default:
-// 		return "bg-text-secondary"
-// 	}
-// }
-
-// type Assignments []Assignment
-
-// func (a Assignments) String(lang string) string {
-// 	assignments := []string{}
-// 	for _, assignment := range a {
-// 		assignments = append(assignments, assignment.String(lang))
-// 	}
-// 	if len(assignments) == 0 {
-// 		return "TODO"
-// 	}
-// 	return strings.Join(assignments, " ")
-// }
-
-// func (d *NullDescription) Scan(val interface{}) error {
-// 	if val == nil {
-// 		d.Valid = false
-// 		return nil
-// 	}
-// 	if err := d.Description.Scan(val); err != nil {
-// 		return err
-// 	}
-// 	d.Valid = true
-// 	return nil
-// }
+func (a AssignmentSlice) Sort() AssignmentSlice {
+	sort.Slice(a, func(i, j int) bool {
+		if a[i].year == a[j].year {
+			return a[i].semester < a[j].semester
+		}
+		return a[i].year < a[j].year
+	})
+	return a
+}
 
 type Capacity int
 
@@ -282,48 +220,3 @@ type Class struct {
 	Code string
 	Name string
 }
-
-// type CommentSlice []Comment
-
-// func (cs *CommentSlice) Scan(val interface{}) error {
-// 	switch v := val.(type) {
-// 	case nil:
-// 		*cs = nil
-// 		return nil
-// 	case []byte:
-// 		*cs = nil
-// 		err := json.Unmarshal(v, &cs)
-// 		return err
-// 	case string:
-// 		err := json.Unmarshal([]byte(v), &cs)
-// 		return err
-// 	default:
-// 		return fmt.Errorf("unsupported type: %T", v)
-// 	}
-// }
-
-// type Comment struct {
-// 	StudiesType   string  `json:"NAZEV"`
-// 	StudiesYear   int     `json:"SROC"`
-// 	StudiesField  string  `json:"SOBOR"`
-// 	AcademicYear  int     `json:"SSKR"`
-// 	TargetType    string  `json:"PRDMTYP"`
-// 	TargetTeacher Teacher `json:"TEACHER"`
-// 	Content       string  `json:"MEMO"`
-// }
-
-// func (c Comment) AcademicYearString() string {
-// 	return strconv.Itoa(c.AcademicYear)
-// }
-
-// func (c Comment) StudiesYearString() string {
-// 	return strconv.Itoa(c.StudiesYear)
-// }
-
-// func (c Comment) TargetTeacherString() string {
-// 	if len(c.TargetTeacher.SisID) > 0 {
-// 		return c.TargetTeacher.String()
-// 	} else {
-// 		return "Global"
-// 	}
-// }

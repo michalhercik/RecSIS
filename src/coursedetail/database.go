@@ -1,8 +1,6 @@
 package coursedetail
 
 import (
-	"strconv"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/coursedetail/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/dbds"
@@ -128,7 +126,7 @@ func intoBlueprintAssignmentSlice(from []dbds.BlueprintAssignment) []Assignment 
 		result[i] = Assignment{
 			id:       a.ID,
 			year:     a.Year,
-			semester: strconv.Itoa(a.Semester),
+			semester: SemesterAssignment(a.Semester),
 		}
 	}
 	return result

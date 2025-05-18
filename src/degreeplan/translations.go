@@ -9,7 +9,6 @@ import (
 
 type text struct {
 	PageTitle    string
-	Language     string
 	Code         string
 	Title        string
 	Status       string
@@ -32,9 +31,9 @@ type text struct {
 }
 
 func (t text) YearStr(year int) string {
-	if t.Language == "cs" {
+	if t.Utils.Language == language.CS {
 		return strconv.Itoa(year) + ". " + t.Year
-	} else if t.Language == "en" {
+	} else if t.Utils.Language == language.EN {
 		return t.Year + " " + strconv.Itoa(year)
 	}
 	return ""
@@ -43,7 +42,6 @@ func (t text) YearStr(year int) string {
 var texts = map[language.Language]text{
 	language.CS: {
 		PageTitle:    "Studijní plán",
-		Language:     "cs",
 		Code:         "Kód",
 		Title:        "Název",
 		Status:       "Stav",
@@ -62,11 +60,10 @@ var texts = map[language.Language]text{
 		WinterAssign: "ZS",
 		SummerAssign: "LS",
 		// utils
-		Utils: utils.Texts["cs"],
+		Utils: utils.Texts[language.CS],
 	},
 	language.EN: {
 		PageTitle:    "Degree Plan",
-		Language:     "en",
 		Code:         "Code",
 		Title:        "Title",
 		Status:       "Status",
@@ -85,6 +82,6 @@ var texts = map[language.Language]text{
 		WinterAssign: "Winter",
 		SummerAssign: "Summer",
 		// utils
-		Utils: utils.Texts["en"],
+		Utils: utils.Texts[language.EN],
 	},
 }

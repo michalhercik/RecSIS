@@ -1,5 +1,4 @@
 initializeTooltips();
-clearExpanded();
 
 // bootstrap tooltip initialization
 function initializeTooltips() {

@@ -9,7 +9,6 @@ import (
 
 type text struct {
 	PageTitle         string
-	Language          string
 	Winter            string
 	Summer            string
 	Both              string
@@ -20,6 +19,8 @@ type text struct {
 	UN                string
 	SearchPlaceholder string
 	SearchButton      string
+	FilterButton      string
+	ShowResults       string
 	TopFilter         string
 	ShowMore4Minus    string
 	ShowMore5Plus     string
@@ -44,9 +45,9 @@ type text struct {
 }
 
 func (t text) YearStr(year int) string {
-	if t.Language == "cs" {
+	if t.Utils.Language == language.CS {
 		return strconv.Itoa(year) + ". " + t.Year
-	} else if t.Language == "en" {
+	} else if t.Utils.Language == language.EN {
 		return t.Year + " " + strconv.Itoa(year)
 	}
 	return ""
@@ -63,17 +64,18 @@ func (t text) ShowMore(rest int) string {
 var texts = map[language.Language]text{
 	language.CS: {
 		PageTitle:         "Hledání",
-		Language:          "cs",
 		Winter:            "Zimní",
 		Summer:            "Letní",
 		Both:              "Oba",
-		W:                 "Z",
-		S:                 "L",
+		W:                 "ZS",
+		S:                 "LS",
 		N:                 "ER",
 		ER:                "ER",
-		UN:                "NE",
+		UN:                "NEZAŘ.",
 		SearchPlaceholder: "Hledej...",
 		SearchButton:      "Hledej",
+		FilterButton:      "Zobrazit filtrování",
+		ShowResults:       "Zobrazit výsledky",
 		TopFilter:         "Filtrovat",
 		ShowMore4Minus:    "Další",
 		ShowMore5Plus:     "Dalších",
@@ -94,21 +96,22 @@ var texts = map[language.Language]text{
 		Of:                "z",
 		NoCoursesFound:    "Žádné předměty nebyly nalezeny.",
 		// utils
-		Utils: utils.Texts["cs"],
+		Utils: utils.Texts[language.CS],
 	},
 	language.EN: {
 		PageTitle:         "Search",
-		Language:          "en",
 		Winter:            "Winter",
 		Summer:            "Summer",
 		Both:              "Both",
-		W:                 "W",
-		S:                 "S",
-		N:                 "N",
+		W:                 "WIN",
+		S:                 "SUM",
+		N:                 "ER",
 		ER:                "ER",
-		UN:                "UN",
+		UN:                "UNASS.",
 		SearchPlaceholder: "Search...",
 		SearchButton:      "Search",
+		FilterButton:      "Show filters",
+		ShowResults:       "Show results",
 		TopFilter:         "Filter",
 		ShowMore4Minus:    "Another",
 		ShowMore5Plus:     "Another",
@@ -129,6 +132,6 @@ var texts = map[language.Language]text{
 		Of:                "of",
 		NoCoursesFound:    "No courses found.",
 		// utils
-		Utils: utils.Texts["en"],
+		Utils: utils.Texts[language.EN],
 	},
 }

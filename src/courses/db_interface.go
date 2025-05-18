@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"iter"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -103,16 +104,16 @@ const (
 	teachingBoth
 )
 
-func (ts *TeachingSemester) String(lang string) string {
-	l := language.Language(lang)
+func (ts *TeachingSemester) String(lang language.Language) string {
+	t := texts[lang]
 	semester := ""
 	switch *ts {
 	case teachingWinterOnly:
-		semester = texts[l].WinterAssign
+		semester = t.WinterAssign
 	case teachingSummerOnly:
-		semester = texts[l].SummerAssign
+		semester = t.SummerAssign
 	case teachingBoth:
-		semester = texts[l].Both
+		semester = t.Both
 	default:
 		semester = "unsupported"
 	}
@@ -124,23 +125,23 @@ type Assignment struct {
 	Semester SemesterAssignment `json:"semester"`
 }
 
-func (a Assignment) String(lang string) string {
-	l := language.Language(lang)
+func (a Assignment) String(lang language.Language) string {
+	t := texts[lang]
 	semester := ""
 	switch a.Semester {
 	case assignmentNone:
-		semester = texts[l].N
+		semester = t.N
 	case assignmentWinter:
-		semester = texts[l].W
+		semester = t.W
 	case assignmentSummer:
-		semester = texts[l].S
+		semester = t.S
 	default:
-		semester = texts[l].ER
+		semester = t.ER
 	}
 
-	result := fmt.Sprintf("%d%s", a.Year, semester)
+	result := fmt.Sprintf("%d. %s", a.Year, semester)
 	if a.Year == 0 {
-		result = texts[l].UN
+		result = t.UN
 	}
 	return result
 }
@@ -161,15 +162,14 @@ func (a *AssignmentSlice) Scan(value interface{}) error {
 	return nil
 }
 
-func (a AssignmentSlice) String(lang string) string {
-	assignments := []string{}
-	for _, assignment := range a {
-		assignments = append(assignments, assignment.String(lang))
-	}
-	if len(assignments) == 0 {
-		return ""
-	}
-	return strings.Join(assignments, " ")
+func (a AssignmentSlice) Sort() AssignmentSlice {
+	sort.Slice(a, func(i, j int) bool {
+		if a[i].Year == a[j].Year {
+			return a[i].Semester < a[j].Semester
+		}
+		return a[i].Year < a[j].Year
+	})
+	return a
 }
 
 type Description struct {

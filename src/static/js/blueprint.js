@@ -97,12 +97,12 @@ function sortHxPatch(item, year, semester, position, language) {
     });
 }
 
-// Update the sticky offset for the checked-courses-menu based on the navbar height
+// Update the sticky offset for the checked-courses-menu based on the header height
 function updateStickyOffset() {
-    const navbar = document.getElementById('navbarNav');
+    const header = document.querySelector('header');
     const menu = document.getElementById('checked-courses-menu');
-    if (navbar && menu) {
-        const height = navbar.offsetHeight;
+    if (header && menu) {
+        const height = header.offsetHeight;
         menu.style.top = height + 'px';
     }
 }

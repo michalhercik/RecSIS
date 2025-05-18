@@ -57,9 +57,9 @@ templ PageView(model pageModel) {
 }
 
 templ Header(model pageModel) {
-    <header class="sticky-lg-top">
+    <header class="sticky-top">
         <nav class="navbar navbar-expand-lg navbar-light bg-light py-0" hx-indicator="#loader"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
-            <div class="container-fluid">
+            <div class="container position-relative">
                 <a class="navbar-brand d-flex align-items-center fs-3 mff-font" href={ templ.URL(model.lang.Path(model.home)) }>
                     <img src="/logo.svg" alt="Logo" height="30" class="mb-1 pe-1">
                     <span class="d-none d-md-inline">RecSIS</span>
@@ -82,9 +82,9 @@ templ Header(model pageModel) {
                             @langBtn(language.CS)
                     }
                 </div>
+                @searchBar(model)
             </div>
         </nav>
-        @searchBar(model)
     </header>
 }
 

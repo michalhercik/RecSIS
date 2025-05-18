@@ -1,24 +1,25 @@
 package courses
 
 import (
-	// "github.com/michalhercik/RecSIS/courses/internal/filter"
 	"github.com/michalhercik/RecSIS/utils"
     "fmt"
 )
 
-const coursesPerPage = 30
+const coursesPerPage = 24
 
 templ Content(coursesPage *coursesPage, t text) {
-    <div id="courses-page" hx-indicator="#loader">
-        <div id="filter-section" class="border-end bg-light">
-            @filterSection(coursesPage, t)
+    <div id="courses-page" class="container" hx-indicator="#loader">
+        <div class="row mx-0">
+            <div id="filter-section" class="col-12 col-sm px-1 py-3 p-sm-3">
+                @filterSection(coursesPage, t)
+            </div>
+            <div class="col-12 col-sm pt-0 pt-sm-4 px-0">
+                @activeFilters(coursesPage, t)
+                @Courses(coursesPage, t)
+            </div>
         </div>
-        <div class="mt-3">
-            @activeFilters(coursesPage, t)
-            @Courses(coursesPage, t)
-        </div>
+        <script defer src="/js/courses.js"></script>
     </div>
-    <script defer src="/js/courses.js"></script>
 }
 
 templ filterSection(cp *coursesPage, t text) {
@@ -30,38 +31,61 @@ templ filterSection(cp *coursesPage, t text) {
             hx-swap="outerHTML"
             hx-include="#search-form"
             hx-trigger="change"
+            x-data="{ showFilters: window.innerWidth > 575.5, expandedFilters: JSON.parse(sessionStorage.getItem('expanded-filters')) || false }"
+            @resize.window="showFilters = window.innerWidth > 575.5"
         >
-            for category := range cp.facets {
-                <div x-data={ fmt.Sprintf("{ expanded: JSON.parse(sessionStorage.getItem('expanded-%s')) || false }", category.ID()) }>
-                    // category title (with help icon)
-                    <div class="d-flex justify-content-start align-items-end">
-                        <p class="form-label fw-semibold mb-0 mt-2">{ category.Title() }</p>
-                        if category.Desc() != "" {
-                            @helpIcon(category.Desc())
-                        }
+            <div class="bg-filters rounded-5">
+                <div x-cloak x-show="showFilters || expandedFilters">
+                    <div class="px-4 px-sm-0 pb-4 pb-sm-0">
+                        @filtersInternal(cp, t)
                     </div>
-                    // checkboxes with values
-                    for i, value := range category.IterWithFacets() {
-                        <div x-cloak x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
-                            @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
-                        </div>
-                    }
-                    if limit := category.DisplayedValueLimit(); category.Size() > limit {
-                        // show more/less button
-                        <button
-                            hx-ignore="true"
-                            type="button"
-                            class="btn btn-link text-secondary p-0"
-                            x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore(category.Size() - limit), category.Size() - limit) }
-                            @click={ fmt.Sprintf("expanded = !expanded; sessionStorage.setItem('expanded-%s', expanded)", category.ID()) }>
-                        </button>
-                    }
                 </div>
-            }
+                <div class="d-flex d-sm-none justify-content-center py-2 position-sticky bottom-0 bg-filters-buttons rounded-5 shadow-sm">
+                    <a
+                        type="button"
+                        class="btn btn-submit-input-green d-inline my-2 bi bi-chevron-down"
+                        href="#"
+                        @click="expandedFilters = !expandedFilters; sessionStorage.setItem('expanded-filters', expandedFilters)"
+                        x-text={ fmt.Sprintf("expandedFilters ? ' %s' : ' %s'", t.ShowResults, t.FilterButton) }>
+                    </a>
+                </div>
+            </div>
         </form>
         // move to the top of the page button
-        @moveToTopButton(t)
+        <div id="move-to-filters-btn" class="d-none d-sm-flex justify-content-center mt-3">
+            @moveToTopLink(t)
+        </div>
     </div>
+}
+
+templ filtersInternal(cp *coursesPage, t text) {
+    for category := range cp.facets {
+        <div x-data={ fmt.Sprintf("{ expanded: JSON.parse(sessionStorage.getItem('expanded-%s')) || false }", category.ID()) }>
+            // category title (with help icon)
+            <div class="d-flex justify-content-start align-items-end">
+                <p class="form-label fw-semibold mb-0 mt-2">{ category.Title() }</p>
+                if category.Desc() != "" {
+                    @helpIcon(category.Desc())
+                }
+            </div>
+            // checkboxes with values
+            for i, value := range category.IterWithFacets() {
+                <div x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
+                    @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
+                </div>
+            }
+            if limit := category.DisplayedValueLimit(); category.Size() > limit {
+                // show more/less button
+                <button
+                    hx-ignore="true"
+                    type="button"
+                    class="btn btn-link text-secondary p-0"
+                    x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore(category.Size() - limit), category.Size() - limit) }
+                    @click={ fmt.Sprintf("expanded = !expanded; sessionStorage.setItem('expanded-%s', expanded)", category.ID()) }>
+                </button>
+            }
+        </div>
+    }
 }
 
 templ checkboxInput(name, value, label, desc string, count int, checked bool) {
@@ -78,18 +102,13 @@ templ checkboxInput(name, value, label, desc string, count int, checked bool) {
     </div>
 }
 
-templ moveToTopButton(t text) {
-    // x-data is necessary for x-on:click to work
-    <div id="move-to-filters-btn" class="text-center d-flex justify-content-center mt-3" x-data>
-        <p
-            role="button"
-            @click="window.scrollTo({ top: 0, behavior: 'smooth' });"
-            class="link-primary"
-        >
-            <i class="bi bi-chevron-up"></i>
-            { t.TopFilter }
-        </p>
-    </div>
+templ moveToTopLink(t text) {
+    <a
+        href="#"
+        class="icon-link">
+        <i class="bi bi-chevron-up lh-1 my-auto"></i>
+        { t.TopFilter }
+    </a>
 }
 
 templ helpIcon(content string) {
@@ -107,17 +126,18 @@ templ helpIcon(content string) {
 }
 
 templ activeFilters(cp *coursesPage, t text) {
-    <div class="mx-5 mb-3">
+    <div id="active-filters">
         {{ anyActive := false }}
         for category := range cp.facets {
             if category.Active() {
                 {{ anyActive = true }}
                 <div class="d-flex flex-row mb-1 w-auto">
-                    <span class="px-2 bg-body border border-end-0 rounded-start">{ category.Title() }</span>
-                    <div class="d-flex flex-row border rounded-end bg-light">
+                    <span class="px-2 bg-body border rounded-start align-self-start">{ category.Title() }</span>
+                    <div class="d-flex flex-row flex-wrap rounded-row-end">
                     for _, value := range category.IterWithFacets() {
                         if value.Checked {
-                            <div class="border-start px-2">
+                            // x-data is necessary for x-on:click to work
+                            <div class="border bg-light px-2" x-data>
                                 <span class="fw-semibold">{ value.Title }</span>
                                 <i
                                     role="button"
@@ -133,7 +153,7 @@ templ activeFilters(cp *coursesPage, t text) {
         }
         if anyActive {
             <button
-                class="btn btn-link text-secondary p-0"
+                class="btn btn-link text-secondary p-0 pb-3"
                 hx-get={ t.Utils.LangLink("/courses/search") }
                 hx-target="#courses-page"
                 hx-include="#search-form"
@@ -146,7 +166,7 @@ templ activeFilters(cp *coursesPage, t text) {
 
 templ Courses(cp *coursesPage, t text) {
     <div id="courses">
-        <div class="grid-cards">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 row-cols-xxl-4 g-0">
             if cp.totalPages == 0 {
                 <p>{ t.NoCoursesFound }</p>
             } else {
@@ -168,9 +188,9 @@ templ Courses(cp *coursesPage, t text) {
 templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
     <div
         id={ fmt.Sprintf("course-card-%s", course.Code) }
-        class="card custom-card rounded-0"
+        class="card col rounded-0 px-0 mb-0"
         x-data="{ expanded: false, isLong: false }"
-        x-init="isLong = $refs.annotation.scrollHeight > 350; $nextTick(() => requestAnimationFrame(() => { isLong = $refs.annotation.scrollHeight > 350 }))"
+        x-init="isLong = $refs.annotation.scrollHeight > 300; $nextTick(() => requestAnimationFrame(() => { isLong = $refs.annotation.scrollHeight > 300 }))"
     >
         // header
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -180,7 +200,6 @@ templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
         </div>
         // body
         <div class="card-body d-flex flex-column position-relative">
-            @ribbon(course.BlueprintAssignments, t)
             <div
                 :class="{ 'expanded': expanded, 'annotation-container': isLong }"
                 x-ref="annotation"
@@ -201,22 +220,32 @@ templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
                 x-show="isLong"
                 x-text={ fmt.Sprintf("expanded ? '%s' : '%s'", t.ReadLess, t.ReadMore) }>
             </button>
-            // add to blueprint button
-            <div class="d-flex justify-content-end mt-auto pt-3">
-                @addBtn(course.Code, "outerHTML", "#course-card-" + course.Code)
+            <div class="d-flex justify-content-between mt-auto pt-3">
+                <div>
+                    for _, ba := range course.BlueprintAssignments.Sort() {
+                        @badge(ba, t)
+                    }
+                </div>
+                // add to blueprint button
+                <div class="d-flex align-self-end">
+                    @addBtn(course.Code, "outerHTML", "#course-card-" + course.Code)
+                </div>
             </div>
         </div>
     </div>
 }
 
-// TODO: change to badges
-templ ribbon(ba AssignmentSlice, t text) {
-    if len(ba) > 0 {
-        <div class="ribbon">
-            <span>{ ba.String(t.Language) }</span>
-        </div>
-    }
+templ badge(ba Assignment, t text) {
+    <span class="badge rounded-pill bg-blueprint me-1">{ ba.String(t.Utils.Language) }</span>
 }
+
+// templ ribbon(ba AssignmentSlice, t text) {
+//     if len(ba) > 0 {
+//         <div class="ribbon">
+//             <span>{ ba.String(t.Utils.Language) }</span>
+//         </div>
+//     }
+// }
 
 templ pagination(cp *coursesPage, t text) {
     // disable pagination if loaded more courses
@@ -301,7 +330,7 @@ templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
 }
 
 func semesterHoursExamsString(course *Course, t text) string {
-    result := course.Start.String(t.Language) + " "
+    result := course.Start.String(t.Utils.Language) + " "
     both := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
     winter := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
     summer := fmt.Sprintf("%d/%d", course.LectureRange2, course.SeminarRange2)
