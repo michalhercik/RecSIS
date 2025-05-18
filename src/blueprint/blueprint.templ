@@ -12,8 +12,8 @@ const ttDelay = "600"
 templ Content(data *Blueprint, t text) {
     <div
         x-data="{ checkedNumber: 0, isSorting: false, smallScreen: window.innerWidth < 768 }"
+        x-init="initializeTooltips(); updateStickyOffset()"
         class="container"
-        :class="checkedNumber > 0 || 'bp-content-padding'"
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"
     >
@@ -29,12 +29,14 @@ templ Content(data *Blueprint, t text) {
 
 templ checkedCoursesMenu(yearCount int, t text) {
     // take care of checked courses
-    <div id="checked-courses-menu" @resize.window="updateStickyOffset">
-        <div x-cloak x-show="checkedNumber > 0">
+    // TODO: finish this, it is not working yet
+    <div id="checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
+        <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
             // uncheck all checkboxes
             <button
                 class="btn btn-bg big-mobile-btn btn-outline-secondary border-0 bi bi-dash-square"
-                @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur()"
+                @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur(); initializeTooltips();"
+                @mouseleave="initializeTooltips()"
                 data-bs-toggle="tooltip"
                 data-bs-placement="bottom"
                 data-bs-delay={ ttDelay }

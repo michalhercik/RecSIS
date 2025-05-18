@@ -133,7 +133,7 @@ body {
     }
 }
 
-/* NAV -> rounded border */
+/* NAV -> rounded border for input */
 @media (max-width: 575.5px) {
     .rounded-input > input,
     button.rounded-input {
@@ -171,6 +171,12 @@ body {
     top: 72px;
 }
 
+@media (max-width: 991.5px) {
+    #move-to-filters-btn {
+        top: 62px;
+    }
+}
+
 /* S -> background for filter */
 .bg-filters {
     background-color: white !important;
@@ -178,7 +184,7 @@ body {
 
 @media (max-width: 575.5px) {
     .bg-filters {
-        background-color: rgba(101, 168, 50, 0.2) !important;
+        background-color: rgba(138, 199, 90, 0.2) !important;
     }
 }
 
@@ -353,26 +359,17 @@ body {
 }
 
 /* BP -> Checked courses menu with buttons */
-.bp-content-padding {
-    padding-top: 36px; /* size of btn-lg */
-}
-
-@media (max-width: 767.5px) {
-    .bp-content-padding {
-        padding-top: 47px;
-    }
-}
-
 #checked-courses-menu {
     position: sticky;
+    height: 36px;
     top: 52px;
     background-color: white;
     z-index: 100;
 }
 
 @media (max-width: 767.5px) {
-    .checked-courses-menu {
-        top: 0px;
+    #checked-courses-menu {
+        height: 47px;
     }
 }
 
