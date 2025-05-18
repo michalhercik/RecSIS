@@ -238,17 +238,17 @@ body {
 
 /* CD -> badges colors */
 .bg-winter {
-    background-color: rgb(113, 180, 206);
+    background-color: rgb(161, 206, 224);
     color: black !important;
 }
 
 .bg-summer {
-    background-color: rgb(255, 222, 16);
+    background-color: rgb(255, 234, 118);
     color: black !important;
 }
 
 .bg-both {
-    background-color: rgb(216, 134, 216);
+    background-color: rgb(218, 172, 218);
     color: black !important;
 }
 

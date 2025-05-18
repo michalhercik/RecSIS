@@ -120,7 +120,7 @@ var texts = map[language.Language]text{
 		TTRunningCredits:  "Průběžný součet",
 		TTTotalCredits:    "Celkem",
 		// utils
-		Utils: utils.Texts["cs"],
+		Utils: utils.Texts[language.CS],
 	},
 	language.EN: {
 		PageTitle:        "Blueprint",
@@ -172,6 +172,6 @@ var texts = map[language.Language]text{
 		TTRunningCredits:  "Running total",
 		TTTotalCredits:    "Total",
 		// utils
-		Utils: utils.Texts["en"],
+		Utils: utils.Texts[language.EN],
 	},
 }

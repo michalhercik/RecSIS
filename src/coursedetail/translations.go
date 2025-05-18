@@ -8,7 +8,6 @@ import (
 )
 
 type text struct {
-	Language           string
 	Faculty            string
 	Department         string
 	Semester           string
@@ -18,9 +17,12 @@ type text struct {
 	WinterAssign       string
 	SummerAssign       string
 	BothAssign         string
+	Unassigned         string
 	Year               string
 	Assign             string
 	ECredits           string
+	InDegreePlan       string
+	Completed          string
 	Capacity           string
 	CapacityNoLimit    string
 	ScopeExam          string
@@ -54,9 +56,9 @@ type text struct {
 }
 
 func (t text) YearStr(year int) string {
-	if t.Language == "cs" {
+	if t.Utils.Language == language.CS {
 		return strconv.Itoa(year) + ". " + t.Year
-	} else if t.Language == "en" {
+	} else if t.Utils.Language == language.EN {
 		return t.Year + " " + strconv.Itoa(year)
 	}
 	return ""
@@ -64,7 +66,6 @@ func (t text) YearStr(year int) string {
 
 var texts = map[language.Language]text{
 	language.CS: {
-		Language:           "cs",
 		Faculty:            "Fakulta",
 		Department:         "Katedra",
 		Semester:           "Semestr",
@@ -74,9 +75,12 @@ var texts = map[language.Language]text{
 		WinterAssign:       "ZS",
 		SummerAssign:       "LS",
 		BothAssign:         "Oba",
+		Unassigned:         "Nezařazen",
 		Year:               "ročník",
 		Assign:             "Přiřadit",
 		ECredits:           "E-Kredity",
+		InDegreePlan:       "V studijním plánu",
+		Completed:          "Splněno",
 		Capacity:           "Kapacita",
 		CapacityNoLimit:    "bez omezení",
 		ScopeExam:          "Rozsah, examinace",
@@ -106,10 +110,9 @@ var texts = map[language.Language]text{
 		CourseWithCode:     "Předmět s kódem ",
 		NotFound:           " nenalezen.",
 		// utils
-		Utils: utils.Texts["cs"],
+		Utils: utils.Texts[language.CS],
 	},
 	language.EN: {
-		Language:           "en",
 		Faculty:            "Faculty",
 		Department:         "Department",
 		Semester:           "Semester",
@@ -119,9 +122,12 @@ var texts = map[language.Language]text{
 		WinterAssign:       "Winter",
 		SummerAssign:       "Summer",
 		BothAssign:         "Both",
+		Unassigned:         "Unassigned",
 		Year:               "Year",
 		Assign:             "Assign",
 		ECredits:           "E-Credits",
+		InDegreePlan:       "In degree plan",
+		Completed:          "Completed",
 		Capacity:           "Capacity",
 		CapacityNoLimit:    "No limit",
 		ScopeExam:          "Scope, examination",
@@ -151,6 +157,6 @@ var texts = map[language.Language]text{
 		CourseWithCode:     "Course with code ",
 		NotFound:           " not found.",
 		// utils
-		Utils: utils.Texts["en"],
+		Utils: utils.Texts[language.EN],
 	},
 }

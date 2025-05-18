@@ -5,6 +5,7 @@ import (
     "github.com/michalhercik/RecSIS/internal/interface/teacher"
     "github.com/michalhercik/RecSIS/internal/interface/course"
     "fmt"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 templ Content(course *Course, t text, bpBtn PartialBlueprintAdd) {
@@ -50,23 +51,30 @@ templ badges(course *Course, t text) {
                 <span>{ fmt.Sprintf("%s %s", hoursString(course, t), course.ExamType) }</span>
             }
         </div>
-        <div class="col-12 col-md-6 d-flex justify-content-center gap-1">
-            // TODO: make this dynamic (this just for show)
-            @standartBadge("bg-blueprint") {
-                <i class="bi bi-basket2"></i> in blueprint
+        <div class="col-12 col-md-6 d-flex flex-wrap justify-content-center gap-1">
+            // TODO: if course.Completed {
+            if false {
+                @standartBadge("text-bg-success") {
+                    <i class="bi bi-check-lg"></i> { t.Completed }
+                }
+            } else {
+                for _, ba := range course.BlueprintAssignments.Sort() {
+                    @standartBadge("bg-blueprint") {
+                        <i class="bi bi-basket2"></i> { ba.String(t.Utils.Language) }
+                    }
+                }
             }
-            @standartBadge("text-bg-success") {
-                <i class="bi bi-check-lg"></i> completed
-            }
-            @standartBadge("text-bg-danger") {
-                <i class="bi bi-stickies"></i> in degree plan
+            if course.InDegreePlan {
+                @standartBadge("text-bg-danger") {
+                    <i class="bi bi-stickies"></i> { t.InDegreePlan }
+                }
             }
         </div>
     </div>
 }
 
 templ standartBadge(bgColor string) {
-    <span class={ "badge rounded-pill fs-6 mb-1", bgColor }>
+    <span class={ "badge rounded-pill align-self-start fs-6 mb-1", bgColor }>
         { children... }
     </span>
 }
@@ -607,9 +615,9 @@ func hoursString(course *Course, t text) string {
 }
 
 func courseSISLink(code string, t text) string {
-    if t.Language == "cs" {
+    if t.Utils.Language == language.CS {
         return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
-    } else if t.Language == "en" {
+    } else if t.Utils.Language == language.EN {
         return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
     }
     return "unsupported language"

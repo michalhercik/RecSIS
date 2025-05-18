@@ -9,7 +9,6 @@ import (
 
 type text struct {
 	PageTitle         string
-	Language          string
 	Winter            string
 	Summer            string
 	Both              string
@@ -46,9 +45,9 @@ type text struct {
 }
 
 func (t text) YearStr(year int) string {
-	if t.Language == "cs" {
+	if t.Utils.Language == language.CS {
 		return strconv.Itoa(year) + ". " + t.Year
-	} else if t.Language == "en" {
+	} else if t.Utils.Language == language.EN {
 		return t.Year + " " + strconv.Itoa(year)
 	}
 	return ""
@@ -65,7 +64,6 @@ func (t text) ShowMore(rest int) string {
 var texts = map[language.Language]text{
 	language.CS: {
 		PageTitle:         "Hledání",
-		Language:          "cs",
 		Winter:            "Zimní",
 		Summer:            "Letní",
 		Both:              "Oba",
@@ -98,11 +96,10 @@ var texts = map[language.Language]text{
 		Of:                "z",
 		NoCoursesFound:    "Žádné předměty nebyly nalezeny.",
 		// utils
-		Utils: utils.Texts["cs"],
+		Utils: utils.Texts[language.CS],
 	},
 	language.EN: {
 		PageTitle:         "Search",
-		Language:          "en",
 		Winter:            "Winter",
 		Summer:            "Summer",
 		Both:              "Both",
@@ -135,6 +132,6 @@ var texts = map[language.Language]text{
 		Of:                "of",
 		NoCoursesFound:    "No courses found.",
 		// utils
-		Utils: utils.Texts["en"],
+		Utils: utils.Texts[language.EN],
 	},
 }

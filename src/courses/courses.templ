@@ -236,13 +236,13 @@ templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
 }
 
 templ badge(ba Assignment, t text) {
-    <span class="badge rounded-pill bg-blueprint me-1">{ ba.String(t.Language) }</span>
+    <span class="badge rounded-pill bg-blueprint me-1">{ ba.String(t.Utils.Language) }</span>
 }
 
 // templ ribbon(ba AssignmentSlice, t text) {
 //     if len(ba) > 0 {
 //         <div class="ribbon">
-//             <span>{ ba.String(t.Language) }</span>
+//             <span>{ ba.String(t.Utils.Language) }</span>
 //         </div>
 //     }
 // }
@@ -330,7 +330,7 @@ templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
 }
 
 func semesterHoursExamsString(course *Course, t text) string {
-    result := course.Start.String(t.Language) + " "
+    result := course.Start.String(t.Utils.Language) + " "
     both := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
     winter := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
     summer := fmt.Sprintf("%d/%d", course.LectureRange2, course.SeminarRange2)
