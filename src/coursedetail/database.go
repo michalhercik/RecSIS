@@ -1,7 +1,6 @@
 package coursedetail
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/jmoiron/sqlx"
@@ -34,7 +33,6 @@ func (reader DBManager) Course(userID string, code string, lang language.Languag
 	if err := reader.DB.Select(&result.blueprintAssignments, sqlquery.BlueprintAssignments, userID, code); err != nil {
 	}
 	course := intoCourse(&result)
-	fmt.Println(course.InDegreePlan)
 	return &course, nil
 }
 
