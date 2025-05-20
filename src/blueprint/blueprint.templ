@@ -12,7 +12,6 @@ const ttDelay = "600"
 templ Content(data *Blueprint, t text) {
     <div
         x-data="{ checkedNumber: 0, isSorting: false, smallScreen: window.innerWidth < 768 }"
-        x-init="initializeTooltips(); updateStickyOffset()"
         class="container"
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"

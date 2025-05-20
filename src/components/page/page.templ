@@ -74,13 +74,15 @@ templ Header(model pageModel) {
                             @navItemView(navItem, model)
                         }
                     </div>
-                    @profileBtn(model)
-                    switch model.lang {
-                        case language.CS:
-                            @langBtn(language.EN)
-                        case language.EN:
-                            @langBtn(language.CS)
-                    }
+                    <div class="d-flex justify-content-between flex-row-reverse py-2 py-lg-0">
+                        @profileBtn(model)
+                        switch model.lang {
+                            case language.CS:
+                                @langBtn(language.EN)
+                            case language.EN:
+                                @langBtn(language.CS)
+                        }
+                    </div>
                 </div>
                 @searchBar(model)
             </div>
@@ -102,19 +104,39 @@ templ navItemView(nav NavItem, model pageModel) {
 
 // TODO: put real data here
 templ profileBtn(model pageModel) {
-    <div class="dropdown">
+    // Mobile version
+    <div class="d-lg-none">
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-outline-secondary bi bi-person-circle border-0" type="button" data-bs-toggle="collapse" data-bs-target="#userCollapse" aria-expanded="false"></button>
+        </div>
+        <div class="collapse" id="userCollapse">
+            <ul class="list-unstyled ps-3">
+                <li><span class="dropdown-item disabled text-center text-decoration-line-through">Jan Novák</span></li>
+                <hr>
+                <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
+                <li>
+                    <form hx-boost="false" method="POST" action={ templ.URL(model.lang.Path("/logout")) }>
+                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Log out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    // Desktop version
+    <li class="dropdown d-none d-lg-block">
         <button class="btn btn-outline-secondary bi bi-person-circle border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
         <ul class="dropdown-menu dropdown-menu-end">
-            <li><span class="dropdown-item disabled text-center">Jan Novák</span></li>
+            <li><span class="dropdown-item disabled text-center text-decoration-line-through">Jan Novák</span></li>
             <li><hr class="dropdown-divider"></li>
-            <li><button class="dropdown-item" href="#">Reload from SIS</button></li>
+            <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
             <li>
                 <form hx-boost="false" method="POST" action={ templ.URL(model.lang.Path("/logout")) }>
                     <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Log out</button>
                 </form>
             </li>
         </ul>
-    </div>
+    </li>
 }
 
 templ searchBar(model pageModel) {
@@ -128,7 +150,7 @@ templ searchBar(model pageModel) {
 
 templ langBtn(l language.Language) {
     <button
-        class="btn btn-outline-secondary border-0"
+        class="btn btn-outline-secondary align-self-start border-0"
         x-data @click={ "changeLanguage('" + string(l) + "')" }>
         { string(l) }
     </button>
