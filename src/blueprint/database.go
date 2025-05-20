@@ -6,13 +6,14 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/blueprint/internal/sqlquery"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 type DBManager struct {
 	DB *sqlx.DB
 }
 
-func (m DBManager) Blueprint(userID string, lang DBLang) (*Blueprint, error) {
+func (m DBManager) Blueprint(userID string, lang language.Language) (*Blueprint, error) {
 	var records []BlueprintRecord
 	if err := m.DB.Select(&records, sqlquery.SelectCourses, userID, lang); err != nil {
 		return nil, err

@@ -14,6 +14,7 @@ type text struct {
 	Status       string
 	Completed    string
 	InBlueprint  string
+	Unassigned   string
 	NotCompleted string
 	Credits      string
 	CreditsShort string
@@ -47,6 +48,7 @@ var texts = map[language.Language]text{
 		Status:       "Stav",
 		Completed:    "Splněno",
 		InBlueprint:  "Blueprint",
+		Unassigned:   "Nezařazen",
 		NotCompleted: "Nesplněno",
 		Credits:      "Kredity",
 		CreditsShort: "kr.",
@@ -69,6 +71,7 @@ var texts = map[language.Language]text{
 		Status:       "Status",
 		Completed:    "Completed",
 		InBlueprint:  "Blueprint",
+		Unassigned:   "Unassigned",
 		NotCompleted: "Not completed",
 		Credits:      "Credits",
 		CreditsShort: "cr.",

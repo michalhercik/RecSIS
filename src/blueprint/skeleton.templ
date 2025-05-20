@@ -9,9 +9,11 @@ import (
 templ Skeleton(lang language.Language) {
     <div
         id="blueprint-skeleton"
-        class="container bp-content-padding placeholder-glow"
+        class="container placeholder-glow"
         x-data
         x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].PageTitle) }>
+        // checked courses menu
+        <div id="checked-courses-menu-skeleton"></div>
         // unassigned
         <table class="table table-sm blueprint-table">
             @skeletonFullHeader(1)

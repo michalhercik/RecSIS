@@ -12,7 +12,7 @@ import (
 )
 
 type DataManager interface {
-	Blueprint(userID string, lang DBLang) (*Blueprint, error)
+	Blueprint(userID string, lang language.Language) (*Blueprint, error)
 	NewCourse(userID string, course string, year int, semester SemesterAssignment) (int, error)
 	AppendCourses(userID string, year int, semester SemesterAssignment, courses ...int) error
 	InsertCourses(userID string, year int, semester SemesterAssignment, position int, courses ...int) error
@@ -52,12 +52,12 @@ const (
 	unassignedStr = "unassigned"
 )
 
-type DBLang string
+// type DBLang string
 
-const (
-	DBLangCS DBLang = "cs"
-	DBLangEN DBLang = "en"
-)
+// const (
+// 	DBLangCS DBLang = "cs"
+// 	DBLangEN DBLang = "en"
+// )
 
 type Teacher struct {
 	SisId       int    `json:"KOD"`
@@ -78,6 +78,34 @@ func (t Teacher) String() string {
 		result = fmt.Sprintf("%c. %s", initial, t.LastName)
 	}
 	return result
+}
+
+type TeacherSlice []Teacher
+
+func (ts *TeacherSlice) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case nil:
+		return nil
+	case []byte:
+		json.Unmarshal(v, &ts)
+		return nil
+	case string:
+		json.Unmarshal([]byte(v), &ts)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+func (t TeacherSlice) string() string {
+	names := []string{}
+	for _, teacher := range t {
+		names = append(names, teacher.String())
+	}
+	if len(names) == 0 {
+		return "---"
+	}
+	return strings.Join(names, ", ")
 }
 
 type TeachingSemester int
@@ -118,34 +146,6 @@ const (
 	assignmentWinter
 	assignmentSummer
 )
-
-type TeacherSlice []Teacher
-
-func (ts *TeacherSlice) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case nil:
-		return nil
-	case []byte:
-		json.Unmarshal(v, &ts)
-		return nil
-	case string:
-		json.Unmarshal([]byte(v), &ts)
-		return nil
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
-}
-
-func (t TeacherSlice) string() string {
-	names := []string{}
-	for _, teacher := range t {
-		names = append(names, teacher.String())
-	}
-	if len(names) == 0 {
-		return "---"
-	}
-	return strings.Join(names, ", ")
-}
 
 type NullCourse struct {
 	ID            sql.NullInt32  `db:"id"`

@@ -220,23 +220,27 @@ templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
                 x-show="isLong"
                 x-text={ fmt.Sprintf("expanded ? '%s' : '%s'", t.ReadLess, t.ReadMore) }>
             </button>
-            <div class="d-flex justify-content-between mt-auto pt-3">
-                <div>
-                    for _, ba := range course.BlueprintAssignments.Sort() {
-                        @badge(ba, t)
-                    }
-                </div>
-                // add to blueprint button
-                <div class="d-flex align-self-end">
-                    @addBtn(course.Code, "outerHTML", "#course-card-" + course.Code)
-                </div>
+            // status badges
+            <div class="d-flex flex-wrap mt-auto pt-3 pb-1">
+                for _, ba := range course.BlueprintAssignments.Sort() {
+                    @badge(ba, t)
+                }
+                // TODO: add degree plan and completed badges
+            </div>
+            // add to blueprint button
+            <div class="d-flex justify-content-end">
+                @addBtn(course.Code, "outerHTML", "#course-card-" + course.Code)
             </div>
         </div>
     </div>
 }
 
 templ badge(ba Assignment, t text) {
-    <span class="badge rounded-pill bg-blueprint me-1">{ ba.String(t.Utils.Language) }</span>
+    if ba.Year == 0 {
+        <span class="badge rounded-pill bg-unassigned me-1 mb-1">{ ba.String(t.Utils.Language) }</span>
+    } else {
+        <span class="badge rounded-pill bg-blueprint me-1 mb-1">{ ba.String(t.Utils.Language) }</span>
+    }
 }
 
 // templ ribbon(ba AssignmentSlice, t text) {

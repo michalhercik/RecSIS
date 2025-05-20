@@ -28,7 +28,6 @@ templ Content(data *Blueprint, t text) {
 
 templ checkedCoursesMenu(yearCount int, t text) {
     // take care of checked courses
-    // TODO: finish this, it is not working yet
     <div id="checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
         <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
             // uncheck all checkboxes
@@ -416,30 +415,32 @@ templ assignCoursesButton(yearCount int, t text) {
 }
 
 templ assignCourseButtonInternal(tooltip, showCondButton, patch, vals, include string, yearCount int, big bool, t text) {
-    <div
-        class="dropdown-center position-relative d-inline-block"
-        @mouseleave="bootstrap.Dropdown.getOrCreateInstance($refs.dropdown).hide(); initializeTooltips()">
-        <button
-            if (showCondButton != "") {
-                x-cloak
-                x-show={ showCondButton }
-            }
-            class={ "btn btn-outline-secondary border-0 p-0", templ.KV("btn-sm", !big), templ.KV("btn-bg", big) }
-            data-bs-toggle="dropdown"
-            data-bs-offset="0, 0"
-            aria-expanded="false"
-            x-ref="dropdown">
-            <div
-                class={ "bi bi-arrows-move", templ.KV("move-button-filler-sm", !big), templ.KV("move-button-filler-bg", big), templ.KV("big-mobile-btn", big) }
-                data-bs-toggle="tooltip"
-                data-bs-placement="bottom"
-                data-bs-delay={ ttDelay }
-                data-bs-title={ tooltip }
-                @click="bootstrap.Tooltip.getOrCreateInstance($el).dispose();">
-            </div>
-        </button>
-        @assignMenu(yearCount, patch, vals, include, t)
-    </div>
+    if yearCount > 0 {
+        <div
+            class="dropdown-center position-relative d-inline-block"
+            @mouseleave="bootstrap.Dropdown.getOrCreateInstance($refs.dropdown).hide(); initializeTooltips()">
+            <button
+                if (showCondButton != "") {
+                    x-cloak
+                    x-show={ showCondButton }
+                }
+                class={ "btn btn-outline-secondary border-0 p-0", templ.KV("btn-sm", !big), templ.KV("btn-bg", big) }
+                data-bs-toggle="dropdown"
+                data-bs-offset="0, 0"
+                aria-expanded="false"
+                x-ref="dropdown">
+                <div
+                    class={ "bi bi-arrows-move", templ.KV("move-button-filler-sm", !big), templ.KV("move-button-filler-bg", big), templ.KV("big-mobile-btn", big) }
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="bottom"
+                    data-bs-delay={ ttDelay }
+                    data-bs-title={ tooltip }
+                    @click="bootstrap.Tooltip.getOrCreateInstance($el).dispose();">
+                </div>
+            </button>
+            @assignMenu(yearCount, patch, vals, include, t)
+        </div>
+    }
 }
 
 templ assignMenu(yearCount int, patch, vals, include string, t text) {

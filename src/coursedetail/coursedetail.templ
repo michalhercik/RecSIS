@@ -59,8 +59,14 @@ templ badges(course *Course, t text) {
                 }
             } else {
                 for _, ba := range course.BlueprintAssignments.Sort() {
-                    @standartBadge("bg-blueprint") {
-                        <i class="bi bi-basket2"></i> { ba.String(t.Utils.Language) }
+                    if ba.year == 0 {
+                        @standartBadge("bg-unassigned") {
+                            <i class="bi bi-inbox"></i> { ba.String(t.Utils.Language) }
+                        }
+                    } else {
+                        @standartBadge("bg-blueprint") {
+                            <i class="bi bi-basket2"></i> { ba.String(t.Utils.Language) }
+                        }
                     }
                 }
             }

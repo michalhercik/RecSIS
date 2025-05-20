@@ -7,6 +7,10 @@ function clearExpanded() {
     });
 }
 
+function hideMain() {
+    document.getElementById('main-content').style.display = 'none'
+}
+
 // Change language to selected
 function changeLanguage(lang) {
     let currentUrl = window.location.pathname;
