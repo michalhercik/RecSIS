@@ -85,7 +85,7 @@ templ CourseRow(course *Course, bpBtn PartialBlueprintAdd, t text) {
         // TODO: here must be { course.Guarantors }
         <td class="d-none d-xl-table-cell">M. Hercík, M. Medek, L. Peška, J. Novák</td>
         <td class="text-start align-middle p-0">
-            @bpBtn(course.Code, "outerHTML", "tr#assign-row-" + course.Code)
+            @bpBtn(course.Code, "outerHTML", "body")
         </td>
     </tr>
 }

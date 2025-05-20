@@ -11,7 +11,7 @@ import (
 
 type Server struct {
 	router *http.ServeMux
-	Data   DataManager
+	Data   DBManager
 	Auth   Authentication
 	BpBtn  BlueprintAddButton
 	Page   Page
@@ -20,7 +20,7 @@ type Server struct {
 func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", s.page)
-	router.HandleFunc("POST /blueprint/{coursecode}", s.AddCourseToBlueprint)
+	router.HandleFunc("POST /blueprint/{coursecode}", s.addCourseToBlueprint)
 	s.router = router
 }
 
@@ -30,31 +30,15 @@ func (s Server) Router() http.Handler {
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
-	t := texts[lang]
 	userID, err := s.Auth.UserID(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	dp, err := s.Data.DegreePlan(userID, lang)
-	if err != nil {
-		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
-		log.Printf("HandlePage error: %v", err)
-		return
-	}
-	numberOfYears, err := s.BpBtn.NumberOfYears(userID)
-	if err != nil {
-		http.Error(w, "Unable to retrieve number of years", http.StatusInternalServerError)
-		log.Printf("HandlePage error: %v", err)
-		return
-	}
-	partialComponent := s.BpBtn.PartialComponent(numberOfYears, lang)
-	main := Content(dp, t, partialComponent)
-	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
+	s.renderPage(w, r, userID, lang)
 }
 
-func (s Server) AddCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
-	lang := language.FromContext(r.Context())
+func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	userID, err := s.Auth.UserID(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -79,19 +63,24 @@ func (s Server) AddCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		log.Printf("HandlePage error: %v", err)
 		return
 	}
+	s.renderPage(w, r, userID, language.FromContext(r.Context()))
+}
+
+func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
+	t := texts[lang]
+	dp, err := s.Data.DegreePlan(userID, lang)
+	if err != nil {
+		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
+		log.Printf("renderPage: %v", err)
+		return
+	}
 	numberOfYears, err := s.BpBtn.NumberOfYears(userID)
 	if err != nil {
 		http.Error(w, "Unable to retrieve number of years", http.StatusInternalServerError)
-		log.Printf("HandlePage error: %v", err)
+		log.Printf("renderPage: %v", err)
 		return
 	}
-	t := texts[lang]
-	btn := s.BpBtn.PartialComponent(numberOfYears, lang)
-	course, err := s.Data.Course(userID, courseCode, lang)
-	if err != nil {
-		http.Error(w, "Unable to retrieve course", http.StatusInternalServerError)
-		log.Printf("HandlePage error: %v", err)
-		return
-	}
-	CourseRow(&course, btn, t).Render(r.Context(), w)
+	partialComponent := s.BpBtn.PartialComponent(numberOfYears, lang)
+	main := Content(dp, t, partialComponent)
+	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
 }

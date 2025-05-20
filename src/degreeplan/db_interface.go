@@ -9,11 +9,6 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
-type DataManager interface {
-	DegreePlan(userID string, lang language.Language) (*DegreePlan, error)
-	Course(userID, courseCode string, lang language.Language) (Course, error)
-}
-
 type Authentication interface {
 	UserID(r *http.Request) (string, error)
 }

@@ -13,15 +13,6 @@ type DBManager struct {
 	DB *sqlx.DB
 }
 
-func (m DBManager) Course(uid, courseCode string, lang language.Language) (Course, error) {
-	var course Course
-	err := m.DB.Get(&course, sqlquery.Course, uid, courseCode, lang)
-	if err != nil {
-		return course, err
-	}
-	return course, nil
-}
-
 func (m DBManager) DegreePlan(uid string, lang language.Language) (*DegreePlan, error) {
 	var records []dbds.DegreePlanRecord
 	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, lang); err != nil {
