@@ -96,7 +96,7 @@ templ navItemView(nav NavItem, model pageModel) {
         class="nav-item nav-link nav-item-font pb-0 pb-lg-2"
         :class={ fmt.Sprintf("{ 'active': title == '%s' }", nav.Title.String(model.lang)) }
         href={ templ.URL(model.lang.Path(nav.Path)) }
-        @click={ fmt.Sprintf("clearExpanded(); title = '%s'; document.getElementById('main-content').style.display = 'none'", nav.Title.String(model.lang)) }
+        @click={ fmt.Sprintf("if (!event.ctrlKey) { clearExpanded(); title = '%s'; document.getElementById('main-content').style.display = 'none' }", nav.Title.String(model.lang)) }
         hx-indicator={ nav.Indicator }>
         { nav.Title.String(model.lang) }
     </a>
