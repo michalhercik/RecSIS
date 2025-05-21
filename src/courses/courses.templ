@@ -26,7 +26,7 @@ templ filterSection(cp *coursesPage, t text) {
     <div id="filters-wrapper">
         <form
             id="filter-form"
-            hx-get={ t.Utils.LangLink("/courses/search") }
+            hx-get={ t.Utils.Language.Path("/courses/search") }
             hx-target="#courses-page"
             hx-swap="outerHTML"
             hx-include="#search-form"
@@ -154,7 +154,7 @@ templ activeFilters(cp *coursesPage, t text) {
         if anyActive {
             <button
                 class="btn btn-link text-secondary p-0 pb-3"
-                hx-get={ t.Utils.LangLink("/courses/search") }
+                hx-get={ t.Utils.Language.Path("/courses/search") }
                 hx-target="#courses-page"
                 hx-include="#search-form"
                 hx-swap="outerHTML show:window:top">
@@ -291,7 +291,7 @@ templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
         <div
             role="button"
             class={ "page-link", templ.KV("disabled", cp.page == page || page < 1 || page > cp.totalPages) }
-            hx-get={ t.Utils.LangLink("/courses/search") }
+            hx-get={ t.Utils.Language.Path("/courses/search") }
             hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
         >
             <i class={ icon }></i>
@@ -304,7 +304,7 @@ templ paginationNumberButton(page int, cp *coursesPage, t text) {
         <div
             role="button"
             class={ "page-link", templ.KV("active", cp.page == page) }
-            hx-get={ t.Utils.LangLink("/courses/search") }
+            hx-get={ t.Utils.Language.Path("/courses/search") }
             hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
         >
             { fmt.Sprintf("%d", page) }
@@ -323,7 +323,7 @@ templ threeDots() {
 templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
     <button
         class="btn btn-outline-primary"
-        hx-get={ t.Utils.LangLink("/courses/search") }
+        hx-get={ t.Utils.Language.Path("/courses/search") }
         hx-target="#courses-page"
         hx-include="#filter-form, #search-form"
         hx-swap="outerHTML"

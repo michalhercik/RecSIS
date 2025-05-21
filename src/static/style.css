@@ -536,15 +536,28 @@ body {
     table-layout: fixed;
 }
 
-/* code */
+/* checkbox */
 .degree-plan-table th:nth-child(1),
 .degree-plan-table td:nth-child(1) {
+    width: 28px;
+}
+
+@media (max-width: 767.5px) {
+    .degree-plan-table th:nth-child(1),
+    .degree-plan-table td:nth-child(1){
+        width: 50px;
+    }
+}
+
+/* code */
+.degree-plan-table th:nth-child(2),
+.degree-plan-table td:nth-child(2) {
     width: 85px;
 }
 
 /* title */
-.degree-plan-table th:nth-child(2),
-.degree-plan-table td:nth-child(2) {
+.degree-plan-table th:nth-child(3),
+.degree-plan-table td:nth-child(3) {
     width: auto;
     white-space: nowrap;
     overflow: hidden;
@@ -552,39 +565,39 @@ body {
 }
 
 /* status */
-.degree-plan-table th:nth-child(3),
-.degree-plan-table td:nth-child(3) {
+.degree-plan-table th:nth-child(4),
+.degree-plan-table td:nth-child(4) {
     width: 110px;
 }
 
 @media (max-width: 767.5px) {
-    .degree-plan-table th:nth-child(3),
-    .degree-plan-table td:nth-child(3) {
+    .degree-plan-table th:nth-child(4),
+    .degree-plan-table td:nth-child(4) {
         width: 30px;
     }
 }
 
 /* credits */
-.degree-plan-table th:nth-child(4),
-.degree-plan-table td:nth-child(4) {
+.degree-plan-table th:nth-child(5),
+.degree-plan-table td:nth-child(5) {
     width: 42px;
 }
 
 /* winter */
-.degree-plan-table th:nth-child(5),
-.degree-plan-table td:nth-child(5) {
-    width: 90px;
-}
-
-/* summer */
 .degree-plan-table th:nth-child(6),
 .degree-plan-table td:nth-child(6) {
     width: 90px;
 }
 
-/* guarantors */
+/* summer */
 .degree-plan-table th:nth-child(7),
 .degree-plan-table td:nth-child(7) {
+    width: 90px;
+}
+
+/* guarantors */
+.degree-plan-table th:nth-child(8),
+.degree-plan-table td:nth-child(8) {
     width: 265px;
     white-space: nowrap;
     overflow: hidden;
@@ -593,19 +606,30 @@ body {
 
 /* guarantors smaller */
 @media (max-width: 1399.5px) {
-    .degree-plan-table th:nth-child(7),
-    .degree-plan-table td:nth-child(7) {
+    .degree-plan-table th:nth-child(8),
+    .degree-plan-table td:nth-child(8) {
         width: 200px;
     }
 }
 
 /* button */
-.degree-plan-table th:nth-child(8),
-.degree-plan-table td:nth-child(8) {
+.degree-plan-table th:nth-child(9),
+.degree-plan-table td:nth-child(9) {
     width: 55px;
 }
 
 /* ============================================== */
+
+/* DP -> status badges overview */
+.status-badges {
+    padding-left: 32px;
+}
+
+@media (max-width: 767.5px) {
+    .status-badges {
+        padding-left: 0;
+    }
+}
 
 /* DP -> badge circle */
 .badge-circle {

@@ -6,6 +6,7 @@ import (
     "github.com/michalhercik/RecSIS/internal/interface/course"
     "fmt"
 	"github.com/michalhercik/RecSIS/language"
+    "net/url"
 )
 
 templ Content(course *Course, t text, bpBtn PartialBlueprintAdd) {
@@ -83,6 +84,15 @@ templ standartBadge(bgColor string) {
     <span class={ "badge rounded-pill align-self-start fs-6 mb-1", bgColor }>
         { children... }
     </span>
+}
+
+templ clickableBadge(bgColor string, course *Course, t text) {
+    <a
+        role="button"
+        class={ "badge rounded-pill align-self-start fs-6 mb-1", bgColor }
+        href={ templ.SafeURL(fmt.Sprintf("/%s/#:~:text=%s", t.Utils.Language.Path("degreeplan"), url.PathEscape(course.Code))) }>
+        { children... }
+    </a>
 }
 
 templ basicInfo(course *Course, t text) {
@@ -247,7 +257,7 @@ templ surveySearch(code string, t text) {
     <form
         id="survey-search-form"
         class="input-group mb-3"
-        hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", code)) }
+        hx-get={ t.Utils.Language.Path(fmt.Sprintf("/course/survey/%s", code)) }
         hx-target="#surveys-content"
         hx-swap="outerHTML"
         x-data="{ surveySearchInput: '' }"
@@ -307,7 +317,7 @@ templ SurveysContent(surveys []course.Comment, code string, end bool, t text) {
         if (!end) {
             // lazy loading of more surveys
             <div
-                hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", code)) }
+                hx-get={ t.Utils.Language.Path(fmt.Sprintf("/course/survey/%s", code)) }
                 hx-trigger="intersect"
                 hx-include="#survey-search-form"
                 hx-target="#surveys-content"
@@ -493,9 +503,9 @@ templ rateButton(rating NullInt64, icon, code string, rate int64, t text, classe
             templ.KV(icon, !rating.Valid || rating.Int64 != rate),
         }
         if rating.Valid && rating.Int64 == rate {
-        hx-delete={ t.Utils.LangLink("/course/rating/" + code) }
+        hx-delete={ t.Utils.Language.Path("/course/rating/" + code) }
         } else {
-        hx-put={ t.Utils.LangLink("/course/rating/" + code) }
+        hx-put={ t.Utils.Language.Path("/course/rating/" + code) }
         hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
         }
         hx-target="#simple-rating"
@@ -544,7 +554,7 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
             <div class="d-flex align-items-center gap-2 pb-3" x-data={ fmt.Sprintf("{ value: %d, valid: %t}", c.UserRating.Int64, c.UserRating.Valid) }>
                 <button
                     class="btn btn-outline-none bi bi-trash-fill p-0"
-                    hx-delete={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
+                    hx-delete={ t.Utils.Language.Path(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
                     hx-target="#category-rating"
                     hx-swap="outerHTML"
                     @click="valid = false">
@@ -564,7 +574,7 @@ templ rateModal(categories []CourseCategoryRating, code string, t text) {
                         min="0" max="10" step="1"
                         x-model="value"
                         @click="valid = true"
-                        hx-put={ t.Utils.LangLink(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
+                        hx-put={ t.Utils.Language.Path(fmt.Sprintf("/course/rating/%s/%d", code, c.Code)) }
                         hx-target="#category-rating"
                         hx-swap="outerHTML"
                         :hx-trigger="valid ? 'change' : 'click'">

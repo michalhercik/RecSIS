@@ -64,6 +64,21 @@ templ yearsTables(years []AcademicYear, t text) {
     }
 }
 
+templ unassignedTable(unassigned []Course, folded bool, yearCount int, t text) {
+    <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
+        if len(unassigned) > 0 {
+            // if there are unassigned courses
+            @unassignHeadline(folded, t)
+            if (!folded) {
+                @coursesBody(unassigned, false, sortHxPatch(0, 0, t), t.TTReassign, yearCount, t)
+            }
+        } else {
+            // if there are no unassigned courses
+            @noCoursesTableContent(t.NoUnassignedText, sortHxPatch(0, 0, t))
+        }
+    </table>
+}
+
 templ unassignHeadline(folded bool, t text) {
     <thead><tr>
         <th class="text-center align-middle p-0 bg-white lh-1">
@@ -89,17 +104,20 @@ templ unassignHeadline(folded bool, t text) {
     </tr></thead>
 }
 
-templ unassignedTable(unassigned []Course, folded bool, yearCount int, t text) {
+templ winterTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, winterCredits int, t text) {
     <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
-        if len(unassigned) > 0 {
-            // if there are unassigned courses
-            @unassignHeadline(folded, t)
+        if len(courses) > 0 {
+            // if there are some courses
+            @winterHeadline(year, runningCredits, yearCredits, winterCredits, folded, t)
             if (!folded) {
-                @coursesBody(unassigned, false, sortHxPatch(0, 0, t), t.TTReassign, yearCount, t)
+                @coursesBody(courses, true, sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t)
             }
         } else {
-            // if there are no unassigned courses
-            @noCoursesTableContent(t.NoUnassignedText, sortHxPatch(0, 0, t))
+            // if there are no courses
+            {{
+                text := t.YearStr(year) + " " + t.Winter + " - " + t.EmptySemester
+            }}
+            @noCoursesTableContent(text, sortHxPatch(year, int(assignmentWinter), t))
         }
     </table>
 }
@@ -134,20 +152,20 @@ templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, folde
     </tr></thead>
 }
 
-templ winterTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, winterCredits int, t text) {
+templ summerTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, summerCredits int, t text) {
     <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
         if len(courses) > 0 {
             // if there are some courses
-            @winterHeadline(year, runningCredits, yearCredits, winterCredits, folded, t)
+            @summerHeadline(year, runningCredits, yearCredits, summerCredits, folded, t)
             if (!folded) {
-                @coursesBody(courses, true, sortHxPatch(year, int(assignmentWinter), t), t.TTReassign, yearCount, t)
+                @coursesBody(courses, true, sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t)
             }
         } else {
             // if there are no courses
             {{
-                text := t.YearStr(year) + " " + t.Winter + " - " + t.EmptySemester
+                text := t.YearStr(year) + " " + t.Summer + " - " + t.EmptySemester
             }}
-            @noCoursesTableContent(text, sortHxPatch(year, int(assignmentWinter), t))
+            @noCoursesTableContent(text, sortHxPatch(year, int(assignmentSummer), t))
         }
     </table>
 }
@@ -182,24 +200,6 @@ templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, folde
     </tr></thead>
 }
 
-templ summerTable(courses []Course, folded bool, year, yearCount, runningCredits, yearCredits, summerCredits int, t text) {
-    <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
-        if len(courses) > 0 {
-            // if there are some courses
-            @summerHeadline(year, runningCredits, yearCredits, summerCredits, folded, t)
-            if (!folded) {
-                @coursesBody(courses, true, sortHxPatch(year, int(assignmentSummer), t), t.TTReassign, yearCount, t)
-            }
-        } else {
-            // if there are no courses
-            {{
-                text := t.YearStr(year) + " " + t.Summer + " - " + t.EmptySemester
-            }}
-            @noCoursesTableContent(text, sortHxPatch(year, int(assignmentSummer), t))
-        }
-    </table>
-}
-
 templ popoverTitle(year, runningCredits, yearCredits, semesterCredits int, semester string, t text) {
     <h5
         class="mb-0 text-nowrap cursor-help"
@@ -216,7 +216,7 @@ templ popoverTitle(year, runningCredits, yearCredits, semesterCredits int, semes
 templ showHideCoursesButton(year int, semester string, folded bool, t text) {
     <button
         class={ "btn btn-sm btn-outline-secondary p-0 border-0 hide-semester-btn bi", templ.KV("bi-caret-up-fill", folded), templ.KV("bi-caret-down-fill", !folded) }
-        hx-patch={ t.Utils.LangLink(fmt.Sprintf("/blueprint/%d/%s", year, semester)) }
+        hx-patch={ t.Utils.Language.Path(fmt.Sprintf("/blueprint/%d/%s", year, semester)) }
         hx-vals={ fmt.Sprintf(`"folded": %t`, !folded) }
         hx-target="main">
     </button>
@@ -343,7 +343,7 @@ templ summarizeFooter(data *Blueprint, t text) {
                 // for this to overflow left, text order is left to right so the elements are in the opposite order
                 <button
                     class="btn btn-sm btn-outline-secondary bi bi-plus"
-                    hx-post={ t.Utils.LangLink("/blueprint/year") }
+                    hx-post={ t.Utils.Language.Path("/blueprint/year") }
                     hx-target="main">
                 </button>
                 { fmt.Sprintf("%d", len(data.years) - 1) }
@@ -359,7 +359,7 @@ templ summarizeFooter(data *Blueprint, t text) {
                     // if the last year is empty, show delete button
                     <button
                         class="btn btn-outline-secondary btn-sm bi bi-dash"
-                        hx-delete={ t.Utils.LangLink("/blueprint/year") }
+                        hx-delete={ t.Utils.Language.Path("/blueprint/year") }
                         hx-vals={ vUnassign(false) }
                         hx-target="main"
                         :disabled={ fmt.Sprintf("%d <= 0", len(data.years) - 1) }>
@@ -386,7 +386,7 @@ templ deleteYearModal(lastYear int, t text) {
                     <button
                         data-bs-dismiss="modal"
                         class="btn btn-primary"
-                        hx-delete={ t.Utils.LangLink("/blueprint/year") }
+                        hx-delete={ t.Utils.Language.Path("/blueprint/year") }
                         hx-vals={ vUnassign(false) }
                         hx-target="main">
                         { t.RemoveCourses }
@@ -394,7 +394,7 @@ templ deleteYearModal(lastYear int, t text) {
                     <button
                         data-bs-dismiss="modal"
                         class="btn btn-primary"
-                        hx-delete={ t.Utils.LangLink("/blueprint/year") }
+                        hx-delete={ t.Utils.Language.Path("/blueprint/year") }
                         hx-vals={ mergeVals(vUnassign(true), vYear(lastYear)) }
                         hx-target="main">
                         { t.UnassignCourses }
@@ -407,11 +407,11 @@ templ deleteYearModal(lastYear int, t text) {
 }
 
 templ assignCourseButton(tooltip string, yearCount, ID int, t text) {
-    @assignCourseButtonInternal(tooltip, "hover && !isSorting", t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%d", ID)), "", "", yearCount, false, t)
+    @assignCourseButtonInternal(tooltip, "hover && !isSorting", t.Utils.Language.Path(fmt.Sprintf("/blueprint/course/%d", ID)), "", "", yearCount, false, t)
 }
 
 templ assignCoursesButton(yearCount int, t text) {
-    @assignCourseButtonInternal(t.TTAssignChecked, "", t.Utils.LangLink("/blueprint/courses"), `, ` + vType(selectedMove), "input[type=checkbox]:checked", yearCount, true, t)
+    @assignCourseButtonInternal(t.TTAssignChecked, "", t.Utils.Language.Path("/blueprint/courses"), `, ` + vType(selectedMove), "input[type=checkbox]:checked", yearCount, true, t)
 }
 
 templ assignCourseButtonInternal(tooltip, showCondButton, patch, vals, include string, yearCount int, big bool, t text) {
@@ -468,19 +468,19 @@ templ assignSemesterButton(year, semester int, patch, vals, include, semesterTex
 }
 
 templ removeCourseButton(ID int, t text) {
-    @adjustCoursesButton("bi-trash-fill", "hover && !isSorting", t.TTRemove, "", "", false, templ.Attributes{"hx-delete": t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%d", ID))})
+    @adjustCoursesButton("bi-trash-fill", "hover && !isSorting", t.TTRemove, "", "", false, templ.Attributes{"hx-delete": t.Utils.Language.Path(fmt.Sprintf("/blueprint/course/%d", ID))})
 }
 
 templ unassignCourseButton(ID int, t text) {
-    @adjustCoursesButton("bi-dash-circle", "hover && !isSorting", t.TTUnassign, mergeVals(vYear(0), vSem(0), vPos()), "", false, templ.Attributes{"hx-patch": t.Utils.LangLink(fmt.Sprintf("/blueprint/course/%d", ID))})
+    @adjustCoursesButton("bi-dash-circle", "hover && !isSorting", t.TTUnassign, mergeVals(vYear(0), vSem(0), vPos()), "", false, templ.Attributes{"hx-patch": t.Utils.Language.Path(fmt.Sprintf("/blueprint/course/%d", ID))})
 }
 
 templ removeCoursesButton(tooltip, vals, include string, big bool, t text) {
-    @adjustCoursesButton("bi-trash-fill", "", tooltip, vals, include, big, templ.Attributes{"hx-delete": t.Utils.LangLink("/blueprint/courses")})
+    @adjustCoursesButton("bi-trash-fill", "", tooltip, vals, include, big, templ.Attributes{"hx-delete": t.Utils.Language.Path("/blueprint/courses")})
 }
 
 templ unassignCoursesButton(tooltip, vals, include string, big bool, t text) {
-    @adjustCoursesButton("bi-dash-circle", "", tooltip, vals, include, big, templ.Attributes{"hx-patch": t.Utils.LangLink("/blueprint/courses")})
+    @adjustCoursesButton("bi-dash-circle", "", tooltip, vals, include, big, templ.Attributes{"hx-patch": t.Utils.Language.Path("/blueprint/courses")})
 }
 
 templ adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, method templ.Attributes) {

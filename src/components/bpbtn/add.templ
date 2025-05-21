@@ -7,7 +7,7 @@ import (
 templ AddBtn(code string, numberOfYears int, t Text, options Options) {
     <div id={ fmt.Sprintf("%s-blueprint-add", code) } class="btn-group">
         <button type="button" class="btn btn-outline-blueprint"
-            hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+            hx-post={ t.Utils.Language.Path(options.HxPostBase + "/blueprint/" + code) }
             hx-vals={ `"year": 0, "semester": 0` }
             hx-swap={ options.HxSwap }
             hx-target={ options.HxTarget }
@@ -47,7 +47,7 @@ templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
             } else {
                 :class="{ 'border-0': !hover }"
             }
-            hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+            hx-post={ t.Utils.Language.Path(options.HxPostBase + "/blueprint/" + code) }
             hx-vals={ `"year": 0, "semester": 0` }
             hx-swap={ options.HxSwap }
             hx-target={ options.HxTarget }
@@ -78,7 +78,7 @@ templ assignSemesterButton(code, semesterText string, year, semester int, t Text
     <li class="mx-3">
         <button
             class="dropdown-item rounded text-center dropdown-item-blueprint"
-            hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+            hx-post={ t.Utils.Language.Path(options.HxPostBase + "/blueprint/" + code) }
             hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }
             hx-swap={ options.HxSwap }
             hx-target={ options.HxTarget }>

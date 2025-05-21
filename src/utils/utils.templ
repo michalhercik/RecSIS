@@ -22,7 +22,7 @@ templ watermark() {
 templ CourseLink(code string, t Text) {
     <a
         class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
-        href={ templ.URL(t.LangLink("/course/" + code)) }>
+        href={ templ.URL(t.Language.Path("/course/" + code)) }>
         { code }
     </a>
 }
@@ -30,7 +30,7 @@ templ CourseLink(code string, t Text) {
 templ TitleCourseLink(code, title string, lowUnderline bool, t Text) {
     <a
         class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover", templ.KV("link-offset-2", lowUnderline) }
-        href={ templ.URL(t.LangLink("/course/" + code)) }>
+        href={ templ.URL(t.Language.Path("/course/" + code)) }>
         { title }
     </a>
 }

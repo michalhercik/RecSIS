@@ -14,11 +14,6 @@ type Text struct {
 	Contact    string
 }
 
-func (t Text) LangLink(URL string) string {
-	link := "/" + string(t.Language) + URL
-	return link
-}
-
 var Texts = map[language.Language]Text{
 	language.CS: {
 		Language:   language.CS,

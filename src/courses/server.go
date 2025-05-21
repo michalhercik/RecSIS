@@ -232,7 +232,7 @@ func (s Server) parseUrl(queryValues url.Values, t text) string {
 	}
 	// TODO: possibly add more defaults to exclude
 
-	return t.Utils.LangLink("/courses?" + queryValues.Encode())
+	return t.Utils.Language.Path("/courses?" + queryValues.Encode())
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {

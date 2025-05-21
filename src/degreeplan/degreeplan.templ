@@ -9,9 +9,8 @@ templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
     <div class="container pt-3" hx-indicator="#loader">
         for _, bloc := range dp.blocs {
             // bloc title, icon, credits and limit
-            if bloc.Name != "" {
-                @blocName(&bloc, "d-md-none", "", t)
-            }
+            @completionStatusBadges(&bloc, t)
+            @blocName(&bloc, "d-md-none", "px-1 my-1", t)
             // table with courses
             <table class="table table-sm table-hover degree-plan-table">
                 @tableHeader(&bloc, t)
@@ -25,9 +24,25 @@ templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
     </div>
 }
 
+templ completionStatusBadges(bloc *Bloc, t text) {
+    <div class="d-flex gap-2 status-badges">
+        <span class="badge bg-success">
+            { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.Limit) }
+        </span>
+        <span class="badge bg-blueprint">
+            { fmt.Sprintf("%d/%d", bloc.assignedCredits(), bloc.Limit) }
+        </span>
+        <span class="badge bg-unassigned">
+            { fmt.Sprintf("%d/%d", bloc.blueprintCredits(), bloc.Limit) }
+        </span>
+    </div>
+}
+
 templ tableHeader(bloc *Bloc, t text) {
     <thead>
         <tr>
+            // checkbox
+            <th></th>
             if bloc.Name != "" {
                 // code
                 <th>
@@ -58,12 +73,24 @@ templ tableHeader(bloc *Bloc, t text) {
     </thead>
 }
 
+templ blocName(bloc *Bloc, show, classes string, t text) {
+    if bloc.Name != "" {
+        <h5 class={ "mb-0", classes, show }>
+            { utils.CapitalizeFirstLetter(bloc.Name) }
+            @statusIcon(bloc, t)
+        </h5>
+    }
+}
+
 templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t text) {
     <tr
         id={ fmt.Sprintf("assign-row-%s", course.Code) }
         x-data="{ hoverRow: false }"
         @mouseover="hoverRow = true"
         @mouseleave="hoverRow = false">
+        // checkbox
+        <td></td>
+        // <td class="text-center align-middle" @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)"> @checkbox(course.ID) </td>
         // code
         <td> @utils.CourseLink(course.Code, t.Utils) </td>
         // title
@@ -85,42 +112,37 @@ templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
     </tr>
 }
 
-templ blocName(bloc *Bloc, show, classes string, t text) {
-    <div class={ "d-flex flex-column", show }>
-        @completionStatusBadges(bloc, t)
-        <div>
-            <h5 class={ "mb-0", classes }>
-                { utils.CapitalizeFirstLetter(bloc.Name) }
-                @statusIcon(bloc, t)
-            </h5>
+templ checkbox(ID int) {
+    <div class="checkbox-container position-relative" x-data>
+        <input
+            type="checkbox"
+            id={ fmt.Sprintf("checkbox%d", ID) }
+            class="form-check-input bp-checkbox"
+            name="selected"
+            value={ fmt.Sprintf("%d", ID) }
+            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1;"
+            @uncheck-all.window="$el.checked = false;"
+        />
+        // circle overlay for easier clicking
+        <div class="d-none d-md-inline">
+            <div
+                class="circle-overlay"
+                @click="handleCircleClick($event)">
+            </div>
         </div>
-    </div>
-}
-
-templ completionStatusBadges(bloc *Bloc, t text) {
-    <div class="flex-grow-1 d-flex align-items-center gap-2 my-1">
-        <span class="badge bg-success">
-            { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.Limit) }
-        </span>
-        <span class="badge bg-blueprint">
-            { fmt.Sprintf("%d/%d", bloc.assignedCredits(), bloc.Limit) }
-        </span>
-        <span class="badge bg-unassigned">
-            { fmt.Sprintf("%d/%d", bloc.blueprintCredits(), bloc.Limit) }
-        </span>
     </div>
 }
 
 templ statusIcon(bloc *Bloc, t text) {
     if bloc.isCompleted() {
         // most important is completion status
-        <i class="bi bi-check-lg text-success ps-2"></i>
+        <i class="bi bi-check-lg text-success"></i>
     } else if bloc.isAssigned() {
         // if not completed, check if assigned
-        <i class="bi bi-basket2 blueprint-color ps-2"></i>
+        <i class="bi bi-basket2 blueprint-color"></i>
     } else if bloc.hasLimit() {
         // if not even assigned and has limit, then it is not completed
-        <i class="bi bi-x-lg text-danger ps-2"></i>
+        <i class="bi bi-x-lg text-danger"></i>
     }
 }
 
