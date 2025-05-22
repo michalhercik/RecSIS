@@ -34,7 +34,7 @@ func add(dp *DegreePlan, record dbds.DegreePlanRecord) {
 		}
 	}
 	if blocIndex == -1 {
-		// TODO: this is temporary FE hack, remove limit, if and change Limit to record.BlocLimit
+		// TODO: this is temporary FE hack, remove limit, if, and set Limit to record.BlocLimit
 		limit := record.BlocLimit
 		if record.IsBlocCompulsory {
 			limit = 42

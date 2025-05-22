@@ -137,6 +137,19 @@ const (
 	assignmentSummer
 )
 
+func (sa SemesterAssignment) IDstring() string {
+	switch sa {
+	case assignmentNone:
+		return "none"
+	case assignmentWinter:
+		return "winter"
+	case assignmentSummer:
+		return "summer"
+	default:
+		return "unsupported"
+	}
+}
+
 type Assignment struct {
 	id       int
 	year     int

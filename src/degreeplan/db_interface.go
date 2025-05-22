@@ -154,6 +154,23 @@ func (c *Course) isUnassigned() bool {
 	return false
 }
 
+func (c *Course) statusBackgroundColor() string {
+	// TODO: add course completion status -> change `false` to `course.Completed`
+	if false {
+		// most important is completion status
+		return "bg-success"
+	} else if c.isAssigned() {
+		// if not completed, check if assigned
+		return "bg-blueprint"
+	} else if c.isUnassigned() {
+		// if not even assigned, check if unassigned
+		return "bg-unassigned"
+	} else {
+		// if nothing else, then it is not completed
+		return "bg-danger"
+	}
+}
+
 type TeachingSemester int
 
 const (

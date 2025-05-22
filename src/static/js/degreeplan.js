@@ -1,36 +1,4 @@
-initAll();
-
-function initAll() {
-    initializeTooltips();
-    initializePopovers();
-    setupCheckboxShiftClick();
-    updateStickyOffset();
-}
-
-// bootstrap tooltip initialization
-function initializeTooltips() {
-    // Dispose of existing tooltips
-    removeAllTooltips();
-
-    // Initialize new tooltips
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-};
-
-// Dispose of existing tooltips
-function removeAllTooltips() {
-    var tooltipElements = document.querySelectorAll('.tooltip');
-    tooltipElements.forEach(function (tooltipEl) {
-        tooltipEl.remove();
-    });
-};
-
-// bootstrap popover initialization
-function initializePopovers() {
-    // Initialize new popovers
-    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
-    const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
-};
+setupCheckboxShiftClick();
 
 // shift click for multiple checkboxes
 function setupCheckboxShiftClick() {
@@ -89,18 +57,10 @@ function handleTdClick(event) {
     }
 }
 
-// update position of course in database using dynamic htmx patch
-function sortHxPatch(item, year, semester, position, language) {
-    htmx.ajax('PATCH', '/' + language + '/blueprint/course/' + item, {
-        target: 'main',
-        values: { year: year, semester: semester, position: position + 1 }
-    });
-}
-
 // Update the sticky offset for the checked-courses-menu based on the header height
 function updateStickyOffset() {
     const header = document.querySelector('header');
-    const menu = document.getElementById('bp-checked-courses-menu');
+    const menu = document.getElementById('dp-checked-courses-menu');
     if (header && menu) {
         const height = header.offsetHeight;
         menu.style.top = height + 'px';

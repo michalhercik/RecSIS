@@ -39,14 +39,6 @@ type Page interface {
 
 type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
 
-type SemesterAssignment int
-
-const (
-	assignmentNone SemesterAssignment = iota
-	assignmentWinter
-	assignmentSummer
-)
-
 type coursesPage struct {
 	courses     []Course
 	page        int
@@ -144,6 +136,27 @@ func (a Assignment) String(lang language.Language) string {
 		result = t.UN
 	}
 	return result
+}
+
+type SemesterAssignment int
+
+const (
+	assignmentNone SemesterAssignment = iota
+	assignmentWinter
+	assignmentSummer
+)
+
+func (sa SemesterAssignment) IDstring() string {
+	switch sa {
+	case assignmentNone:
+		return "none"
+	case assignmentWinter:
+		return "winter"
+	case assignmentSummer:
+		return "summer"
+	default:
+		return "unsupported"
+	}
 }
 
 type AssignmentSlice []Assignment

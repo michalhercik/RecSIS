@@ -78,6 +78,27 @@ body {
     }
 }
 
+/* transparent border */
+.border-transparent {
+    border-color: transparent !important;
+}
+
+/* target row from another pages */
+tr:target {
+    /* keeps the target row in view */
+    scroll-margin-top: 100px;
+}
+
+tr:target td {
+    background-color: yellow;
+    animation: highlight 3s ease-in forwards;
+}
+
+@keyframes highlight {
+    from { background-color: yellow; }
+    to { background-color: white; }
+}
+
 /* NAV -> nav items font size */
 .nav-item-font {
     font-size: calc(1.275rem + .3vw) !important; /* ~ bootstrap fs-4 */
@@ -97,6 +118,11 @@ body {
 
 .btn-submit-input-green:hover {
     background-color: rgb(101, 168, 50) !important;
+}
+
+/* NAV -> background color */
+.bg-navbar {
+    background-color: rgb(233, 244, 222)!important;
 }
 
 /* NAV -> search bar styles */
@@ -260,6 +286,11 @@ body {
     color: black !important;
 }
 
+.bg-degreeplan {
+    background-color: rgb(240, 116, 0);
+    color: white !important;
+}
+
 /* CD -> teachers table styles */
 #teachers-table {
     table-layout: auto;
@@ -304,6 +335,17 @@ body {
     border: none !important;
 }
 
+/* CD -> scrolling to details nav tabs */
+#details-nav-tabs {
+    scroll-margin-top: 56px;
+}
+
+@media (max-width: 767.5px) {
+    #details-nav-tabs {
+        scroll-margin-top: 75px;
+    }
+}
+
 /* BP -> small screen title */
 .small-screen-title {
     overflow: hidden;
@@ -329,7 +371,7 @@ body {
     transform: translate(-50%, -50%);
     display: none;
     user-select: none;
-    z-index: 2;
+    z-index: 3;
 }
 
 .checkbox-container:hover .circle-overlay,
@@ -340,7 +382,7 @@ body {
 /* BP -> Checkbox styles */
 .bp-checkbox {
     border: 1px solid #2c2c2c !important;
-    z-index: 1 !important;
+    z-index: 2 !important;
 }
 
 @media (max-width: 767.5px) {
@@ -361,8 +403,8 @@ body {
 }
 
 /* BP -> Checked courses menu with buttons */
-#checked-courses-menu,
-#checked-courses-menu-skeleton {
+#bp-checked-courses-menu,
+#bp-checked-courses-menu-skeleton {
     position: sticky;
     height: 36px;
     top: 52px;
@@ -371,9 +413,9 @@ body {
 }
 
 @media (max-width: 767.5px) {
-    #checked-courses-menu,
-    #checked-courses-menu-skeleton {
-        height: 47px;
+    #bp-checked-courses-menu,
+    #bp-checked-courses-menu-skeleton {
+        height: 60px;
     }
 }
 
@@ -389,6 +431,10 @@ body {
 .btn-outline-blueprint {
     color: rgb(4, 108, 181) !important;
     border-color: rgb(4, 108, 181) !important;
+}
+
+.btn-outline-blueprint.border-transparent {
+    border-color: transparent !important;
 }
 
 .btn-outline-blueprint:hover,
@@ -539,13 +585,13 @@ body {
 /* checkbox */
 .degree-plan-table th:nth-child(1),
 .degree-plan-table td:nth-child(1) {
-    width: 28px;
+    width: 34px;
 }
 
 @media (max-width: 767.5px) {
     .degree-plan-table th:nth-child(1),
     .degree-plan-table td:nth-child(1){
-        width: 50px;
+        width: 56px;
     }
 }
 
@@ -564,40 +610,27 @@ body {
     text-overflow: ellipsis;
 }
 
-/* status */
+/* credits */
 .degree-plan-table th:nth-child(4),
 .degree-plan-table td:nth-child(4) {
-    width: 110px;
-}
-
-@media (max-width: 767.5px) {
-    .degree-plan-table th:nth-child(4),
-    .degree-plan-table td:nth-child(4) {
-        width: 30px;
-    }
-}
-
-/* credits */
-.degree-plan-table th:nth-child(5),
-.degree-plan-table td:nth-child(5) {
     width: 42px;
 }
 
 /* winter */
+.degree-plan-table th:nth-child(5),
+.degree-plan-table td:nth-child(5) {
+    width: 90px;
+}
+
+/* summer */
 .degree-plan-table th:nth-child(6),
 .degree-plan-table td:nth-child(6) {
     width: 90px;
 }
 
-/* summer */
+/* guarantors */
 .degree-plan-table th:nth-child(7),
 .degree-plan-table td:nth-child(7) {
-    width: 90px;
-}
-
-/* guarantors */
-.degree-plan-table th:nth-child(8),
-.degree-plan-table td:nth-child(8) {
     width: 265px;
     white-space: nowrap;
     overflow: hidden;
@@ -606,23 +639,82 @@ body {
 
 /* guarantors smaller */
 @media (max-width: 1399.5px) {
-    .degree-plan-table th:nth-child(8),
-    .degree-plan-table td:nth-child(8) {
+    .degree-plan-table th:nth-child(7),
+    .degree-plan-table td:nth-child(7) {
         width: 200px;
     }
 }
 
 /* button */
-.degree-plan-table th:nth-child(9),
-.degree-plan-table td:nth-child(9) {
+.degree-plan-table th:nth-child(8),
+.degree-plan-table td:nth-child(8) {
     width: 55px;
 }
 
 /* ============================================== */
 
+/* DP -> Checked courses menu with buttons */
+#dp-checked-courses-menu,
+#dp-checked-courses-menu-skeleton {
+    position: sticky;
+    height: 37px;
+    top: 52px;
+    background-color: white;
+    z-index: 100;
+}
+
+@media (max-width: 767.5px) {
+    #dp-checked-courses-menu,
+    #dp-checked-courses-menu-skeleton {
+        height: 60px;
+    }
+}
+
+/* DP -> Checkbox styles */
+.dp-checkbox {
+    position: relative;
+    z-index: 2 !important;
+    border: 0 !important;
+    background-color: white !important;
+}
+
+.dp-checkbox:checked {
+    background-color: transparent !important;
+}
+
+@media (max-width: 767.5px) {
+    .dp-checkbox {
+        width: 24px !important;
+        height: 24px !important;
+        margin-top: 0px !important;
+    }
+}
+
+/* DP -> circle underlay for course status */
+.circle-underlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 26px;
+    height: 26px;
+    border-radius: 40%;
+    transform: translate(-50%, -50%);
+    display: block;
+    user-select: none;
+    z-index: 1;
+}
+
+@media (max-width: 767.5px) {
+    .circle-underlay {
+        width: 34px;
+        height: 34px;
+        border-radius: 20%;
+    }
+}
+
 /* DP -> status badges overview */
 .status-badges {
-    padding-left: 32px;
+    padding-left: 36px;
 }
 
 @media (max-width: 767.5px) {
@@ -637,14 +729,13 @@ body {
     height: 20px;
 }
 
-/* DP -> BP assign button group */
-.dp-bp-assign-group {
-    height: 32px;
+/* DP -> plus button is large */
+.dp-bp-assign-btn-sm {
+    font-size: 1.75rem !important;
 }
 
-/* DP -> plus button is large */
 .dp-bp-assign-btn {
-    font-size: 1.75rem !important;
+    font-size: 2rem !important;
 }
 
 /* DP -> BP assign line in middle */
@@ -661,6 +752,24 @@ body {
     height: 20px;
     width: 1px;
     background-color: rgb(4, 108, 181);;
+}
+
+/* DP -> mobile td widths */
+.dp-mobile-code {
+    width: 60px;
+}
+
+.dp-mobile-semester {
+    width: 100px;
+}
+
+.dp-mobile-credits {
+    width: 40px;
+}
+
+/* DP -> small table semester */
+.dp-lg-semester {
+    width: 130px;
 }
 
 /* === Loader and page overlay styles === */

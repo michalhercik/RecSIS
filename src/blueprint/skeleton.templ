@@ -13,7 +13,7 @@ templ Skeleton(lang language.Language) {
         x-data
         x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].PageTitle) }>
         // checked courses menu
-        <div id="checked-courses-menu-skeleton"></div>
+        <div id="bp-checked-courses-menu-skeleton"></div>
         // unassigned
         <table class="table table-sm blueprint-table">
             @skeletonFullHeader(1)
@@ -62,17 +62,17 @@ templ skeletonFullHeader(buttons int) {
     <thead><tr>
         // hide/show button
         <th></th>
-        // title
+        // code
         <th class="d-none d-md-table-cell">
             <h5 class="mb-0 text-nowrap popover-title">
                 @placeholder(12)
             </h5>
         </th>
-        // code
+        // title
         <th>
             <span class="d-md-none">
                 <h5 class="mb-0 text-nowrap popover-title">
-                    @placeholder(12)
+                    @placeholder(5)
                 </h5>
             </span>
         </th>
@@ -93,20 +93,30 @@ templ skeletonFullHeader(buttons int) {
     </tr></thead>
 }
 
-templ skeletonRow(title, code, credits, winter, summer, guarantor1, guarantor2, guarantor3 int) {
+templ skeletonRow(code, title, credits, winter, summer, guarantor1, guarantor2, guarantor3 int) {
     <tr>
         // checkbox
         <td class="text-center align-middle p-0 lh-1">@placeholder(8)</td>
-        // title
-        <td class="d-none d-md-table-cell">@placeholder(title)</td>
         // code
+        <td class="d-none d-md-table-cell">@placeholder(code)</td>
+        // title
         <td>
             <span class="d-none d-md-inline">
-                @placeholder(code)
+                @placeholder(title)
             </span>
             <div class="d-flex flex-column d-md-none">
-                <span class="text-muted small lh-1">@placeholder(2)</span>
-                <span class="fw-bold small-screen-title">
+                <div class="d-flex justify-content-between align-items-center small lh-1">
+                    <span class="text-muted dp-mobile-code">
+                        @placeholder(11)
+                    </span>
+                    <span class="text-muted dp-mobile-semester">
+                        @placeholder(7)
+                    </span>
+                    <span class="text-muted dp-mobile-credits">
+                        @placeholder(10)
+                    </span>
+                </div>
+                <span class="fw-semibold small-screen-title">
                     @placeholder(title)
                 </span>
             </div>

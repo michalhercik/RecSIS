@@ -3,6 +3,7 @@ package courses
 import (
 	"github.com/michalhercik/RecSIS/utils"
     "fmt"
+    "net/url"
 )
 
 const coursesPerPage = 24
@@ -44,8 +45,7 @@ templ filterSection(cp *coursesPage, t text) {
                     <a
                         type="button"
                         class="btn btn-submit-input-green d-inline my-2 bi bi-chevron-down"
-                        href="#"
-                        @click="expandedFilters = !expandedFilters; sessionStorage.setItem('expanded-filters', expandedFilters)"
+                        @click="expandedFilters = !expandedFilters; sessionStorage.setItem('expanded-filters', expandedFilters); window.scrollTo({ top: 0, left: 0, behavior: 'instant' })"
                         x-text={ fmt.Sprintf("expandedFilters ? ' %s' : ' %s'", t.ShowResults, t.FilterButton) }>
                     </a>
                 </div>
@@ -223,7 +223,7 @@ templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
             // status badges
             <div class="d-flex flex-wrap mt-auto pt-3 pb-1">
                 for _, ba := range course.BlueprintAssignments.Sort() {
-                    @badge(ba, t)
+                    @badge(course, ba, t)
                 }
                 // TODO: add degree plan and completed badges
             </div>
@@ -235,14 +235,29 @@ templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
     </div>
 }
 
-templ badge(ba Assignment, t text) {
+templ badge(course *Course, ba Assignment, t text) {
     if ba.Year == 0 {
-        <span class="badge rounded-pill bg-unassigned me-1 mb-1">{ ba.String(t.Utils.Language) }</span>
+        @clickableBadge("blueprint", fmt.Sprintf("bp-unassigned-row-%s", course.Code), "bg-unassigned", t) {
+            { ba.String(t.Utils.Language) }
+        }
     } else {
-        <span class="badge rounded-pill bg-blueprint me-1 mb-1">{ ba.String(t.Utils.Language) }</span>
+        @clickableBadge("blueprint", fmt.Sprintf("bp-%d-%s-row-%s", ba.Year, ba.Semester.IDstring(), course.Code), "bg-blueprint", t) {
+            { ba.String(t.Utils.Language) }
+        }
     }
 }
 
+templ clickableBadge(target, fragment, bgColor string, t text) {
+    <a
+        role="button"
+        hx-boost="false"
+        class={ "badge rounded-pill me-1 mb-1", bgColor }
+        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.Utils.Language.Path(target), url.PathEscape(fragment))) }>
+        { children... }
+    </a>
+}
+
+// TODO: keep this for later usage (if not used, remove it)
 // templ ribbon(ba AssignmentSlice, t text) {
 //     if len(ba) > 0 {
 //         <div class="ribbon">

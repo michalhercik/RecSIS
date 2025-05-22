@@ -32,7 +32,7 @@ var texts = map[language.Language]Text{
 		Year:         "ročník",
 		WinterAssign: "ZS",
 		SummerAssign: "LS",
-		Utils:        utils.Texts["cs"],
+		Utils:        utils.Texts[language.CS],
 	},
 	language.EN: {
 		Language:     "en",
@@ -40,6 +40,6 @@ var texts = map[language.Language]Text{
 		Year:         "Year",
 		WinterAssign: "Winter",
 		SummerAssign: "Summer",
-		Utils:        utils.Texts["en"],
+		Utils:        utils.Texts[language.EN],
 	},
 }

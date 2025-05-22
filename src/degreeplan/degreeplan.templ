@@ -6,13 +6,22 @@ import (
 )
 
 templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
-    <div class="container pt-3" hx-indicator="#loader">
+    <div
+        id="degreeplan-content"
+        class="container" 
+        x-data="{ checkedNumber: 0, smallScreen: window.innerWidth < 768 }"
+        x-init="$nextTick(() => updateStickyOffset())"
+        @resize.window="smallScreen = window.innerWidth < 768"
+        hx-indicator="#loader"
+    >
+        // TODO: here we need another BP button for all checked courses
+        @checkedCoursesMenu(3, t)
         for _, bloc := range dp.blocs {
             // bloc title, icon, credits and limit
             @completionStatusBadges(&bloc, t)
             @blocName(&bloc, "d-md-none", "px-1 my-1", t)
             // table with courses
-            <table class="table table-sm table-hover degree-plan-table">
+            <table class="table table-sm degree-plan-table" :class="{ 'table-hover': !smallScreen }">
                 @tableHeader(&bloc, t)
                 <tbody>
                     for _, course := range bloc.Courses {
@@ -21,6 +30,54 @@ templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
                 </tbody>
             </table>
         }
+        <script defer src="/js/degreeplan.js"></script>
+    </div>
+}
+
+// TODO: style this and make better
+// TODO: for now this is just a proof of concept
+templ checkedCoursesMenu(yearCount int, t text) {
+    // take care of checked courses
+    <div id="dp-checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
+        <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
+            // uncheck all checkboxes
+            <button
+                class="btn big-mobile-btn btn-outline-secondary border-0 bi bi-dash-square"
+                @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur();">
+            </button>
+            // assign
+            // TODO: this should be add-checked-courses-to-blueprint button
+            <div
+                class="btn-group dropdown-center"
+                x-data="{ hover: false, hoverSelection: false }"
+                @mouseover="hover = true"
+                @mouseleave="hover = false">
+                <button
+                    class="btn btn-outline-blueprint dp-bp-assign-btn bi bi-plus lh-1 p-0 border-0"
+                    if yearCount > 0 {
+                        :class="{ 'dp-bp-delimiter': !hover }"
+                    }
+                ></button>
+                if (yearCount > 0) {
+                    <button
+                        class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split border-0 pb-1"
+                        :class="{ 'btn-blueprint-hover': hoverSelection }"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        data-bs-offset="0, 0">
+                    </button>
+                    <ul
+                        class="dropdown-menu"
+                        @mouseover="hoverSelection = true"
+                        @mouseleave="hoverSelection = false">
+                        for year := 1; year <= yearCount; year++ {
+                            //@assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
+                            //@assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
     </div>
 }
 
@@ -41,26 +98,23 @@ templ completionStatusBadges(bloc *Bloc, t text) {
 templ tableHeader(bloc *Bloc, t text) {
     <thead>
         <tr>
-            // checkbox
+            // checkbox + status
             <th></th>
             if bloc.Name != "" {
                 // code
-                <th>
+                <th class="d-none d-md-table-cell">
                     @blocName(bloc, "d-none d-md-block", "text-nowrap", t)
-                    <span class="d-md-none">{ t.Code }</span>
                 </th>
                 // title
-                <th><span class="d-md-none">{ t.Title }</span></th>
+                <th></th>
             } else {
                 // code
-                <th>{ t.Code }</th>
+                <th class="d-none d-md-table-cell">{ t.Code }</th>
                 // title
-                <th>{ t.Title }</th>
+                <th><span class="d-none d-md-inline">{ t.Title }</span></th>
             }
-            // status
-            <th></th>
             // credits
-            <th class="th-overflow credits-column">{ t.Credits }</th>
+            <th class="d-none d-md-table-cell th-overflow credits-column">{ t.Credits }</th>
             // winter
             <th class="d-none d-lg-table-cell">{ t.Winter }</th>
             // summer
@@ -68,7 +122,9 @@ templ tableHeader(bloc *Bloc, t text) {
             // guarantors
             <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
             // blueprint button
-            <th class="th-overflow"><span class="d-none d-lg-inline">{ t.Blueprint }</span></th>
+            <th class="d-none d-md-table-cell th-overflow">
+                <span class="d-none d-lg-inline">{ t.Blueprint }</span>
+            </th>
         </tr>
     </thead>
 }
@@ -80,57 +136,6 @@ templ blocName(bloc *Bloc, show, classes string, t text) {
             @statusIcon(bloc, t)
         </h5>
     }
-}
-
-templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t text) {
-    <tr
-        id={ fmt.Sprintf("assign-row-%s", course.Code) }
-        x-data="{ hoverRow: false }"
-        @mouseover="hoverRow = true"
-        @mouseleave="hoverRow = false">
-        // checkbox
-        <td></td>
-        // <td class="text-center align-middle" @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)"> @checkbox(course.ID) </td>
-        // code
-        <td> @utils.CourseLink(course.Code, t.Utils) </td>
-        // title
-        <td class={ templ.KV("fw-bold", isCompulsory) }> @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils) </td>
-        // status
-        <td class="align-middle lh-1"> @statusBadge(course, t) </td>
-        // credits
-        <td class="text-end credits-column">{ fmt.Sprintf("%d", course.Credits) }</td>
-        // winter
-        <td class="d-none d-lg-table-cell">{ winterString(course) }</td>
-        // summer
-        <td class="d-none d-lg-table-cell">{ summerString(course) }</td>
-        // guarantors
-        <td class="d-none d-xl-table-cell">{ course.Guarantors.string() }</td>
-        // blueprint button
-        <td class="text-start align-middle p-0">
-            @bpBtn(course.Code, "outerHTML", "body")
-        </td>
-    </tr>
-}
-
-templ checkbox(ID int) {
-    <div class="checkbox-container position-relative" x-data>
-        <input
-            type="checkbox"
-            id={ fmt.Sprintf("checkbox%d", ID) }
-            class="form-check-input bp-checkbox"
-            name="selected"
-            value={ fmt.Sprintf("%d", ID) }
-            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1;"
-            @uncheck-all.window="$el.checked = false;"
-        />
-        // circle overlay for easier clicking
-        <div class="d-none d-md-inline">
-            <div
-                class="circle-overlay"
-                @click="handleCircleClick($event)">
-            </div>
-        </div>
-    </div>
 }
 
 templ statusIcon(bloc *Bloc, t text) {
@@ -146,30 +151,89 @@ templ statusIcon(bloc *Bloc, t text) {
     }
 }
 
-templ statusBadge(course *Course, t text) {
-    // TODO: add course completion status -> change `false` to `course.Completed`
-    if false {
-        // most important is completion status
-        @badge("bg-success", t.Completed)
-    } else if course.isAssigned() {
-        // if not completed, check if assigned
-        @badge("bg-blueprint", t.InBlueprint)
-    } else if course.isUnassigned() {
-        // if not even assigned, check if unassigned
-        @badge("bg-unassigned", t.Unassigned)
-    } else {
-        // if nothing else, then it is not completed
-        @badge("bg-danger", t.NotCompleted)
-    }
+templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t text) {
+    <tr
+        id={ fmt.Sprintf("dp-row-%s", course.Code) }
+        x-data="{ hoverRow: false }"
+        @mouseover="hoverRow = true"
+        @mouseleave="hoverRow = false">
+        // checkbox + status
+        <td
+            class="text-center align-middle"
+            @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)"> 
+            @checkbox(course)
+        </td>
+        // code
+        <td class="d-none d-md-table-cell"> @utils.CourseLink(course.Code, t.Utils) </td>
+        // title
+        <td>
+            <div class="d-flex justify-content-between">
+                <span class={ "d-none d-md-inline", templ.KV("fw-bold", isCompulsory) }>
+                    @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils)
+                </span>
+                <span class="d-none d-md-inline d-lg-none dp-lg-semester">
+                    { fmt.Sprintf("%s %s, %s", semesterString(course, t), hoursString(course, t), course.ExamType) }
+                </span>
+            </div>
+            @mobileInfoTd(course, isCompulsory, t)
+        </td>
+        // credits
+        <td class="d-none d-md-table-cell text-end credits-column">{ fmt.Sprintf("%d", course.Credits) }</td>
+        // winter
+        <td class="d-none d-lg-table-cell">{ winterString(course) }</td>
+        // summer
+        <td class="d-none d-lg-table-cell">{ summerString(course) }</td>
+        // guarantors
+        <td class="d-none d-xl-table-cell">{ course.Guarantors.string() }</td>
+        // blueprint button
+        <td class="d-none d-md-table-cell text-start align-middle p-0">
+            @bpBtn(course.Code, "outerHTML", "body")
+        </td>
+    </tr>
 }
 
-templ badge(color, text string) {
-    // small badge for mobile
-    <span class={ "d-none d-md-inline-block rounded-pill badge", color }> { text } </span>
-    // big badge for desktop
-    <span class={ "badge-circle d-inline-flex d-md-none align-center rounded-circle", color }>
-        <span class="visually-hidden">{ text }</span>
-    </span>
+templ checkbox(course *Course) {
+    <div class="checkbox-container position-relative">
+        // circle under the checkbox - course status
+        <div class={ "circle-underlay", course.statusBackgroundColor() }></div>
+        // checkbox
+        <input
+            type="checkbox"
+            id={ fmt.Sprintf("dp-checkbox-%s", course.Code) }
+            class="form-check-input dp-checkbox"
+            name="selected"
+            value={ fmt.Sprintf("%s", course.Code) }
+            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1;"
+            @uncheck-all.window="$el.checked = false;"
+        />
+        // circle overlay for easier clicking
+        <div class="d-none d-md-inline">
+            <div
+                role="button"
+                class="circle-overlay"
+                @click="handleCircleClick($event)">
+            </div>
+        </div>
+    </div>
+}
+
+templ mobileInfoTd(course *Course, isCompulsory bool, t text) {
+    <div class="d-flex flex-column d-md-none">
+        <div class="d-flex justify-content-between align-items-center small lh-1">
+            <span class="text-muted dp-mobile-code">
+                { course.Code }
+            </span>
+            <span class="text-muted dp-mobile-semester">
+                { fmt.Sprintf("%s %s, %s", semesterString(course, t), hoursString(course, t), course.ExamType) }
+            </span>
+            <span class="text-muted dp-mobile-credits">
+                { fmt.Sprintf("%s: %d", t.CreditsShort, course.Credits) }
+            </span>
+        </div>
+        <span class={ "fw-semibold small-screen-title", templ.KV("fw-bold", isCompulsory) }>
+            @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils)
+        </span>
+    </div>
 }
 
 func winterString(course *Course) string {
@@ -192,4 +256,62 @@ func summerString(course *Course) string {
         summerText = "---"
     }
     return summerText
+}
+
+func semesterString(c *Course, t text) string {
+    switch c.Start {
+        case teachingBoth:
+            return t.Both
+        case teachingWinterOnly:
+            return t.Winter
+        case teachingSummerOnly:
+            return t.Summer
+        default:
+            return ""
+    }
+}
+
+// TODO: after refactor to lectureWinter + valid, etc use this
+// func hoursString(course *Course, t text) string {
+//     result := ""
+//     winter := course.LectureRangeWinter.Valid && course.SeminarRangeWinter.Valid
+//     summer := course.LectureRangeSummer.Valid && course.SeminarRangeSummer.Valid
+//     if winter {
+//         result += fmt.Sprintf("%d/%d", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64)
+//     }
+//     if winter && summer {
+//         result += ", "
+//     }
+//     if summer {
+//         result += fmt.Sprintf("%d/%d", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64)
+//     }
+//     return result
+// }
+func hoursString(course *Course, t text) string {
+    result := ""
+    both := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
+    winter := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
+    summer := fmt.Sprintf("%d/%d", course.LectureRange2, course.SeminarRange2)
+
+    switch course.Start {
+        case teachingWinterOnly:
+            result += winter
+        case teachingSummerOnly:
+            result += summer
+        case teachingBoth:
+            result += both
+    }
+
+    if course.SemesterCount == 2 {
+        switch course.Start {
+        case teachingWinterOnly:
+            result += " " + t.Summer + " " + summer
+        case teachingSummerOnly:
+            result += " " + t.Winter + " " + winter
+        case teachingBoth:
+            result = "ERROR" // TODO: what should be done in this case? can it even happen?
+        }
+    }
+
+    return result
 }
