@@ -173,7 +173,7 @@ templ details(course *Course, t text) {
             @description(course, t)
         </div>
         <div class="tab-pane pt-2" id="survey-tab-pane" role="tabpanel" tabindex="0"
-            hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", course.Code)) }
+            hx-get={ t.Utils.Language.Path(fmt.Sprintf("/course/survey/%s", course.Code)) }
             hx-trigger="intersect once"
             hx-target="this"
             hx-swap="innerHTML"
@@ -262,7 +262,7 @@ templ surveySearch(model SurveyViewModel, t text) {
     <form
         id="survey-search-form"
         class="input-group mb-3"
-        hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", model.code)) }
+        hx-get={ t.Utils.Language.Path(fmt.Sprintf("/course/survey/%s", model.code)) }
         hx-target="#survey-tab-pane"
         hx-swap="innerHTML"
         x-data={ fmt.Sprintf("{ surveySearchInput: '%s' }", model.query) }
