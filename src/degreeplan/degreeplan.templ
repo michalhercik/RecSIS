@@ -6,116 +6,234 @@ import (
 )
 
 templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
-    <div class="container pt-3" hx-indicator="#loader">
+    <div
+        id="degreeplan-content"
+        class="container" 
+        x-data="{ checkedNumber: 0, smallScreen: window.innerWidth < 768 }"
+        x-init="$nextTick(() => updateStickyOffset())"
+        @resize.window="smallScreen = window.innerWidth < 768"
+        hx-indicator="#loader"
+    >
+        // TODO: here we need another BP button for all checked courses
+        @checkedCoursesMenu(3, t)
         for _, bloc := range dp.blocs {
-            if bloc.Name != "" {
-                <h5 class="d-md-none">
-                    { fmt.Sprintf("%s", utils.CapitalizeFirstLetter(bloc.Name)) }
-                    if bloc.hasLimit() {
-                        <span class="d-md-none">{ fmt.Sprintf("(≥%d %s)", bloc.Limit, t.CreditsShort) }</span>
-                    }
-                    @statusIcon(&bloc, t)
-                </h5>
-            }
-            <table class="table table-sm table-hover degree-plan-table">
+            // bloc title, icon, credits and limit
+            @completionStatusBadges(&bloc, t)
+            @blocName(&bloc, "d-md-none", "px-1 my-1", t)
+            // table with courses
+            <table class="table table-sm degree-plan-table" :class="{ 'table-hover': !smallScreen }">
                 @tableHeader(&bloc, t)
                 <tbody>
                     for _, course := range bloc.Courses {
-                        @CourseRow(&course, bpBtn, t)
+                        @CourseRow(&course, bloc.IsCompulsory, bpBtn, t)
                     }
                 </tbody>
             </table>
         }
+        <script defer src="/js/degreeplan.js"></script>
+    </div>
+}
+
+// TODO: style this and make better
+// TODO: for now this is just a proof of concept
+templ checkedCoursesMenu(yearCount int, t text) {
+    // take care of checked courses
+    <div id="dp-checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
+        <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
+            // uncheck all checkboxes
+            <button
+                class="btn big-mobile-btn btn-outline-secondary border-0 bi bi-dash-square"
+                @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur();">
+            </button>
+            // assign
+            // TODO: this should be add-checked-courses-to-blueprint button
+            <div
+                class="btn-group dropdown-center"
+                x-data="{ hover: false, hoverSelection: false }"
+                @mouseover="hover = true"
+                @mouseleave="hover = false">
+                <button
+                    class="btn btn-outline-blueprint dp-bp-assign-btn bi bi-plus lh-1 p-0 border-0"
+                    if yearCount > 0 {
+                        :class="{ 'dp-bp-delimiter': !hover }"
+                    }
+                ></button>
+                if (yearCount > 0) {
+                    <button
+                        class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split border-0 pb-1"
+                        :class="{ 'btn-blueprint-hover': hoverSelection }"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        data-bs-offset="0, 0">
+                    </button>
+                    <ul
+                        class="dropdown-menu"
+                        @mouseover="hoverSelection = true"
+                        @mouseleave="hoverSelection = false">
+                        for year := 1; year <= yearCount; year++ {
+                            //@assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
+                            //@assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+templ completionStatusBadges(bloc *Bloc, t text) {
+    <div class="d-flex gap-2 status-badges">
+        <span class="badge bg-success">
+            { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.Limit) }
+        </span>
+        <span class="badge bg-blueprint">
+            { fmt.Sprintf("%d/%d", bloc.assignedCredits(), bloc.Limit) }
+        </span>
+        <span class="badge bg-unassigned">
+            { fmt.Sprintf("%d/%d", bloc.blueprintCredits(), bloc.Limit) }
+        </span>
     </div>
 }
 
 templ tableHeader(bloc *Bloc, t text) {
     <thead>
         <tr>
-            if bloc.Name == "" {
-                <th>{ t.Code }</th>
-                <th>{ t.Title }</th>
-            } else {
-                <th>
-                    <h5 class="mb-0 text-nowrap d-none d-md-block">
-                        { utils.CapitalizeFirstLetter(bloc.Name) }
-                        @statusIcon(bloc, t)
-                    </h5>
-                    <span class="d-md-none">{ t.Code }</span>
-                </th>
-                <th>
-                    <span class="d-md-none">{ t.Title }</span>
-                </th>
-            }
+            // checkbox + status
             <th></th>
-            <th class="th-overflow pe-0"> @creditsHeader(bloc, t) </th>
-            <th class="d-none d-md-table-cell">
-                if bloc.hasLimit() {
-                    { fmt.Sprintf("(≥%d)", bloc.Limit) }
-                }
-            </th>
+            if bloc.Name != "" {
+                // code
+                <th class="d-none d-md-table-cell">
+                    @blocName(bloc, "d-none d-md-block", "text-nowrap", t)
+                </th>
+                // title
+                <th></th>
+            } else {
+                // code
+                <th class="d-none d-md-table-cell">{ t.Code }</th>
+                // title
+                <th><span class="d-none d-md-inline">{ t.Title }</span></th>
+            }
+            // credits
+            <th class="d-none d-md-table-cell th-overflow credits-column">{ t.Credits }</th>
+            // winter
             <th class="d-none d-lg-table-cell">{ t.Winter }</th>
+            // summer
             <th class="d-none d-lg-table-cell">{ t.Summer }</th>
+            // guarantors
             <th class="d-none d-xl-table-cell">{ t.Guarantors }</th>
-            <th class="th-overflow"><span class="d-none d-lg-inline">{ t.Blueprint }</span></th>
+            // blueprint button
+            <th class="d-none d-md-table-cell th-overflow">
+                <span class="d-none d-lg-inline">{ t.Blueprint }</span>
+            </th>
         </tr>
     </thead>
 }
 
-templ creditsHeader(bloc *Bloc, t text) {
-    <span>{ fmt.Sprintf("%s:", t.Credits) }</span>
-    <span class="text-success">{ fmt.Sprintf("%d", bloc.completedCredits()) }</span>
-    <span>|</span>
-    <span class="blueprint-color">{ fmt.Sprintf("%d", bloc.inBlueprintCredits()) }</span>
+templ blocName(bloc *Bloc, show, classes string, t text) {
+    if bloc.Name != "" {
+        <h5 class={ "mb-0", classes, show }>
+            { utils.CapitalizeFirstLetter(bloc.Name) }
+            @statusIcon(bloc, t)
+        </h5>
+    }
 }
 
-templ CourseRow(course *Course, bpBtn PartialBlueprintAdd, t text) {
+templ statusIcon(bloc *Bloc, t text) {
+    if bloc.isCompleted() {
+        // most important is completion status
+        <i class="bi bi-check-lg text-success"></i>
+    } else if bloc.isAssigned() {
+        // if not completed, check if assigned
+        <i class="bi bi-basket2 blueprint-color"></i>
+    } else if bloc.hasLimit() {
+        // if not even assigned and has limit, then it is not completed
+        <i class="bi bi-x-lg text-danger"></i>
+    }
+}
+
+templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t text) {
     <tr
-        id={ fmt.Sprintf("assign-row-%s", course.Code) }
+        id={ fmt.Sprintf("dp-row-%s", course.Code) }
         x-data="{ hoverRow: false }"
         @mouseover="hoverRow = true"
         @mouseleave="hoverRow = false">
-        <td> @utils.CourseLink(course.Code, t.Utils) </td>
-        <td> @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils) </td>
-        <td class="align-middle lh-1"> @statusBadge(course, t) </td>
-        <td class="text-end pe-0">{ fmt.Sprintf("%d", course.Credits) }</td>
-        <td class="d-none d-md-table-cell"></td>
+        // checkbox + status
+        <td
+            class="text-center align-middle"
+            @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)"> 
+            @checkbox(course)
+        </td>
+        // code
+        <td class="d-none d-md-table-cell"> @utils.CourseLink(course.Code, t.Utils) </td>
+        // title
+        <td>
+            <div class="d-flex justify-content-between">
+                <span class={ "d-none d-md-inline", templ.KV("fw-bold", isCompulsory) }>
+                    @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils)
+                </span>
+                <span class="d-none d-md-inline d-lg-none dp-lg-semester">
+                    { fmt.Sprintf("%s %s, %s", semesterString(course, t), hoursString(course, t), course.ExamType) }
+                </span>
+            </div>
+            @mobileInfoTd(course, isCompulsory, t)
+        </td>
+        // credits
+        <td class="d-none d-md-table-cell text-end credits-column">{ fmt.Sprintf("%d", course.Credits) }</td>
+        // winter
         <td class="d-none d-lg-table-cell">{ winterString(course) }</td>
+        // summer
         <td class="d-none d-lg-table-cell">{ summerString(course) }</td>
-        // TODO: here must be { course.Guarantors }
-        <td class="d-none d-xl-table-cell">M. Hercík, M. Medek, L. Peška, J. Novák</td>
-        <td class="text-start align-middle p-0">
+        // guarantors
+        <td class="d-none d-xl-table-cell">{ course.Guarantors.string() }</td>
+        // blueprint button
+        <td class="d-none d-md-table-cell text-start align-middle p-0">
             @bpBtn(course.Code, "outerHTML", "body")
         </td>
     </tr>
 }
 
-templ statusIcon(bloc *Bloc, t text) {
-    if bloc.completed() {
-        <i class="bi bi-check-lg text-success ps-2"></i>
-    } else if bloc.inBlueprint() {
-        <i class="bi bi-basket2 blueprint-color ps-2"></i>
-    } else if bloc.hasLimit() {
-        <i class="bi bi-x-lg text-danger ps-2"></i>
-    }
+templ checkbox(course *Course) {
+    <div class="checkbox-container position-relative">
+        // circle under the checkbox - course status
+        <div class={ "circle-underlay", course.statusBackgroundColor() }></div>
+        // checkbox
+        <input
+            type="checkbox"
+            id={ fmt.Sprintf("dp-checkbox-%s", course.Code) }
+            class="form-check-input dp-checkbox"
+            name="selected"
+            value={ fmt.Sprintf("%s", course.Code) }
+            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1;"
+            @uncheck-all.window="$el.checked = false;"
+        />
+        // circle overlay for easier clicking
+        <div class="d-none d-md-inline">
+            <div
+                role="button"
+                class="circle-overlay"
+                @click="handleCircleClick($event)">
+            </div>
+        </div>
+    </div>
 }
 
-templ statusBadge(course *Course, t text) {
-    // TODO: add course completion status -> change `false` to `course.Completed`
-    if false {
-        @badge("bg-success", t.Completed)
-    } else if course.assignedInBlueprint() {
-        @badge("bg-blueprint", t.InBlueprint)
-    } else {
-        @badge("bg-danger", t.NotCompleted)
-    }
-}
-
-templ badge(color, text string) {
-    <span class={ "d-none d-md-inline-block rounded-pill badge", color }> { text } </span>
-    <span class={ "badge-circle d-inline-flex d-md-none align-center rounded-circle", color }>
-        <span class="visually-hidden">{ text }</span>
-    </span>
+templ mobileInfoTd(course *Course, isCompulsory bool, t text) {
+    <div class="d-flex flex-column d-md-none">
+        <div class="d-flex justify-content-between align-items-center small lh-1">
+            <span class="text-muted dp-mobile-code">
+                { course.Code }
+            </span>
+            <span class="text-muted dp-mobile-semester">
+                { fmt.Sprintf("%s %s, %s", semesterString(course, t), hoursString(course, t), course.ExamType) }
+            </span>
+            <span class="text-muted dp-mobile-credits">
+                { fmt.Sprintf("%s: %d", t.CreditsShort, course.Credits) }
+            </span>
+        </div>
+        <span class={ "fw-semibold small-screen-title", templ.KV("fw-bold", isCompulsory) }>
+            @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils)
+        </span>
+    </div>
 }
 
 func winterString(course *Course) string {
@@ -138,4 +256,62 @@ func summerString(course *Course) string {
         summerText = "---"
     }
     return summerText
+}
+
+func semesterString(c *Course, t text) string {
+    switch c.Start {
+        case teachingBoth:
+            return t.Both
+        case teachingWinterOnly:
+            return t.Winter
+        case teachingSummerOnly:
+            return t.Summer
+        default:
+            return ""
+    }
+}
+
+// TODO: after refactor to lectureWinter + valid, etc use this
+// func hoursString(course *Course, t text) string {
+//     result := ""
+//     winter := course.LectureRangeWinter.Valid && course.SeminarRangeWinter.Valid
+//     summer := course.LectureRangeSummer.Valid && course.SeminarRangeSummer.Valid
+//     if winter {
+//         result += fmt.Sprintf("%d/%d", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64)
+//     }
+//     if winter && summer {
+//         result += ", "
+//     }
+//     if summer {
+//         result += fmt.Sprintf("%d/%d", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64)
+//     }
+//     return result
+// }
+func hoursString(course *Course, t text) string {
+    result := ""
+    both := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
+    winter := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
+    summer := fmt.Sprintf("%d/%d", course.LectureRange2, course.SeminarRange2)
+
+    switch course.Start {
+        case teachingWinterOnly:
+            result += winter
+        case teachingSummerOnly:
+            result += summer
+        case teachingBoth:
+            result += both
+    }
+
+    if course.SemesterCount == 2 {
+        switch course.Start {
+        case teachingWinterOnly:
+            result += " " + t.Summer + " " + summer
+        case teachingSummerOnly:
+            result += " " + t.Winter + " " + winter
+        case teachingBoth:
+            result = "ERROR" // TODO: what should be done in this case? can it even happen?
+        }
+    }
+
+    return result
 }

@@ -1,6 +1,7 @@
 package courses
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -187,7 +188,7 @@ func (s Server) parseUrl(queryValues url.Values, t text) string {
 	}
 	// TODO: possibly add more defaults to exclude
 
-	return t.Utils.LangLink("/courses?" + queryValues.Encode())
+	return fmt.Sprintf("%s?%s", t.Utils.Language.Path("/courses"), queryValues.Encode())
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {

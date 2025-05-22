@@ -7,6 +7,10 @@ function clearExpanded() {
     });
 }
 
+function hideMain() {
+    document.getElementById('main-content').style.display = 'none'
+}
+
 // Change language to selected
 function changeLanguage(lang) {
     let currentUrl = window.location.pathname;
@@ -25,6 +29,5 @@ document.addEventListener('htmx:afterSwap', function (e) {
 });
 
 window.addEventListener('htmx:historyRestore', () => {
-    console.log(document.getElementById('main-content'));
     document.getElementById('main-content').style.display = 'inline';
 });

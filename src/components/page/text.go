@@ -2,12 +2,10 @@ package page
 
 import (
 	"github.com/michalhercik/RecSIS/language"
-	"github.com/michalhercik/RecSIS/utils"
 )
 
 type Text struct {
 	Contact string
-	Utils   utils.Text
 }
 
 var texts = map[language.Language]Text{

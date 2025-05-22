@@ -58,7 +58,7 @@ templ PageView(model pageModel) {
 
 templ Header(model pageModel) {
     <header class="sticky-top">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light py-0" hx-indicator="#loader"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
+        <nav class="navbar navbar-expand-lg navbar-light bg-navbar py-2 py-md-0" hx-indicator="#loader"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
             <div class="container position-relative">
                 <a class="navbar-brand d-flex align-items-center fs-3 mff-font" href={ templ.URL(model.lang.Path(model.home)) }>
                     <img src="/logo.svg" alt="Logo" height="30" class="mb-1 pe-1">
@@ -96,7 +96,9 @@ templ navItemView(nav NavItem, model pageModel) {
         class="nav-item nav-link nav-item-font pb-0 pb-lg-2"
         :class={ fmt.Sprintf("{ 'active': title == '%s' }", nav.Title.String(model.lang)) }
         href={ templ.URL(model.lang.Path(nav.Path)) }
-        @click={ fmt.Sprintf("clearExpanded(); title = '%s'; document.getElementById('main-content').style.display = 'none'", nav.Title.String(model.lang)) }
+        @click.prevent={ fmt.Sprintf("if (!event.ctrlKey) { clearExpanded(); title = '%s'; hideMain(); }", nav.Title.String(model.lang)) }
+        data-bs-toggle="collapse"
+        data-bs-target=".navbar-collapse.show"
         hx-indicator={ nav.Indicator }>
         { nav.Title.String(model.lang) }
     </a>

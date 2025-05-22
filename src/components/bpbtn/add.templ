@@ -7,14 +7,14 @@ import (
 templ AddBtn(code string, numberOfYears int, t Text, options Options) {
     <div id={ fmt.Sprintf("%s-blueprint-add", code) } class="btn-group">
         <button type="button" class="btn btn-outline-blueprint"
-            hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+            hx-post={ t.Utils.Language.Path(options.HxPostBase + "/blueprint/" + code) }
             hx-vals={ `"year": 0, "semester": 0` }
             hx-swap={ options.HxSwap }
             hx-target={ options.HxTarget }
         >
             { t.Assign }
         </button>
-        if (numberOfYears > 1) {
+        if (numberOfYears > 0) {
             <button
                 type="button"
                 class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
@@ -34,29 +34,29 @@ templ AddBtn(code string, numberOfYears int, t Text, options Options) {
 
 templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
     <div
-        class="dp-bp-assign-group btn-group w-100"
+        class="btn-group w-100"
         x-cloak
         x-show="hoverRow"
         x-data="{ hover: false, hoverSelection: false }"
         @mouseover="hover = true"
         @mouseleave="hover = false">
         <button
-            class="dp-bp-assign-btn btn btn-sm btn-outline-blueprint bi bi-plus lh-1 p-0"
-            if numberOfYears > 1 {
-                :class="{ 'border-0': !hover, 'dp-bp-delimiter': !hover }"
+            class="btn btn-sm btn-outline-blueprint dp-bp-assign-btn-sm bi bi-plus lh-1 p-0"
+            if numberOfYears > 0 {
+                :class="{ 'border-transparent': !hover, 'dp-bp-delimiter': !hover }"
             } else {
-                :class="{ 'border-0': !hover }"
+                :class="{ 'border-transparent': !hover }"
             }
-            hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+            hx-post={ t.Utils.Language.Path(options.HxPostBase + "/blueprint/" + code) }
             hx-vals={ `"year": 0, "semester": 0` }
             hx-swap={ options.HxSwap }
             hx-target={ options.HxTarget }
             >
         </button>
-        if (numberOfYears > 1) {
+        if (numberOfYears > 0) {
             <button
                 class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-                :class="{ 'btn-blueprint-hover': hoverSelection, 'border-0': !hover }"
+                :class="{ 'btn-blueprint-hover': hoverSelection, 'border-transparent': !hover }"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
                 data-bs-offset="0, 0">
@@ -78,7 +78,7 @@ templ assignSemesterButton(code, semesterText string, year, semester int, t Text
     <li class="mx-3">
         <button
             class="dropdown-item rounded text-center dropdown-item-blueprint"
-            hx-post={ t.Utils.LangLink(options.HxPostBase + "/blueprint/" + code) }
+            hx-post={ t.Utils.Language.Path(options.HxPostBase + "/blueprint/" + code) }
             hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }
             hx-swap={ options.HxSwap }
             hx-target={ options.HxTarget }>

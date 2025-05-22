@@ -17,12 +17,12 @@ var texts = map[language.Language]Text{
 		NoCoursesFound:    "Žádné předměty nebyly nalezeny.",
 		SearchPlaceholder: "Hledej předmět...",
 		SearchButton:      "Hledej",
-		Utils:             utils.Texts["cs"],
+		Utils:             utils.Texts[language.CS],
 	},
 	language.EN: {
 		NoCoursesFound:    "No courses found.",
 		SearchPlaceholder: "Search for course...",
 		SearchButton:      "Search",
-		Utils:             utils.Texts["en"],
+		Utils:             utils.Texts[language.EN],
 	},
 }

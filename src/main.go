@@ -85,7 +85,7 @@ func main() {
 		Home: "/home",
 		NavItems: []page.NavItem{
 			{Title: language.MakeLangString("Domů", "Home"), Path: "/", Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
-			{Title: language.MakeLangString("Hledání", "Search"), Path: "/courses/", Indicator: "#loader"},
+			{Title: language.MakeLangString("Hledání", "Search"), Path: "/courses/", Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
 			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: "/blueprint/", Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
 			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: "/degreeplan/", Skeleton: degreeplan.Skeleton, Indicator: "#degreeplan-skeleton"},
 		},

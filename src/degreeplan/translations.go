@@ -14,12 +14,14 @@ type text struct {
 	Status       string
 	Completed    string
 	InBlueprint  string
+	Unassigned   string
 	NotCompleted string
 	Credits      string
 	CreditsShort string
 	Needed       string
 	Winter       string
 	Summer       string
+	Both         string
 	Guarantors   string
 	Blueprint    string
 	Assign       string
@@ -47,12 +49,14 @@ var texts = map[language.Language]text{
 		Status:       "Stav",
 		Completed:    "Splněno",
 		InBlueprint:  "Blueprint",
+		Unassigned:   "Nezařazen",
 		NotCompleted: "Nesplněno",
 		Credits:      "Kredity",
-		CreditsShort: "kr.",
+		CreditsShort: "Kr.",
 		Needed:       "potřeba",
 		Winter:       "ZS",
 		Summer:       "LS",
+		Both:         "Oba",
 		Guarantors:   "Garant(i)",
 		Blueprint:    "Blueprint",
 		Assign:       "Přiřadit",
@@ -69,11 +73,13 @@ var texts = map[language.Language]text{
 		Status:       "Status",
 		Completed:    "Completed",
 		InBlueprint:  "Blueprint",
+		Unassigned:   "Unassigned",
 		NotCompleted: "Not completed",
 		Credits:      "Credits",
-		CreditsShort: "cr.",
+		CreditsShort: "Cr.",
 		Needed:       "needed",
 		Winter:       "Winter",
+		Both:         "Both",
 		Summer:       "Summer",
 		Guarantors:   "Guarantor(s)",
 		Blueprint:    "Blueprint",

@@ -1,8 +1,9 @@
 package degreeplan
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/dbds"
@@ -39,31 +40,29 @@ type Bloc struct {
 	Courses      []Course
 }
 
-func (bloc *Bloc) hasLimit() bool {
-	return bloc.Limit > -1
+func (b *Bloc) hasLimit() bool {
+	return b.Limit > -1
 }
 
-func (b *Bloc) inBlueprint() bool {
-	if b.hasLimit() && b.inBlueprintCredits() >= b.Limit {
+// ignores courses unassigned in the blueprint
+func (b *Bloc) isAssigned() bool {
+	if b.hasLimit() && b.assignedCredits() >= b.Limit {
 		return true
 	}
 	return false
 }
 
-func (b *Bloc) inBlueprintCredits() int {
+func (b *Bloc) assignedCredits() int {
 	credits := 0
 	for _, c := range b.Courses {
-		for _, year := range c.BlueprintYears {
-			if year > 0 {
-				credits += c.Credits
-				break
-			}
+		if c.isAssigned() {
+			credits += c.Credits
 		}
 	}
 	return credits
 }
 
-func (b *Bloc) completed() bool {
+func (b *Bloc) isCompleted() bool {
 	if b.hasLimit() && b.completedCredits() >= b.Limit {
 		return true
 	}
@@ -81,19 +80,95 @@ func (b *Bloc) completedCredits() int {
 	return credits
 }
 
-type CourseStatus string
-
-func (c CourseStatus) String() string {
-	return string(c)
+// gets all courses in the blueprint
+func (b *Bloc) isInBlueprint() bool {
+	if b.hasLimit() && b.blueprintCredits() >= b.Limit {
+		return true
+	}
+	return false
 }
 
-func (c *CourseStatus) UnmarshalJSON(b []byte) error {
-	var r string
-	if err := json.Unmarshal(b, &r); err != nil {
-		return err
+func (b *Bloc) blueprintCredits() int {
+	credits := 0
+	for _, c := range b.Courses {
+		if c.isInBlueprint() {
+			credits += c.Credits
+		}
 	}
-	*c = CourseStatus(r)
-	return nil
+	return credits
+}
+
+// type CourseStatus string
+
+// func (c CourseStatus) String() string {
+// 	return string(c)
+// }
+
+// func (c *CourseStatus) UnmarshalJSON(b []byte) error {
+// 	var r string
+// 	if err := json.Unmarshal(b, &r); err != nil {
+// 		return err
+// 	}
+// 	*c = CourseStatus(r)
+// 	return nil
+// }
+
+type Course struct {
+	Code           string
+	Title          string
+	Note           string
+	Credits        int
+	Start          TeachingSemester
+	Guarantors     TeacherSlice
+	LectureRange1  int
+	SeminarRange1  int
+	LectureRange2  int
+	SeminarRange2  int
+	SemesterCount  int
+	ExamType       string
+	BlueprintYears []int64
+}
+
+// if is (un)assigned in the blueprint
+func (c *Course) isInBlueprint() bool {
+	return len(c.BlueprintYears) > 0
+}
+
+// if is assigned in the blueprint
+func (c *Course) isAssigned() bool {
+	for _, year := range c.BlueprintYears {
+		if year > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// if is unassigned in the blueprint
+func (c *Course) isUnassigned() bool {
+	for _, year := range c.BlueprintYears {
+		if year == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Course) statusBackgroundColor() string {
+	// TODO: add course completion status -> change `false` to `course.Completed`
+	if false {
+		// most important is completion status
+		return "bg-success"
+	} else if c.isAssigned() {
+		// if not completed, check if assigned
+		return "bg-blueprint"
+	} else if c.isUnassigned() {
+		// if not even assigned, check if unassigned
+		return "bg-unassigned"
+	} else {
+		// if nothing else, then it is not completed
+		return "bg-danger"
+	}
 }
 
 type TeachingSemester int
@@ -112,27 +187,27 @@ type Teacher struct {
 	TitleAfter  string
 }
 
-type Course struct {
-	Code           string
-	Title          string
-	Note           string
-	Credits        int
-	Start          TeachingSemester
-	Guarantors     []Teacher
-	LectureRange1  int
-	SeminarRange1  int
-	LectureRange2  int
-	SeminarRange2  int
-	SemesterCount  int
-	ExamType       string
-	BlueprintYears []int64
+func (t Teacher) String() string {
+	if len(t.FirstName) > 0 {
+		var initial rune
+		for _, r := range t.FirstName {
+			initial = r
+			break
+		}
+		return fmt.Sprintf("%c. %s", initial, t.LastName)
+	}
+	return t.LastName
 }
 
-func (c *Course) assignedInBlueprint() bool {
-	for _, year := range c.BlueprintYears {
-		if year > 0 {
-			return true
-		}
+type TeacherSlice []Teacher
+
+func (t TeacherSlice) string() string {
+	names := []string{}
+	for _, teacher := range t {
+		names = append(names, teacher.String())
 	}
-	return false
+	if len(names) == 0 {
+		return "---"
+	}
+	return strings.Join(names, ", ")
 }

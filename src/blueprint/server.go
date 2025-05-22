@@ -111,7 +111,7 @@ func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request, t text) 
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	data, err := s.Data.Blueprint(userID, DBLang(t.Utils.Language))
+	data, err := s.Data.Blueprint(userID, t.Utils.Language)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -131,7 +131,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	data, err := s.Data.Blueprint(userID, DBLang(t.Utils.Language))
+	data, err := s.Data.Blueprint(userID, t.Utils.Language)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

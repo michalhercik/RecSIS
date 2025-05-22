@@ -13,10 +13,12 @@ type text struct {
 	Code             string
 	Title            string
 	Credits          string
+	CreditsShort     string
 	Winter           string
 	WinterLong       string
 	Summer           string
 	SummerLong       string
+	Both             string
 	Guarantors       string
 	Unassigned       string
 	NoUnassignedText string
@@ -76,10 +78,12 @@ var texts = map[language.Language]text{
 		Code:             "Kód",
 		Title:            "Název",
 		Credits:          "Kredity",
+		CreditsShort:     "Kr.",
 		Winter:           "ZS",
 		WinterLong:       "Zimní",
 		Summer:           "LS",
 		SummerLong:       "Letní",
+		Both:             "Oba",
 		Guarantors:       "Garant(i)",
 		Unassigned:       "Nezařazené",
 		NoUnassignedText: "Žádné nezařazené předměty",
@@ -128,10 +132,12 @@ var texts = map[language.Language]text{
 		Code:             "Code",
 		Title:            "Title",
 		Credits:          "Credits",
+		CreditsShort:     "Cr.",
 		Winter:           "Winter",
 		WinterLong:       "Winter",
 		Summer:           "Summer",
 		SummerLong:       "Summer",
+		Both:             "Both",
 		Guarantors:       "Guarantor(s)",
 		Unassigned:       "Unassigned",
 		NoUnassignedText: "No unassigned courses",
