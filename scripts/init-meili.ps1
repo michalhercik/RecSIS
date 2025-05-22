@@ -83,7 +83,7 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-commen
 echo "$($response.StatusCode) $($response.Content)"
 
 $filterable = @(
-    "teacher.KOD",
+    "teacher_facet",
     "study_field",
     "academic_year",
     "study_year",

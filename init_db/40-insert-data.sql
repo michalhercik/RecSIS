@@ -67,7 +67,12 @@ FROM '/docker-entrypoint-initdb.d/blueprint_years.csv'
 DELIMITER ','
 CSV HEADER;
 
-COPY filter_categories(id, facet_id, title_cs, title_en, description_cs, description_en, displayed_value_limit, position)
+INSERT INTO filters (id)
+VALUES
+    ('courses'),
+    ('course-survey');
+
+COPY filter_categories(id, facet_id, title_cs, title_en, description_cs, description_en, displayed_value_limit, position, filter_id)
 FROM '/docker-entrypoint-initdb.d/filter_categories.csv'
 DELIMITER ','
 CSV HEADER;

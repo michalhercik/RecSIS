@@ -17,6 +17,7 @@ def com_agg(row):
         "semester": row.iloc[0]["SEM"],
         "study_field": row.iloc[0]["SOBOR"],
         "teacher": row.iloc[0]["TEACHER"],
+        "teacher_facet": row.iloc[0]["TEACHER"]["JMENO"] + " " + row.iloc[0]["TEACHER"]["PRIJMENI"] if not pd.isna(row.iloc[0]["TEACHER"]) else None,
         "study_type": {
             "code": row.iloc[0]["KOD"],
             "abbr": row.iloc[0]["ZKRATKA"],
@@ -27,10 +28,12 @@ def com_agg(row):
     return pd.Series(data=data, index=data.keys())
 
 
-# comments = pd.read_csv('./init_db/ankecy_transformed.csv', converters={"TEACHER": converter}, dtype={"SROC": pd.Int32Dtype()})
-# comments = comments.groupby(["POVINN", "SOBOR", "SSKR", "SROC", "SEM", "KOD"]).apply(com_agg)
-# comments = comments.reset_index(drop=True).reset_index().rename(columns={"index": "id"})
-# comments = comments.to_json('./init_search/comments.json', orient='records', lines=True)
+comments = pd.read_csv('./init_db/ankecy_transformed.csv', converters={"TEACHER": converter}, dtype={"SROC": pd.Int32Dtype()})
+comments = comments.groupby(["POVINN", "SOBOR", "SSKR", "SROC", "SEM", "KOD"]).apply(com_agg)
+comments = comments.reset_index(drop=True).reset_index().rename(columns={"index": "id"})
+comments = comments.to_json('./init_search/comments.json', orient='records', lines=True)
+
+exit()
 
 povinn = pd.read_csv('./init_db/POVINN.csv')
 courses = pd.read_csv('./init_db/courses_transformed.csv', usecols=[

@@ -2,14 +2,16 @@ package coursedetail
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"iter"
 	"net/http"
 	"sort"
+	"strconv"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/dbds"
-	"github.com/michalhercik/RecSIS/internal/course/comments/search"
-	"github.com/michalhercik/RecSIS/internal/interface/teacher"
+	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -44,6 +46,15 @@ const (
 	numberOfComments = 20
 	nOCommentsQuery  = "number-of-comments"
 )
+
+type SurveyViewModel struct {
+	lang   language.Language
+	code   string
+	query  string
+	survey []Comment
+	isEnd  bool
+	facets iter.Seq[filters.FacetIterator] // TODO
+}
 
 type Course struct {
 	Code                   string
@@ -81,7 +92,7 @@ type Course struct {
 	BlueprintAssignments AssignmentSlice
 	InDegreePlan         bool
 	CategoryRatings      []CourseCategoryRating
-	Comments             search.SearchResult
+	Comments             []Comment
 }
 
 func (c Course) IsTaughtInWinter() bool {
@@ -109,6 +120,67 @@ func (c Course) courseStyleClass() string {
 	}
 }
 
+type Comment struct {
+	Student
+	CommentTarget
+	AcademicYear int `json:"academic_year"`
+	// Semester string `json:"semester"`
+	Content string `json:"content"`
+}
+
+func (c Comment) AcademicYearString() string {
+	return strconv.Itoa(c.AcademicYear)
+}
+
+type CommentTarget struct {
+	Type          string  `json:"target_type"` // Lecture or Seminar
+	CourseCode    string  `json:"course_code"`
+	TargetTeacher Teacher `json:"teacher"`
+}
+
+type Teacher struct {
+	SISID       string `json:"KOD"`
+	LastName    string `json:"PRIJMENI"`
+	FirstName   string `json:"JMENO"`
+	TitleBefore string `json:"TITULPRED"`
+	TitleAfter  string `json:"TITULZA"`
+}
+
+type Student struct {
+	StudyYear  int       `json:"study_year"`
+	StudyField string    `json:"study_field"`
+	Study      StudyType `json:"study_type"`
+}
+
+func (c Comment) StudiesYearString() string {
+	return strconv.Itoa(c.StudyYear)
+}
+
+type StudyType struct {
+	Code string `json:"code"`
+	Abbr string `json:"abbr"`
+	Name string `json:"name"`
+}
+
+func (st *StudyType) UnmarshalJSON(val []byte) error {
+	var tmp struct {
+		Code   string `json:"code"`
+		Abbr   string `json:"abbr"`
+		NameCs string `json:"name_cs"`
+		NameEn string `json:"name_en"`
+	}
+	if err := json.Unmarshal(val, &tmp); err != nil {
+		return err
+	}
+	st.Code = tmp.Code
+	st.Abbr = tmp.Abbr
+	st.Name = tmp.NameCs
+	if len(st.Name) == 0 {
+		st.Name = tmp.NameEn
+	}
+	return nil
+}
+
 type TeachingSemester int
 
 const (
@@ -117,7 +189,7 @@ const (
 	teachingBoth
 )
 
-type TeacherSlice []teacher.Teacher
+type TeacherSlice []Teacher
 
 type Description struct {
 	Title   string

@@ -16,15 +16,13 @@ const pageParam = "page"
 const hitsPerPageParam = "hitsPerPage"
 
 type Server struct {
-	router *http.ServeMux
-	Data   DataManager
-	// SearchParam string
+	router  *http.ServeMux
+	Data    DataManager
 	Search  SearchEngine
 	Auth    Authentication
 	filters filter.Filters
 	BpBtn   BlueprintAddButton
 	Page    Page
-	// PageTempl   func(templ.Component, language.Language, string) templ.Component
 }
 
 //================================================================================
@@ -48,7 +46,6 @@ func (s *Server) initRouter() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", s.page)
 	router.HandleFunc("GET /search", s.content)
-	// router.HandleFunc("GET /quicksearch", s.quickSearch)
 	router.HandleFunc("POST /blueprint/{coursecode}", s.addCourseToBlueprint)
 	s.router = router
 }
@@ -121,26 +118,6 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
-// func (s Server) quickSearch(w http.ResponseWriter, r *http.Request) {
-// 	lang := language.FromContext(r.Context())
-// 	t := texts[lang]
-// 	query := r.FormValue(s.Page.SearchParam())
-// 	req := QuickRequest{
-// 		query:    query,
-// 		indexUID: courseIndex,
-// 		limit:    5,
-// 		offset:   0,
-// 		lang:     lang,
-// 	}
-// 	res, err := s.Search.QuickSearch(req)
-// 	if err != nil {
-// 		log.Printf("quickSearch: %v", err)
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		return
-// 	}
-// 	QuickResults(&res, t).Render(r.Context(), w)
-// }
-
 func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Request, error) {
 	var req Request
 	userID, err := s.Auth.UserID(r)
@@ -188,11 +165,6 @@ func (s Server) search(req Request, httpReq *http.Request) (coursesPage, error) 
 	if err != nil {
 		return result, err
 	}
-	// paramLabels, err := s.Data.ParamLabels(req.lang)
-	// if err != nil {
-	// 	return result, err
-	// }
-	// facets := filter.MakeFacetDistribution(searchResponse.FacetDistribution, paramLabels)
 	result = coursesPage{
 		courses:     coursesData,
 		page:        int(req.page),
@@ -202,23 +174,6 @@ func (s Server) search(req Request, httpReq *http.Request) (coursesPage, error) 
 		search:      req.query,
 		facets:      filter.IterFiltersWithFacets(s.filters, searchResponse.FacetDistribution, httpReq.URL.Query(), req.lang),
 	}
-	return result, nil
-}
-
-func (s Server) facetDistribution(lang language.Language) (coursesPage, error) {
-	var result coursesPage
-	// f, err := s.Search.FacetDistribution()
-	// if err != nil {
-	// 	return result, err
-	// }
-	// param, err := s.Data.ParamLabels(lang)
-	// if err != nil {
-	// 	return result, err
-	// }
-	// facets := filter.MakeFacetDistribution(f, param)
-	// result = coursesPage{
-	// 	facets: facets,
-	// }
 	return result, nil
 }
 

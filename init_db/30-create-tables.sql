@@ -335,8 +335,13 @@ CREATE TABLE course_ratings (
 --     description VARCHAR(200) NOT NULL,
 -- )
 
+CREATE TABLE filters (
+    id VARCHAR(50) PRIMARY KEY
+);
+
 CREATE TABLE filter_categories (
     id INT PRIMARY KEY,
+    filter_id VARCHAR(50) NOT NULL REFERENCES filters(id),
     facet_id VARCHAR(50) NOT NULL,
     title_cs VARCHAR(50) NOT NULL,
     title_en VARCHAR(50) NOT NULL,

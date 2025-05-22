@@ -1,0 +1,136 @@
+package coursedetail
+
+import (
+	"encoding/json"
+
+	"github.com/meilisearch/meilisearch-go"
+	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
+	"github.com/michalhercik/RecSIS/internal/course/comments/search"
+	"github.com/michalhercik/RecSIS/language"
+)
+
+type Search struct {
+	Client meilisearch.ServiceManager
+	Survey meilisearch.IndexConfig
+}
+
+// TODO: write own meilisearch client
+func (s Search) Comments(r Request) (Response, error) {
+	var result Response
+	searchReq := makeMultiSearchRequest(r, s.Survey)
+	response, err := s.Client.MultiSearch(searchReq)
+	if err != nil {
+		return result, err
+	}
+	rawResponse, err := response.MarshalJSON()
+	if err != nil {
+		return result, err
+	}
+	multi := MultiResponse{}
+	if err = json.Unmarshal(rawResponse, &multi); err != nil {
+		return result, err
+	}
+	result = multi.Results[0]
+	for _, res := range multi.Results[1:] {
+		for param, distribution := range res.FacetDistribution {
+			result.FacetDistribution[param] = distribution
+		}
+	}
+	return result, nil
+}
+
+type Expression interface {
+	String() string
+	Except() func(func(string, string) bool)
+	ConditionsCount() int
+	Append(param string, values ...string)
+}
+
+type Request struct {
+	userID   string
+	query    string
+	indexUID string
+	offset   int
+	limit    int
+	lang     language.Language
+	filter   Expression
+	facets   []string
+	sort     string
+}
+
+type Response struct {
+	EstimatedTotalHits int
+	Survey             []Comment
+	FacetDistribution  map[string]map[string]int
+}
+
+type MultiResponse struct {
+	Results []Response `json:"results"`
+}
+
+func (r *Response) UnmarshalJSON(data []byte) error {
+	var hit struct {
+		EstimatedTotalHits int                       `json:"estimatedTotalHits"`
+		Hits               []Comment                 `json:"Hits"`
+		FacetDistribution  map[string]map[string]int `json:"FacetDistribution"`
+	}
+	if err := json.Unmarshal(data, &hit); err != nil {
+		return err
+	}
+	r.EstimatedTotalHits = int(hit.EstimatedTotalHits)
+	r.Survey = hit.Hits
+	r.FacetDistribution = hit.FacetDistribution
+	return nil
+}
+
+func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
+	numOfReq := 1 + r.filter.ConditionsCount()
+	result := &meilisearch.MultiSearchRequest{
+		Queries: make([]*meilisearch.SearchRequest, 0, numOfReq),
+	}
+	result.Queries = append(result.Queries, &meilisearch.SearchRequest{
+		IndexUID:             index.Uid,
+		Query:                r.query,
+		Limit:                int64(r.limit),
+		AttributesToRetrieve: attributesToRetrieve(r.lang),
+		Filter:               r.filter.String(),
+		Facets:               r.facets,
+		Sort:                 []string{r.sort},
+	})
+	for param, filter := range r.filter.Except() {
+		_ = param
+		_ = filter
+		result.Queries = append(result.Queries, &meilisearch.SearchRequest{
+			IndexUID:             index.Uid,
+			Query:                r.query,
+			Limit:                0,          // TODO: not working, probably bug in meilisearch-go -> write own client...
+			AttributesToRetrieve: []string{}, // TODO: not working, probably bug in meilisearch-go -> write own client...
+			Filter:               filter,
+			Facets:               []string{param},
+		})
+	}
+	return result
+}
+
+// TODO: remove params package
+func attributesToRetrieve(lang language.Language) []string {
+	var studyTypeName search.Parameter
+	if lang == language.CS {
+		studyTypeName = params.StudyTypeNameCS
+	} else {
+		studyTypeName = params.StudyTypeNameEN
+	}
+	attrs := []string{
+		params.Content.String(),
+		params.CourseCode.String(),
+		params.StudyYear.String(),
+		params.AcademicYear.String(),
+		params.StudyField.String(),
+		params.Teacher.String(),
+		params.TargetType.String(),
+		params.StudyTypeCode.String(),
+		// params.StudyTypeAbbr.String(),
+		studyTypeName.String(),
+	}
+	return attrs
+}

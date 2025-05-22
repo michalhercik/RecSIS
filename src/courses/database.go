@@ -48,10 +48,10 @@ func (m DBManager) Filters() (filter.Filters, error) {
 		CategoryDescCS              sql.NullString `db:"category_description_cs"`
 		CategoryDescEN              sql.NullString `db:"category_description_en"`
 		CategoryDisplayedValueLimit int            `db:"category_displayed_value_limit"`
-		ValueID                     string         `db:"value_id"`
-		ValueFacetID                string         `db:"value_facet_id"`
-		ValueTitleCS                string         `db:"value_title_cs"`
-		ValueTitleEN                string         `db:"value_title_en"`
+		ValueID                     sql.NullString `db:"value_id"`
+		ValueFacetID                sql.NullString `db:"value_facet_id"`
+		ValueTitleCS                sql.NullString `db:"value_title_cs"`
+		ValueTitleEN                sql.NullString `db:"value_title_en"`
 		ValueDescCS                 sql.NullString `db:"value_description_cs"`
 		ValueDescEN                 sql.NullString `db:"value_description_en"`
 	}{}
@@ -69,12 +69,14 @@ func (m DBManager) Filters() (filter.Filters, error) {
 				language.MakeLangString(row.CategoryDescCS.String, row.CategoryDescEN.String),
 			), row.CategoryDisplayedValueLimit)
 		}
-		fb.Value(filter.MakeFilterIdentity(
-			row.ValueID,
-			row.ValueFacetID,
-			language.MakeLangString(row.ValueTitleCS, row.ValueTitleEN),
-			language.MakeLangString(row.ValueDescCS.String, row.ValueDescEN.String),
-		))
+		if row.ValueID.Valid {
+			fb.Value(filter.MakeFilterIdentity(
+				row.ValueID.String,
+				row.ValueFacetID.String,
+				language.MakeLangString(row.ValueTitleCS.String, row.ValueTitleEN.String),
+				language.MakeLangString(row.ValueDescCS.String, row.ValueDescEN.String),
+			))
+		}
 	}
 	return fb.Build(), nil
 }

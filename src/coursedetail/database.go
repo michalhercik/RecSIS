@@ -4,7 +4,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/michalhercik/RecSIS/coursedetail/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/dbds"
-	"github.com/michalhercik/RecSIS/internal/interface/teacher"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -81,6 +80,7 @@ func (db DBManager) DeleteRating(userID string, code string) (CourseRating, erro
 	}
 	return intoCourseRating(rating), err
 }
+
 func intoCourse(course *courseDetail) Course {
 	return Course{
 		Code:                   course.Code,
@@ -171,10 +171,10 @@ func intoNullDesc(from dbds.NullDescription) NullDescription {
 	}
 }
 
-func intoTeacherSlice(from dbds.TeacherSlice) []teacher.Teacher {
-	result := make([]teacher.Teacher, len(from))
+func intoTeacherSlice(from dbds.TeacherSlice) []Teacher {
+	result := make([]Teacher, len(from))
 	for i, t := range from {
-		result[i] = teacher.Teacher(t)
+		result[i] = Teacher(t)
 	}
 	return result
 }

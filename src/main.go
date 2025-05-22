@@ -14,6 +14,7 @@ import (
 	"github.com/michalhercik/RecSIS/components/bpbtn"
 	"github.com/michalhercik/RecSIS/components/page"
 	"github.com/michalhercik/RecSIS/components/searchbar"
+	"github.com/michalhercik/RecSIS/filters"
 	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
 	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/urlparser"
@@ -135,6 +136,14 @@ func main() {
 			Options: bpbtn.Options{
 				HxPostBase: "/course",
 			},
+		},
+		Filters: filters.Filters{
+			DB:     db,
+			Filter: "course-survey",
+		},
+		Search: coursedetail.Search{
+			Client: meiliClient,
+			Survey: meilisearch.IndexConfig{Uid: "courses-comments"},
 		},
 	}
 	coursedetail.Init()

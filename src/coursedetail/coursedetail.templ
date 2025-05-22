@@ -2,10 +2,9 @@ package coursedetail
 
 import (
     "github.com/michalhercik/RecSIS/utils"
-    "github.com/michalhercik/RecSIS/internal/interface/teacher"
-    "github.com/michalhercik/RecSIS/internal/interface/course"
     "fmt"
 	"github.com/michalhercik/RecSIS/language"
+	"github.com/michalhercik/RecSIS/filters"
 )
 
 templ Content(course *Course, t text, bpBtn PartialBlueprintAdd) {
@@ -156,8 +155,12 @@ templ details(course *Course, t text) {
         <div class="tab-pane show active pt-2" id="desc-tab-pane" role="tabpanel" tabindex="0">
             @description(course, t)
         </div>
-        <div class="tab-pane pt-2" id="survey-tab-pane" role="tabpanel" tabindex="0">
-            @survey(course.Comments.Comments(), course.Code, t)
+        <div class="tab-pane pt-2" id="survey-tab-pane" role="tabpanel" tabindex="0"
+            hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", course.Code)) }
+            hx-trigger="intersect once"
+            hx-target="this"
+            hx-swap="innerHTML"
+        >
         </div>
         <div class="tab-pane pt-2" id="detail-tab-pane" role="tabpanel" tabindex="0">
             @detailInfo(course, t)
@@ -225,26 +228,27 @@ templ descriptionItem(desc NullDescription, id string) {
     }
 }
 
-templ survey(surveys []course.Comment, code string, t text) {
-        if len(surveys) == 0 {
+// templ survey(surveys []Comment, code string, t text) {
+templ Survey(model SurveyViewModel, t text) {
+        @surveySearch(model, t)
+        if len(model.survey) == 0 {
             <div class="alert alert-primary" role="alert">
                 { t.NoSurvey }
             </div>
         } else {
-            @surveySearch(code, t)
-            @SurveysContent(surveys, code, false, t)
+            @SurveysContent(model, t)
         }
 }
 
 // TODO: this is just a proof of concept, make it better, add texts
-templ surveySearch(code string, t text) {
+templ surveySearch(model SurveyViewModel, t text) {
     <form
         id="survey-search-form"
         class="input-group mb-3"
-        hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", code)) }
-        hx-target="#surveys-content"
-        hx-swap="outerHTML"
-        x-data="{ surveySearchInput: '' }"
+        hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", model.code)) }
+        hx-target="#survey-tab-pane"
+        hx-swap="innerHTML"
+        x-data={ fmt.Sprintf("{ surveySearchInput: '%s' }", model.query) }
     >
         <input type="text" class="form-control" placeholder="search in survey" name="survey-search" autocomplete="off" x-model="surveySearchInput" x-ref="surveySearchInput">
         // TODO: this might reload results as empty search query
@@ -252,14 +256,19 @@ templ surveySearch(code string, t text) {
             <i class="bi bi-x-lg"></i>
         </button>
         <button class="btn btn-outline-secondary bi bi-search" type="submit"></button>
-        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Teacher</button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            @dropdownFilter("M. Medek", 1)
-            @dropdownFilter("M Hercík", 2)
-            @dropdownFilter("L. Peška", 3)
-            @dropdownFilter("J. Novák", 4)
-            @dropdownFilter("=GLOBAL=", 5)
-        </ul>
+        for category := range filters.CategoryWithAtLeast(2, model.facets) {
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">{ fmt.Sprintf("%s (%d)", category.Title(), category.Count()) }</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                for i, value := range filters.SkipEmptyFacet(category.IterWithFacets(false)) {
+                    @dropdownFilter(value.Title, i)
+                    // @dropdownFilter("M. Medek", 1)
+                    // @dropdownFilter("M Hercík", 2)
+                    // @dropdownFilter("L. Peška", 3)
+                    // @dropdownFilter("J. Novák", 4)
+                    // @dropdownFilter("=GLOBAL=", 5)
+                }
+            </ul>
+        }
     </form>
 }
 
@@ -278,9 +287,9 @@ templ dropdownFilter(label string, ID int) {
 }
 
 // TODO: this is just a proof of concept, make it better, add texts
-templ SurveysContent(surveys []course.Comment, code string, end bool, t text) {
+templ SurveysContent(model SurveyViewModel, t text) {
     <div id="surveys-content">
-        for _, s := range surveys {
+        for _, s := range model.survey {
             <div class="card mb-1">
                 <div class="card-header">
                     <div class="d-flex justify-content-between lh-1">
@@ -298,15 +307,15 @@ templ SurveysContent(surveys []course.Comment, code string, end bool, t text) {
             </div>
         }
         // TODO: might add empty result info
-        if (!end) {
+        if (!model.isEnd) {
             // lazy loading of more surveys
             <div
-                hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/%s", code)) }
+                hx-get={ t.Utils.LangLink(fmt.Sprintf("/course/survey/next/%s", model.code)) }
                 hx-trigger="intersect"
                 hx-include="#survey-search-form"
                 hx-target="#surveys-content"
                 hx-swap="outerHTML"
-                hx-vals={ fmt.Sprintf(`"%s": %d`, nOCommentsQuery, len(surveys) + numberOfComments) }>
+                hx-vals={ fmt.Sprintf(`"%s": %d`, nOCommentsQuery, len(model.survey) + numberOfComments) }>
             </div>
         } else {
             // if no more surveys, scroll to search
@@ -328,7 +337,7 @@ templ SurveysContent(surveys []course.Comment, code string, end bool, t text) {
     </div>
 }
 
-templ teacherStyled(tt teacher.Teacher, t text) {
+templ teacherStyled(tt Teacher, t text) {
     if len(tt.SISID) == 0 {
         <span class="fs-6 text-dark fw-semibold">{ t.CourseGlobalNotes }</span>
     } else {
@@ -408,7 +417,7 @@ templ infoRow(title string) {
 }
 
 
-templ teacherStyledRow(t teacher.Teacher) {
+templ teacherStyledRow(t Teacher) {
     <tr>
         <td class="text-end teachers-first-column">
             @teacherTitleBefore(t)
@@ -419,21 +428,21 @@ templ teacherStyledRow(t teacher.Teacher) {
     </tr>
 }
 
-templ teacherTitleBefore(t teacher.Teacher) {
+templ teacherTitleBefore(t Teacher) {
     if t.TitleBefore != "" {
         <small class="font06">{ t.TitleBefore + " " }</small>
     }
 }
 
-templ teacherName(t teacher.Teacher) {
+templ teacherName(t Teacher) {
     <span class="fs-6 text-dark fw-semibold">{ t.FirstName + " " + t.LastName }</span>
 }
 
-templ teacherTitleAfter(t teacher.Teacher) {
+templ teacherTitleAfter(t Teacher) {
     <small class="font06">{ ", " + t.TitleAfter }</small>
 }
 
-templ teacherNameTitleAfter(t teacher.Teacher) {
+templ teacherNameTitleAfter(t Teacher) {
     if t.TitleAfter != "" {
         @teacherName(t)@teacherTitleAfter(t)
     } else {

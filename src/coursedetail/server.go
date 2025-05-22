@@ -3,27 +3,64 @@ package coursedetail
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/michalhercik/RecSIS/dbds"
-	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
+	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/internal/course/comments/search"
 	"github.com/michalhercik/RecSIS/language"
 )
 
+type Filters interface {
+	Init() error
+	ParseURLQuery(query url.Values) (Expression, error)
+	Facets() []string
+	IterFacets() any // TODO
+}
+
 type Server struct {
 	router         *http.ServeMux
-	Data           DataManager
+	Data           DBManager
 	CourseComments search.SearchEngine
+	Filters        filters.Filters
 	Auth           Authentication
 	Page           Page
 	BpBtn          BlueprintAddButton
+	Search         Search
 }
 
+//================================================================================
+// Interface
+//================================================================================
+
 func (s *Server) Init() {
+	var err error
+	if err = s.Filters.Init(); err != nil {
+		log.Fatal("coursedetail.Init: ", err)
+	}
+	// for category := range s.Filters.IterFiltersWithFacets(filters.Facets{}, url.Values{}, language.CS) {
+	// 	fmt.Println(category.Title())
+	// 	for i, value := range category.IterWithFacets(false) {
+	// 		fmt.Println("  ", i, value.Title)
+	// 	}
+	// }
+	s.initRouter()
+}
+
+func (s Server) Router() http.Handler {
+	return s.router
+}
+
+//================================================================================
+// Init
+//================================================================================
+
+func (s *Server) initRouter() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{code}", s.page)
 	router.HandleFunc("GET /survey/{code}", s.survey)
+	router.HandleFunc("GET /survey/next/{code}", s.surveyNext)
 	router.HandleFunc("PUT /rating/{code}/{category}", s.rateCategory)
 	router.HandleFunc("DELETE /rating/{code}/{category}", s.deleteCategoryRating)
 	router.HandleFunc("PUT /rating/{code}", s.rate)
@@ -32,9 +69,9 @@ func (s *Server) Init() {
 	s.router = router
 }
 
-func (s Server) Router() http.Handler {
-	return s.router
-}
+//================================================================================
+// Handlers
+//================================================================================
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
@@ -69,65 +106,59 @@ func (s Server) course(userID, code string, lang language.Language, r *http.Requ
 	if err != nil {
 		return nil, err
 	}
-	br := s.CourseComments.BuildRequest(lang)
-	br, err = br.ParseURLQuery(r.URL.Query())
+	// TODO: render on demand via survey endpoint
+	req, err := s.parseQueryRequest(r)
 	if err != nil {
 		return nil, err
 	}
-	br = br.SetQuery("") // default query is empty
-	br = br.AddCourse(code)
-	br = br.SetLimit(numberOfComments)
-	br = br.SetOffset(0)
-	br = br.AddSort(params.AcademicYear, params.Desc)
-	req, err := br.Build()
+	req.filter.Append("course_code", code)
+	searchResponse, err := s.Search.Comments(req)
 	if err != nil {
 		return nil, err
 	}
-	result.Comments, err = s.CourseComments.Comments(req)
-	if err != nil {
-		return nil, err
-	}
+	result.Comments = searchResponse.Survey
 	return result, nil
 }
 
+func (s Server) surveyNext(w http.ResponseWriter, r *http.Request) {
+	model, err := s.surveyViewModel(r)
+	if err != nil {
+		log.Printf("survey %s: %v", model.code, err)
+		http.Error(w, "Unable to parse request", http.StatusBadRequest)
+		return
+	}
+	SurveysContent(model, texts[model.lang]).Render(r.Context(), w)
+}
+
 func (s Server) survey(w http.ResponseWriter, r *http.Request) {
-	// language
-	lang := language.FromContext(r.Context())
-	// code
+	model, err := s.surveyViewModel(r)
+	if err != nil {
+		log.Printf("survey %s: %v", model.code, err)
+		http.Error(w, "Unable to parse request", http.StatusBadRequest)
+		return
+	}
+	Survey(model, texts[model.lang]).Render(r.Context(), w)
+}
+
+func (s Server) surveyViewModel(r *http.Request) (SurveyViewModel, error) {
+	var result SurveyViewModel
 	code := r.PathValue("code")
-	// number of comments
-	numberOfCommentsStr := r.FormValue(nOCommentsQuery)
-	numberOfComments, err := strconv.Atoi(numberOfCommentsStr)
+	req, err := s.parseQueryRequest(r)
 	if err != nil {
-		log.Printf("HandlePage error %s: %v", code, err)
+		return result, err
 	}
-	// survey
-	br := s.CourseComments.BuildRequest(lang)
-	br, err = br.ParseURLQuery(r.URL.Query())
+	req.filter.Append("course_code", code)
+	searchResponse, err := s.Search.Comments(req)
 	if err != nil {
-		log.Printf("HandlePage error %s: %v", code, err)
+		return result, err
 	}
-	// TODO: paginace prev/next (nic vic)
-	// TODO: alterative -> only load more (hx-trigger revealed) lazy loading
-	// TODO: if alterative -> add top button
-	searchQuery := r.FormValue("survey-search")
-	br = br.SetQuery(searchQuery)
-	br = br.AddCourse(code)
-	br = br.SetLimit(numberOfComments)
-	br = br.SetOffset(0)
-	br = br.AddSort(params.AcademicYear, params.Desc)
-	req, err := br.Build()
-	if err != nil {
-		log.Printf("HandlePage error %s: %v", code, err)
-	}
-	surveyRes, err := s.CourseComments.Comments(req)
-	if err != nil {
-		log.Printf("HandlePage error %s: %v", code, err)
-	}
-	survey := surveyRes.Comments()
-	noMoreComments := len(survey) < numberOfComments
-	// render the survey
-	SurveysContent(survey, code, noMoreComments, texts[lang]).Render(r.Context(), w)
+	result.lang = req.lang
+	result.code = code
+	result.survey = searchResponse.Survey
+	result.isEnd = searchResponse.EstimatedTotalHits <= req.offset+req.limit
+	result.facets = s.Filters.IterFiltersWithFacets(searchResponse.FacetDistribution, r.URL.Query(), req.lang)
+	result.query = req.query
+	return result, nil
 }
 
 func (s Server) rate(w http.ResponseWriter, r *http.Request) {
@@ -245,13 +276,6 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	}
 	t := texts[lang]
 	btn := s.BpBtn.PartialComponent(numberOfYears, lang)
-	// course, err := s.Data.Course(userID, courseCode, lang)
-	// if err != nil {
-	// 	http.Error(w, "Unable to retrieve course", http.StatusInternalServerError)
-	// 	log.Printf("HandlePage error: %v", err)
-	// 	return
-	// }
-	// CourseRow(&course, btn, t).Render(r.Context(), w)
 	course, err := s.course(userID, courseCode, lang, r)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", courseCode, err)
@@ -260,4 +284,36 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		main := Content(course, t, btn)
 		s.Page.View(main, lang, course.Code+" - "+course.Name).Render(r.Context(), w)
 	}
+}
+
+func (s Server) parseQueryRequest(r *http.Request) (Request, error) {
+	var req Request
+	userID, err := s.Auth.UserID(r)
+	if err != nil {
+		return req, err
+	}
+	lang := language.FromContext(r.Context())
+	query := r.FormValue("survey-search")
+	offset, err := strconv.Atoi(r.FormValue(nOCommentsQuery))
+	if err != nil {
+		offset = 1
+	}
+	filter, err := s.Filters.ParseURLQuery(r.URL.Query())
+	if err != nil {
+		// TODO: handle error
+		log.Printf("search error: %v", err)
+	}
+
+	req = Request{
+		userID:   userID,
+		query:    query,
+		indexUID: "courses-comments", // TODO
+		offset:   offset,
+		limit:    numberOfComments,
+		lang:     lang,
+		filter:   Expression(&filter),
+		facets:   s.Filters.Facets(),
+		sort:     "academic_year:desc", // TODO
+	}
+	return req, nil
 }
