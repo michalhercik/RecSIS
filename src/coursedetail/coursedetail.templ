@@ -276,7 +276,7 @@ templ surveySearch(model SurveyViewModel, t text) {
         for category := range filters.CategoryWithAtLeast(2, model.facets) {
             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">{ fmt.Sprintf("%s (%d)", category.Title(), category.Count()) }</button>
             <ul class="dropdown-menu dropdown-menu-end">
-                for i, value := range filters.SkipEmptyFacet(category.IterWithFacets(false)) {
+                for i, value := range filters.SkipEmptyFacet(category.IterWithFacets()) {
                     @dropdownFilter(value.Title, i)
                     // @dropdownFilter("M. Medek", 1)
                     // @dropdownFilter("M Hercík", 2)

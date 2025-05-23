@@ -9,16 +9,14 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
-	"github.com/michalhercik/RecSIS/courses/internal/filter"
 	"github.com/michalhercik/RecSIS/dbds"
+	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
 	//"log"
 )
 
 type DataManager interface {
 	Courses(userID string, courseCodes []string, lang language.Language) ([]Course, error)
-	// ParamLabels(lang language.Language) (map[string][]filter.ParamValue, error)
-	Filters() (filter.Filters, error)
 }
 
 type Authentication interface {
@@ -45,7 +43,7 @@ type coursesPage struct {
 	pageSize    int
 	totalPages  int
 	search      string
-	facets      iter.Seq[filter.FacetIterator] // func(func(filter.FacetIterator) bool) //filter.Filters //FacetDistribution
+	facets      iter.Seq[filters.FacetIterator] // func(func(filter.FacetIterator) bool) //filter.Filters //FacetDistribution
 	searchParam string
 	templ       PartialBlueprintAdd
 }

@@ -159,6 +159,10 @@ func main() {
 				HxPostBase: "/courses",
 			},
 		},
+		Filters: filters.Filters{
+			DB:     db,
+			Filter: "courses",
+		},
 	}
 	courses.Init()
 	degreePlan := degreeplan.Server{
