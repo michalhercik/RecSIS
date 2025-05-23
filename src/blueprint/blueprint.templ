@@ -220,7 +220,8 @@ templ showHideCoursesButton(year int, semester string, folded bool, t text) {
         class={ "btn btn-sm btn-outline-secondary p-0 border-0 hide-semester-btn bi", templ.KV("bi-caret-up-fill", folded), templ.KV("bi-caret-down-fill", !folded) }
         hx-patch={ t.Utils.Language.Path(fmt.Sprintf("/blueprint/%d/%s", year, semester)) }
         hx-vals={ fmt.Sprintf(`"folded": %t`, !folded) }
-        hx-target="#blueprint-page">
+        hx-target="#blueprint-page"
+        hx-swap="outerHTML">
     </button>
 }
 
@@ -239,8 +240,16 @@ templ coursesBody(tableID string, courses []Course, canUnassign bool, xSortMetho
             @dragend="isSorting = false; initializeTooltips()"
             x-sort:item={ fmt.Sprintf("%d", course.ID) }
         >
-            <td class="text-center align-middle" @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)"> @checkbox(course.ID) </td>
-            <td class="d-none d-md-table-cell"> @utils.CourseLink(course.Code, t.Utils) </td>
+            <td
+                class="align-middle position-relative"
+                @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)">
+                @checkbox(course.ID)
+               
+            </td>
+            <td class="d-none d-md-table-cell position-relative">
+                @utils.CourseLink(course.Code, t.Utils)
+                @warningIcon(&course, t)
+            </td>
             <td>
                 <span class="d-none d-md-inline">
                     @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils)
@@ -312,8 +321,20 @@ templ noCoursesTableContent(text, xSort string) {
     </tbody>
 }
 
+templ warningIcon(course *Course, t text) {
+    if len(course.Warnings) > 0 {
+        <span
+            class="bi bi-exclamation-lg text-danger fs-4 position-absolute"
+            style="right: -6px; top: calc(50% - 1px); transform: translateY(-50%);"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title={ strings.Join(course.Warnings, " ") }>
+        </span>
+    }
+}
+
 templ checkbox(ID int) {
-    <div class="checkbox-container position-relative" x-data>
+    <div class="checkbox-container position-relative text-center" x-data>
         <input
             type="checkbox"
             id={ fmt.Sprintf("checkbox%d", ID) }
@@ -364,7 +385,8 @@ templ summarizeFooter(data *Blueprint, t text) {
                 <button
                     class="btn btn-sm btn-outline-secondary bi bi-plus"
                     hx-post={ t.Utils.Language.Path("/blueprint/year") }
-                    hx-target="#blueprint-page">
+                    hx-target="#blueprint-page"
+                    hx-swap="outerHTML">
                 </button>
                 { fmt.Sprintf("%d", len(data.years) - 1) }
                 if len(data.years[len(data.years) - 1].winter.courses) > 0 || len(data.years[len(data.years) - 1].summer.courses) > 0 {
@@ -382,6 +404,7 @@ templ summarizeFooter(data *Blueprint, t text) {
                         hx-delete={ t.Utils.Language.Path("/blueprint/year") }
                         hx-vals={ vUnassign(false) }
                         hx-target="#blueprint-page"
+                        hx-swap="outerHTML"
                         :disabled={ fmt.Sprintf("%d <= 0", len(data.years) - 1) }>
                     </button>
                 }
@@ -408,7 +431,8 @@ templ deleteYearModal(lastYear int, t text) {
                         class="btn btn-primary"
                         hx-delete={ t.Utils.Language.Path("/blueprint/year") }
                         hx-vals={ vUnassign(false) }
-                        hx-target="#blueprint-page">
+                        hx-target="#blueprint-page"
+                        hx-swap="outerHTML">
                         { t.RemoveCourses }
                     </button>
                     <button
@@ -416,7 +440,8 @@ templ deleteYearModal(lastYear int, t text) {
                         class="btn btn-primary"
                         hx-delete={ t.Utils.Language.Path("/blueprint/year") }
                         hx-vals={ mergeVals(vUnassign(true), vYear(lastYear)) }
-                        hx-target="#blueprint-page">
+                        hx-target="#blueprint-page"
+                        hx-swap="outerHTML">
                         { t.UnassignCourses }
                     </button>
                     <button class="btn btn-secondary" data-bs-dismiss="modal">{ t.Cancel }</button>
@@ -481,7 +506,8 @@ templ assignSemesterButton(year, semester int, patch, vals, include, semesterTex
             if (include != "") {
                 hx-include={ include }
             }
-            hx-target="#blueprint-page">
+            hx-target="#blueprint-page"
+            hx-swap="outerHTML">
             { t.YearStr(year) + " " + semesterText }
         </button>
     </li>
@@ -522,7 +548,8 @@ templ adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, 
         if (include != "") {
             hx-include={ include }
         }
-        hx-target="#blueprint-page">
+        hx-target="#blueprint-page"
+        hx-swap="outerHTML">
     </button>
 }
 
@@ -619,4 +646,4 @@ func vUnassign(unassign bool) string  { return fmt.Sprintf(`"unassign": %t`, una
 
 func mergeVals(vals ...string) string { return strings.Join(vals, ", ") }
 
-templ DefaultCourseAdditionPresenter(info insertedCourseInfo) {}
+// templ DefaultCourseAdditionPresenter(info insertedCourseInfo) {}

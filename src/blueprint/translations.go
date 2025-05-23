@@ -58,6 +58,10 @@ type text struct {
 	TTYearCredits     string
 	TTRunningCredits  string
 	TTTotalCredits    string
+	// warnings
+	WWrongAssignWinter    string
+	WWrongAssignSummer    string
+	WAssignedMoreThanOnce string
 	// utils
 	Utils utils.Text
 }
@@ -123,6 +127,10 @@ var texts = map[language.Language]text{
 		TTYearCredits:     "V tomto ročníku",
 		TTRunningCredits:  "Průběžný součet",
 		TTTotalCredits:    "Celkem",
+		// warnings
+		WWrongAssignWinter:    "Předmět je zařazen do zimního semestru, ale měl by být v letním semestru.",
+		WWrongAssignSummer:    "Předmět je zařazen do letního semestru, ale měl by být v zimním semestru.",
+		WAssignedMoreThanOnce: "Předmět je zařazen více než jednou ",
 		// utils
 		Utils: utils.Texts[language.CS],
 	},
@@ -177,6 +185,10 @@ var texts = map[language.Language]text{
 		TTYearCredits:     "In this year",
 		TTRunningCredits:  "Running total",
 		TTTotalCredits:    "Total",
+		// warnings
+		WWrongAssignWinter:    "Course is assigned in a winter semester (should be in summer).",
+		WWrongAssignSummer:    "Course is assigned in a summer semester (should be in winter).",
+		WAssignedMoreThanOnce: "Course is assigned more than once ",
 		// utils
 		Utils: utils.Texts[language.EN],
 	},

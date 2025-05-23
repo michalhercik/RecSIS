@@ -195,6 +195,7 @@ type Course struct {
 	ExamType      string           `db:"exam_type"`
 	Credits       int              `db:"credits"`
 	Guarantors    TeacherSlice     `db:"guarantors"`
+	Warnings      []string
 }
 
 type Semester struct {
@@ -231,11 +232,11 @@ func (ay AcademicYear) credits() int {
 	return ay.winterCredits() + ay.summerCredits()
 }
 
-type insertedCourseInfo struct {
-	courseID     int
-	academicYear int
-	semester     SemesterAssignment
-}
+// type insertedCourseInfo struct {
+// 	courseID     int
+// 	academicYear int
+// 	semester     SemesterAssignment
+// }
 
 type BlueprintRecordPosition struct {
 	AcademicYear int                `db:"academic_year"`
@@ -291,24 +292,24 @@ func (b *Blueprint) assign(position BlueprintRecordPosition, course *Course) err
 	return nil
 }
 
-type courseAdditionRequestSource int
+// type courseAdditionRequestSource int
 
-const (
-	sourceNone courseAdditionRequestSource = iota
-	sourceBlueprint
-	sourceCourseDetail
-	sourceDegreePlan
-)
+// const (
+// 	sourceNone courseAdditionRequestSource = iota
+// 	sourceBlueprint
+// 	sourceCourseDetail
+// 	sourceDegreePlan
+// )
 
-func (r courseAdditionRequestSource) String() string {
-	switch r {
-	case sourceBlueprint:
-		return "blueprint"
-	case sourceCourseDetail:
-		return "courseDetail"
-	case sourceDegreePlan:
-		return "degreePlan"
-	default:
-		return fmt.Sprintf("unknown %d", r)
-	}
-}
+// func (r courseAdditionRequestSource) String() string {
+// 	switch r {
+// 	case sourceBlueprint:
+// 		return "blueprint"
+// 	case sourceCourseDetail:
+// 		return "courseDetail"
+// 	case sourceDegreePlan:
+// 		return "degreePlan"
+// 	default:
+// 		return fmt.Sprintf("unknown %d", r)
+// 	}
+// }
