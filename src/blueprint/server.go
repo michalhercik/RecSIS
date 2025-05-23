@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/language"
@@ -30,7 +31,7 @@ func (s *Server) Init() {
 	s.router.HandleFunc("POST /year", s.yearAddition)
 	s.router.HandleFunc("DELETE /year", s.yearRemoval)
 	s.router.HandleFunc("PATCH /{year}/{semester}", s.foldSemester)
-	s.router.HandleFunc("POST /course/{code}", s.courseAddition)
+	//s.router.HandleFunc("POST /course/{code}", s.courseAddition)
 	s.router.HandleFunc("PATCH /course/{id}", s.courseMovement)
 	s.router.HandleFunc("PATCH /courses", s.coursesMovement)
 	s.router.HandleFunc("DELETE /course/{id}", s.courseRemoval)
@@ -100,12 +101,113 @@ func atoiSlice(s []string) ([]int, error) {
 	return result, nil
 }
 
+func generateWarnings(bp *Blueprint, t text) {
+	// check if the course is assigned in a correct semester
+	for _, year := range bp.years {
+		winter := year.winter
+		if !winter.folded {
+			courses := winter.courses
+			for ci := range courses {
+				if courses[ci].Start == teachingSummerOnly {
+					courses[ci].Warnings = append(courses[ci].Warnings, t.WWrongAssignWinter)
+				}
+			}
+		}
+		summer := year.summer
+		if !summer.folded {
+			courses := summer.courses
+			for ci := range courses {
+				if courses[ci].Start == teachingWinterOnly {
+					courses[ci].Warnings = append(courses[ci].Warnings, t.WWrongAssignSummer)
+				}
+			}
+		}
+	}
+	// check if the course is assigned more than once
+	// TODO: ignore the course if it can be completed more than once
+	for _, year1 := range bp.years {
+		winter1 := year1.winter.courses
+		for ci1 := range winter1 {
+			duplicates := make([]struct {
+				year     int
+				semester string
+			}, 0)
+			for y2, year2 := range bp.years {
+				winter2 := year2.winter.courses
+				for ci2 := range winter2 {
+					if winter1[ci1].Code == winter2[ci2].Code {
+						duplicates = append(duplicates, struct {
+							year     int
+							semester string
+						}{year: y2, semester: t.Winter})
+					}
+				}
+				summer2 := year2.summer.courses
+				for ci2 := range summer2 {
+					if winter1[ci1].Code == summer2[ci2].Code {
+						duplicates = append(duplicates, struct {
+							year     int
+							semester string
+						}{year: y2, semester: t.Summer})
+					}
+				}
+			}
+			if len(duplicates) > 1 {
+				warning := t.WAssignedMoreThanOnce + "("
+				duplicatesStr := make([]string, len(duplicates))
+				for i, dup := range duplicates {
+					duplicatesStr[i] = fmt.Sprintf("%s %s", t.YearStr(dup.year), dup.semester)
+				}
+				warning += strings.Join(duplicatesStr, ", ") + ")."
+				winter1[ci1].Warnings = append(winter1[ci1].Warnings, warning)
+			}
+		}
+
+		summer1 := year1.summer.courses
+		for ci1 := range summer1 {
+			duplicates := make([]struct {
+				year     int
+				semester string
+			}, 0)
+			for y2, year2 := range bp.years {
+				winter2 := year2.winter.courses
+				for ci2 := range winter2 {
+					if summer1[ci1].Code == winter2[ci2].Code {
+						duplicates = append(duplicates, struct {
+							year     int
+							semester string
+						}{year: y2, semester: t.Winter})
+					}
+				}
+				summer2 := year2.summer.courses
+				for ci2 := range summer2 {
+					if summer1[ci1].Code == summer2[ci2].Code {
+						duplicates = append(duplicates, struct {
+							year     int
+							semester string
+						}{year: y2, semester: t.Summer})
+					}
+				}
+			}
+			if len(duplicates) > 1 {
+				warning := t.WAssignedMoreThanOnce + "("
+				duplicatesStr := make([]string, len(duplicates))
+				for i, dup := range duplicates {
+					duplicatesStr[i] = fmt.Sprintf("%s %s", t.YearStr(dup.year), dup.semester)
+				}
+				warning += strings.Join(duplicatesStr, ", ") + ")."
+				summer1[ci1].Warnings = append(summer1[ci1].Warnings, warning)
+			}
+		}
+	}
+	// TODO: add a warning if the course is not taught
+}
+
 // ===============================================================================================================================
 // Page
 // ===============================================================================================================================
 
 func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request, t text) {
-	var result templ.Component
 	userID, err := s.Auth.UserID(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -116,10 +218,9 @@ func (s Server) renderBlueprint(w http.ResponseWriter, r *http.Request, t text) 
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	} else {
-		result = Content(data, t)
 	}
-	result.Render(r.Context(), w)
+	generateWarnings(data, t)
+	Content(data, t).Render(r.Context(), w)
 }
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
@@ -132,6 +233,9 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data, err := s.Data.Blueprint(userID, t.Utils.Language)
+	if err == nil {
+		generateWarnings(data, t)
+	}
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -348,59 +452,59 @@ func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 // Add Courses
 // ===============================================================================================================================
 
-type courseAdditionPresenter func(insertedCourseInfo) templ.Component
+// type courseAdditionPresenter func(insertedCourseInfo) templ.Component
 
-func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	course := r.PathValue("code")
-	year, semester, err := parseYearSemester(r)
-	if err != nil {
-		log.Printf("courseAddition error: %v", err)
-		return
-	}
-	reqSourceInt, err := strconv.Atoi(r.FormValue("requestSource"))
-	if err != nil {
-		reqSourceInt = int(sourceNone)
-		log.Printf("courseAddition warning: %v", err)
-	}
-	reqSource := courseAdditionRequestSource(reqSourceInt)
-	var presenter courseAdditionPresenter = DefaultCourseAdditionPresenter
-	switch reqSource {
-	case sourceBlueprint:
-		// TODO: implement
-		//
-		// Example:
-		//	file: blueprint/blueprint.templ
-		//		templ Ribbon(insertInfo insertedCourseInfo) {
-		//			<div class="ribbon"> {{insertInfo.courseID}} </div>
-		//  	}
-		//
-		//	file: blueprint/blueprint.go
-		//		presenter = Ribbon
-	case sourceCourseDetail:
-		// TODO: implement
-	case sourceDegreePlan:
-		// TODO: implement
-	}
-	// TODO: use this
-	// text, err := parseLanguage(r)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	return
-	// }
-	courseID, err := s.Data.NewCourse(userID, course, year, semester)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	insertInfo := insertedCourseInfo{courseID: courseID, academicYear: year, semester: semester}
-	presenter(insertInfo).Render(r.Context(), w)
-}
+// func (s Server) courseAddition(w http.ResponseWriter, r *http.Request) {
+// 	userID, err := s.Auth.UserID(r)
+// 	if err != nil {
+// 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+// 		return
+// 	}
+// 	course := r.PathValue("code")
+// 	year, semester, err := parseYearSemester(r)
+// 	if err != nil {
+// 		log.Printf("courseAddition error: %v", err)
+// 		return
+// 	}
+// 	reqSourceInt, err := strconv.Atoi(r.FormValue("requestSource"))
+// 	if err != nil {
+// 		reqSourceInt = int(sourceNone)
+// 		log.Printf("courseAddition warning: %v", err)
+// 	}
+// 	reqSource := courseAdditionRequestSource(reqSourceInt)
+// 	var presenter courseAdditionPresenter = DefaultCourseAdditionPresenter
+// 	switch reqSource {
+// 	case sourceBlueprint:
+// 		// TODO: implement
+// 		//
+// 		// Example:
+// 		//	file: blueprint/blueprint.templ
+// 		//		templ Ribbon(insertInfo insertedCourseInfo) {
+// 		//			<div class="ribbon"> {{insertInfo.courseID}} </div>
+// 		//  	}
+// 		//
+// 		//	file: blueprint/blueprint.go
+// 		//		presenter = Ribbon
+// 	case sourceCourseDetail:
+// 		// TODO: implement
+// 	case sourceDegreePlan:
+// 		// TODO: implement
+// 	}
+// 	// TODO: use this
+// 	// text, err := parseLanguage(r)
+// 	// if err != nil {
+// 	// 	log.Println(err)
+// 	// 	w.WriteHeader(http.StatusInternalServerError)
+// 	// 	return
+// 	// }
+// 	courseID, err := s.Data.NewCourse(userID, course, year, semester)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
+// 	insertInfo := insertedCourseInfo{courseID: courseID, academicYear: year, semester: semester}
+// 	presenter(insertInfo).Render(r.Context(), w)
+// }
 
 // ===============================================================================================================================
 // Remove Year

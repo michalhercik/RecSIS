@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
@@ -36,9 +35,6 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
-	time.Sleep(2 * time.Second) // Simulate a delay for testing
-
 	s.renderPage(w, r, userID, lang)
 }
 

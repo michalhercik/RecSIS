@@ -92,7 +92,8 @@ function handleTdClick(event) {
 // update position of course in database using dynamic htmx patch
 function sortHxPatch(item, year, semester, position, language) {
     htmx.ajax('PATCH', '/' + language + '/blueprint/course/' + item, {
-        target: 'main',
+        target: '#blueprint-page',
+        swap: 'outerHTML',
         values: { year: year, semester: semester, position: position + 1 }
     });
 }
