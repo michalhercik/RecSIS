@@ -46,7 +46,7 @@ func CategoryWithAtLeast(n int, iter iter.Seq[FacetIterator]) iter.Seq[FacetIter
 func SkipEmptyFacet(iter iter.Seq2[int, FacetValue]) iter.Seq2[int, FacetValue] {
 	return func(yield func(int, FacetValue) bool) {
 		for i, v := range iter {
-			if v.Count < 0 {
+			if v.Count <= 0 {
 				continue
 			}
 			if !yield(i, v) {
