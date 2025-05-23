@@ -157,23 +157,23 @@ func (c Comment) StudiesYearString() string {
 }
 
 type StudyType struct {
-	Code string `json:"code"`
-	Abbr string `json:"abbr"`
+	// Code string `json:"code"`
+	// Abbr string `json:"abbr"`
 	Name string `json:"name"`
 }
 
 func (st *StudyType) UnmarshalJSON(val []byte) error {
 	var tmp struct {
-		Code   string `json:"code"`
-		Abbr   string `json:"abbr"`
+		Code string `json:"code"`
+		// Abbr   string `json:"abbr"`
 		NameCs string `json:"name_cs"`
 		NameEn string `json:"name_en"`
 	}
 	if err := json.Unmarshal(val, &tmp); err != nil {
 		return err
 	}
-	st.Code = tmp.Code
-	st.Abbr = tmp.Abbr
+	// st.Code = tmp.Code
+	// st.Abbr = tmp.Abbr
 	st.Name = tmp.NameCs
 	if len(st.Name) == 0 {
 		st.Name = tmp.NameEn

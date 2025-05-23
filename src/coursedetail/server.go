@@ -8,7 +8,6 @@ import (
 
 	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/filters"
-	"github.com/michalhercik/RecSIS/internal/course/comments/search"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -20,14 +19,13 @@ type Filters interface {
 }
 
 type Server struct {
-	router         *http.ServeMux
-	Data           DBManager
-	CourseComments search.SearchEngine
-	Filters        filters.Filters
-	Auth           Authentication
-	Page           Page
-	BpBtn          BlueprintAddButton
-	Search         Search
+	router  *http.ServeMux
+	Data    DBManager
+	Filters filters.Filters
+	Auth    Authentication
+	Page    Page
+	BpBtn   BlueprintAddButton
+	Search  Search
 }
 
 //================================================================================

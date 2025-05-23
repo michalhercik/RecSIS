@@ -15,9 +15,6 @@ import (
 	"github.com/michalhercik/RecSIS/components/page"
 	"github.com/michalhercik/RecSIS/components/searchbar"
 	"github.com/michalhercik/RecSIS/filters"
-	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
-	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
-	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/urlparser"
 	"github.com/michalhercik/RecSIS/language"
 
 	// pages
@@ -118,16 +115,6 @@ func main() {
 	blueprint.Init()
 	coursedetail := coursedetail.Server{
 		Data: coursedetail.DBManager{DB: db},
-		CourseComments: meilicomments.MeiliSearch{
-			Client:        meiliClient,
-			CommentsIndex: meilisearch.IndexConfig{Uid: "courses-comments"},
-			UrlToFilter: urlparser.FilterParser{
-				ParamPrefix: "parf",
-				IDToParam:   params.IdToParam,
-			},
-			TeacherParam: params.TeacherCode,
-			CourseParam:  params.CourseCode,
-		},
 		Auth: cas.UserIDFromContext{},
 		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		BpBtn: bpbtn.Add{
