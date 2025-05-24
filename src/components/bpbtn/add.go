@@ -3,6 +3,7 @@ package bpbtn
 import (
 	"github.com/a-h/templ"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
 )
@@ -37,10 +38,11 @@ func (b Add) NumberOfYears(userID string) (int, error) {
 	return numberOfYears, nil
 }
 
-func (b Add) Action(userID, course string, year int, semester dbds.SemesterAssignment) (int, error) {
+func (b Add) Action(userID string, year int, semester dbds.SemesterAssignment, courses ...string) ([]int, error) {
 	const InsertCourse = `--sql
 		WITH target_position AS (
-			SELECT bs.id AS blueprint_semester_id, COALESCE(bc.position, 0) + 1 AS position FROM blueprint_years y
+			SELECT bs.id AS blueprint_semester_id, COALESCE(bc.position, 0) + 1 AS last_position
+			FROM blueprint_years y
 			LEFT JOIN blueprint_semesters bs ON y.id=bs.blueprint_year_id
 			LEFT JOIN blueprint_courses bc ON bs.id=bc.blueprint_semester_id
 			WHERE y.user_id=$1
@@ -48,24 +50,25 @@ func (b Add) Action(userID, course string, year int, semester dbds.SemesterAssig
 			AND bs.semester=$3
 			ORDER BY bc.position DESC
 			LIMIT 1
-		),
-		target_course AS (
-			SELECT code, valid_from FROM courses WHERE code=$4 ORDER BY valid_from DESC LIMIT 1
 		)
 		INSERT INTO blueprint_courses(blueprint_semester_id, course_code, course_valid_from, position)
-		VALUES (
-			(SELECT blueprint_semester_id FROM target_position),
-			(SELECT code FROM target_course),
-			(SELECT valid_from FROM target_course),
-			(SELECT position FROM target_position)
-		)
-		RETURNING id
-		;
+		SELECT
+			tp.blueprint_semester_id,
+			c.code,
+			c.valid_from,
+			tp.last_position + ROW_NUMBER() OVER (ORDER BY c.code)
+		FROM
+			target_position tp,
+			UNNEST($4::text[]) AS course_code
+			JOIN LATERAL (
+				SELECT code, valid_from FROM courses WHERE code=course_code ORDER BY valid_from DESC LIMIT 1
+			) c ON TRUE
+		RETURNING id;
 		`
-	var courseID int
-	err := b.DB.Get(&courseID, InsertCourse, userID, year, int(semester), course)
+	var courseID []int
+	err := b.DB.Select(&courseID, InsertCourse, userID, year, int(semester), pq.StringArray(courses))
 	if err != nil {
-		return 0, err
+		return []int{}, err
 	}
 	return courseID, nil
 }

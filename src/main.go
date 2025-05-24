@@ -46,9 +46,9 @@ func main() {
 
 	switch conf.Environment {
 	case productionEnvironment:
-		log.Println("WARNING: Running in production mode.")
+		log.Println("INFO: Running in production mode.")
 	case developmentEnvironment:
-		log.Println("WARNING: Running in development mode.")
+		log.Println("INFO: Running in development mode.")
 		// Allow self-signed certificates
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		log.Println("WARNING: Insecure TLS configuration for development environment.")

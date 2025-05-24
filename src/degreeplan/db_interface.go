@@ -18,7 +18,7 @@ type BlueprintAddButton interface {
 	Component(course string, numberOfYears int, lang language.Language) templ.Component
 	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
 	NumberOfYears(userID string) (int, error)
-	Action(userID, course string, year int, semester dbds.SemesterAssignment) (int, error)
+	Action(userID string, year int, semester dbds.SemesterAssignment, course ...string) ([]int, error)
 }
 
 type Page interface {

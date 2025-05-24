@@ -200,7 +200,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		log.Printf("addCourseToBlueprint: %v", err)
 		return
 	}
-	_, err = s.BpBtn.Action(userID, courseCode, year, semester)
+	_, err = s.BpBtn.Action(userID, year, semester, courseCode)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Printf("failed to create button: %v", err)
