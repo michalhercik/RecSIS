@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/meilisearch/meilisearch-go"
-	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
-	"github.com/michalhercik/RecSIS/internal/course/comments/search"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -115,23 +113,21 @@ func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisear
 
 // TODO: remove params package
 func attributesToRetrieve(lang language.Language) []string {
-	var studyTypeName search.Parameter
+	var studyTypeName string
 	if lang == language.CS {
-		studyTypeName = params.StudyTypeNameCS
+		studyTypeName = "study_type.name_cs"
 	} else {
-		studyTypeName = params.StudyTypeNameEN
+		studyTypeName = "study_type.name_en"
 	}
 	attrs := []string{
-		params.Content.String(),
-		params.CourseCode.String(),
-		params.StudyYear.String(),
-		params.AcademicYear.String(),
-		params.StudyField.String(),
-		params.Teacher.String(),
-		params.TargetType.String(),
-		params.StudyTypeCode.String(),
-		// params.StudyTypeAbbr.String(),
-		studyTypeName.String(),
+		"content",
+		"course_code",
+		"study_year",
+		"academic_year",
+		"study_field",
+		"teacher",
+		"target_type",
+		studyTypeName,
 	}
 	return attrs
 }

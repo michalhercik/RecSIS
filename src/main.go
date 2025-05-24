@@ -15,9 +15,6 @@ import (
 	"github.com/michalhercik/RecSIS/components/page"
 	"github.com/michalhercik/RecSIS/components/searchbar"
 	"github.com/michalhercik/RecSIS/filters"
-	meilicomments "github.com/michalhercik/RecSIS/internal/course/comments/meilisearch"
-	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/params"
-	"github.com/michalhercik/RecSIS/internal/course/comments/meilisearch/urlparser"
 	"github.com/michalhercik/RecSIS/language"
 
 	// pages
@@ -49,9 +46,9 @@ func main() {
 
 	switch conf.Environment {
 	case productionEnvironment:
-		log.Println("WARNING: Running in production mode.")
+		log.Println("INFO: Running in production mode.")
 	case developmentEnvironment:
-		log.Println("WARNING: Running in development mode.")
+		log.Println("INFO: Running in development mode.")
 		// Allow self-signed certificates
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		log.Println("WARNING: Insecure TLS configuration for development environment.")
@@ -118,16 +115,6 @@ func main() {
 	blueprint.Init()
 	coursedetail := coursedetail.Server{
 		Data: coursedetail.DBManager{DB: db},
-		CourseComments: meilicomments.MeiliSearch{
-			Client:        meiliClient,
-			CommentsIndex: meilisearch.IndexConfig{Uid: "courses-comments"},
-			UrlToFilter: urlparser.FilterParser{
-				ParamPrefix: "parf",
-				IDToParam:   params.IdToParam,
-			},
-			TeacherParam: params.TeacherCode,
-			CourseParam:  params.CourseCode,
-		},
 		Auth: cas.UserIDFromContext{},
 		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		BpBtn: bpbtn.Add{
@@ -158,6 +145,10 @@ func main() {
 			Options: bpbtn.Options{
 				HxPostBase: "/courses",
 			},
+		},
+		Filters: filters.Filters{
+			DB:     db,
+			Filter: "courses",
 		},
 	}
 	courses.Init()

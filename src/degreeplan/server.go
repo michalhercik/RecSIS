@@ -57,7 +57,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	semester := dbds.SemesterAssignment(semesterInt)
-	_, err = s.BpBtn.Action(userID, courseCode, year, semester)
+	_, err = s.BpBtn.Action(userID, year, semester, courseCode)
 	if err != nil {
 		http.Error(w, "Unable to add course to blueprint", http.StatusInternalServerError)
 		log.Printf("HandlePage error: %v", err)

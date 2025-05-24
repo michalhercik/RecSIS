@@ -8,7 +8,6 @@ import (
 
 	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/filters"
-	"github.com/michalhercik/RecSIS/internal/course/comments/search"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -20,14 +19,13 @@ type Filters interface {
 }
 
 type Server struct {
-	router         *http.ServeMux
-	Data           DBManager
-	CourseComments search.SearchEngine
-	Filters        filters.Filters
-	Auth           Authentication
-	Page           Page
-	BpBtn          BlueprintAddButton
-	Search         Search
+	router  *http.ServeMux
+	Data    DBManager
+	Filters filters.Filters
+	Auth    Authentication
+	Page    Page
+	BpBtn   BlueprintAddButton
+	Search  Search
 }
 
 //================================================================================
@@ -39,12 +37,6 @@ func (s *Server) Init() {
 	if err = s.Filters.Init(); err != nil {
 		log.Fatal("coursedetail.Init: ", err)
 	}
-	// for category := range s.Filters.IterFiltersWithFacets(filters.Facets{}, url.Values{}, language.CS) {
-	// 	fmt.Println(category.Title())
-	// 	for i, value := range category.IterWithFacets(false) {
-	// 		fmt.Println("  ", i, value.Title)
-	// 	}
-	// }
 	s.initRouter()
 }
 
@@ -87,37 +79,24 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		log.Printf("HandlePage error %s: %v", code, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	} else {
-		numberOfYears, err := s.BpBtn.NumberOfYears(userID)
-		if err != nil {
-			http.Error(w, "Unable to retrieve number of years", http.StatusInternalServerError)
-			log.Printf("HandlePage error: %v", err)
-			return
-		}
-		btn := s.BpBtn.PartialComponent(numberOfYears, lang)
-		main := Content(course, t, btn)
-		s.Page.View(main, lang, course.Code+" - "+course.Name).Render(r.Context(), w)
 	}
+	numberOfYears, err := s.BpBtn.NumberOfYears(userID)
+	if err != nil {
+		http.Error(w, "Unable to retrieve number of years", http.StatusInternalServerError)
+		log.Printf("HandlePage error: %v", err)
+		return
+	}
+	btn := s.BpBtn.PartialComponent(numberOfYears, lang)
+	main := Content(course, t, btn)
+	s.Page.View(main, lang, course.Code+" - "+course.Name).Render(r.Context(), w)
 }
 
-// func (s Server) course(userID, code string, lang language.Language, r *http.Request) (*Course, error) {
 func (s Server) course(userID, code string, lang language.Language) (*Course, error) {
 	var result *Course
 	result, err := s.Data.Course(userID, code, lang)
 	if err != nil {
 		return nil, err
 	}
-	// TODO: render on demand via survey endpoint
-	// req, err := s.parseQueryRequest(r)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// req.filter.Append("course_code", code)
-	// searchResponse, err := s.Search.Comments(req)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// result.Comments = searchResponse.Survey
 	return result, nil
 }
 
@@ -264,7 +243,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	semester := dbds.SemesterAssignment(semesterInt)
-	_, err = s.BpBtn.Action(userID, courseCode, year, semester)
+	_, err = s.BpBtn.Action(userID, year, semester, courseCode)
 	if err != nil {
 		http.Error(w, "Unable to add course to blueprint", http.StatusInternalServerError)
 		log.Printf("HandlePage error: %v", err)

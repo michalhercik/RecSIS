@@ -5,9 +5,14 @@ import (
 	"fmt"
 
 	"github.com/meilisearch/meilisearch-go"
-	"github.com/michalhercik/RecSIS/courses/internal/filter"
 	"github.com/michalhercik/RecSIS/language"
 )
+
+type Expression interface {
+	String() string
+	Except() func(func(string, string) bool)
+	ConditionsCount() int
+}
 
 type Request struct {
 	userID      string
@@ -16,7 +21,7 @@ type Request struct {
 	page        int
 	hitsPerPage int
 	lang        language.Language
-	filter      filter.Expression
+	filter      Expression
 	facets      []string
 }
 

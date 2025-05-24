@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/michalhercik/RecSIS/courses/internal/filter"
 	"github.com/michalhercik/RecSIS/dbds"
+	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -21,7 +21,7 @@ type Server struct {
 	Data    DataManager
 	Search  SearchEngine
 	Auth    Authentication
-	filters filter.Filters
+	Filters filters.Filters
 	BpBtn   BlueprintAddButton
 	Page    Page
 }
@@ -31,7 +31,9 @@ type Server struct {
 //================================================================================
 
 func (s *Server) Init() {
-	s.initFilters()
+	if err := s.Filters.Init(); err != nil {
+		log.Fatal("courses.Init: ", err)
+	}
 	s.initRouter()
 }
 
@@ -49,14 +51,6 @@ func (s *Server) initRouter() {
 	router.HandleFunc("GET /search", s.content)
 	router.HandleFunc("POST /blueprint/{coursecode}", s.addCourseToBlueprint)
 	s.router = router
-}
-
-func (s *Server) initFilters() {
-	filters, err := s.Data.Filters()
-	if err != nil {
-		log.Fatalf("failed to load filters: %v", err)
-	}
-	s.filters = filters
 }
 
 //================================================================================
@@ -136,7 +130,7 @@ func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Reque
 	if err != nil {
 		hitsPerPage = coursesPerPage
 	}
-	filter, err := s.filters.ParseURLQuery(r.URL.Query())
+	filter, err := s.Filters.ParseURLQuery(r.URL.Query())
 	if err != nil {
 		// TODO: handle error
 		log.Printf("search error: %v", err)
@@ -150,7 +144,7 @@ func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Reque
 		hitsPerPage: hitsPerPage,
 		lang:        lang,
 		filter:      filter,
-		facets:      s.filters.Facets,
+		facets:      s.Filters.Facets(),
 	}
 	return req, nil
 }
@@ -173,7 +167,7 @@ func (s Server) search(req Request, httpReq *http.Request) (coursesPage, error) 
 		searchParam: s.Page.SearchParam(),
 		totalPages:  searchResponse.TotalPages,
 		search:      req.query,
-		facets:      filter.IterFiltersWithFacets(s.filters, searchResponse.FacetDistribution, httpReq.URL.Query(), req.lang),
+		facets:      s.Filters.IterFiltersWithFacets(searchResponse.FacetDistribution, httpReq.URL.Query(), req.lang),
 	}
 	return result, nil
 }
@@ -206,7 +200,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		log.Printf("addCourseToBlueprint: %v", err)
 		return
 	}
-	_, err = s.BpBtn.Action(userID, courseCode, year, semester)
+	_, err = s.BpBtn.Action(userID, year, semester, courseCode)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Printf("failed to create button: %v", err)

@@ -36,14 +36,14 @@ type BlueprintAddButton interface {
 	Component(course string, numberOfYears int, lang language.Language) templ.Component
 	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
 	NumberOfYears(userID string) (int, error)
-	Action(userID, course string, year int, semester dbds.SemesterAssignment) (int, error)
+	Action(userID string, year int, semester dbds.SemesterAssignment, course ...string) ([]int, error)
 }
 type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
 
 const (
 	positiveRating   = 1
 	negativeRating   = 0
-	numberOfComments = 7 // TODO: change to 20
+	numberOfComments = 20
 	searchQuery      = "survey-search"
 	surveyOffset     = "survey-offset"
 )
@@ -159,23 +159,23 @@ func (c Comment) StudiesYearString() string {
 }
 
 type StudyType struct {
-	Code string `json:"code"`
-	Abbr string `json:"abbr"`
+	// Code string `json:"code"`
+	// Abbr string `json:"abbr"`
 	Name string `json:"name"`
 }
 
 func (st *StudyType) UnmarshalJSON(val []byte) error {
 	var tmp struct {
-		Code   string `json:"code"`
-		Abbr   string `json:"abbr"`
+		Code string `json:"code"`
+		// Abbr   string `json:"abbr"`
 		NameCs string `json:"name_cs"`
 		NameEn string `json:"name_en"`
 	}
 	if err := json.Unmarshal(val, &tmp); err != nil {
 		return err
 	}
-	st.Code = tmp.Code
-	st.Abbr = tmp.Abbr
+	// st.Code = tmp.Code
+	// st.Abbr = tmp.Abbr
 	st.Name = tmp.NameCs
 	if len(st.Name) == 0 {
 		st.Name = tmp.NameEn

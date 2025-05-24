@@ -325,7 +325,7 @@ templ surveyFilters(model SurveyViewModel, t text) {
                 { fmt.Sprintf("%s (%d) ", category.Title(), category.Count()) }
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                for _, value := range filters.SkipEmptyFacet(category.IterWithFacets(false)) {
+                for _, value := range filters.SkipEmptyFacet(category.IterWithFacets()) {
                     @dropdownFilter("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
                 }
             </ul>

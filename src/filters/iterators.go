@@ -56,7 +56,7 @@ func SkipEmptyFacet(iter iter.Seq2[int, FacetValue]) iter.Seq2[int, FacetValue] 
 	}
 }
 
-func (ci FacetIterator) IterWithFacets(includeEmpty bool) iter.Seq2[int, FacetValue] {
+func (ci FacetIterator) IterWithFacets() iter.Seq2[int, FacetValue] {
 	return func(yield func(int, FacetValue) bool) {
 		for i, v := range ci.filter.values {
 			count := ci.facets[v.facetID]
