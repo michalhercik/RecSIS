@@ -65,7 +65,7 @@ func (s *Server) initRouter() {
 	router.HandleFunc("DELETE /rating/{code}/{category}", s.deleteCategoryRating)
 	router.HandleFunc("PUT /rating/{code}", s.rate)
 	router.HandleFunc("DELETE /rating/{code}", s.deleteRating)
-	router.HandleFunc("POST /blueprint/{coursecode}", s.addCourseToBlueprint)
+	router.HandleFunc("POST /blueprint/{code}", s.addCourseToBlueprint)
 	s.router = router
 }
 
@@ -82,7 +82,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	code := r.PathValue("code")
-	course, err := s.course(userID, code, lang, r)
+	course, err := s.course(userID, code, lang)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", code, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -100,23 +100,24 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s Server) course(userID, code string, lang language.Language, r *http.Request) (*Course, error) {
+// func (s Server) course(userID, code string, lang language.Language, r *http.Request) (*Course, error) {
+func (s Server) course(userID, code string, lang language.Language) (*Course, error) {
 	var result *Course
 	result, err := s.Data.Course(userID, code, lang)
 	if err != nil {
 		return nil, err
 	}
 	// TODO: render on demand via survey endpoint
-	req, err := s.parseQueryRequest(r)
-	if err != nil {
-		return nil, err
-	}
-	req.filter.Append("course_code", code)
-	searchResponse, err := s.Search.Comments(req)
-	if err != nil {
-		return nil, err
-	}
-	result.Comments = searchResponse.Survey
+	// req, err := s.parseQueryRequest(r)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// req.filter.Append("course_code", code)
+	// searchResponse, err := s.Search.Comments(req)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// result.Comments = searchResponse.Survey
 	return result, nil
 }
 
@@ -137,7 +138,7 @@ func (s Server) survey(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse request", http.StatusBadRequest)
 		return
 	}
-	Survey(model, texts[model.lang]).Render(r.Context(), w)
+	SurveyFiltersContent(model, texts[model.lang]).Render(r.Context(), w)
 }
 
 func (s Server) surveyViewModel(r *http.Request) (SurveyViewModel, error) {
@@ -155,6 +156,7 @@ func (s Server) surveyViewModel(r *http.Request) (SurveyViewModel, error) {
 	result.lang = req.lang
 	result.code = code
 	result.survey = searchResponse.Survey
+	result.offset = req.offset
 	result.isEnd = searchResponse.EstimatedTotalHits <= req.offset+req.limit
 	result.facets = s.Filters.IterFiltersWithFacets(searchResponse.FacetDistribution, r.URL.Query(), req.lang)
 	result.query = req.query
@@ -249,7 +251,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	courseCode := r.PathValue("coursecode")
+	courseCode := r.PathValue("code")
 	year, err := strconv.Atoi(r.FormValue("year"))
 	if err != nil {
 		http.Error(w, "Invalid year", http.StatusBadRequest)
@@ -276,7 +278,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	}
 	t := texts[lang]
 	btn := s.BpBtn.PartialComponent(numberOfYears, lang)
-	course, err := s.course(userID, courseCode, lang, r)
+	course, err := s.course(userID, courseCode, lang)
 	if err != nil {
 		log.Printf("HandlePage error %s: %v", courseCode, err)
 		http.Error(w, "Course not found", http.StatusNotFound)
@@ -293,10 +295,10 @@ func (s Server) parseQueryRequest(r *http.Request) (Request, error) {
 		return req, err
 	}
 	lang := language.FromContext(r.Context())
-	query := r.FormValue("survey-search")
-	offset, err := strconv.Atoi(r.FormValue(nOCommentsQuery))
+	query := r.FormValue(searchQuery)
+	offset, err := strconv.Atoi(r.FormValue(surveyOffset))
 	if err != nil {
-		offset = 1
+		offset = 0
 	}
 	filter, err := s.Filters.ParseURLQuery(r.URL.Query())
 	if err != nil {

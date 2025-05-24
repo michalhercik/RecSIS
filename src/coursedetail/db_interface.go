@@ -43,8 +43,9 @@ type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
 const (
 	positiveRating   = 1
 	negativeRating   = 0
-	numberOfComments = 20
-	nOCommentsQuery  = "number-of-comments"
+	numberOfComments = 7 // TODO: change to 20
+	searchQuery      = "survey-search"
+	surveyOffset     = "survey-offset"
 )
 
 type SurveyViewModel struct {
@@ -52,6 +53,7 @@ type SurveyViewModel struct {
 	code   string
 	query  string
 	survey []Comment
+	offset int
 	isEnd  bool
 	facets iter.Seq[filters.FacetIterator] // TODO
 }
@@ -92,7 +94,7 @@ type Course struct {
 	BlueprintAssignments AssignmentSlice
 	InDegreePlan         bool
 	CategoryRatings      []CourseCategoryRating
-	Comments             []Comment
+	//Comments             []Comment
 }
 
 func (c Course) IsTaughtInWinter() bool {
