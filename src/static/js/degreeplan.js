@@ -1,4 +1,5 @@
 setupCheckboxShiftClick();
+updateStickyOffset();
 
 // shift click for multiple checkboxes
 function setupCheckboxShiftClick() {

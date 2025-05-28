@@ -90,7 +90,7 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
 echo "POST documents: $response"
 
 filterable='[
-    "teacher.KOD",
+    "teacher_facet",
     "study_field",
     "academic_year",
     "study_year",

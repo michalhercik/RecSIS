@@ -104,7 +104,9 @@ func main() {
 	}
 	pageTempl.Init()
 	home := home.Server{
-		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Page:        page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Auth:        cas.UserIDFromContext{},
+		Recommender: fmt.Sprintf("http://%s:%d", conf.Recommender.Host, conf.Recommender.Port),
 	}
 	home.Init()
 	blueprint := blueprint.Server{
@@ -274,6 +276,10 @@ type config struct {
 		Host string `toml:"host"`
 		Key  string `toml:"key"`
 	} `toml:"meilisearch"`
+	Recommender struct {
+		Host string `toml:"host"`
+		Port int    `toml:"port"`
+	} `toml:"recommender"`
 	CAS struct {
 		Host string `toml:"host"`
 	} `toml:"cas"`

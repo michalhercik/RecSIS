@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/filters"
@@ -51,7 +52,8 @@ type Teacher struct {
 }
 
 func (t Teacher) String() string {
-	return fmt.Sprintf("%c. %s", t.FirstName[0], t.LastName)
+	firstRune, _ := utf8.DecodeRuneInString(t.FirstName)
+	return fmt.Sprintf("%c. %s", firstRune, t.LastName)
 }
 
 type TeacherSlice []Teacher

@@ -11,6 +11,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      recommender:
+        condition: service_healthy
     networks:
       - recsis-network
     volumes:
@@ -60,6 +62,19 @@ services:
       - ./meili_data:/meili_data
     ports:
       - 7700:7700
+    networks:
+      - recsis-network
+  recommender:
+    container_name: recsis-recommender
+    build:
+      dockerfile: Dockerfile
+      context: ./recommender/
+      target: dev-stage
+    ports:
+      - 8002:8002
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - recsis-network
 

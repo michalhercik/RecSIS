@@ -1,14 +1,96 @@
 package home
 
-templ Content(t text) {
-    <div id="home-page" class="container pt-3">
-        <h1>{ t.Introduction }</h1>
-        <p>{ t.IntroductionText }</p>
+import (
+    "fmt"
 
-        <h1>{ t.HowToUse }</h1>
-        <p>{ t.HowToUseText }</p>
+	"github.com/michalhercik/RecSIS/utils"
+)
 
-        <h1>{ t.Authors }</h1>
-        <p> @templ.Raw(t.AuthorsText) </p> // TODO make not raw!!!
+templ Content(hp *HomePage, t text) {
+    <div
+        id="home-page"
+        class="container pt-3"
+        x-data="{ visibleCards: 0, recVisibleOffset: 0, newVisibleOffset: 0, initialLoad: true }"
+        @load.window="setCardsWidth(); visibleCards = calculateVisibleCardsRec(); initialLoad = false;"
+        @resize.window="setCardsWidth(); visibleCards = calculateVisibleCardsRec()"
+    >
+        <h4>{ t.Welcome }</h4>
+        <p>{ t.RecSISIntro }</p>
+
+        <div class="pb-4">
+            <h4>{ t.RecommendedCourses }</h4>
+            @courseCardsRow("rec", hp.RecommendedCourses, t)
+        </div>
+
+        <div class="pb-4">
+            <h4>{ t.NewCourses }</h4>
+            @courseCardsRow("new", hp.NewCourses, t)
+        </div>
+
+        <script defer src="/js/home.js"></script>
     </div>
+}
+
+templ courseCardsRow(ID string, courses []Course, t text) {
+    <div class="d-flex justify-content-between align-items-center pt-2">
+        @chevronLeftBtn(ID)
+        <div id={ fmt.Sprintf("course-cards-row-%s", ID) } class="d-flex flex-row flex-no-wrap overflow-hidden w-100 gap-1 px-1">
+            for i, c := range courses {
+                <div class="card small-card" x-cloak x-show={ fmt.Sprintf("initialLoad || (%sVisibleOffset <= %d && %d < %sVisibleOffset + visibleCards)", ID, i, i, ID) }>
+                    <div class="card-header lh-1 py-1">
+                        <div class="d-flex justify-content-between w-100">
+                            <h6 class="mb-0">{ c.Code }</h6> // code
+                            <small>{ fmt.Sprintf("%s: %d", t.Credits, c.Credits) }</small> // credits
+                        </div>
+                        <div class="text-center w-100">
+                            <small>{ fmt.Sprintf("%s %s, %s", c.Semester.String(t.Utils.Language), hoursString(&c, t), c.ExamType) }</small> // semester, hours, exams
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        // title
+                        <h5 class="card-title">
+                            @utils.TitleCourseLink(c.Code, c.Title, false, t.Utils)
+                        </h5>
+                        // guarantors
+                        <h6 class="card-subtitle mb-2 text-muted">{ c.Guarantors.string(t) }</h6>
+                    </div>
+                </div>
+            }
+        </div>
+        @chevronRightBtn(ID, len(courses) - 1)
+    </div>
+}
+
+templ chevronLeftBtn(ID string) {
+    <button
+        class="btn btn-primary px-0 py-2"
+        :class={ fmt.Sprintf("{ 'disabled': %sVisibleOffset <= 0 }", ID) }
+        @click={ fmt.Sprintf("%sVisibleOffset = Math.max(0, %sVisibleOffset - visibleCards)", ID, ID) }>
+        <i class="bi bi-chevron-compact-left fs-4"></i>
+    </button>
+}
+
+templ chevronRightBtn(ID string, maxOffset int) {
+    <button
+        class="btn btn-primary px-0 py-2"
+        :class={ fmt.Sprintf("{ 'disabled': %sVisibleOffset + visibleCards >= %d }", ID, maxOffset) }
+        @click={ fmt.Sprintf("%sVisibleOffset += visibleCards", ID) }>
+        <i class="bi bi-chevron-compact-right fs-4"></i>
+    </button>
+}
+
+func hoursString(course *Course, t text) string {
+    result := ""
+    winter := course.LectureRangeWinter.Valid && course.SeminarRangeWinter.Valid
+    summer := course.LectureRangeSummer.Valid && course.SeminarRangeSummer.Valid
+    if winter {
+        result += fmt.Sprintf("%d/%d", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64)
+    }
+    if winter && summer {
+        result += ", "
+    }
+    if summer {
+        result += fmt.Sprintf("%d/%d", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64)
+    }
+    return result
 }

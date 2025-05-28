@@ -103,8 +103,10 @@ templ basicInfo(course *Course, t text) {
         @infoRow(t.Department) {
             <span>{ course.GuarantorDepartment }</span>
         }
-        @infoRow(t.LanguageOfCourse) {
-            <span>{ course.Language }</span>
+        if course.Language != "" {
+            @infoRow(t.LanguageOfCourse) {
+                <span>{ course.Language }</span>
+            }
         }
         // TODO: if not default (default=taught) show NOT TAUGHT, else do not show anything
         @infoRow(t.StateOfCourse) {

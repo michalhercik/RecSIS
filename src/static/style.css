@@ -189,6 +189,11 @@ tr:target td {
     }
 }
 
+/* H -> small course card */
+.small-card {
+    min-height: 220px;
+}
+
 /* S -> cards grid styles */
 #filter-section,
 #filter-section-skeleton {

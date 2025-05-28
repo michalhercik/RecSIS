@@ -14,7 +14,6 @@ templ Content(data *Blueprint, t text) {
         id="blueprint-page"
         class="container"
         x-data="{ checkedNumber: 0, isSorting: false, smallScreen: window.innerWidth < 768 }"
-        x-init="$nextTick(() => updateStickyOffset())"
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"
     >
