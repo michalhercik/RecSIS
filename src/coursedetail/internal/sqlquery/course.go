@@ -66,6 +66,16 @@ degree_plan AS (
     WHERE bs.user_id=$1
     AND dp.course_code=$2
     LIMIT 1
+),
+user_blueprint_semesters AS (
+    SELECT array_agg(course_code IS NOT NULL) AS semesters FROM (
+        SELECT by.user_id, bc.course_code FROM blueprint_years by
+        LEFT JOIN blueprint_semesters bs ON by.id = bs.blueprint_year_id
+        LEFT JOIN blueprint_courses bc ON bs.id = bc.blueprint_semester_id AND bc.course_code=$2
+        WHERE by.user_id=$1
+        ORDER BY by.academic_year, bs.semester
+    )
+    GROUP BY user_id
 )
 SELECT
     c.code,
@@ -101,11 +111,13 @@ SELECT
     c.interchangebilities,
     c.classes,
     c.classifications,
+	ubs.semesters,
     dp.course_code IS NOT NULL AS in_degree_plan
 FROM courses c
 LEFT JOIN user_course_overall_ratings ucor ON c.code = ucor.course_code
 LEFT JOIN avg_course_overall_ratings avg_cor ON c.code = avg_cor.course_code
 LEFT JOIN degree_plan dp ON c.code = dp.course_code
+LEFT JOIN user_blueprint_semesters ubs ON TRUE
 WHERE code = $2 AND c.lang = $3;
 `
 

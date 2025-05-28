@@ -2,6 +2,7 @@ package coursedetail
 
 import (
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/coursedetail/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
@@ -14,9 +15,10 @@ type DBManager struct {
 type courseDetail struct {
 	dbds.Course
 	dbds.OverallRating
-	categoryRatings      []dbds.CourseCategoryRating
-	blueprintAssignments []dbds.BlueprintAssignment
-	InDegreePlan         bool `db:"in_degree_plan"`
+	CategoryRatings    []dbds.CourseCategoryRating
+	BlueprintSemesters pq.BoolArray `db:"semesters"`
+	InDegreePlan       bool         `db:"in_degree_plan"`
+	// blueprintAssignments []dbds.BlueprintAssignment
 }
 
 func (reader DBManager) Course(userID string, code string, lang language.Language) (*Course, error) {
@@ -24,11 +26,11 @@ func (reader DBManager) Course(userID string, code string, lang language.Languag
 	if err := reader.DB.Get(&result, sqlquery.Course, userID, code, lang); err != nil {
 		return nil, err
 	}
-	if err := reader.DB.Select(&result.categoryRatings, sqlquery.Rating, userID, code, lang); err != nil {
+	if err := reader.DB.Select(&result.CategoryRatings, sqlquery.Rating, userID, code, lang); err != nil {
 		return nil, err
 	}
-	if err := reader.DB.Select(&result.blueprintAssignments, sqlquery.BlueprintAssignments, userID, code); err != nil {
-	}
+	// if err := reader.DB.Select(&result.blueprintAssignments, sqlquery.BlueprintAssignments, userID, code); err != nil {
+	// }
 	course := intoCourse(&result)
 	return &course, nil
 }
@@ -114,19 +116,26 @@ func intoCourse(course *courseDetail) Course {
 		Classes:                intoClassSlice(course.Classes),
 		Classifications:        intoClassSlice(course.Classifications),
 		CourseRating:           intoCourseRating(course.OverallRating),
-		CategoryRatings:        intoCategoryRatingSlice(course.categoryRatings),
-		BlueprintAssignments:   intoBlueprintAssignmentSlice(course.blueprintAssignments),
+		CategoryRatings:        intoCategoryRatingSlice(course.CategoryRatings),
+		BlueprintAssignments:   intoBlueprintAssignmentSlice(course.BlueprintSemesters),
+		BlueprintSemesters:     course.BlueprintSemesters,
 		InDegreePlan:           course.InDegreePlan,
 	}
 }
 
-func intoBlueprintAssignmentSlice(from []dbds.BlueprintAssignment) []Assignment {
-	result := make([]Assignment, len(from))
-	for i, a := range from {
-		result[i] = Assignment{
-			id:       a.ID,
-			year:     a.Year,
-			semester: SemesterAssignment(a.Semester),
+func intoBlueprintAssignmentSlice(from pq.BoolArray) []Assignment {
+	result := []Assignment{}
+	if len(from) > 0 && from[0] {
+		a := Assignment{year: 0, semester: SemesterAssignment(0)}
+		result = append(result, a)
+	}
+	for j, assigned := range from[1:] {
+		if assigned {
+			a := Assignment{
+				year:     (j / 2) + 1,
+				semester: SemesterAssignment((j % 2) + 1),
+			}
+			result = append(result, a)
 		}
 	}
 	return result

@@ -2,19 +2,22 @@ package bpbtn
 
 import (
     "fmt"
+    "strings"
 )
 
-templ AddBtn(code string, numberOfYears int, t Text, options Options) {
-    <div id={ fmt.Sprintf("%s-blueprint-add", code) } class="btn-group">
+templ AddBtn(model ViewModel, t Text) {
+    <div class="btn-group">
         <button type="button" class="btn btn-outline-blueprint"
-            hx-post={ t.Utils.Language.Path(options.HxPostBase + "/blueprint/" + code) }
-            hx-vals={ `"year": 0, "semester": 0` }
-            hx-swap={ options.HxSwap }
-            hx-target={ options.HxTarget }
+            hx-post={ t.Utils.Language.Path(model.hxPostBase + "/blueprint") }
+            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "courses": ["%s"]`, strings.Join(model.courses, `","`)) }
+            hx-swap={ model.hxSwap }
+            hx-target={ model.hxTarget }
+            hx-include="input:checked[name=selected]"
+            disabled?={ len(model.semesters) > 0 && model.semesters[0] }
         >
             { t.Assign }
         </button>
-        if (numberOfYears > 0) {
+        if (len(model.semesters) > 0) {
             <button
                 type="button"
                 class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
@@ -23,16 +26,17 @@ templ AddBtn(code string, numberOfYears int, t Text, options Options) {
                 data-bs-offset="0, 0">
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                for year := 1; year <= numberOfYears; year++ {
-                    @assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
-                    @assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
+                // for year := 1; year <= numberOfYears; year++ {
+                for i, v := range iterateOverAssignedYears(model.semesters) {
+                    @assignSemesterButton(t.WinterAssign, i, 1, v.disableWinter, t, model)
+                    @assignSemesterButton(t.SummerAssign, i, 2, v.disableSummer, t, model)
                 }
             </ul>
         }
     </div>
 }
 
-templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
+templ PlusSignBtn(model ViewModel, t Text) {
     <div
         class="btn-group w-100"
         x-cloak
@@ -42,18 +46,20 @@ templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
         @mouseleave="hover = false">
         <button
             class="btn btn-sm btn-outline-blueprint dp-bp-assign-btn-sm bi bi-plus lh-1 p-0"
-            if numberOfYears > 0 {
+            if len(model.semesters) > 0 {
                 :class="{ 'border-transparent': !hover, 'dp-bp-delimiter': !hover }"
             } else {
                 :class="{ 'border-transparent': !hover }"
             }
-            hx-post={ t.Utils.Language.Path(options.HxPostBase + "/blueprint/" + code) }
-            hx-vals={ `"year": 0, "semester": 0` }
-            hx-swap={ options.HxSwap }
-            hx-target={ options.HxTarget }
+            hx-post={ t.Utils.Language.Path(model.hxPostBase + "/blueprint") }
+            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "courses": ["%s"]`, strings.Join(model.courses, `","`)) }
+            hx-include={ model.hxInclude }
+            hx-swap={ model.hxSwap }
+            hx-target={ model.hxTarget }
+            disabled?={ len(model.semesters) > 0 && model.semesters[0] }
             >
         </button>
-        if (numberOfYears > 0) {
+        if (len(model.semesters) > 0) {
             <button
                 class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
                 :class="{ 'btn-blueprint-hover': hoverSelection, 'border-transparent': !hover }"
@@ -65,23 +71,26 @@ templ PlusSignBtn(code string, numberOfYears int, t Text, options Options) {
                 class="dropdown-menu dropdown-menu-end"
                 @mouseover="hoverSelection = true"
                 @mouseleave="hoverSelection = false">
-                for year := 1; year <= numberOfYears; year++ {
-                    @assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
-                    @assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
+                for i, v := range iterateOverAssignedYears(model.semesters) {
+                    @assignSemesterButton(t.WinterAssign, i, 1, v.disableWinter, t, model)
+                    @assignSemesterButton(t.SummerAssign, i, 2, v.disableSummer, t, model)
                 }
             </ul>
         }
     </div>
 }
 
-templ assignSemesterButton(code, semesterText string, year, semester int, t Text, options Options) {
+templ assignSemesterButton(semesterText string, year, semester int, disabled bool, t Text, model ViewModel) {
     <li class="mx-3">
         <button
             class="dropdown-item rounded text-center dropdown-item-blueprint"
-            hx-post={ t.Utils.Language.Path(options.HxPostBase + "/blueprint/" + code) }
-            hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }
-            hx-swap={ options.HxSwap }
-            hx-target={ options.HxTarget }>
+            hx-post={ t.Utils.Language.Path(model.hxPostBase + "/blueprint") }
+            hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d, "courses": ["%s"]`, year, semester, strings.Join(model.courses, ",")) }
+            hx-include={ model.hxInclude }
+            hx-swap={ model.hxSwap }
+            hx-target={ model.hxTarget }
+            disabled?={ disabled }
+            >
             { fmt.Sprintf("%s %s", t.YearStr(year), semesterText) }
         </button>
     </li>

@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/a-h/templ"
-	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
 )
@@ -33,12 +32,12 @@ type Page interface {
 }
 
 type BlueprintAddButton interface {
-	Component(course string, numberOfYears int, lang language.Language) templ.Component
-	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
-	NumberOfYears(userID string) (int, error)
-	Action(userID string, year int, semester dbds.SemesterAssignment, course ...string) ([]int, error)
+	Component(semesters []bool, lang language.Language, course ...string) templ.Component
+	PartialComponent(lang language.Language) PartialBlueprintAdd
+	Action(userID string, year int, semester int, course ...string) ([]int, error)
+	ParseRequest(r *http.Request) ([]string, int, int, error)
 }
-type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
+type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, semesters []bool, course ...string) templ.Component
 
 const (
 	positiveRating   = 1
@@ -90,6 +89,7 @@ type Course struct {
 	CourseRating
 	Link                 string // link to course webpage (not SIS)
 	BlueprintAssignments AssignmentSlice
+	BlueprintSemesters   []bool
 	InDegreePlan         bool
 	CategoryRatings      []CourseCategoryRating
 	Comments             []Comment
@@ -223,7 +223,6 @@ func (sa SemesterAssignment) IDstring() string {
 }
 
 type Assignment struct {
-	id       int
 	year     int
 	semester SemesterAssignment
 }

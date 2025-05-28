@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
-	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -15,17 +14,16 @@ type Authentication interface {
 }
 
 type BlueprintAddButton interface {
-	Component(course string, numberOfYears int, lang language.Language) templ.Component
-	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
-	NumberOfYears(userID string) (int, error)
-	Action(userID string, year int, semester dbds.SemesterAssignment, course ...string) ([]int, error)
+	PartialComponent(lang language.Language) PartialBlueprintAdd
+	ParseRequest(r *http.Request) ([]string, int, int, error)
+	Action(userID string, year int, semester int, course ...string) ([]int, error)
 }
 
 type Page interface {
 	View(main templ.Component, lang language.Language, title string) templ.Component
 }
 
-type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
+type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, years []bool, course ...string) templ.Component
 
 type DegreePlan struct {
 	blocs []Bloc
@@ -114,30 +112,39 @@ func (b *Bloc) blueprintCredits() int {
 // }
 
 type Course struct {
-	Code           string
-	Title          string
-	Note           string
-	Credits        int
-	Start          TeachingSemester
-	Guarantors     TeacherSlice
-	LectureRange1  int
-	SeminarRange1  int
-	LectureRange2  int
-	SeminarRange2  int
-	SemesterCount  int
-	ExamType       string
-	BlueprintYears []int64
+	Code               string
+	Title              string
+	Note               string
+	Credits            int
+	Start              TeachingSemester
+	Guarantors         TeacherSlice
+	LectureRange1      int
+	SeminarRange1      int
+	LectureRange2      int
+	SeminarRange2      int
+	SemesterCount      int
+	ExamType           string
+	BlueprintSemesters []bool
+	// BlueprintYears     []int64
 }
 
 // if is (un)assigned in the blueprint
 func (c *Course) isInBlueprint() bool {
-	return len(c.BlueprintYears) > 0
+	for _, isIn := range c.BlueprintSemesters {
+		if isIn {
+			return true
+		}
+	}
+	return false
 }
 
 // if is assigned in the blueprint
 func (c *Course) isAssigned() bool {
-	for _, year := range c.BlueprintYears {
-		if year > 0 {
+	if len(c.BlueprintSemesters) < 2 {
+		return false
+	}
+	for _, isIn := range c.BlueprintSemesters[1:] {
+		if isIn {
 			return true
 		}
 	}
@@ -146,12 +153,10 @@ func (c *Course) isAssigned() bool {
 
 // if is unassigned in the blueprint
 func (c *Course) isUnassigned() bool {
-	for _, year := range c.BlueprintYears {
-		if year == 0 {
-			return true
-		}
+	if len(c.BlueprintSemesters) < 1 {
+		return false
 	}
-	return false
+	return c.BlueprintSemesters[0]
 }
 
 func (c *Course) statusBackgroundColor() string {

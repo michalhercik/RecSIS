@@ -213,7 +213,7 @@ templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
                 // course description (annotation)
                 <p class="card-text annotation-text">{ course.Annotation.string() }</p>
             </div>
-            // show rest/less of annotation button 
+            // show rest/less of annotation button
             <button
                 class="btn btn-link text-secondary"
                 @click="expanded = !expanded"
@@ -229,7 +229,7 @@ templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
             </div>
             // add to blueprint button
             <div class="d-flex justify-content-end">
-                @addBtn(course.Code, "outerHTML", "#course-card-" + course.Code)
+                @addBtn("outerHTML", "#course-card-" + course.Code, "", course.BlueprintSemesters, course.Code)
             </div>
         </div>
     </div>

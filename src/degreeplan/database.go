@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/degreeplan/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/language"
@@ -13,8 +14,13 @@ type DBManager struct {
 	DB *sqlx.DB
 }
 
+type DBDegreePlanRecord struct {
+	dbds.DegreePlanRecord
+	BlueprintSemesters pq.BoolArray `db:"semesters"`
+}
+
 func (m DBManager) DegreePlan(uid string, lang language.Language) (*DegreePlan, error) {
-	var records []dbds.DegreePlanRecord
+	var records []DBDegreePlanRecord
 	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, lang); err != nil {
 		return nil, fmt.Errorf("degreePlan: %v", err)
 	}
@@ -25,7 +31,7 @@ func (m DBManager) DegreePlan(uid string, lang language.Language) (*DegreePlan, 
 	return &dp, nil
 }
 
-func add(dp *DegreePlan, record dbds.DegreePlanRecord) {
+func add(dp *DegreePlan, record DBDegreePlanRecord) {
 	blocIndex := -1
 	for i, b := range dp.blocs {
 		if b.Code == record.BlocCode {
@@ -51,20 +57,20 @@ func add(dp *DegreePlan, record dbds.DegreePlanRecord) {
 	dp.blocs[blocIndex].Courses = append(dp.blocs[blocIndex].Courses, intoCourse(record))
 }
 
-func intoCourse(from dbds.DegreePlanRecord) Course {
+func intoCourse(from DBDegreePlanRecord) Course {
 	return Course{
-		Code:           from.Code,
-		Title:          from.Title,
-		Credits:        from.Credits,
-		Start:          TeachingSemester(from.Start),
-		LectureRange1:  int(from.LectureRangeWinter.Int64),
-		LectureRange2:  int(from.LectureRangeSummer.Int64),
-		SeminarRange1:  int(from.SeminarRangeWinter.Int64),
-		SeminarRange2:  int(from.SeminarRangeSummer.Int64),
-		ExamType:       from.ExamType,
-		Guarantors:     intoTeacherSlice(from.Guarantors),
-		Note:           from.Note,
-		BlueprintYears: []int64(from.BlueprintYears),
+		Code:               from.Code,
+		Title:              from.Title,
+		Credits:            from.Credits,
+		Start:              TeachingSemester(from.Start),
+		LectureRange1:      int(from.LectureRangeWinter.Int64),
+		LectureRange2:      int(from.LectureRangeSummer.Int64),
+		SeminarRange1:      int(from.SeminarRangeWinter.Int64),
+		SeminarRange2:      int(from.SeminarRangeSummer.Int64),
+		ExamType:           from.ExamType,
+		Guarantors:         intoTeacherSlice(from.Guarantors),
+		Note:               from.Note,
+		BlueprintSemesters: from.BlueprintSemesters,
 	}
 }
 

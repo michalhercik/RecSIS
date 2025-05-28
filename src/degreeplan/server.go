@@ -3,9 +3,7 @@ package degreeplan
 import (
 	"log"
 	"net/http"
-	"strconv"
 
-	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -20,7 +18,7 @@ type Server struct {
 func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", s.page)
-	router.HandleFunc("POST /blueprint/{coursecode}", s.addCourseToBlueprint)
+	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
 	s.router = router
 }
 
@@ -44,20 +42,15 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	courseCode := r.PathValue("coursecode")
-	year, err := strconv.Atoi(r.FormValue("year"))
+	courseCode, year, semester, err := s.BpBtn.ParseRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid year", http.StatusBadRequest)
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		log.Printf("HandlePage error: %v", err)
 		return
 	}
-
-	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
-	if err != nil {
-		http.Error(w, "Invalid semester", http.StatusBadRequest)
-		return
-	}
-	semester := dbds.SemesterAssignment(semesterInt)
-	_, err = s.BpBtn.Action(userID, year, semester, courseCode)
+	courseCode = append(courseCode, r.Form["selected"]...)
+	// courseCode := r.Form["selected"]
+	_, err = s.BpBtn.Action(userID, year, semester, courseCode...)
 	if err != nil {
 		http.Error(w, "Unable to add course to blueprint", http.StatusInternalServerError)
 		log.Printf("HandlePage error: %v", err)
@@ -74,13 +67,7 @@ func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string
 		log.Printf("renderPage: %v", err)
 		return
 	}
-	numberOfYears, err := s.BpBtn.NumberOfYears(userID)
-	if err != nil {
-		http.Error(w, "Unable to retrieve number of years", http.StatusInternalServerError)
-		log.Printf("renderPage: %v", err)
-		return
-	}
-	partialComponent := s.BpBtn.PartialComponent(numberOfYears, lang)
+	partialComponent := s.BpBtn.PartialComponent(lang)
 	main := Content(dp, t, partialComponent)
 	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
 }

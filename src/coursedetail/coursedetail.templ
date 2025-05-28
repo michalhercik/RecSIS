@@ -149,7 +149,7 @@ templ buttons(course *Course, t text, bpBtn PartialBlueprintAdd) {
             rozvrh
         </a>
         // button to assign course to blueprint
-        @bpBtn(course.Code, "outerHTML", "body")
+        @bpBtn("outerHTML", "body", "", course.BlueprintSemesters, course.Code)
     </div>
 }
 

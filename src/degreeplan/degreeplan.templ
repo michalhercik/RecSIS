@@ -8,7 +8,7 @@ import (
 templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
     <div
         id="degreeplan-content"
-        class="container" 
+        class="container"
         x-data="{ checkedNumber: 0, smallScreen: window.innerWidth < 768 }"
         x-init="$nextTick(() => updateStickyOffset())"
         @resize.window="smallScreen = window.innerWidth < 768"
@@ -160,7 +160,7 @@ templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         // checkbox + status
         <td
             class="text-center align-middle"
-            @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)"> 
+            @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)">
             @checkbox(course)
         </td>
         // code
@@ -187,7 +187,7 @@ templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         <td class="d-none d-xl-table-cell">{ course.Guarantors.string() }</td>
         // blueprint button
         <td class="d-none d-md-table-cell text-start align-middle p-0">
-            @bpBtn(course.Code, "outerHTML", "body")
+            @bpBtn("outerHTML", "body", "", course.BlueprintSemesters, course.Code)
         </td>
     </tr>
 }

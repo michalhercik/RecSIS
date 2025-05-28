@@ -18,7 +18,7 @@ const hitsPerPageParam = "hitsPerPage"
 
 type Server struct {
 	router  *http.ServeMux
-	Data    DataManager
+	Data    DBManager
 	Search  SearchEngine
 	Auth    Authentication
 	Filters filters.Filters
@@ -49,7 +49,7 @@ func (s *Server) initRouter() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", s.page)
 	router.HandleFunc("GET /search", s.content)
-	router.HandleFunc("POST /blueprint/{coursecode}", s.addCourseToBlueprint)
+	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
 	s.router = router
 }
 
@@ -73,13 +73,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	numberOfBlueprintYears, err := s.BpBtn.NumberOfYears(req.userID)
-	if err != nil {
-		log.Printf("numberOfBlueprintYears: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	result.templ = s.BpBtn.PartialComponent(numberOfBlueprintYears, lang)
+	result.templ = s.BpBtn.PartialComponent(lang)
 	main := Content(&result, t)
 	s.Page.View(main, lang, t.PageTitle, req.query).Render(r.Context(), w)
 }
@@ -103,13 +97,7 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	// Set the HX-Push-Url header to update the browser URL without a full reload
 	w.Header().Set("HX-Push-Url", s.parseUrl(r.URL.Query(), t))
 
-	numberOfBlueprintYears, err := s.BpBtn.NumberOfYears(req.userID)
-	if err != nil {
-		log.Printf("numberOfBlueprintYears: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	coursesPage.templ = s.BpBtn.PartialComponent(numberOfBlueprintYears, lang)
+	coursesPage.templ = s.BpBtn.PartialComponent(lang)
 	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
@@ -193,14 +181,13 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lang := language.FromContext(r.Context())
-	courseCode := r.PathValue("coursecode")
-	year, semester, err := parseYearSemester(r)
+	courseCodes, year, semester, err := s.BpBtn.ParseRequest(r)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		log.Printf("addCourseToBlueprint: %v", err)
 		return
 	}
-	_, err = s.BpBtn.Action(userID, year, semester, courseCode)
+	_, err = s.BpBtn.Action(userID, year, semester, courseCodes[0])
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Printf("failed to create button: %v", err)
@@ -208,19 +195,13 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := texts[lang]
-	courses, err := s.Data.Courses(userID, []string{courseCode}, lang)
+	courses, err := s.Data.Courses(userID, courseCodes, lang)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Printf("failed to create button: %v", err)
 		return
 	}
-	numberOfYears, err := s.BpBtn.NumberOfYears(userID)
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		log.Printf("failed to create button: %v", err)
-		return
-	}
-	btn := s.BpBtn.PartialComponent(numberOfYears, lang)
+	btn := s.BpBtn.PartialComponent(lang)
 	CourseCard(&courses[0], t, btn).Render(r.Context(), w)
 
 	// btn.Render(r.Context(), w)

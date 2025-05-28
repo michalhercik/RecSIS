@@ -9,25 +9,19 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
-	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
 	//"log"
 )
-
-type DataManager interface {
-	Courses(userID string, courseCodes []string, lang language.Language) ([]Course, error)
-}
 
 type Authentication interface {
 	UserID(r *http.Request) (string, error)
 }
 
 type BlueprintAddButton interface {
-	Component(course string, numberOfYears int, lang language.Language) templ.Component
-	PartialComponent(numberOfYears int, lang language.Language) PartialBlueprintAdd
-	NumberOfYears(userID string) (int, error)
-	Action(userID string, year int, semester dbds.SemesterAssignment, course ...string) ([]int, error)
+	PartialComponent(lang language.Language) PartialBlueprintAdd
+	ParseRequest(r *http.Request) ([]string, int, int, error)
+	Action(userID string, year int, semester int, course ...string) ([]int, error)
 }
 
 type Page interface {
@@ -35,7 +29,7 @@ type Page interface {
 	SearchParam() string
 }
 
-type PartialBlueprintAdd = func(course, hxSwap, hxTarget string) templ.Component
+type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, years []bool, course ...string) templ.Component
 
 type coursesPage struct {
 	courses     []Course
@@ -49,11 +43,11 @@ type coursesPage struct {
 }
 
 type Teacher struct {
-	SisID       int    `json:"KOD"`
-	FirstName   string `json:"JMENO"`
-	LastName    string `json:"PRIJMENI"`
-	TitleBefore string `json:"TITULPRED"`
-	TitleAfter  string `json:"TITULZA"`
+	SisID       string
+	FirstName   string
+	LastName    string
+	TitleBefore string
+	TitleAfter  string
 }
 
 func (t Teacher) String() string {
@@ -111,8 +105,8 @@ func (ts *TeachingSemester) String(lang language.Language) string {
 }
 
 type Assignment struct {
-	Year     int                `json:"year"`
-	Semester SemesterAssignment `json:"semester"`
+	Year     int
+	Semester SemesterAssignment
 }
 
 func (a Assignment) String(lang language.Language) string {
@@ -184,8 +178,8 @@ func (a AssignmentSlice) Sort() AssignmentSlice {
 }
 
 type Description struct {
-	Title   string `json:"TITLE"`
-	Content string `json:"MEMO"`
+	Title   string
+	Content string
 }
 
 func (d *Description) Scan(val interface{}) error {
@@ -230,17 +224,18 @@ func (d NullDescription) string() string {
 }
 
 type Course struct {
-	Code                 string           `db:"code"`
-	Name                 string           `db:"title"`
-	Annotation           NullDescription  `db:"annotation"`
-	Start                TeachingSemester `db:"start_semester"`
-	SemesterCount        int              `db:"semester_count"`
-	LectureRange1        int              `db:"lecture_range1"`
-	SeminarRange1        int              `db:"seminar_range1"`
-	LectureRange2        int              `db:"lecture_range2"`
-	SeminarRange2        int              `db:"seminar_range2"`
-	ExamType             string           `db:"exam_type"`
-	Credits              int              `db:"credits"`
-	Guarantors           TeacherSlice     `db:"guarantors"`
-	BlueprintAssignments AssignmentSlice  `db:"assignment"`
+	Code                 string
+	Name                 string
+	Annotation           NullDescription
+	Start                TeachingSemester
+	SemesterCount        int
+	LectureRange1        int
+	SeminarRange1        int
+	LectureRange2        int
+	SeminarRange2        int
+	ExamType             string
+	Credits              int
+	Guarantors           TeacherSlice
+	BlueprintAssignments AssignmentSlice
+	BlueprintSemesters   []bool
 }
