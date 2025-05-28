@@ -90,6 +90,7 @@ func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisear
 		IndexUID:             index.Uid,
 		Query:                r.query,
 		Limit:                int64(r.limit),
+		Offset:               int64(r.offset),
 		AttributesToRetrieve: attributesToRetrieve(r.lang),
 		Filter:               r.filter.String(),
 		Facets:               r.facets,

@@ -56,7 +56,11 @@ func (s *Server) initRouter() {
 	router.HandleFunc("DELETE /rating/{code}/{category}", s.deleteCategoryRating)
 	router.HandleFunc("PUT /rating/{code}", s.rate)
 	router.HandleFunc("DELETE /rating/{code}", s.deleteRating)
+<<<<<<< HEAD
 	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
+=======
+	router.HandleFunc("POST /blueprint/{code}", s.addCourseToBlueprint)
+>>>>>>> 07a4f0505aa54b2112d997341ae2545ca917e7a5
 	s.router = router
 }
 
@@ -110,7 +114,7 @@ func (s Server) survey(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse request", http.StatusBadRequest)
 		return
 	}
-	Survey(model, texts[model.lang]).Render(r.Context(), w)
+	SurveyFiltersContent(model, texts[model.lang]).Render(r.Context(), w)
 }
 
 func (s Server) surveyViewModel(r *http.Request) (SurveyViewModel, error) {
@@ -128,6 +132,7 @@ func (s Server) surveyViewModel(r *http.Request) (SurveyViewModel, error) {
 	result.lang = req.lang
 	result.code = code
 	result.survey = searchResponse.Survey
+	result.offset = req.offset
 	result.isEnd = searchResponse.EstimatedTotalHits <= req.offset+req.limit
 	result.facets = s.Filters.IterFiltersWithFacets(searchResponse.FacetDistribution, r.URL.Query(), req.lang)
 	result.query = req.query
@@ -259,10 +264,10 @@ func (s Server) parseQueryRequest(r *http.Request) (Request, error) {
 		return req, err
 	}
 	lang := language.FromContext(r.Context())
-	query := r.FormValue("survey-search")
-	offset, err := strconv.Atoi(r.FormValue(nOCommentsQuery))
+	query := r.FormValue(searchQuery)
+	offset, err := strconv.Atoi(r.FormValue(surveyOffset))
 	if err != nil {
-		offset = 1
+		offset = 0
 	}
 	filter, err := s.Filters.ParseURLQuery(r.URL.Query())
 	if err != nil {

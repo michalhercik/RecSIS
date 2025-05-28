@@ -244,7 +244,6 @@ templ coursesBody(tableID string, courses []Course, canUnassign bool, xSortMetho
                 class="align-middle position-relative"
                 @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)">
                 @checkbox(course.ID)
-               
             </td>
             <td class="d-none d-md-table-cell position-relative">
                 @utils.CourseLink(course.Code, t.Utils)
@@ -324,8 +323,7 @@ templ noCoursesTableContent(text, xSort string) {
 templ warningIcon(course *Course, t text) {
     if len(course.Warnings) > 0 {
         <span
-            class="bi bi-exclamation-lg text-danger fs-4 position-absolute"
-            style="right: -6px; top: calc(50% - 1px); transform: translateY(-50%);"
+            class="bi bi-exclamation-lg text-danger fs-4 position-absolute bp-warning"
             data-bs-toggle="tooltip"
             data-bs-placement="bottom"
             data-bs-title={ strings.Join(course.Warnings, " ") }>

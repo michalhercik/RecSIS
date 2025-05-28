@@ -43,7 +43,8 @@ const (
 	positiveRating   = 1
 	negativeRating   = 0
 	numberOfComments = 20
-	nOCommentsQuery  = "number-of-comments"
+	searchQuery      = "survey-search"
+	surveyOffset     = "survey-offset"
 )
 
 type SurveyViewModel struct {
@@ -51,6 +52,7 @@ type SurveyViewModel struct {
 	code   string
 	query  string
 	survey []Comment
+	offset int
 	isEnd  bool
 	facets iter.Seq[filters.FacetIterator] // TODO
 }
@@ -92,7 +94,7 @@ type Course struct {
 	BlueprintSemesters   []bool
 	InDegreePlan         bool
 	CategoryRatings      []CourseCategoryRating
-	Comments             []Comment
+	//Comments             []Comment
 }
 
 func (c Course) IsTaughtInWinter() bool {

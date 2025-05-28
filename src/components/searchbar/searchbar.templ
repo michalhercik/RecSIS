@@ -22,7 +22,7 @@ templ SearchBar(model searchBarModel) {
     >
         <div class="justify-content-center">
             <div class="dropdown" @click.outside="quickResOpen = false">
-                <div class="input-group" :class="{ 'rounded-input': searchInput.length == 0 }">
+                <div class="input-group rounded-input position-relative">
                     <input
                         type="text"
                         id="search"
@@ -46,8 +46,7 @@ templ SearchBar(model searchBarModel) {
                     <button
                         type="reset"
                         x-cloak x-show="searchInput.length > 0" 
-                        class="btn bg-white border-top border-bottom border-end border-start-0 py-0"
-                        :class="{ 'rounded-input': searchInput.length > 0 }"
+                        class="btn bg-white border-0 position-absolute navbar-clear-search-btn"
                         @click="searchInput = ''; quickResOpen = false; $refs.searchInput.focus();">
                         <i class="bi bi-x-lg"></i>
                     </button>
