@@ -56,11 +56,7 @@ func (s *Server) initRouter() {
 	router.HandleFunc("DELETE /rating/{code}/{category}", s.deleteCategoryRating)
 	router.HandleFunc("PUT /rating/{code}", s.rate)
 	router.HandleFunc("DELETE /rating/{code}", s.deleteRating)
-<<<<<<< HEAD
 	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
-=======
-	router.HandleFunc("POST /blueprint/{code}", s.addCourseToBlueprint)
->>>>>>> 07a4f0505aa54b2112d997341ae2545ca917e7a5
 	s.router = router
 }
 
