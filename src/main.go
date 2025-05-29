@@ -79,7 +79,7 @@ func main() {
 	// Handlers
 	//////////////////////////////////////////
 	pageTempl := page.Page{
-		Home: "/home",
+		Home: "/home/",
 		NavItems: []page.NavItem{
 			{Title: language.MakeLangString("Domů", "Home"), Path: "/", Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
 			{Title: language.MakeLangString("Hledání", "Search"), Path: "/courses/", Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
@@ -157,12 +157,15 @@ func main() {
 	degreePlan := degreeplan.Server{
 		Data: degreeplan.DBManager{DB: db},
 		Auth: cas.UserIDFromContext{},
-		BpBtn: bpbtn.Add{
-			DB:    db,
-			Templ: bpbtn.PlusSignBtn,
-			Options: bpbtn.Options{
-				HxPostBase: "/degreeplan",
+		BpBtn: bpbtn.DoubleAdd{
+			Add: bpbtn.Add{
+				DB:    db,
+				Templ: bpbtn.PlusSignBtn,
+				Options: bpbtn.Options{
+					HxPostBase: "/degreeplan",
+				},
 			},
+			TemplSecond: bpbtn.PlusSignBtnChecked,
 		},
 		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}

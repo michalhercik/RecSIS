@@ -22,10 +22,10 @@ function changeLanguage(lang) {
 
 document.addEventListener('htmx:afterSwap', function (e) {
     // Reinitialize Alpine when HTMX swaps in new content
-    // if (e.detail.target === document.body) {
-    //     let initAlpine = new Event('alpine:init');
-    //     document.dispatchEvent(initAlpine);
-    // }
+    if (e.detail.target === document.body) {
+        let initAlpine = new Event('alpine:init');
+        document.dispatchEvent(initAlpine);
+    }
 });
 
 window.addEventListener('htmx:historyRestore', () => {

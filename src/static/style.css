@@ -191,7 +191,7 @@ tr:target td {
 
 /* H -> small course card */
 .small-card {
-    min-height: 220px;
+    min-height: 170px;
 }
 
 /* S -> cards grid styles */

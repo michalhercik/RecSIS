@@ -10,9 +10,10 @@ templ Content(hp *HomePage, t text) {
     <div
         id="home-page"
         class="container pt-3"
-        x-data="{ visibleCards: 0, recVisibleOffset: 0, newVisibleOffset: 0, initialLoad: true }"
-        @load.window="setCardsWidth(); visibleCards = calculateVisibleCardsRec(); initialLoad = false;"
-        @resize.window="setCardsWidth(); visibleCards = calculateVisibleCardsRec()"
+        x-data="{ visibleCards: 0, recVisibleOffset: 0, newVisibleOffset: 0 }"
+        x-init="setCardsWidth(); visibleCards = calculateVisibleCards();"
+        @load.window="setCardsWidth(); visibleCards = calculateVisibleCards();"
+        @resize.window="setCardsWidth(); visibleCards = calculateVisibleCards();"
     >
         <h4>{ t.Welcome }</h4>
         <p>{ t.RecSISIntro }</p>
@@ -27,7 +28,7 @@ templ Content(hp *HomePage, t text) {
             @courseCardsRow("new", hp.NewCourses, t)
         </div>
 
-        <script defer src="/js/home.js"></script>
+        @scripts()
     </div>
 }
 
@@ -36,7 +37,7 @@ templ courseCardsRow(ID string, courses []Course, t text) {
         @chevronLeftBtn(ID)
         <div id={ fmt.Sprintf("course-cards-row-%s", ID) } class="d-flex flex-row flex-no-wrap overflow-hidden w-100 gap-1 px-1">
             for i, c := range courses {
-                <div class="card small-card" x-cloak x-show={ fmt.Sprintf("initialLoad || (%sVisibleOffset <= %d && %d < %sVisibleOffset + visibleCards)", ID, i, i, ID) }>
+                <div class="card small-card" x-cloak x-show={ fmt.Sprintf("(%sVisibleOffset <= %d && %d < %sVisibleOffset + visibleCards)", ID, i, i, ID) }>
                     <div class="card-header lh-1 py-1">
                         <div class="d-flex justify-content-between w-100">
                             <h6 class="mb-0">{ c.Code }</h6> // code
@@ -46,13 +47,13 @@ templ courseCardsRow(ID string, courses []Course, t text) {
                             <small>{ fmt.Sprintf("%s %s, %s", c.Semester.String(t.Utils.Language), hoursString(&c, t), c.ExamType) }</small> // semester, hours, exams
                         </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body justify-content-between d-flex flex-column h-100">
                         // title
-                        <h5 class="card-title">
+                        <h6 class="card-title pb-1">
                             @utils.TitleCourseLink(c.Code, c.Title, false, t.Utils)
-                        </h5>
+                        </h6>
                         // guarantors
-                        <h6 class="card-subtitle mb-2 text-muted">{ c.Guarantors.string(t) }</h6>
+                        <h6 class="card-subtitle text-muted">{ c.Guarantors.string(t) }</h6>
                     </div>
                 </div>
             }
