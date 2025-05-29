@@ -48,6 +48,7 @@ type text struct {
 	Survey                  string
 	NoSurvey                string
 	SurveySearchPlaceholder string
+	CancelFilters           string
 	ScrollToSearch          string
 	Detail                  string
 	NoDetail                string
@@ -108,6 +109,7 @@ var texts = map[language.Language]text{
 		Survey:                  "Anketa",
 		NoSurvey:                "Nejsou k dispozici žádné komentáře.",
 		SurveySearchPlaceholder: "Hledat v anketě...",
+		CancelFilters:           "Zrušit vybrané filtry",
 		ScrollToSearch:          "Nahoru na vyhledávání",
 		Detail:                  "Detailní informace",
 		NoDetail:                "Pro tento předmět nejsou k dispozici žádné podrobnosti.",
@@ -157,6 +159,7 @@ var texts = map[language.Language]text{
 		Survey:                  "Survey",
 		NoSurvey:                "No comments available.",
 		SurveySearchPlaceholder: "Search in survey...",
+		CancelFilters:           "Cancel selected filters",
 		ScrollToSearch:          "Scroll to search",
 		Detail:                  "Detailed information",
 		NoDetail:                "No detailed information available for this course.",

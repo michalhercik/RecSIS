@@ -59,7 +59,7 @@ templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, 
 }
 
 templ dropdown(model ViewModel, classes string, alpineClasses, ulAttributes templ.Attributes, menuEnd bool, t Text) {
-    if (len(model.semesters) > 0) {
+    if (len(model.semesters) > 1) {
         <button
             class={ "btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split", classes }
             { alpineClasses... }

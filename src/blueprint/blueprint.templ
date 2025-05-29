@@ -243,6 +243,9 @@ templ coursesBody(tableID string, courses []Course, canUnassign bool, xSortMetho
                 class="align-middle position-relative"
                 @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)">
                 @checkbox(course.ID)
+                <div class="d-md-none">
+                    @warningIcon(&course, t)
+                </div>
             </td>
             <td class="d-none d-md-table-cell position-relative">
                 @utils.CourseLink(course.Code, t.Utils)

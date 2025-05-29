@@ -35,6 +35,8 @@ templ Content(course *Course, t text, bpBtn PartialBlueprintAdd) {
         <div class="pt-3 pt-md-0">
             @details(course, t)
         </div>
+
+        <script defer src="/js/coursedetail.js"></script>
     </div>
 }
 
@@ -268,6 +270,7 @@ templ surveySearch(code string, t text) {
         hx-trigger="input, clear-survey-search"
         x-data="{ surveySearchInput: '' }"
         hx-indicator="#explicit-no-loader"
+        @keydown.enter.prevent=""
     >
         <input
             type="text"
@@ -292,6 +295,7 @@ templ SurveyFiltersContent(model SurveyViewModel, t text) {
         <div class="mb-1">
             @surveyFilters(model, t)
         </div>
+        @surveyActiveFilters(model, t)
         if len(model.survey) == 0 {
             <div role="alert" class="alert alert-primary">
                 { t.NoSurvey }
@@ -319,14 +323,22 @@ templ surveyFilters(model SurveyViewModel, t text) {
         @change="changed = true;"
         @hide-bs-dropdown.dot="if (changed) { changed = false; $dispatch('filters-changed'); }"
     >
-        for category := range filters.CategoryWithAtLeast(2, model.facets) {
+        for category := range filters.CategoryWithAtLeast(0, model.facets) {
             <button
                 type="button"
-                class="btn btn-light dropdown-toggle"
-                data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                { fmt.Sprintf("%s (%d) ", category.Title(), category.Count()) }
+                class="btn btn-light dropdown-toggle position-relative"
+                data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+            >
+                // placeholder for width of the button
+                <span class="invisible">
+                    { fmt.Sprintf("%s (00) ", category.Title()) }
+                </span>
+                // actual button content
+                <span class="position-absolute category-title">
+                    { fmt.Sprintf("%s (%d) ", category.Title(), category.Count()) }
+                </span>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end">
+            <ul class="dropdown-menu dropdown-menu-end filters-dropdown-menu-scroll">
                 for _, value := range filters.SkipEmptyFacet(category.IterWithFacets()) {
                     @dropdownFilter("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
                 }
@@ -343,7 +355,49 @@ templ dropdownFilter(name, value, label, desc string, count int, checked bool) {
             class="form-check-input me-2"
             name={ name } value={ value } checked?={ checked } disabled?={ count == 0 }>
         { label }
+        <span class="text-muted small"> ({ count })</span>
     </label></li>
+}
+
+templ surveyActiveFilters(model SurveyViewModel, t text) {
+    <div id="active-filters" class="pt-1">
+        {{ anyActive := false }}
+        for category := range model.facets {
+            if category.Active() {
+                {{ anyActive = true }}
+                <div class="d-flex flex-row mb-1 w-auto">
+                    <span class="px-2 bg-body border rounded-start align-self-start">{ category.Title() }</span>
+                    <div class="d-flex flex-row flex-wrap rounded-row-end">
+                    for _, value := range category.IterWithFacets() {
+                        if value.Checked && value.Count > 0 {
+                            // x-data is necessary for x-on:click to work
+                            <div class="border bg-light px-2" x-data>
+                                <span class="fw-semibold">{ value.Title }</span>
+                                <i
+                                    role="button"
+                                    class="bi bi-x-lg"
+                                    @click={ fmt.Sprintf("uncheck('par%s-%s')", category.ID(), value.ID) }>
+                                </i>
+                            </div>
+                        }
+                    }
+                    </div>
+                </div>
+            }
+        }
+        if anyActive {
+            <button
+                class="btn btn-link text-secondary p-0 pb-2"
+                hx-get={ t.Utils.Language.Path(fmt.Sprintf("/course/survey/%s", model.code)) }
+                hx-target="#survey-filters-content"
+                hx-swap="innerHTML"
+                hx-include="#survey-search-form"
+                x-data="{ surveySearchInput: '' }"
+                hx-indicator="#explicit-no-loader">
+                { t.CancelFilters }
+            </button>
+        }
+    </div>
 }
 
 templ SurveysContent(model SurveyViewModel, t text) {
