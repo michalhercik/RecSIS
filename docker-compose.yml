@@ -56,6 +56,7 @@ services:
     image: getmeili/meilisearch
     environment:
       MEILI_MASTER_KEY: MASTER_KEY
+      MEILI_HTTP_PAYLOAD_SIZE_LIMIT: "200MB"
     volumes:
       - ./meili_data:/meili_data
     ports:

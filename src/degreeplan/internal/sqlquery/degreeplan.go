@@ -1,6 +1,6 @@
 package sqlquery
 
-const DegreePlan = `
+const UserDegreePlan = `
 WITH user_blueprint_semesters AS (
         SELECT dp.course_code, array_agg(bc.course_code IS NOT NULL) AS semesters
         FROM bla_studies s
@@ -116,5 +116,49 @@ FROM courses c
 LEFT JOIN user_blueprint_courses ubc ON ubc.course_code = c.code
 WHERE c.code = $2
 AND c.lang = $3
+;
+`
+
+const DegreePlan = `
+WITH user_blueprint_semesters AS (
+        SELECT dp.course_code, array_agg(bc.course_code IS NOT NULL) AS semesters
+        FROM bla_studies s
+        LEFT JOIN degree_plans dp ON dp.plan_code=$2 AND dp.plan_year=$3
+        LEFT JOIN blueprint_years by ON by.user_id=s.user_id
+        LEFT JOIN blueprint_semesters bs ON by.id = bs.blueprint_year_id
+        LEFT JOIN blueprint_courses bc ON bs.id = bc.blueprint_semester_id AND bc.course_code=dp.course_code
+        WHERE s.user_id=$1
+        AND dp.lang=$4
+        AND s.start_year = ( SELECT MIN(s.start_year) FROM bla_studies s WHERE s.user_id = $1 )
+        GROUP BY dp.course_code, dp.bloc_subject_code
+)
+SELECT
+	dp.bloc_subject_code,
+	COALESCE(dp.bloc_limit, -1) bloc_limit,
+	COALESCE(dp.bloc_name, '') bloc_name,
+	COALESCE(dp.bloc_note, '') bloc_note,
+	COALESCE(dp.note, '') note,
+	c.code,
+	c.title,
+	c.credits,
+	c.start_semester,
+	COALESCE(c.lecture_range1, -1) lecture_range1,
+	COALESCE(c.lecture_range2, -1) lecture_range2,
+	COALESCE(c.seminar_range1, -1) seminar_range1,
+	COALESCE(c.seminar_range2, -1) seminar_range2,
+	c.exam_type,
+	c.guarantors,
+        ubs.semesters,
+	CASE WHEN dp.bloc_type = 'A' THEN TRUE WHEN dp.bloc_type = 'B' THEN FALSE END AS is_compulsory
+FROM degree_plans dp
+LEFT JOIN courses c ON dp.course_code = c.code
+LEFT JOIN user_blueprint_semesters ubs ON dp.course_code = ubs.course_code
+WHERE dp.plan_code = $2
+AND dp.plan_year = $3
+AND dp.lang = $4
+AND c.lang = $4
+AND interchangeability IS NULL
+-- TODO: pick a user selected study or max
+ORDER BY dp.bloc_type, dp.seq
 ;
 `

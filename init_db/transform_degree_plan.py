@@ -1,6 +1,6 @@
 import pandas as pd
 
-degree_plans = pd.read_csv("./init_db/final_degree_plan.csv", dtype={
+degree_plans = pd.read_csv("./init_db/degree_plans.csv", dtype={
     "BLOC_LIMIT": pd.Int64Dtype()
 })
 common = ["PLAN_CODE","PLAN_YEAR","CODE","INTERCHANGEABILITY","BLOC_SUBJECT_CODE","BLOC_TYPE","BLOC_LIMIT","SEQ"]
@@ -10,7 +10,7 @@ dp_en = degree_plans[common + ["BLOC_NAME_EN","BLOC_NOTE_EN","NOTE_EN"]].rename(
 dp_en["LANG"] = "en"
 dp = pd.concat([dp_cs, dp_en])
 # print(dp)
-dp.to_csv("./init_db/transformed_degree_plan.csv", index=False)
+dp.to_csv("./init_db/degree_plans_transformed.csv", index=False)
 
 
 #====================================================================================================
