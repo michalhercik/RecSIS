@@ -4,9 +4,14 @@ import (
     "github.com/michalhercik/RecSIS/language"
 
     "fmt"
+    "math/rand"
 )
 
 templ Skeleton(lang language.Language) {
+    {{
+        const seed = 21
+        rand.Seed(int64(seed))
+    }}
     <div
         id="courses-skeleton"
         class="container placeholder-glow"
@@ -108,12 +113,9 @@ templ skeletonCard() {
             <div class="annotation-container">
                 // course title (link to detail page)
                 <h5 class="card-title">
-                    @placeholder(4)&nbsp;
-                    @placeholder(5)&nbsp;
-                    @placeholder(3)&nbsp;
-                    @placeholder(6)&nbsp;
-                    @placeholder(6)&nbsp;
-                    @placeholder(4)
+                    for i := 0; i < 2+rand.Intn(5); i++ {
+                        @placeholder(3 + rand.Intn(4))&nbsp;
+                    }
                 </h5>
                 // guarantors
                 <h6 class="card-subtitle mb-2 text-muted">
@@ -131,6 +133,10 @@ templ skeletonCard() {
                         @placeholder(4)&nbsp;
                         @placeholder(3)&nbsp;
                         @placeholder(4)&nbsp;
+                        @placeholder(2)&nbsp;
+                        @placeholder(3)&nbsp;
+                        @placeholder(4)&nbsp;
+                        @placeholder(2)&nbsp;
                     }
                 </p>
             </div>

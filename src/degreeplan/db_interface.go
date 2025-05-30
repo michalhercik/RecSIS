@@ -15,6 +15,7 @@ type Authentication interface {
 
 type BlueprintAddButton interface {
 	PartialComponent(lang language.Language) PartialBlueprintAdd
+	PartialComponentSecond(lang language.Language) PartialBlueprintAdd
 	ParseRequest(r *http.Request) ([]string, int, int, error)
 	Action(userID string, year int, semester int, course ...string) ([]int, error)
 }
@@ -27,6 +28,16 @@ type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, years []bool
 
 type DegreePlan struct {
 	blocs []Bloc
+}
+
+func (dp *DegreePlan) bpNumberOfSemesters() int {
+	if len(dp.blocs) == 0 {
+		return 0
+	}
+	if len(dp.blocs[0].Courses) == 0 {
+		return 0
+	}
+	return len(dp.blocs[0].Courses[0].BlueprintSemesters)
 }
 
 type Bloc struct {
@@ -96,21 +107,6 @@ func (b *Bloc) blueprintCredits() int {
 	return credits
 }
 
-// type CourseStatus string
-
-// func (c CourseStatus) String() string {
-// 	return string(c)
-// }
-
-// func (c *CourseStatus) UnmarshalJSON(b []byte) error {
-// 	var r string
-// 	if err := json.Unmarshal(b, &r); err != nil {
-// 		return err
-// 	}
-// 	*c = CourseStatus(r)
-// 	return nil
-// }
-
 type Course struct {
 	Code               string
 	Title              string
@@ -125,7 +121,6 @@ type Course struct {
 	SemesterCount      int
 	ExamType           string
 	BlueprintSemesters []bool
-	// BlueprintYears     []int64
 }
 
 // if is (un)assigned in the blueprint

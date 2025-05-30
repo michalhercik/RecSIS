@@ -5,7 +5,7 @@ import (
     "fmt"
 )
 
-templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
+templ Content(dp *DegreePlan, t text, bpBtnRow PartialBlueprintAdd, bpBtnChecked PartialBlueprintAdd) {
     <div
         id="degreeplan-content"
         class="container"
@@ -38,9 +38,8 @@ templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
                 </div>
             </div>
         </div>
-        // TODO: here we need another BP button for all checked courses
-        @checkedCoursesMenu(3, t)
         <button class="btn btn-secondary" x-on:click="searchOpened = true">Search</button>
+        @checkedCoursesMenu(dp.bpNumberOfSemesters(), bpBtnChecked, t)
         for _, bloc := range dp.blocs {
             // bloc title, icon, credits and limit
             @completionStatusBadges(&bloc, t)
@@ -50,7 +49,7 @@ templ Content(dp *DegreePlan, t text, bpBtn PartialBlueprintAdd) {
                 @tableHeader(&bloc, t)
                 <tbody>
                     for _, course := range bloc.Courses {
-                        @CourseRow(&course, bloc.IsCompulsory, bpBtn, t)
+                        @CourseRow(&course, bloc.IsCompulsory, bpBtnRow, t)
                     }
                 </tbody>
             </table>
@@ -87,9 +86,7 @@ templ QuickSearchResultsContent(results []QuickDegreePlan) {
     }
 }
 
-// TODO: style this and make better
-// TODO: for now this is just a proof of concept
-templ checkedCoursesMenu(yearCount int, t text) {
+templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
     // take care of checked courses
     <div id="dp-checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
         <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
@@ -99,37 +96,7 @@ templ checkedCoursesMenu(yearCount int, t text) {
                 @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur();">
             </button>
             // assign
-            // TODO: this should be add-checked-courses-to-blueprint button
-            <div
-                class="btn-group dropdown-center"
-                x-data="{ hover: false, hoverSelection: false }"
-                @mouseover="hover = true"
-                @mouseleave="hover = false">
-                <button
-                    class="btn btn-outline-blueprint dp-bp-assign-btn bi bi-plus lh-1 p-0 border-0"
-                    if yearCount > 0 {
-                        :class="{ 'dp-bp-delimiter': !hover }"
-                    }
-                ></button>
-                if (yearCount > 0) {
-                    <button
-                        class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split border-0 pb-1"
-                        :class="{ 'btn-blueprint-hover': hoverSelection }"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                        data-bs-offset="0, 0">
-                    </button>
-                    <ul
-                        class="dropdown-menu"
-                        @mouseover="hoverSelection = true"
-                        @mouseleave="hoverSelection = false">
-                        for year := 1; year <= yearCount; year++ {
-                            //@assignSemesterButton(code, t.WinterAssign, year, 1, t, options)
-                            //@assignSemesterButton(code, t.SummerAssign, year, 2, t, options)
-                        }
-                    </ul>
-                }
-            </div>
+            @bpBtn("outerHTML", "body", "input:checked[name=selected]", make([]bool, semCount))
         </div>
     </div>
 }
@@ -256,7 +223,7 @@ templ checkbox(course *Course) {
             class="form-check-input dp-checkbox"
             name="selected"
             value={ fmt.Sprintf("%s", course.Code) }
-            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1;"
+            @change={ fmt.Sprintf("checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; updateCheckedCoursesMenu(%d)", len(course.BlueprintSemesters) )}
             @uncheck-all.window="$el.checked = false;"
         />
         // circle overlay for easier clicking

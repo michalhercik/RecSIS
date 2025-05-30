@@ -19,6 +19,10 @@ dbname   = "recsis"
 host = "http://localhost:7700"
 key  = "MASTER_KEY"
 
+[recommender]
+host = "localhost"
+port = 8002
+
 [cas]
 host = "localhost:8001"
 

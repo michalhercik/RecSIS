@@ -7,32 +7,10 @@ import (
 
 templ AddBtn(model ViewModel, t Text) {
     <div class="btn-group">
-        <button type="button" class="btn btn-outline-blueprint"
-            hx-post={ t.Utils.Language.Path(model.hxPostBase + "/blueprint") }
-            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "courses": ["%s"]`, strings.Join(model.courses, `","`)) }
-            hx-swap={ model.hxSwap }
-            hx-target={ model.hxTarget }
-            hx-include="input:checked[name=selected]"
-            disabled?={ len(model.semesters) > 0 && model.semesters[0] }
-        >
+        @assignToUnassignedBtn(model, "", nil, nil, t) {
             { t.Assign }
-        </button>
-        if (len(model.semesters) > 0) {
-            <button
-                type="button"
-                class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                data-bs-offset="0, 0">
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                // for year := 1; year <= numberOfYears; year++ {
-                for i, v := range iterateOverAssignedYears(model.semesters) {
-                    @assignSemesterButton(t.WinterAssign, i, 1, v.disableWinter, t, model)
-                    @assignSemesterButton(t.SummerAssign, i, 2, v.disableSummer, t, model)
-                }
-            </ul>
         }
+        @dropdown(model, "", nil, nil, true, t)
     </div>
 }
 
@@ -44,40 +22,60 @@ templ PlusSignBtn(model ViewModel, t Text) {
         x-data="{ hover: false, hoverSelection: false }"
         @mouseover="hover = true"
         @mouseleave="hover = false">
-        <button
-            class="btn btn-sm btn-outline-blueprint dp-bp-assign-btn-sm bi bi-plus lh-1 p-0"
-            if len(model.semesters) > 0 {
-                :class="{ 'border-transparent': !hover, 'dp-bp-delimiter': !hover }"
-            } else {
-                :class="{ 'border-transparent': !hover }"
-            }
-            hx-post={ t.Utils.Language.Path(model.hxPostBase + "/blueprint") }
-            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "courses": ["%s"]`, strings.Join(model.courses, `","`)) }
-            hx-include={ model.hxInclude }
-            hx-swap={ model.hxSwap }
-            hx-target={ model.hxTarget }
-            disabled?={ len(model.semesters) > 0 && model.semesters[0] }
-            >
-        </button>
-        if (len(model.semesters) > 0) {
-            <button
-                class="btn btn-sm btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-                :class="{ 'btn-blueprint-hover': hoverSelection, 'border-transparent': !hover }"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                data-bs-offset="0, 0">
-            </button>
-            <ul
-                class="dropdown-menu dropdown-menu-end"
-                @mouseover="hoverSelection = true"
-                @mouseleave="hoverSelection = false">
-                for i, v := range iterateOverAssignedYears(model.semesters) {
-                    @assignSemesterButton(t.WinterAssign, i, 1, v.disableWinter, t, model)
-                    @assignSemesterButton(t.SummerAssign, i, 2, v.disableSummer, t, model)
-                }
-            </ul>
-        }
+        @assignToUnassignedBtn(model, "btn-sm dp-bp-assign-btn-sm bi bi-plus lh-1 p-0", templ.Attributes{":class": "{ 'border-transparent': !hover, 'dp-bp-delimiter': !hover }"}, templ.Attributes{":class": "{ 'border-transparent': !hover }"}, t)
+        @dropdown(model, "btn-sm", templ.Attributes{":class": "{ 'btn-blueprint-hover': hoverSelection, 'border-transparent': !hover }"}, templ.Attributes{"@mouseover": "hoverSelection = true", "@mouseleave": "hoverSelection = false"}, true, t)
     </div>
+}
+
+templ PlusSignBtnChecked(model ViewModel, t Text) {
+    <div
+        class="btn-group dropdown-center"
+        x-data="{ hover: false, hoverSelection: false }"
+        @mouseover="hover = true"
+        @mouseleave="hover = false">
+        @assignToUnassignedBtn(model, "dp-bp-assign-btn bi bi-plus lh-1 p-0 border-0", templ.Attributes{":class": "{ 'dp-bp-delimiter': !hover }"}, nil, t)
+        @dropdown(model, "border-0 pb-1", templ.Attributes{":class": "{ 'btn-blueprint-hover': hoverSelection }"}, templ.Attributes{"@mouseover": "hoverSelection = true", "@mouseleave": "hoverSelection = false"}, false, t)
+    </div>
+}
+
+templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, alpineClassesFalse templ.Attributes, t Text) {
+    <button
+        type="button"
+        class={ "btn btn-outline-blueprint assign-to-unassigned-btn", classes }
+        if len(model.semesters) > 0 {
+            { alpineClassesTrue... }
+        } else {
+            { alpineClassesFalse... }
+        }
+        hx-post={ t.Utils.Language.Path(model.hxPostBase + "/blueprint") }
+        hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "courses": ["%s"]`, strings.Join(model.courses, `","`)) }
+        hx-swap={ model.hxSwap }
+        hx-target={ model.hxTarget }
+        hx-include={ model.hxInclude }
+        disabled?={ len(model.semesters) > 0 && model.semesters[0] }
+    >
+        { children... }
+    </button>
+}
+
+templ dropdown(model ViewModel, classes string, alpineClasses, ulAttributes templ.Attributes, menuEnd bool, t Text) {
+    if (len(model.semesters) > 1) {
+        <button
+            class={ "btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split", classes }
+            { alpineClasses... }
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            data-bs-offset="0, 0">
+        </button>
+        <ul
+            class={ "dropdown-menu", templ.KV("dropdown-menu-end", menuEnd) }
+            { ulAttributes... }>
+            for i, v := range iterateOverAssignedYears(model.semesters) {
+                @assignSemesterButton(t.WinterAssign, i, 1, v.disableWinter, t, model)
+                @assignSemesterButton(t.SummerAssign, i, 2, v.disableSummer, t, model)
+            }
+        </ul>
+    }
 }
 
 templ assignSemesterButton(semesterText string, year, semester int, disabled bool, t Text, model ViewModel) {
@@ -89,8 +87,7 @@ templ assignSemesterButton(semesterText string, year, semester int, disabled boo
             hx-include={ model.hxInclude }
             hx-swap={ model.hxSwap }
             hx-target={ model.hxTarget }
-            disabled?={ disabled }
-            >
+            disabled?={ disabled }>
             { fmt.Sprintf("%s %s", t.YearStr(year), semesterText) }
         </button>
     </li>

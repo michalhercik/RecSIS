@@ -1,4 +1,5 @@
 setupCheckboxShiftClick();
+updateStickyOffset();
 
 // shift click for multiple checkboxes
 function setupCheckboxShiftClick() {
@@ -65,4 +66,55 @@ function updateStickyOffset() {
         const height = header.offsetHeight;
         menu.style.top = height + 'px';
     }
+}
+
+// Add checked courses to BP btn can add only to the union of not yet assigned semesters of all checked courses 
+function updateCheckedCoursesMenu(semesterCount) {
+    const checkedCourses = Array.from(document.querySelectorAll('input[type="checkbox"][name="selected"]:checked'));
+    const disabledSemesters = Array(semesterCount).fill(false);
+
+    checkedCourses.forEach(checkbox => {
+        // Get the table row
+        const row = checkbox.closest('tr');
+        if (!row) return;
+        // Get the last td (blueprint button cell)
+        const lastTd = row.querySelector('td:last-child');
+        if (!lastTd) return;
+
+        // Find the assign to unassigned button
+        const plusBtn = lastTd.querySelector('button.assign-to-unassigned-btn');
+        if (plusBtn && plusBtn.disabled) {
+            // Mark first semester (unassigned) as disabled
+            disabledSemesters[0] = true;
+        }
+
+        // Find dropdown items (semester assign buttons)
+        const dropdownItems = lastTd.querySelectorAll('.dropdown-menu .dropdown-item');
+        dropdownItems.forEach((item, idx) => {
+            if (item.disabled) {
+                // Mark this semester as disabled
+                disabledSemesters[idx] = true;
+            }
+        });
+    });
+
+    // Now update the checked-courses-menu buttons
+    const menu = document.getElementById('dp-checked-courses-menu');
+    if (!menu) return;
+    const innerDiv = menu.querySelector('div > div');
+    if (!innerDiv) return;
+
+    // Update the assign-to-unassigned button (first semester)
+    const assignBtn = innerDiv.querySelector('button.assign-to-unassigned-btn');
+    if (assignBtn) {
+        assignBtn.disabled = disabledSemesters[0];
+    }
+
+    // Update dropdown items (other semesters)
+    const dropdownItems = innerDiv.querySelectorAll('.dropdown-menu .dropdown-item');
+    dropdownItems.forEach((item, idx) => {
+        if (idx < disabledSemesters.length) {
+            item.disabled = disabledSemesters[idx];
+        }
+    });
 }

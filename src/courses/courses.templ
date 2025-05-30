@@ -97,7 +97,7 @@ templ checkboxInput(name, value, label, desc string, count int, checked bool) {
             if desc != "" {
                 @helpIcon(desc)
             }
-            <span>{ fmt.Sprintf("(%d)", count) }</span>
+            <span class="text-muted small">{ fmt.Sprintf("(%d)", count) }</span>
         </label>
     </div>
 }

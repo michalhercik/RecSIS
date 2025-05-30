@@ -12,6 +12,26 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
+type DoubleAdd struct {
+	Add
+	TemplSecond func(ViewModel, Text) templ.Component
+}
+
+func (b DoubleAdd) PartialComponentSecond(lang language.Language) func(string, string, string, []bool, ...string) templ.Component {
+	return func(hxSwap, hxTarget, hxInclude string, semesters []bool, course ...string) templ.Component {
+		t := texts[lang]
+		model := ViewModel{
+			courses:    course,
+			semesters:  semesters,
+			hxPostBase: b.Options.HxPostBase,
+			hxSwap:     hxSwap,
+			hxTarget:   hxTarget,
+			hxInclude:  hxInclude,
+		}
+		return b.TemplSecond(model, t)
+	}
+}
+
 type Add struct {
 	DB      *sqlx.DB
 	Templ   func(ViewModel, Text) templ.Component

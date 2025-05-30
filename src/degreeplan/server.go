@@ -46,6 +46,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	// TODO: should we differentiate between BpBtnRow and BpBtnChecked here?
 	courseCode, year, semester, err := s.BpBtn.ParseRequest(r)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -54,6 +55,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	}
 	courseCode = append(courseCode, r.Form["selected"]...)
 	// courseCode := r.Form["selected"]
+	// TODO: should we differentiate between BpBtn and BpBtnChecked here?
 	_, err = s.BpBtn.Action(userID, year, semester, courseCode...)
 	if err != nil {
 		http.Error(w, "Unable to add course to blueprint", http.StatusInternalServerError)
@@ -64,6 +66,16 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
+	// t := texts[lang]
+	// dp, err := s.Data.UserDegreePlan(userID, lang)
+	// if err != nil {
+	// 	http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
+	// 	log.Printf("renderPage: %v", err)
+	// 	return
+	// }
+	// partialComponent := s.BpBtn.PartialComponent(lang)
+	// main := Content(dp, t, partialComponent)
+	// s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
 	t := texts[lang]
 	dp, err := s.Data.UserDegreePlan(userID, lang)
 	if err != nil {
@@ -71,8 +83,9 @@ func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string
 		log.Printf("renderPage: %v", err)
 		return
 	}
-	partialComponent := s.BpBtn.PartialComponent(lang)
-	main := Content(dp, t, partialComponent)
+	partialBpBtn := s.BpBtn.PartialComponent(lang)
+	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
+	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
 	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
 }
 
@@ -111,7 +124,8 @@ func (s Server) show(w http.ResponseWriter, r *http.Request) {
 		log.Printf("renderPage: %v", err)
 		return
 	}
-	partialComponent := s.BpBtn.PartialComponent(lang)
-	main := Content(dp, t, partialComponent)
+	partialBpBtn := s.BpBtn.PartialComponent(lang)
+	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
+	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
 	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
 }
