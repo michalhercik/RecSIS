@@ -131,8 +131,8 @@ templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
 templ completionStatusBadges(bloc *Bloc, t text) {
     <h5 class="d-flex gap-2 status-badges mb-0">
         <div class="d-flex justify-content-start">
-            <span class="badge bg-success rounded-end-0 py-2">{ t.Completed }</span>
-            <span class="badge bg-success-dark rounded-start-0 py-2">
+            <span class="badge bg-success rounded-end-0 py-2 text-decoration-line-through">{ t.Completed }</span>
+            <span class="badge bg-success-dark rounded-start-0 py-2 text-decoration-line-through">
                 { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.Limit) }
             </span>
         </div>
