@@ -14,13 +14,8 @@ type Text struct {
 	Contact    string
 }
 
-func (t Text) LangLink(URL string) string {
-	link := "/" + string(t.Language) + URL
-	return link
-}
-
-var Texts = map[string]Text{
-	"cs": {
+var Texts = map[language.Language]Text{
+	language.CS: {
 		Language:   language.CS,
 		Home:       "Domů",
 		Courses:    "Hledání",
@@ -29,7 +24,7 @@ var Texts = map[string]Text{
 		Login:      "Přihlášení",
 		Contact:    "V případě jakýchkoliv problémů kontaktujte tým RecSIS.",
 	},
-	"en": {
+	language.EN: {
 		Language:   language.EN,
 		Home:       "Home",
 		Courses:    "Search",

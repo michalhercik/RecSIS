@@ -17,5 +17,6 @@ SELECT
 	fv.description_en AS value_description_en
 FROM filter_categories fc
 LEFT JOIN filter_values fv ON fc.id = fv.category_id
+WHERE fc.filter_id = 'courses'
 ORDER BY fc.position, fv.position
 `

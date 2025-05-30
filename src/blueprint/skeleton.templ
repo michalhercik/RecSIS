@@ -1,0 +1,147 @@
+package blueprint
+
+import (
+    "github.com/michalhercik/RecSIS/language"
+
+    "fmt"
+)
+
+templ Skeleton(lang language.Language) {
+    <div
+        id="blueprint-skeleton"
+        class="container placeholder-glow"
+        x-data
+        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].PageTitle) }>
+        // checked courses menu
+        <div id="bp-checked-courses-menu-skeleton"></div>
+        // unassigned
+        <table class="table table-sm blueprint-table">
+            @skeletonFullHeader(1)
+            <tbody>
+                @skeletonRow( 9, 6, 7, 9, 4, 3, 4, 0)
+                @skeletonRow(10, 7, 7, 4, 7, 5, 0, 0)
+            </tbody>
+        </table>
+        // first year
+        <div>
+            // winter
+            <table class="table table-sm blueprint-table">
+                @skeletonFullHeader(2)
+                <tbody>
+                    @skeletonRow( 9, 8, 7, 9, 4, 5, 3, 0)
+                    @skeletonRow(10, 7, 8, 8, 4, 6, 0, 0)
+                    @skeletonRow( 9, 8, 8, 8, 4, 4, 4, 0)
+                    @skeletonRow( 9, 6, 7, 9, 4, 3, 4, 0)
+                    @skeletonRow(11, 4, 9, 7, 4, 4, 4, 3)
+                    @skeletonRow( 8, 4, 8, 8, 4, 4, 0, 0)
+                    @skeletonRow(10, 9, 7, 7, 4, 5, 6, 0)
+                    @skeletonRow(10, 8, 8, 9, 4, 3, 3, 0)
+                    @skeletonRow( 9, 9, 9, 8, 4, 5, 0, 0)
+                </tbody>
+            </table>
+            // summer
+            <table class="table table-sm blueprint-table">
+                @skeletonFullHeader(2)
+                <tbody>
+                    @skeletonRow(10, 4, 8, 4, 9, 2, 3, 2)
+                    @skeletonRow( 9, 7, 7, 4, 8, 4, 2, 4)
+                    @skeletonRow(10, 7, 7, 4, 7, 5, 0, 0)
+                    @skeletonRow(11, 6, 7, 4, 9, 4, 6, 0)
+                    @skeletonRow(10, 9, 8, 4, 8, 2, 3, 0)
+                    @skeletonRow(11, 5, 8, 4, 9, 4, 2, 0)
+                    @skeletonRow(10, 9, 9, 4, 8, 4, 0, 0)
+                    @skeletonRow( 9, 9, 7, 4, 8, 6, 3, 0)
+                    @skeletonRow( 9, 8, 8, 4, 8, 3, 4, 0)
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+templ skeletonFullHeader(buttons int) {
+    <thead><tr>
+        // hide/show button
+        <th></th>
+        // code
+        <th class="d-none d-md-table-cell">
+            <h5 class="mb-0 text-nowrap popover-title">
+                @placeholder(12)
+            </h5>
+        </th>
+        // title
+        <th>
+            <span class="d-md-none">
+                <h5 class="mb-0 text-nowrap popover-title">
+                    @placeholder(5)
+                </h5>
+            </span>
+        </th>
+        // credits
+        <th class="th-overflow credits-column d-none d-md-table-cell">@placeholderAbsolute(80)</th>
+        // winter
+        <th class="d-none d-md-table-cell">@placeholder(4)</th>
+        // summer
+        <th class="d-none d-md-table-cell">@placeholder(4)</th>
+        // guarantors
+        <th class="d-none d-xl-table-cell">@placeholder(3)</th>
+        // buttons
+        <th class="d-none d-md-table-cell text-end">
+            for i := 0; i < buttons; i++ {
+                @placeholder(2)&nbsp;
+            }
+        </th>
+    </tr></thead>
+}
+
+templ skeletonRow(code, title, credits, winter, summer, guarantor1, guarantor2, guarantor3 int) {
+    <tr>
+        // checkbox
+        <td class="text-center align-middle p-0 lh-1">@placeholder(8)</td>
+        // code
+        <td class="d-none d-md-table-cell">@placeholder(code)</td>
+        // title
+        <td>
+            <span class="d-none d-md-inline">
+                @placeholder(title)
+            </span>
+            <div class="d-flex flex-column d-md-none">
+                <div class="d-flex justify-content-between align-items-center small lh-1">
+                    <span class="text-muted dp-mobile-code">
+                        @placeholder(11)
+                    </span>
+                    <span class="text-muted dp-mobile-semester">
+                        @placeholder(7)
+                    </span>
+                    <span class="text-muted dp-mobile-credits">
+                        @placeholder(10)
+                    </span>
+                </div>
+                <span class="fw-semibold small-screen-title">
+                    @placeholder(title)
+                </span>
+            </div>
+        </td>
+        // credits
+        <td class="credits-column text-end d-none d-md-table-cell">@placeholder(credits)</td>
+        // winter
+        <td class="d-none d-md-table-cell">@placeholder(winter)</td>
+        //summer
+        <td class="d-none d-md-table-cell">@placeholder(summer)</td>
+        // guarantors   
+        <td class="d-none d-xl-table-cell">
+            @placeholder(guarantor1)&nbsp;
+            @placeholder(guarantor2)&nbsp;
+            @placeholder(guarantor3)
+        </td>
+        // buttons
+        <td class="d-none d-md-table-cell"></td>
+    </tr>
+}
+
+templ placeholder(size int) {
+    <span class={ fmt.Sprintf("placeholder bg-secondary col-%d", size) }></span>
+}
+
+templ placeholderAbsolute(width int) {
+    <span class="placeholder bg-secondary" { templ.Attributes{"style": fmt.Sprintf("width: %dpx;",  width) }... }></span>
+}

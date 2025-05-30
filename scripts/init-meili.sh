@@ -90,7 +90,7 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
 echo "POST documents: $response"
 
 filterable='[
-    "teacher.KOD",
+    "teacher_facet",
     "study_field",
     "academic_year",
     "study_year",
@@ -117,3 +117,10 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -d "$sortable" \
   "$BASE_URL/indexes/courses-comments/settings/sortable-attributes")
 echo "PUT filterable attributes: $response"
+
+response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/x-ndjson" \
+  --data-binary @"$(dirname "$0")/../init_search/degree-plans-transformed.json" \
+  "$BASE_URL/indexes/degree-plans/documents?primaryKey=id")
+echo "POST documents: $response"

@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 type DataManager interface {
-	Blueprint(userID string, lang DBLang) (*Blueprint, error)
+	Blueprint(userID string, lang language.Language) (*Blueprint, error)
 	NewCourse(userID string, course string, year int, semester SemesterAssignment) (int, error)
 	AppendCourses(userID string, year int, semester SemesterAssignment, courses ...int) error
 	InsertCourses(userID string, year int, semester SemesterAssignment, position int, courses ...int) error
@@ -20,10 +23,15 @@ type DataManager interface {
 	RemoveCoursesByYear(userID string, year int) error
 	AddYear(userID string) error
 	RemoveYear(userID string) error
+	FoldSemester(userID string, year int, semester SemesterAssignment, folded bool) error
 }
 
 type Authentication interface {
 	UserID(r *http.Request) (string, error)
+}
+
+type Page interface {
+	View(main templ.Component, lang language.Language, title string) templ.Component
 }
 
 const (
@@ -38,12 +46,18 @@ const (
 	selectedRemove string = "selected"
 )
 
-type DBLang string
-
 const (
-	DBLangCS DBLang = "cs"
-	DBLangEN DBLang = "en"
+	winterStr     = "winter"
+	summerStr     = "summer"
+	unassignedStr = "unassigned"
 )
+
+// type DBLang string
+
+// const (
+// 	DBLangCS DBLang = "cs"
+// 	DBLangEN DBLang = "en"
+// )
 
 type Teacher struct {
 	SisId       int    `json:"KOD"`
@@ -65,32 +79,6 @@ func (t Teacher) String() string {
 	}
 	return result
 }
-
-type TeachingSemester int
-
-const (
-	teachingWinterOnly TeachingSemester = iota + 1
-	teachingSummerOnly
-	teachingBoth
-)
-
-type SemesterAssignment int
-
-func (sa *SemesterAssignment) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case int64:
-		*sa = SemesterAssignment(v)
-		return nil
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
-}
-
-const (
-	assignmentNone SemesterAssignment = iota
-	assignmentWinter
-	assignmentSummer
-)
 
 type TeacherSlice []Teacher
 
@@ -119,6 +107,45 @@ func (t TeacherSlice) string() string {
 	}
 	return strings.Join(names, ", ")
 }
+
+type TeachingSemester int
+
+const (
+	teachingWinterOnly TeachingSemester = iota + 1
+	teachingSummerOnly
+	teachingBoth
+)
+
+type SemesterAssignment int
+
+func (sa *SemesterAssignment) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case int64:
+		*sa = SemesterAssignment(v)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+func SemesterAssignmentFromString(s string) (SemesterAssignment, error) {
+	switch s {
+	case winterStr:
+		return assignmentWinter, nil
+	case summerStr:
+		return assignmentSummer, nil
+	case unassignedStr:
+		return assignmentNone, nil
+	default:
+		return 0, fmt.Errorf("unknown semester assignment %s", s)
+	}
+}
+
+const (
+	assignmentNone SemesterAssignment = iota
+	assignmentWinter
+	assignmentSummer
+)
 
 type NullCourse struct {
 	ID            sql.NullInt32  `db:"id"`
@@ -168,13 +195,21 @@ type Course struct {
 	ExamType      string           `db:"exam_type"`
 	Credits       int              `db:"credits"`
 	Guarantors    TeacherSlice     `db:"guarantors"`
+	Warnings      []string
+}
+
+type Semester struct {
+	courses []Course
+	folded  bool
 }
 
 type AcademicYear struct {
-	position   int
-	winter     []Course
-	summer     []Course
-	unassigned []Course
+	position int
+	winter   Semester
+	summer   Semester
+	// winter     []Course
+	// summer     []Course
+	unassigned Semester
 }
 
 func sumCredits(courses []Course) int {
@@ -186,26 +221,27 @@ func sumCredits(courses []Course) int {
 }
 
 func (ay AcademicYear) winterCredits() int {
-	return sumCredits(ay.winter)
+	return sumCredits(ay.winter.courses)
 }
 
 func (ay AcademicYear) summerCredits() int {
-	return sumCredits(ay.summer)
+	return sumCredits(ay.summer.courses)
 }
 
 func (ay AcademicYear) credits() int {
 	return ay.winterCredits() + ay.summerCredits()
 }
 
-type insertedCourseInfo struct {
-	courseID     int
-	academicYear int
-	semester     SemesterAssignment
-}
+// type insertedCourseInfo struct {
+// 	courseID     int
+// 	academicYear int
+// 	semester     SemesterAssignment
+// }
 
 type BlueprintRecordPosition struct {
 	AcademicYear int                `db:"academic_year"`
 	Semester     SemesterAssignment `db:"semester"`
+	Folded       bool               `db:"folded"`
 }
 
 type BlueprintRecord struct {
@@ -234,38 +270,46 @@ func (b *Blueprint) assign(position BlueprintRecordPosition, course *Course) err
 	}
 	if course != nil {
 		target := &b.years[position.AcademicYear]
+		var semester *Semester
 		switch position.Semester {
 		case assignmentWinter:
-			target.winter = append(target.winter, *course)
+			semester = &target.winter
+			// target.winter.courses = append(target.winter.courses, *course)
 		case assignmentSummer:
-			target.summer = append(target.summer, *course)
+			semester = &target.summer
+			// target.summer.courses = append(target.summer.courses, *course)
 		case assignmentNone:
-			target.unassigned = append(target.unassigned, *course)
+			semester = &target.unassigned
+			// target.unassigned = append(target.unassigned, *course)
 		default:
 			return fmt.Errorf("unknown semester assignment %d", position.Semester)
 		}
+		if len(semester.courses) == 0 {
+			semester.folded = position.Folded
+		}
+		semester.courses = append(semester.courses, *course)
 	}
 	return nil
 }
 
-type courseAdditionRequestSource int
+// type courseAdditionRequestSource int
 
-const (
-	sourceNone courseAdditionRequestSource = iota
-	sourceBlueprint
-	sourceCourseDetail
-	sourceDegreePlan
-)
+// const (
+// 	sourceNone courseAdditionRequestSource = iota
+// 	sourceBlueprint
+// 	sourceCourseDetail
+// 	sourceDegreePlan
+// )
 
-func (r courseAdditionRequestSource) String() string {
-	switch r {
-	case sourceBlueprint:
-		return "blueprint"
-	case sourceCourseDetail:
-		return "courseDetail"
-	case sourceDegreePlan:
-		return "degreePlan"
-	default:
-		return fmt.Sprintf("unknown %d", r)
-	}
-}
+// func (r courseAdditionRequestSource) String() string {
+// 	switch r {
+// 	case sourceBlueprint:
+// 		return "blueprint"
+// 	case sourceCourseDetail:
+// 		return "courseDetail"
+// 	case sourceDegreePlan:
+// 		return "degreePlan"
+// 	default:
+// 		return fmt.Sprintf("unknown %d", r)
+// 	}
+// }

@@ -59,6 +59,23 @@ avg_course_overall_ratings AS (
     SELECT cor.course_code, AVG(rating) AS avg_rating, COUNT(rating) AS rating_count FROM course_overall_ratings cor
     WHERE course_code=$2
     GROUP BY course_code
+),
+degree_plan AS (
+    SELECT dp.course_code FROM bla_studies bs
+    LEFT JOIN degree_plans dp ON bs.degree_plan_code = dp.plan_code
+    WHERE bs.user_id=$1
+    AND dp.course_code=$2
+    LIMIT 1
+),
+user_blueprint_semesters AS (
+    SELECT array_agg(course_code IS NOT NULL) AS semesters FROM (
+        SELECT by.user_id, bc.course_code FROM blueprint_years by
+        LEFT JOIN blueprint_semesters bs ON by.id = bs.blueprint_year_id
+        LEFT JOIN blueprint_courses bc ON bs.id = bc.blueprint_semester_id AND bc.course_code=$2
+        WHERE by.user_id=$1
+        ORDER BY by.academic_year, bs.semester
+    )
+    GROUP BY user_id
 )
 SELECT
     c.code,
@@ -67,7 +84,6 @@ SELECT
     c.guarantor,
     c.taught,
     c.start_semester,
-    -- c.semester_count,
     c.taught_lang,
     c.lecture_range1,
     c.seminar_range1,
@@ -94,10 +110,14 @@ SELECT
     c.incompatibilities,
     c.interchangebilities,
     c.classes,
-    c.classifications
+    c.classifications,
+	ubs.semesters,
+    dp.course_code IS NOT NULL AS in_degree_plan
 FROM courses c
 LEFT JOIN user_course_overall_ratings ucor ON c.code = ucor.course_code
 LEFT JOIN avg_course_overall_ratings avg_cor ON c.code = avg_cor.course_code
+LEFT JOIN degree_plan dp ON c.code = dp.course_code
+LEFT JOIN user_blueprint_semesters ubs ON TRUE
 WHERE code = $2 AND c.lang = $3;
 `
 
@@ -122,4 +142,11 @@ FROM course_rating_categories crc
 LEFT JOIN user_ratings ur ON ur.category_code = crc.code
 LEFT JOIN avg_course_rating avg_cr ON avg_cr.category_code = crc.code
 WHERE crc.lang = $3
+`
+const BlueprintAssignments = `--sql
+SELECT bc.id, by.academic_year, bs.semester FROM blueprint_years BY
+LEFT JOIN blueprint_semesters bs ON by.id = bs.blueprint_year_id
+LEFT JOIN blueprint_courses bc ON bs.id = bc.blueprint_semester_id
+WHERE by.user_id=$1
+AND bc.course_code=$2
 `

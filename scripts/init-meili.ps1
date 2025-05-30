@@ -8,6 +8,13 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-commen
     -Headers @{ "Authorization" = "Bearer MASTER_KEY" }
 echo "$($response.StatusCode) $($response.Content)"
 
+# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settings/pagination" `
+#     -Method Patch `
+#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
+#     -ContentType "application/json" `
+#     -Body (@{"maxTotalHits" = 1000} | ConvertTo-Json)
+# echo "$($response.StatusCode) $($response.Content)"
+
 $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents?primaryKey=id" `
     -Method Post `
     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
@@ -83,7 +90,7 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-commen
 echo "$($response.StatusCode) $($response.Content)"
 
 $filterable = @(
-    "teacher.KOD",
+    "teacher_facet",
     "study_field",
     "academic_year",
     "study_year",
@@ -109,4 +116,11 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-commen
     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
     -ContentType "application/json" `
     -Body ($sortable | ConvertTo-Json)
+echo "$($response.StatusCode) $($response.Content)"
+
+$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/degree-plans/documents?primaryKey=id" `
+    -Method Post `
+    -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
+    -ContentType "application/x-ndjson" `
+    -InFile "$PSScriptRoot/../init_search/degree-plans-transformed.json"
 echo "$($response.StatusCode) $($response.Content)"

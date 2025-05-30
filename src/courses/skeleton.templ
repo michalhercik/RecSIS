@@ -1,0 +1,165 @@
+package courses
+
+import (
+    "github.com/michalhercik/RecSIS/language"
+
+    "fmt"
+    "math/rand"
+)
+
+templ Skeleton(lang language.Language) {
+    {{
+        const seed = 21
+        rand.Seed(int64(seed))
+    }}
+    <div
+        id="courses-skeleton"
+        class="container placeholder-glow"
+        x-data
+        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].PageTitle) }>
+        <div class="row mx-0">
+            <div id="filter-section-skeleton" class="col-12 col-sm px-1 py-3 p-sm-3">
+                @skeletonFilters()
+            </div>
+            <div class="col-12 col-sm pt-0 pt-sm-4 px-0">
+                @skeletonGrid()
+            </div>
+        </div>
+    </div>
+}
+
+templ skeletonFilters() {
+    <div>
+        <div
+            x-data="{ showFilters: window.innerWidth > 575.5 }"
+            @resize.window="showFilters = window.innerWidth > 575.5"
+        >
+            <div>
+                <div x-cloak x-show="showFilters">
+                    <div class="px-4 px-sm-0 pb-4 pb-sm-0">
+                        @skeletonInternalFilters()
+                    </div>
+                </div>
+                <div class="d-flex d-sm-none justify-content-center py-2 position-sticky bottom-0 bg-filters-buttons rounded-5 shadow-sm">
+                    <button class="btn d-inline my-2 placeholder bg-secondary col-4" style="width: 171px;"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+templ skeletonInternalFilters() {
+    <p class="form-label fw-semibold mb-0 mt-2" style="height: 32px;">
+        @placeholder(4)
+    </p>
+    <div>
+        @placeholder(1)&nbsp;
+        @placeholder(10)&nbsp;
+        <span class="placeholder bg-white col-1"></span>&nbsp;
+        @placeholder(5)&nbsp;
+        @placeholder(4)&nbsp;
+        <span class="placeholder bg-white col-1"></span>&nbsp;
+        @placeholder(4)
+    </div>
+    @skeletonFilterCategory(2, 4, []int{10, 9}, false)
+    @skeletonFilterCategory(6, 0, []int{5, 5, 4}, false)
+    @skeletonFilterCategory(5, 0, []int{3, 2, 3, 4, 3, 3}, true)
+    @skeletonFilterCategory(3, 4, []int{5, 2}, false)
+    @skeletonFilterCategory(3, 4, []int{5, 4, 5}, true)
+    @skeletonFilterCategory(3, 3, []int{5, 4, 5}, true)
+    @skeletonFilterCategory(3, 2, []int{8, 9}, true)
+    @skeletonFilterCategory(2, 4, []int{7, 5, 5, 4}, true)
+    @skeletonFilterCategory(5, 5, []int{3, 3, 5, 3}, false)
+    @skeletonFilterCategory(4, 0, []int{6, 6, 7, 6, 7, 6}, true)
+}
+
+templ skeletonFilterCategory(name1, name2 int, values []int, hide bool) {
+    <p class="form-label fw-semibold mb-0 mt-2" style="height: 32px;">
+        @placeholder(name1)&nbsp;
+        @placeholder(name2)
+    </p>
+    for _, value := range values {
+        <div>
+            @placeholder(1)&nbsp;
+            @placeholder(value)
+        </div>
+    }
+    if hide {
+        @placeholder(4)
+    }
+}
+
+templ skeletonGrid() {
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 row-cols-xxl-4 g-0">
+        for i := 0; i < coursesPerPage; i++ {
+            @skeletonCard()
+        }
+    </div>
+}
+
+templ skeletonCard() {
+    <div class="card col rounded-0 px-0 mb-0">
+        // header
+        <div class="card-header d-flex justify-content-between align-items-center" style="height: 37px;">
+            // code
+            <h6 class="mb-0 placeholder placeholder-lg bg-secondary col-3"></h6>
+            // semester, hours, exams
+            <small class="placeholder bg-secondary col-2"></small>
+            // credits
+            <small class="placeholder bg-secondary col-2"></small>
+        </div>
+        // body
+        <div class="card-body d-flex flex-column position-relative">
+            <div class="annotation-container">
+                // course title (link to detail page)
+                <h5 class="card-title">
+                    for i := 0; i < 2+rand.Intn(5); i++ {
+                        @placeholder(3 + rand.Intn(4))&nbsp;
+                    }
+                </h5>
+                // guarantors
+                <h6 class="card-subtitle mb-2 text-muted">
+                    @placeholder(3)&nbsp;
+                    @placeholder(3)
+                </h6>
+                // course description (annotation)
+                <p class="card-text">
+                    for i := 0; i < 4; i++ {
+                        @placeholder(3)&nbsp;
+                        @placeholder(2)&nbsp;
+                        @placeholder(1)&nbsp;
+                        @placeholder(3)&nbsp;
+                        @placeholder(2)&nbsp;
+                        @placeholder(4)&nbsp;
+                        @placeholder(3)&nbsp;
+                        @placeholder(4)&nbsp;
+                        @placeholder(2)&nbsp;
+                        @placeholder(3)&nbsp;
+                        @placeholder(4)&nbsp;
+                        @placeholder(2)&nbsp;
+                    }
+                </p>
+            </div>
+            // show rest/less of annotation button 
+            <div class="d-flex justify-content-center" style="height: 38px;">
+                <span class="placeholder bg-secondary col-3 my-auto" style="height: 50%;"></span>
+            </div>
+            // status badges
+            <div class="mt-auto pt-3 pb-1"></div>
+            // add to blueprint button
+            <div class="d-flex justify-content-end">
+                <button
+                    class="btn placeholder bg-secondary col-5">
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+templ placeholder(size int) {
+    <span class={ fmt.Sprintf("placeholder bg-secondary col-%d", size) }></span>
+}
+
+templ placeholderAbsolute(width int) {
+    <span class="placeholder bg-secondary" { templ.Attributes{"style": fmt.Sprintf("width: %dpx;",  width) }... }></span>
+}

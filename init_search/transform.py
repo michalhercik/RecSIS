@@ -17,6 +17,7 @@ def com_agg(row):
         "semester": row.iloc[0]["SEM"],
         "study_field": row.iloc[0]["SOBOR"],
         "teacher": row.iloc[0]["TEACHER"],
+        "teacher_facet": row.iloc[0]["TEACHER"]["JMENO"] + " " + row.iloc[0]["TEACHER"]["PRIJMENI"] if not pd.isna(row.iloc[0]["TEACHER"]) else None,
         "study_type": {
             "code": row.iloc[0]["KOD"],
             "abbr": row.iloc[0]["ZKRATKA"],

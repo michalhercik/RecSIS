@@ -19,43 +19,392 @@
     background: #555;
 }
 
-/* Ensure space for scrollbar on every page */
+/* space for scrollbar & footer */
 body {
     overflow-y: scroll;
+    min-height: 100vh;
+    padding-bottom: 75px; /* Space for the footer */
 }
 
-/* Blueprint credits div box styles */
-.credits-box {
-    position: absolute;
-    background: white;
-    border: 1px solid #ccc;
-    padding: 10px;
-    z-index: 1000;
-    left: 25px;
+@media (max-width: 575.5px) {
+    body {
+        padding-bottom: 100px; /* Space for the footer */
+    }
 }
 
-/* Blueprint Popover styles */
-.popover-body {
-    text-align: right;
+@media (max-width: 308.5px) {
+    body {
+        padding-bottom: 121px; /* Space for the footer */
+    }
 }
 
-/* Assign box styles */
-.assign-box {
-    position: absolute;
-    top: 100%; /* Position it directly below the parent */
-    left: 50%; /* Center it horizontally */
-    transform: translateX(-50%); /* Adjust for the element's width */
-    background: white;
-    border: 1px solid #ccc;
-    padding: 10px;
-    z-index: 100;
-} 
+/* Help cursor for popovers/tooltips */
+.cursor-help {
+    cursor: help;
+}
 
-/* Easier checking of the checkboxes */
-.checkbox-container {
+/* text justify class */
+.text-justify {
+    text-align: justify;
+}
+
+/* MatFyz font family */
+.mff-font {
+    font-family: 'Saira', sans-serif;
+}
+
+/* font sizes */
+.font08 {
+    font-size: 0.8rem !important;
+}
+
+.font06 {
+    font-size: 0.6rem !important;
+}
+
+.responsive-font {
+    font-size: 1rem !important;
+}
+
+@media (max-width: 767.5px) {
+    .responsive-font {
+        font-size: 0.9rem !important;
+    }
+}
+
+@media (max-width: 575.5px) {
+    .responsive-font {
+        font-size: 0.8rem !important;
+    }
+}
+
+/* transparent border */
+.border-transparent {
+    border-color: transparent !important;
+}
+
+/* target row from another pages */
+tr:target {
+    /* keeps the target row in view */
+    scroll-margin-top: 100px;
+}
+
+tr:target td {
+    background-color: yellow;
+    animation: highlight 3s ease-in forwards;
+}
+
+@keyframes highlight {
+    from { background-color: yellow; }
+    to { background-color: white; }
+}
+
+/* NAV -> nav items font size */
+.nav-item-font {
+    font-size: calc(1.275rem + .3vw) !important; /* ~ bootstrap fs-4 */
+}
+
+@media (max-width: 1199.5px) {
+    .nav-item-font {
+        font-size: 1.25rem !important; /* ~ bootstrap fs-5 */
+    }
+}
+
+/* NAV -> input submit button color */
+.btn-submit-input-green {
+    background-color: rgb(138, 199, 90) !important;
+    color: black !important;
+}
+
+.btn-submit-input-green:hover {
+    background-color: rgb(101, 168, 50) !important;
+}
+
+/* NAV -> clear input button */
+.navbar-clear-search-btn {
+    top: 1px;
+    right: 71px;
+    z-index: 6 !important;
+}
+
+@media (max-width: 1199.5px) {
+    .navbar-clear-search-btn {
+        right: 42px;
+    }
+}
+
+@media (max-width: 575.5px) {
+    .navbar-clear-search-btn {
+        right: 1px;
+        border-top-right-radius: 0.375rem !important;
+        border-bottom-right-radius: 0.375rem !important;
+    }
+}
+
+/* NAV -> background color */
+.bg-navbar {
+    background-color: rgb(233, 244, 222)!important;
+}
+
+/* NAV -> search bar styles */
+#search-bar-container {
+    width: 500px;
+    top: 7px;
+    right: 106px;
+}
+
+@media (max-width: 1399.5px) {
+    #search-bar-container {
+        width: 430px;
+    }
+}
+
+@media (max-width: 1199.5px) {
+    #search-bar-container {
+        width: 320px;
+    }
+}
+
+@media (max-width: 991.5px) {
+    #search-bar-container {
+        width: calc(100% - 206px);
+        top: 5px;
+        right: 62px;
+    }
+}
+
+@media (max-width: 767.5px) {
+    #search-bar-container {
+        width: calc(100% - 112px);
+        top: 3px;
+    }
+}
+
+/* NAV -> rounded border for input */
+@media (max-width: 575.5px) {
+    .rounded-input > input,
+    button.rounded-input {
+        border-top-right-radius: 0.375rem !important;
+        border-bottom-right-radius: 0.375rem !important;
+    }
+}
+
+/* H -> small course card */
+.small-card {
+    min-height: 170px;
+}
+
+/* S -> cards grid styles */
+#filter-section,
+#filter-section-skeleton {
+    max-width: 185px;
+    width: 185px;
+}
+
+@media (max-width: 575.5px) {
+    #filter-section,
+    #filter-section-skeleton {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+.custom-card {
+    width: 300px;
+    min-width: 300px;
+}
+
+/* S -> filters wrapper */
+#filters-wrapper {
+    height: 100%;
+}
+
+/* S -> move to top button */
+#move-to-filters-btn {
+    position: sticky;
+    top: 72px;
+}
+
+@media (max-width: 991.5px) {
+    #move-to-filters-btn {
+        top: 62px;
+    }
+}
+
+/* S -> background for filter */
+.bg-filters {
+    background-color: white !important;
+}
+
+@media (max-width: 575.5px) {
+    .bg-filters {
+        background-color: rgba(138, 199, 90, 0.2) !important;
+    }
+}
+
+.bg-filters-buttons { 
+    background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* S -> active filters rounding */
+.rounded-row-end div:last-child {
+    border-top-right-radius: 0.375rem !important;
+    border-bottom-right-radius: 0.375rem !important;
+}
+
+/* S -> annotation styles */
+.annotation-container {
+    max-height: 300px;
+    overflow: hidden;
     position: relative;
+    mask-image: linear-gradient(180deg, #000 80%, transparent);
 }
 
+.annotation-container.expanded {
+    max-height: none;
+    mask-image: none;
+}
+
+.annotation-text {
+    text-align: justify;
+    font-size: 0.9em;
+}
+
+/* S -> Course card blueprint assignment ribbon styles */
+.ribbon {
+    width: 70px;
+    height: 70px;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.ribbon span {
+    position: absolute;
+    display: block;
+    width: 99px;
+    padding: 5px 0;
+    background: rgb(4, 108, 181);
+    color: white;
+    text-align: center;
+    font-size: 15px;
+    font-weight: bold;
+    transform: rotate(45deg);
+    top: 7px;
+    right: -28px;
+    z-index: 50;
+}
+
+/* CD -> badges colors */
+.bg-winter {
+    background-color: rgb(161, 206, 224);
+    color: black !important;
+}
+
+.bg-summer {
+    background-color: rgb(255, 234, 118);
+    color: black !important;
+}
+
+.bg-both {
+    background-color: rgb(218, 172, 218);
+    color: black !important;
+}
+
+.bg-degreeplan {
+    background-color: rgb(240, 116, 0) !important;
+    color: white !important;
+}
+
+/* CD -> teachers table styles */
+#teachers-table {
+    table-layout: auto;
+}
+
+.teachers-first-column {
+    white-space: nowrap;
+    width: 1px;
+    max-width: max-content;
+}
+
+/* CD -> rating form ticks styles */
+.tick-container {
+    position: relative;
+    width: 97%;
+    top: -5px;
+}
+
+.tick {
+    position: absolute;
+    text-align: center;
+    font-size: 12px;
+    transform: translateX(-50%);
+}
+
+/* CD -> info tables have no border under itself */
+.info-table-borders tr:last-child td:nth-child(2) {
+    border-bottom: none !important;
+}
+
+/* CD -> not rated no thumb range styles */
+.no-thumb::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.no-thumb::-moz-range-thumb {
+    width: 0 !important;
+    height: 0 !important;
+    border: none !important;
+}
+
+/* CD -> scrolling to details nav tabs */
+#details-nav-tabs {
+    scroll-margin-top: 56px;
+}
+
+@media (max-width: 767.5px) {
+    #details-nav-tabs {
+        scroll-margin-top: 75px;
+    }
+}
+
+/* CD -> clear search btn */
+.clear-search-btn {
+    top: 1px;
+    right: 1px;
+}
+
+/* CD -> category title placement */
+.category-title {
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* CD -> filters dropdown scrollable */
+.filters-dropdown-menu-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* BP -> small screen title */
+.small-screen-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* BP -> fold semester button */
+.hide-semester-btn {
+    width: 28px;
+    height: 28px;
+}
+
+/* BP -> Easier checking of the checkboxes */
 .circle-overlay {
     position: absolute;
     top: 50%;
@@ -67,7 +416,7 @@ body {
     transform: translate(-50%, -50%);
     display: none;
     user-select: none;
-    z-index: 2;
+    z-index: 3;
 }
 
 .checkbox-container:hover .circle-overlay,
@@ -75,19 +424,59 @@ body {
     display: block;
 }
 
-/* Option menu on checkbox */
-.option-menu {
-    position: absolute;
-    top: 50%;
-    left: 25px;
+/* BP -> Checkbox styles */
+.bp-checkbox {
+    border: 1px solid #2c2c2c !important;
+    z-index: 2 !important;
+}
+
+@media (max-width: 767.5px) {
+    .bp-checkbox {
+        margin-top: 0px !important;
+        width: 24px !important;
+        height: 24px !important;
+    }
+}
+
+/* BP -> warning */
+.bp-warning {
+    right: -6px;
+    top: calc(50% - 1px);
     transform: translateY(-50%);
-    z-index: 50;
-    background: white;
-    border: 1px solid #ccc;
-    padding: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
+}
+
+/* BP -> Move course button */
+.move-button-filler-sm {
+    padding: 4px 8px;
+}
+
+.move-button-filler-bg {
+    padding: 6px 12px;
+}
+
+/* BP -> Checked courses menu with buttons */
+#bp-checked-courses-menu,
+#bp-checked-courses-menu-skeleton {
+    position: sticky;
+    height: 36px;
+    top: 52px;
+    background-color: white;
+    z-index: 100;
+}
+
+@media (max-width: 767.5px) {
+    #bp-checked-courses-menu,
+    #bp-checked-courses-menu-skeleton {
+        height: 60px;
+    }
+}
+
+/* BP -> Checked courses big buttons on mobile */
+@media (max-width: 767.5px) {
+    .big-mobile-btn {
+        font-size: 1.3rem !important;
+        padding: 8px 12px !important;
+    }
 }
 
 /* Blueprint colored button */
@@ -96,7 +485,12 @@ body {
     border-color: rgb(4, 108, 181) !important;
 }
 
-.btn-outline-blueprint:hover {
+.btn-outline-blueprint.border-transparent {
+    border-color: transparent !important;
+}
+
+.btn-outline-blueprint:hover,
+.btn-blueprint-hover {
     color: #fff !important;
     background-color: rgb(4, 108, 181) !important;
     border-color: rgb(4, 108, 181) !important;
@@ -114,24 +508,28 @@ body {
     border-color: rgb(3, 87, 146) !important;
 }
 
+/* Icon color */
+.blueprint-color {
+    color: rgb(4, 108, 181) !important;
+}
+
+.unassigned-color {
+    color: rgb(122, 158, 190) !important;
+}
+
 /* Badges colors */
 .bg-blueprint {
-    background-color: rgb(4, 108, 181);
+    background-color: rgb(4, 108, 181) !important;
 }
 
-.bg-winter {
-    background-color: rgb(113, 180, 206);
-    color: black !important;
+.bg-unassigned {
+    background-color: rgb(122, 158, 190) !important;
 }
 
-.bg-summer {
-    background-color: rgb(255, 222, 16);
-    color: black !important;
-}
-
-.bg-both {
-    background-color: rgb(216, 134, 216);
-    color: black !important;
+/* BP -> assign hover styles */
+.dropdown-item-blueprint:hover {
+    background-color: rgb(4, 108, 181) !important;
+    color: #fff !important;
 }
 
 /* === Blueprint tables styles === */
@@ -143,6 +541,13 @@ body {
 .blueprint-table th:nth-child(1),
 .blueprint-table td:nth-child(1) {
     width: 28px;
+}
+
+@media (max-width: 767.5px) {
+    .blueprint-table th:nth-child(1),
+    .blueprint-table td:nth-child(1){
+        width: 50px;
+    }
 }
 
 /* code */
@@ -187,8 +592,8 @@ body {
     text-overflow: ellipsis;
 }
 
-/* teachers smaller */
-@media (max-width: 1400px) {
+/* guarantors smaller */
+@media (max-width: 1399.5px) {
     .blueprint-table th:nth-child(7),
     .blueprint-table td:nth-child(7) {
         width: 200px;
@@ -198,8 +603,16 @@ body {
 /* buttons */
 .blueprint-table th:nth-child(8),
 .blueprint-table td:nth-child(8) {
-    /* 3 * button=32 + 2 * padding=4 */
-    width: 104px;
+    /* 4 * button=30 + 2 * padding=4 */
+    width: 128px;
+}
+
+@media (max-width: 767.5px) {
+    .blueprint-table th:nth-child(8),
+    .blueprint-table td:nth-child(8) {
+        /* 1 * button=30 + 2 * padding=4 */
+        width: 38px;
+    }
 }
 
 /* table header cell overflow */
@@ -216,187 +629,287 @@ body {
 
 /* =============================== */
 
-/* Courses grid styles */
-.grid-page {
-    display: grid;
-    grid-template-columns: 230px 1fr;
-    gap: 1rem; /* Space between columns */
-}
-
-.filter {
-    width: 230px; /* Ensure the width stays fixed */
-    padding: 1rem;
-}
-
-.grid-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, 300px);
-    gap: 0;
-    max-width: 100%;
-    justify-content: center;
-}
-
-.custom-card {
-    width: 300px;
-    min-width: 300px;
-    padding-left: 0;
-    padding-right: 0;
-    margin-bottom: 0;
-}
-
-/* Courses annotation styles */
-.annotation-container {
-    max-height: 350px;
-    overflow: hidden;
-    position: relative;
-    mask-image: linear-gradient(180deg, #000 80%, transparent);
-}
-
-.annotation-container.expanded {
-    max-height: none;
-    mask-image: none;
-}
-
-.annotation-text {
-    text-align: justify;
-    font-size: 0.9em;
-}
-
-/* Course card blueprint assignment ribbon styles */
-.ribbon {
-    width: 70px;
-    height: 70px;
-    overflow: hidden;
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-
-.ribbon span {
-    position: absolute;
-    display: block;
-    width: 99px;
-    padding: 5px 0;
-    background: rgb(4, 108, 181);
-    color: white;
-    text-align: center;
-    font-size: 15px;
-    font-weight: bold;
-    transform: rotate(45deg);
-    top: 7px;
-    right: -28px;
-    z-index: 50;
-}
-
-/* Course detail teachers table styles */
-#teachers-table {
-    table-layout: auto;
-}
-
-.teachers-first-column {
-    white-space: nowrap;
-    width: 1px;
-    max-width: max-content;
-}
-
-/* Course detail rating form ticks styles */
-.tick-container {
-    position: relative;
-    width: 97%;
-    top: -5px;
-}
-
-.tick {
-    position: absolute;
-    text-align: center;
-    font-size: 12px;
-    transform: translateX(-50%);
-}
-
-/* Course detail not rated no thumb range styles */
-.no-thumb::-webkit-slider-thumb {
-    -webkit-appearance: none !important;
-    appearance: none !important;
-    width: 0 !important;
-    height: 0 !important;
-}
-
-.no-thumb::-moz-range-thumb {
-    width: 0 !important;
-    height: 0 !important;
-    border: none !important;
-}
-
 /* === Degree plan table columns width styles === */
 .degree-plan-table {
     table-layout: fixed;
 }
 
-/* code */
+/* checkbox */
 .degree-plan-table th:nth-child(1),
 .degree-plan-table td:nth-child(1) {
+    width: 34px;
+}
+
+@media (max-width: 767.5px) {
+    .degree-plan-table th:nth-child(1),
+    .degree-plan-table td:nth-child(1){
+        width: 56px;
+    }
+}
+
+/* code */
+.degree-plan-table th:nth-child(2),
+.degree-plan-table td:nth-child(2) {
     width: 85px;
 }
 
 /* title */
-.degree-plan-table th:nth-child(2),
-.degree-plan-table td:nth-child(2) {
+.degree-plan-table th:nth-child(3),
+.degree-plan-table td:nth-child(3) {
     width: auto;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* status */
-.degree-plan-table th:nth-child(3),
-.degree-plan-table td:nth-child(3) {
-    width: 110px;
-}
-
-@media (max-width: 767px) {
-    .degree-plan-table th:nth-child(3),
-    .degree-plan-table td:nth-child(3) {
-        width: 30px;
-    }
-}
-
 /* credits */
 .degree-plan-table th:nth-child(4),
 .degree-plan-table td:nth-child(4) {
-    width: 20px;
-}
-
-/* bloc limit */
-.degree-plan-table th:nth-child(5),
-.degree-plan-table td:nth-child(5) {
-    width: 48px;
+    width: 42px;
 }
 
 /* winter */
+.degree-plan-table th:nth-child(5),
+.degree-plan-table td:nth-child(5) {
+    width: 90px;
+}
+
+/* summer */
 .degree-plan-table th:nth-child(6),
 .degree-plan-table td:nth-child(6) {
     width: 90px;
 }
 
-/* summer */
+/* guarantors */
 .degree-plan-table th:nth-child(7),
 .degree-plan-table td:nth-child(7) {
-    width: 90px;
+    width: 265px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* guarantors smaller */
+@media (max-width: 1399.5px) {
+    .degree-plan-table th:nth-child(7),
+    .degree-plan-table td:nth-child(7) {
+        width: 200px;
+    }
 }
 
 /* button */
 .degree-plan-table th:nth-child(8),
 .degree-plan-table td:nth-child(8) {
-    width: 90px;
+    width: 55px;
 }
 
-@media (max-width: 992px) {
-    .degree-plan-table th {
-        font-size: 0.9rem !important;
-    }
-
-    .degree-plan-table th h5 {
-        font-size: 1.1rem !important;
-    }
-}
 /* ============================================== */
+
+/* DP -> Checked courses menu with buttons */
+#dp-checked-courses-menu,
+#dp-checked-courses-menu-skeleton {
+    position: sticky;
+    height: 37px;
+    top: 52px;
+    background-color: white;
+    z-index: 100;
+}
+
+@media (max-width: 767.5px) {
+    #dp-checked-courses-menu,
+    #dp-checked-courses-menu-skeleton {
+        height: 60px;
+    }
+}
+
+/* DP -> choose degree plan button styles */
+.choose-degree-plan-btn {
+    z-index: 1000 !important;
+    top: 12px;
+    right: 12px;
+}
+
+/* DP -> choose degree plan modal styles */
+#choose-degree-plan-modal-body {
+    min-height: 400px;
+}
+
+/* DP -> Checkbox styles */
+.dp-checkbox {
+    position: relative;
+    z-index: 2 !important;
+    border: 0 !important;
+    background-color: white !important;
+}
+
+.dp-checkbox:checked {
+    background-color: transparent !important;
+}
+
+@media (max-width: 767.5px) {
+    .dp-checkbox {
+        width: 24px !important;
+        height: 24px !important;
+        margin-top: 0px !important;
+    }
+}
+
+/* DP -> circle underlay for course status */
+.circle-underlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    border-radius: 30%;
+    transform: translate(-50%, -50%);
+    display: block;
+    user-select: none;
+    z-index: 1;
+}
+
+@media (max-width: 767.5px) {
+    .circle-underlay {
+        width: 34px;
+        height: 34px;
+        border-radius: 20%;
+    }
+}
+
+/* DP -> status badges overview */
+.status-badges {
+    padding-left: 36px;
+}
+
+@media (max-width: 767.5px) {
+    .status-badges {
+        padding-left: 0;
+    }
+}
+
+/* DP -> status badges color */
+.bg-success-dark {
+    background-color: rgb(27, 99, 42);
+    color: white;
+}
+
+.bg-blueprint-dark {
+    background-color: rgb(4, 54, 90);
+    color: white;
+}
+
+/* DP -> all blueprint (with unassigned) credits */
+.small-dark-text {
+    font-size: 0.7rem;
+    color: rgb(200,200,200);
+}
+
+/* DP -> warning icon */
+.dp-warning {
+    right: -6px;
+    top: calc(50% - 1px);
+    transform: translateY(-50%);
+}
+
+/* DP -> plus button is large */
+.dp-bp-assign-btn-sm {
+    font-size: 1.75rem !important;
+}
+
+.dp-bp-assign-btn {
+    font-size: 2rem !important;
+}
+
+/* DP -> BP assign line in middle */
+.dp-bp-delimiter {
+    position: relative;
+}
+
+.dp-bp-delimiter::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 1px;
+    background-color: rgb(4, 108, 181);
+}
+
+/* DP -> mobile td widths */
+.dp-mobile-code {
+    width: 60px;
+}
+
+.dp-mobile-semester {
+    width: 100px;
+}
+
+.dp-mobile-credits {
+    width: 40px;
+}
+
+/* DP -> small table semester */
+.dp-lg-semester {
+    width: 130px;
+}
+
+/* === Loader and page overlay styles === */
+#loader {
+    display: none;
+    position: fixed;
+    text-align: center;
+    top: calc(50% - 18px);
+    left: calc(50% - 18px);
+    font-size: 1.5rem;
+    width: 3rem;
+    height: 3rem;
+    z-index: 9999;
+}
+
+#loader.htmx-request {
+    display: inline;
+}
+
+#page-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: 9998;
+}
+
+/* Show overlay when loader is active */
+#loader.htmx-request ~ #page-overlay {
+    display: block;
+}
+
+/* Skeleton styles */
+#home-skeleton,
+#courses-skeleton,
+#blueprint-skeleton,
+#degreeplan-skeleton {
+    display: none;
+}
+
+#home-skeleton.htmx-request,
+#courses-skeleton.htmx-request,
+#blueprint-skeleton.htmx-request,
+#degreeplan-skeleton.htmx-request {
+    display: block;
+}
+
+/* CD -> lazy loader */
+#lazy-loader {
+    display: none;
+}
+
+#lazy-loader.htmx-request {
+    display: flex;
+}
+
+
+/* ====================================== */

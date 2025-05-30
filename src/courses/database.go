@@ -1,13 +1,12 @@
 package courses
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/michalhercik/RecSIS/courses/internal/filter"
 	"github.com/michalhercik/RecSIS/courses/internal/sqlquery"
+	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -15,66 +14,76 @@ type DBManager struct {
 	DB *sqlx.DB
 }
 
+type courses []struct {
+	dbds.Course
+	BlueprintSemesters pq.BoolArray `db:"semesters"`
+}
+
 func (m DBManager) Courses(userID string, courseCodes []string, lang language.Language) ([]Course, error) {
-	result := []Course{}
-	if err := m.DB.Select(&result, sqlquery.Courses, userID, pq.Array(courseCodes), lang); err != nil {
+	dbResult := courses{}
+	if err := m.DB.Select(&dbResult, sqlquery.Courses, userID, pq.Array(courseCodes), lang); err != nil {
 		return nil, fmt.Errorf("failed to fetch courses: %w", err)
 	}
+	result := intoCourses(dbResult)
 	return result, nil
 }
 
-// func (m DBManager) ParamLabels(lang language.Language) (map[string][]filter.ParamValue, error) {
-// 	var result map[string][]filter.ParamValue = make(map[string][]filter.ParamValue)
-// 	var rows []struct {
-// 		Param string `db:"param_name"`
-// 		filter.ParamValue
-// 	}
-// 	if err := m.DB.Select(&rows, sqlquery.ParamLabels, lang); err != nil {
-// 		return nil, fmt.Errorf("failed to fetch param labels: %w", err)
-// 	}
-// 	for _, row := range rows {
-// 		result[row.Param] = append(result[row.Param], row.ParamValue)
-// 	}
-// 	return result, nil
-// }
+func intoCourses(from courses) []Course {
+	result := make([]Course, len(from))
+	for i, course := range from {
+		result[i].Code = course.Code
+		result[i].Name = course.Title
+		result[i].Annotation = intoNullDesc(course.Annotation)
+		result[i].Start = TeachingSemester(course.Start)
+		result[i].LectureRange1 = int(course.LectureRangeWinter.Int64)
+		result[i].SeminarRange1 = int(course.SeminarRangeWinter.Int64)
+		result[i].LectureRange2 = int(course.LectureRangeSummer.Int64)
+		result[i].SeminarRange2 = int(course.SeminarRangeSummer.Int64)
+		result[i].ExamType = course.ExamType
+		result[i].Credits = course.Credits
+		result[i].Guarantors = intoTeacherSlice(course.Guarantors)
+		result[i].BlueprintSemesters = course.BlueprintSemesters
+		result[i].BlueprintAssignments = intoBlueprintAssignmentSlice(course.BlueprintSemesters)
 
-func (m DBManager) Filters() (filter.Filters, error) {
-	// Retrieve
-	tmpResult := []struct {
-		CategoryID                  string         `db:"category_id"`
-		CategoryFacetID             string         `db:"category_facet_id"`
-		CategoryTitleCS             string         `db:"category_title_cs"`
-		CategoryTitleEN             string         `db:"category_title_en"`
-		CategoryDescCS              sql.NullString `db:"category_description_cs"`
-		CategoryDescEN              sql.NullString `db:"category_description_en"`
-		CategoryDisplayedValueLimit int            `db:"category_displayed_value_limit"`
-		ValueID                     string         `db:"value_id"`
-		ValueFacetID                string         `db:"value_facet_id"`
-		ValueTitleCS                string         `db:"value_title_cs"`
-		ValueTitleEN                string         `db:"value_title_en"`
-		ValueDescCS                 sql.NullString `db:"value_description_cs"`
-		ValueDescEN                 sql.NullString `db:"value_description_en"`
-	}{}
-	if err := m.DB.Select(&tmpResult, sqlquery.Filters); err != nil {
-		return filter.Filters{}, fmt.Errorf("failed to fetch filters: %w", err)
 	}
-	// Parse
-	fb := filter.FilterBuilder{}
-	for _, row := range tmpResult {
-		if fb.IsLastCategory(row.CategoryID) {
-			fb.Category(filter.MakeFilterIdentity(
-				row.CategoryID,
-				row.CategoryFacetID,
-				language.MakeLangString(row.CategoryTitleCS, row.CategoryTitleEN),
-				language.MakeLangString(row.CategoryDescCS.String, row.CategoryDescEN.String),
-			), row.CategoryDisplayedValueLimit)
+	return result
+}
+
+func intoNullDesc(from dbds.NullDescription) NullDescription {
+	return NullDescription{
+		Description: Description(from.Description),
+		Valid:       from.Valid,
+	}
+}
+
+func intoTeacherSlice(from dbds.TeacherSlice) []Teacher {
+	result := make([]Teacher, len(from))
+	for i, t := range from {
+		result[i] = Teacher{
+			SisID:       t.SISID,
+			FirstName:   t.FirstName,
+			LastName:    t.LastName,
+			TitleBefore: t.TitleBefore,
+			TitleAfter:  t.TitleAfter,
 		}
-		fb.Value(filter.MakeFilterIdentity(
-			row.ValueID,
-			row.ValueFacetID,
-			language.MakeLangString(row.ValueTitleCS, row.ValueTitleEN),
-			language.MakeLangString(row.ValueDescCS.String, row.ValueDescEN.String),
-		))
 	}
-	return fb.Build(), nil
+	return result
+}
+
+func intoBlueprintAssignmentSlice(from pq.BoolArray) []Assignment {
+	result := []Assignment{}
+	if len(from) > 0 && from[0] {
+		a := Assignment{Year: 0, Semester: SemesterAssignment(0)}
+		result = append(result, a)
+	}
+	for j, assigned := range from[1:] {
+		if assigned {
+			a := Assignment{
+				Year:     (j / 2) + 1,
+				Semester: SemesterAssignment((j % 2) + 1),
+			}
+			result = append(result, a)
+		}
+	}
+	return result
 }

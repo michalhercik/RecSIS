@@ -6,38 +6,47 @@ import (
 )
 
 type text struct {
-	Language         string
-	Introduction     string
-	IntroductionText string
-	HowToUse         string
-	HowToUseText     string
-	Authors          string
-	AuthorsText      string
+	PageTitle          string
+	Welcome            string
+	RecSISIntro        string
+	RecommendedCourses string
+	NewCourses         string
+	Winter             string
+	Summer             string
+	Both               string
+	Credits            string
+	NoGuarantors       string
 	// utils
 	Utils utils.Text
 }
 
 var texts = map[language.Language]text{
 	language.CS: {
-		Language:         "cs",
-		Introduction:     "Úvod",
-		IntroductionText: "Příliš žluťoučký kůň úpěl ďábelské ódy. Nechť již hříšné saxofony ďáblů rozezvučí síň úděsnými tóny waltzu, polky a quickstepu.",
-		HowToUse:         "Jak používat",
-		HowToUseText:     "Používejte! Příliš žluťoučký kůň úpěl ďábelské ódy. Nechť již hříšné saxofony ďáblů rozezvučí síň úděsnými tóny waltzu, polky a quickstepu.",
-		Authors:          "Autoři",
-		AuthorsText:      "Jeho Milost, svobodný pán z Malé Strany, kancléř univerzitní rady, doc. Mgr. <b>Michal Hercík</b>, Th.D., LL.M., kustod historických rukopisů, hlavní kronikář akademického senátu, poradce císařské rady pro vzdělanost a vědu <br> a <br> Jeho Excelence, arcibiskup pražský, rytíř Řádu sv. Václava, prof. Ing. <b>Michal Medek</b>, Ph.D., DSc., MBA, knihovník královské univerzitní sbírky, správce archivů svaté katedrály, čestný člen spolku staroměstských alchymistů",
+		PageTitle:          "Domů",
+		Welcome:            "Vítejte!",
+		RecSISIntro:        "RecSIS je systém pro plánování studia, kontrolování studijních povinností a doporučování kurzů.",
+		RecommendedCourses: "Doporučené kurzy přímo pro vás",
+		NewCourses:         "Nové kurzy",
+		Winter:             "ZS",
+		Summer:             "LS",
+		Both:               "Oba",
+		Credits:            "Kredity",
+		NoGuarantors:       "Žádní garanti",
 		// utils
-		Utils: utils.Texts["cs"],
+		Utils: utils.Texts[language.CS],
 	},
 	language.EN: {
-		Language:         "en",
-		Introduction:     "Introduction",
-		IntroductionText: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		HowToUse:         "How to use",
-		HowToUseText:     "Use it! Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		Authors:          "Authors",
-		AuthorsText:      "RecSIS Team!",
+		PageTitle:          "Home",
+		Welcome:            "Welcome!",
+		RecSISIntro:        "RecSIS is a system for study planning, monitoring study obligations, and recommending courses.",
+		RecommendedCourses: "Recommended courses just for you",
+		NewCourses:         "New courses",
+		Winter:             "Winter",
+		Summer:             "Summer",
+		Both:               "Both",
+		Credits:            "Credits",
+		NoGuarantors:       "No guarantors",
 		// utils
-		Utils: utils.Texts["en"],
+		Utils: utils.Texts[language.EN],
 	},
 }

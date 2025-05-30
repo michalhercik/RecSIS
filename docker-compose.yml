@@ -7,13 +7,17 @@ services:
       target: dev-stage
     ports:
       - 443:8000
+      - 80:80
     depends_on:
       postgres:
+        condition: service_healthy
+      recommender:
         condition: service_healthy
     networks:
       - recsis-network
     volumes:
       - ./utils/:/app/utils/
+      - /var/recsis-cert/:/app/recsis-cert/:ro
       # - ./log:/app/log
     develop:
       watch:
@@ -54,10 +58,24 @@ services:
     image: getmeili/meilisearch
     environment:
       MEILI_MASTER_KEY: MASTER_KEY
+      MEILI_HTTP_PAYLOAD_SIZE_LIMIT: "200MB"
     volumes:
       - ./meili_data:/meili_data
     ports:
       - 7700:7700
+    networks:
+      - recsis-network
+  recommender:
+    container_name: recsis-recommender
+    build:
+      dockerfile: Dockerfile
+      context: ./recommender/
+      target: dev-stage
+    ports:
+      - 8002:8002
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - recsis-network
 

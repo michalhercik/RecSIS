@@ -20,6 +20,7 @@ func (d *Description) SanitizeContent(squash bool) string {
 	sanitizedContent := sanitizeHTML(cleanedContent)
 
 	// ================== FOR TESTING PURPOSES ==================
+	// TODO: remove
 	removedTags := getRemovedTags(cleanedContent, sanitizedContent)
 	if len(removedTags) > 0 {
 		log.Println("Removed tags: ", removedTags)

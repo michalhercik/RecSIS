@@ -17,7 +17,6 @@ courses = pd.read_csv('./init_db/courses_transformed.csv', usecols=[
         "SEMINAR_RANGE_SUMMER": str,
     }
 )
-# langs = pd.read_csv('./init_db/JAZYK.csv', usecols=["NAZEV", "ANAZEV"]).rename(columns={"NAZEV": "title_cs", "ANAZEV": "title_en"})
 courses = courses[~courses["PVYUCOVAN"].isin(["Zrušen", "Cancelled"])]
 courses["PPOCMAX"] = courses["PPOCMAX"].replace(["Neomezená", "Unlimited"], -1)
 courses["PPOCMAX"] = courses["PPOCMAX"].astype(int)
@@ -99,6 +98,7 @@ categories = pd.DataFrame(
     columns=["facet_id", "title_cs", "title_en", "desc_cs", "desc_en", "displayed_value_limit"]
 )
 categories["position"] = categories.index
+categories["filter_id"] = "courses"
 
 language_order = {
     "čeština": 0,
@@ -108,12 +108,6 @@ language_order = {
     "španělština": 4,
     "francouština": 5,
 }
-# langs["description_cs"] = ""
-# langs["description_en"] = ""
-# langs["category"] = categories[categories["facet_id"] == "language"].index[0]
-# langs["facet_id"] = format_str(langs["title_en"]) #.astype(str).str.lower()
-# langs = langs.sort_values(by=["title_cs", "title_en"], key=lambda x: x.apply(lambda e: language_order.get(e, len(language_order))))
-# langs["position"] = langs.index
 
 def reverse(x):
     x.reverse()
@@ -176,30 +170,99 @@ for row in categories[~categories["facet_id"].isin(["language", "lecture_range",
 
 category_values = pd.concat(category_values).reset_index(drop=True).dropna()
 
+
+#===================================================================================
+# Survey categories
+#===================================================================================
+
+df = pd.read_csv("./init_db/ANKECY.csv", dtype={
+    "SSKR": str,
+    "SOBOR": str,
+    "SDRUH": str,
+    "SROC": str,
+    "PRDMTYP": str,
+    "UCIT": str,
+})
+ucit = pd.read_csv("./init_db/UCIT.csv", dtype={
+    "JMENO": str,
+    "PRIJMENI": str,
+    "KOD": str,
+})
+ucit["UCITJMENO"] = ucit["JMENO"] + " " + ucit["PRIJMENI"]
+ucit = ucit[["UCITJMENO", "KOD"]]
+ucit.loc[-1] = ["Global", "global"]
+df = pd.merge(df, ucit, left_on="UCIT", right_on="KOD", how="left")
+df = pd.merge(df, df, left_index=True, right_index=True, suffixes=("CS", "EN"))
+
+survey_categories = pd.DataFrame(
+    data = [
+        ['teacher_facet', 'Učitelé', 'Teachers'],
+        ['academic_year', 'Rok', 'Year'],
+        ['study_field', 'Obor', 'Field'],
+        ['study_type.code', 'Forma studia', 'Study form'],
+        ['study_year', 'Ročník', 'Year'],
+        ['target_type', 'Přednáška/Cvičení', 'Lecture/Seminar']
+    ],
+    columns=["facet_id", "title_cs", "title_en"]
+)
+survey_categories["filter_id"] = "course-survey"
+survey_categories["position"] = survey_categories.index
+survey_categories["displayed_value_limit"] = 5
+
+facet2column = {
+    "teacher_facet": "UCITJMENO",
+    "academic_year": "SSKR",
+    "study_field": "SOBOR",
+    "study_type.code": "SDRUH",
+    "study_year": "SROC",
+    "target_type": "PRDMTYP"
+}
+
+asint = lambda x: x.astype(pd.Int64Dtype())
+facet2sort = {
+    # "teacher.KOD": "",
+    "academic_year": asint,
+    # "study_field": "",
+    # "study_type.code": "",
+    "study_year": asint,
+    # "target_type": ""
+}
+
+format_str = lambda x: x.astype(str).str.lower().str.replace(" ", "_")
+format_facet_id = {
+    # "teacher.KOD": format_str,
+    # "study_field": format_str,
+    # "study_type.code": format_str,
+    # "target_type": format_str,
+}
+
+# TODO: define custom generator facet_id, title_cs, title_en, description_cs, description_en
+# e.g.:
+#   "facet_id": 30014, "title_cs": "Ladislav Peška", "title_en": "Ladislav Peška"
+#   "facet_id": B, "title_cs": "Bakalářské", "title_en": "Bachelor's"
+survey_category_values = []
+for row in survey_categories[~survey_categories["facet_id"].isin([])].iterrows():
+    col = facet2column[row[1]["facet_id"]]
+    cv = df[[col+"CS", col+"EN"]].drop_duplicates().rename(columns={col+"CS": "title_cs", col+"EN": "title_en"})
+    formater = format_facet_id.get(row[1]["facet_id"], lambda x: x)
+    cv["facet_id"] = formater(cv["title_en"]) #.astype(str).str.lower()
+    cv["category"] = row[0] + len(categories)
+    cv["description_cs"] = ""
+    cv["description_en"] = ""
+    sortkey = facet2sort.get(row[1]["facet_id"], lambda x: x)
+    cv = cv.sort_values(by=["title_cs", "title_en"], key=sortkey)
+    cv = cv.reset_index(drop=True)
+    cv["position"] = cv.index
+    survey_category_values.append(cv)
+
+survey_category_values = pd.concat(survey_category_values).reset_index(drop=True).dropna()
+
+#====================================================================================
+# Save to CSV
+#====================================================================================
+
+categories = pd.concat([categories, survey_categories], ignore_index=True)
+category_values = pd.concat([category_values, survey_category_values], ignore_index=True)
+
 categories.to_csv('./init_db/filter_categories.csv', index=True)
 category_values.to_csv('./init_db/filter_values.csv', index=True)
-# langs = pd.read_csv('./init_db/JAZYK.csv', usecols=["NAZEV", "ANAZEV"]).rename(columns={"NAZEV": "cs", "ANAZEV": "en"}).map(lambda x: x.capitalize())
-
-# courses = courses[~courses["PVYUCOVAN"].isin(["Zrušen", "Cancelled"])]
-
-# cs = courses[courses["LANG"] == "cs"]
-# en = courses[courses["LANG"] == "en"]
-# df_keys = pd.merge(cs, en, on="POVINN", suffixes=("CS", "EN"))
-# df_keys = [df_keys[[col+"CS", col+"EN"]].rename(columns={col+"CS":"cs", col+"EN":"en"}) for col in courses.drop(columns=["POVINN", "LANG"])]
-# df_keys.append(langs)
-# df_keys = pd.concat(df_keys).dropna()
-# df_keys = df_keys.drop_duplicates()
-# # df_keys = df_keys.reset_index(drop=True)
-# # df = pd.concat([df_keys[["cs"]].rename(columns={"cs": "VALUE"}), df_keys[["en"]].rename(columns={"en": "VALUE"})])
-
-# df = df_keys.reset_index(drop=True).reset_index(drop=False).melt(id_vars=["index"])
-# df.to_csv('./init_db/filter_values.csv', index=False)
-
-# # df = df_keys.T.apply(list, axis=1)
-# # df = df.apply(lambda x: "{" + ",".join([f"\"{v}\"" for v in x]) + "}")
-# # df.to_csv('./init_db/filter_values_array.csv', index=True, header=False, sep=";", quotechar="'")
-
-
-# # series_list = [courses[["LANG", col]].rename(columns={col:"VALUE"}) for col in courses.drop(columns=["POVINN", "LANG"])]
-# # df = pd.concat(series_list).dropna().drop_duplicates().reset_index(drop=True)
-# # df.to_csv('./init_db/filter_values.csv', index=True)

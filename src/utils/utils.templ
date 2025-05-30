@@ -2,139 +2,30 @@ package utils
 
 import (
     "strings"
-	"github.com/michalhercik/RecSIS/language"
+    "unicode/utf8"
 )
 
-templ watermark() {
-    <div class="watermark" style="
-        position:fixed;
-        bottom:50%;
-        left:15%;
-        opacity:0.1;
-        z-index:99;
-        color: black;
-        pointer-events:none;
-    ">
-        <span style="font-size:60px">For demonstration purposes only!</span><br/>
-        <span style="font-size:30px">The state is global</span>
-    </div>
-}
-
-templ Page(title string, t Text) {
-    <!DOCTYPE html>
-    <html lang={ string(t.Language) }>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>{ title }</title>
-            // icons
-            <link rel="icon" type="image/svg+xml" href="/logo.svg"> // modern icon using vector graphics
-            <link rel="icon" type="image/png" sizes="256x256" href="/favicon-256x256.png"> // fallback for older browsers
-            // css
-            <link rel="stylesheet" href="/style.css">
-            // bootstrap
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> // -> icons
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-            // htmx
-            <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
-            // alpine js
-            <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script> // drag and drop
-            <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-            // Google Fonts
-            <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;700&display=swap" rel="stylesheet">
-        </head>
-        <body hx-boost="true">
-            @watermark()
-            @Header(title, t)
-            <main>
-                { children... }
-            </main>
-            <hr/>
-            @Footer(t)
-        </body>
-    </html>
-}
-
-templ navItem(url, text string, active bool) {
-    {{
-        class := "fs-4 nav-link"
-        if active {
-            class += " active"
-        }
-    }}
-    <li class="nav-item"><a class={ class } href={ templ.URL(url) }>{ text }</a></li>
-}
-
-templ langButton(l language.Language) {
-    <button
-        class="fw-semibold btn btn-outline-none ps-0"
-        @click={ "changeLanguage('" + string(l) + "')" }>
-        { string(l) }
-    </button>
-    <script>
-        function changeLanguage(lang) {
-            let currentUrl = window.location.pathname;
-            let queryParams = window.location.search;
-            let newUrl = currentUrl.replace(/^\/(cs|en)/, '') || '';
-            newUrl = '/' + lang + newUrl + queryParams;
-            window.location.href = newUrl;
-        }
-    </script>
-}
-
-templ Header(title string, t Text) {
-    <header class="sticky-md-top">
-        <nav class="navbar navbar-expand-md navbar-light bg-light py-0"> // TODO: if too narrow, change py-0 to py-_ (e.g. py-1)
-            <div class="container-fluid">
-                <div style="width: 100px;">
-                    <a class="d-flex align-items-center navbar-brand fs-3" href={ templ.URL(t.LangLink("/home/")) } style="font-family: 'Saira', sans-serif;">
-                        <img src="/logo.svg" alt="Logo" style="height: 30px;" class="mb-1 pe-1">
-                        RecSIS
-                    </a>
-                </div>
-                <button class="navbar-toggler fs-6" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav mx-auto">
-                        @navItem(t.LangLink("/home/"), t.Home, title == t.Home)
-                        @navItem(t.LangLink("/courses/"), t.Courses, title == t.Courses)
-                        @navItem(t.LangLink("/blueprint/"), t.Blueprint, title == t.Blueprint)
-                        @navItem(t.LangLink("/degreeplan/"), t.DegreePlan, title == t.DegreePlan)
-                    </ul>
-                    // x-data is necessary for x-on:click to work
-                    <div class="d-flex justify-content-start justify-content-md-end" style="width: 100px;" x-data>
-                        if t.Language == language.CS {
-                            @langButton(language.EN)
-                        } else {
-                            @langButton(language.CS)
-                        }
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
-}
-
-templ Footer(t Text) {
-    <footer class="text-center my-3">
-        { t.Contact }
-        <a href="mailto:TODO@TODO.com">TODO@TODO.com</a>
-    </footer>
-}
-
 templ CourseLink(code string, t Text) {
-    <a class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover" href={ templ.URL(t.LangLink("/course/" + code)) }>{ code }</a>
+    <a
+        class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+        href={ templ.URL(t.Language.Path("/course/" + code)) }>
+        { code }
+    </a>
 }
 
-templ TitleCourseLink(code, title string, t Text) {
-    <a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.LangLink("/course/" + code)) }>{ title }</a>
+templ TitleCourseLink(code, title string, lowUnderline bool, t Text) {
+    <a
+        class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover", templ.KV("link-offset-2", lowUnderline) }
+        href={ templ.URL(t.Language.Path("/course/" + code)) }>
+        { title }
+    </a>
 }
 
 func CapitalizeFirstLetter(s string) string {
     if len(s) == 0 {
         return s
     }
-    return strings.ToUpper(string(s[0])) + s[1:]
+    firstRune, _ := utf8.DecodeRuneInString(s)
+    return strings.ToUpper(string(firstRune)) + s[1:]
 }
+
