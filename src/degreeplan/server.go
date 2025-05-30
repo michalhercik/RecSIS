@@ -3,21 +3,25 @@ package degreeplan
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/michalhercik/RecSIS/language"
 )
 
 type Server struct {
-	router *http.ServeMux
-	Data   DBManager
-	Auth   Authentication
-	BpBtn  BlueprintAddButton
-	Page   Page
+	router   *http.ServeMux
+	Data     DBManager
+	Auth     Authentication
+	BpBtn    BlueprintAddButton
+	DPSearch MeiliSearch
+	Page     Page
 }
 
 func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", s.page)
+	router.HandleFunc("GET /{dpCode}", s.show)
+	router.HandleFunc("GET /search", s.searchDegreePlan)
 	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
 	s.router = router
 }
@@ -62,8 +66,59 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
+	// t := texts[lang]
+	// dp, err := s.Data.UserDegreePlan(userID, lang)
+	// if err != nil {
+	// 	http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
+	// 	log.Printf("renderPage: %v", err)
+	// 	return
+	// }
+	// partialComponent := s.BpBtn.PartialComponent(lang)
+	// main := Content(dp, t, partialComponent)
+	// s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
 	t := texts[lang]
-	dp, err := s.Data.DegreePlan(userID, lang)
+	dp, err := s.Data.UserDegreePlan(userID, lang)
+	if err != nil {
+		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
+		log.Printf("renderPage: %v", err)
+		return
+	}
+	partialBpBtn := s.BpBtn.PartialComponent(lang)
+	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
+	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
+	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
+}
+
+func (s Server) searchDegreePlan(w http.ResponseWriter, r *http.Request) {
+	query := r.FormValue("q")
+	results, err := s.DPSearch.QuickSearch(QuickRequest{
+		query: query,
+		limit: 5,
+	})
+	if err != nil {
+		http.Error(w, "Search failed", http.StatusInternalServerError)
+		log.Printf("searchDegreePlan error: %v", err)
+		return
+	}
+	QuickSearchResultsContent(results.DegreePlans).Render(r.Context(), w)
+}
+
+func (s Server) show(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	userID, err := s.Auth.UserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	t := texts[lang]
+	dpCode := r.PathValue("dpCode")
+	dpYear, err := strconv.Atoi(r.FormValue("dp-year"))
+	if err != nil {
+		http.Error(w, "Invalid degree plan year", http.StatusBadRequest)
+		log.Printf("renderPage: %v", err)
+		return
+	}
+	dp, err := s.Data.DegreePlan(userID, dpCode, dpYear, lang)
 	if err != nil {
 		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
 		log.Printf("renderPage: %v", err)

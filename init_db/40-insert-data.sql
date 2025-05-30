@@ -41,7 +41,7 @@ CSV HEADER;
 -- COPY degree_plans(code, plan_year, course, bloc_code, bloc_type, bloc_limit)
 -- COPY degree_plans(code, plan_year, lang, blocs)
 COPY degree_plans(plan_code, plan_year, course_code, interchangeability, bloc_subject_code, bloc_type, bloc_limit, seq, bloc_name, bloc_note, note, lang)
-FROM '/docker-entrypoint-initdb.d/transformed_degree_plan.csv'
+FROM '/docker-entrypoint-initdb.d/degree_plans_transformed.csv'
 DELIMITER ','
 CSV HEADER;
 

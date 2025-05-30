@@ -168,6 +168,10 @@ func main() {
 			TemplSecond: bpbtn.PlusSignBtnChecked,
 		},
 		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		DPSearch: degreeplan.MeiliSearch{
+			Client:      meiliClient,
+			DegreePlans: meilisearch.IndexConfig{Uid: "degree-plans"},
+		},
 	}
 	degreePlan.Init()
 

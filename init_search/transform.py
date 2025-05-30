@@ -28,12 +28,10 @@ def com_agg(row):
     return pd.Series(data=data, index=data.keys())
 
 
-comments = pd.read_csv('./init_db/ankecy_transformed.csv', converters={"TEACHER": converter}, dtype={"SROC": pd.Int32Dtype()})
-comments = comments.groupby(["POVINN", "SOBOR", "SSKR", "SROC", "SEM", "KOD"]).apply(com_agg)
-comments = comments.reset_index(drop=True).reset_index().rename(columns={"index": "id"})
-comments = comments.to_json('./init_search/comments.json', orient='records', lines=True)
-
-exit()
+# comments = pd.read_csv('./init_db/ankecy_transformed.csv', converters={"TEACHER": converter}, dtype={"SROC": pd.Int32Dtype()})
+# comments = comments.groupby(["POVINN", "SOBOR", "SSKR", "SROC", "SEM", "KOD"]).apply(com_agg)
+# comments = comments.reset_index(drop=True).reset_index().rename(columns={"index": "id"})
+# comments = comments.to_json('./init_search/comments.json', orient='records', lines=True)
 
 povinn = pd.read_csv('./init_db/POVINN.csv')
 courses = pd.read_csv('./init_db/courses_transformed.csv', usecols=[

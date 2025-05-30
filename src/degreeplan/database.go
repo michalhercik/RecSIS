@@ -19,9 +19,21 @@ type DBDegreePlanRecord struct {
 	BlueprintSemesters pq.BoolArray `db:"semesters"`
 }
 
-func (m DBManager) DegreePlan(uid string, lang language.Language) (*DegreePlan, error) {
+func (m DBManager) UserDegreePlan(uid string, lang language.Language) (*DegreePlan, error) {
 	var records []DBDegreePlanRecord
-	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, lang); err != nil {
+	if err := m.DB.Select(&records, sqlquery.UserDegreePlan, uid, lang); err != nil {
+		return nil, fmt.Errorf("degreePlan: %v", err)
+	}
+	var dp DegreePlan
+	for _, record := range records {
+		add(&dp, record)
+	}
+	return &dp, nil
+}
+
+func (m DBManager) DegreePlan(uid, dpCode string, dpYear int, lang language.Language) (*DegreePlan, error) {
+	var records []DBDegreePlanRecord
+	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, dpCode, dpYear, lang); err != nil {
 		return nil, fmt.Errorf("degreePlan: %v", err)
 	}
 	var dp DegreePlan
