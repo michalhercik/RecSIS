@@ -775,10 +775,28 @@ tr:target td {
     }
 }
 
-/* DP -> badge circle */
-.badge-circle {
-    width: 20px;
-    height: 20px;
+/* DP -> status badges color */
+.bg-success-dark {
+    background-color: rgb(27, 99, 42);
+    color: white;
+}
+
+.bg-blueprint-dark {
+    background-color: rgb(4, 54, 90);
+    color: white;
+}
+
+/* DP -> all blueprint (with unassigned) credits */
+.small-dark-text {
+    font-size: 0.7rem;
+    color: rgb(200,200,200);
+}
+
+/* DP -> warning icon */
+.dp-warning {
+    right: -6px;
+    top: calc(50% - 1px);
+    transform: translateY(-50%);
 }
 
 /* DP -> plus button is large */

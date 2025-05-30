@@ -76,7 +76,7 @@ function handleCircleClick(event) {
 
 // pass through click event to checkbox on small screens
 function handleTdClick(event) {
-    const checkbox = event.target.firstChild.firstChild;
+    const checkbox = event.target.querySelector('input[type="checkbox"][name="selected"]');
     if (checkbox) {
         // Create a new MouseEvent, preserving shift key and other properties
         const clickEvent = new MouseEvent('click', {

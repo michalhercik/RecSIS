@@ -1,5 +1,6 @@
 setupCheckboxShiftClick();
 updateStickyOffset();
+initializeTooltips();
 
 // shift click for multiple checkboxes
 function setupCheckboxShiftClick() {
@@ -45,7 +46,7 @@ function handleCircleClick(event) {
 
 // pass through click event to checkbox on small screens
 function handleTdClick(event) {
-    const checkbox = event.target.firstChild.firstChild;
+    const checkbox = event.target.querySelector('input[type="checkbox"][name="selected"]');
     if (checkbox) {
         // Create a new MouseEvent, preserving shift key and other properties
         const clickEvent = new MouseEvent('click', {
@@ -67,6 +68,13 @@ function updateStickyOffset() {
         menu.style.top = height + 'px';
     }
 }
+
+// bootstrap tooltip initialization
+function initializeTooltips() {
+    // Initialize new tooltips
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+};
 
 // Add checked courses to BP btn can add only to the union of not yet assigned semesters of all checked courses 
 function updateCheckedCoursesMenu(semesterCount) {

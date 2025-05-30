@@ -164,7 +164,7 @@ func (c *Course) statusBackgroundColor() string {
 		return "bg-blueprint"
 	} else if c.isUnassigned() {
 		// if not even assigned, check if unassigned
-		return "bg-unassigned"
+		return "bg-blueprint" // same color, but the row has a warning icon
 	} else {
 		// if nothing else, then it is not completed
 		return "bg-danger"

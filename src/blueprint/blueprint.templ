@@ -241,7 +241,7 @@ templ coursesBody(tableID string, courses []Course, canUnassign bool, xSortMetho
         >
             <td
                 class="align-middle position-relative"
-                @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)">
+                @click.self="if (smallScreen) handleTdClick($event)">
                 @checkbox(course.ID)
                 <div class="d-md-none">
                     @warningIcon(&course, t)
@@ -286,6 +286,53 @@ templ coursesBody(tableID string, courses []Course, canUnassign bool, xSortMetho
     </tbody>
 }
 
+templ checkbox(ID int) {
+    <div class="checkbox-container position-relative text-center" x-data>
+        <input
+            type="checkbox"
+            id={ fmt.Sprintf("checkbox%d", ID) }
+            class="form-check-input bp-checkbox"
+            name="selected"
+            value={ fmt.Sprintf("%d", ID) }
+            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1;"
+            @uncheck-all.window="$el.checked = false;"
+        />
+        // circle overlay for easier clicking
+        <div class="d-none d-md-inline">
+            <div
+                role="button"
+                class="circle-overlay"
+                @click="handleCircleClick($event)">
+            </div>
+        </div>
+    </div>
+}
+
+templ warningIcon(course *Course, t text) {
+    if len(course.Warnings) > 0 {
+        <span
+            class="bi bi-exclamation-lg text-danger fs-4 position-absolute bp-warning"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title={ strings.Join(course.Warnings, " ") }>
+        </span>
+    }
+}
+
+templ dragCourseButton(showAlways bool, t text) {
+    <button
+        x-cloak
+        x-show={ fmt.Sprintf("(hover && !isSorting) || %t", showAlways) }
+        @mousedown="bootstrap.Tooltip.getOrCreateInstance($el).dispose();"
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-delay={ ttDelay }
+        data-bs-title={ t.TTMove }
+        class="btn btn-sm bi bi-grip-horizontal border-0"
+        x-sort:handle>
+    </button>
+}
+
 templ mobileInfoTd(course *Course, isCompulsory bool, t text) {
     <div class="d-flex flex-column d-md-none">
         <div class="d-flex justify-content-between align-items-center small lh-1">
@@ -320,53 +367,6 @@ templ noCoursesTableContent(text, xSort string) {
         // dummy row for sorting error (Cannot read properties of null (reading 'nextSibling')) fix
         <tr class="dummy-row d-none" x-sort:item></tr>
     </tbody>
-}
-
-templ warningIcon(course *Course, t text) {
-    if len(course.Warnings) > 0 {
-        <span
-            class="bi bi-exclamation-lg text-danger fs-4 position-absolute bp-warning"
-            data-bs-toggle="tooltip"
-            data-bs-placement="bottom"
-            data-bs-title={ strings.Join(course.Warnings, " ") }>
-        </span>
-    }
-}
-
-templ checkbox(ID int) {
-    <div class="checkbox-container position-relative text-center" x-data>
-        <input
-            type="checkbox"
-            id={ fmt.Sprintf("checkbox%d", ID) }
-            class="form-check-input bp-checkbox"
-            name="selected"
-            value={ fmt.Sprintf("%d", ID) }
-            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1;"
-            @uncheck-all.window="$el.checked = false;"
-        />
-        // circle overlay for easier clicking
-        <div class="d-none d-md-inline">
-            <div
-                role="button"
-                class="circle-overlay"
-                @click="handleCircleClick($event)">
-            </div>
-        </div>
-    </div>
-}
-
-templ dragCourseButton(showAlways bool, t text) {
-    <button
-        x-cloak
-        x-show={ fmt.Sprintf("(hover && !isSorting) || %t", showAlways) }
-        @mousedown="bootstrap.Tooltip.getOrCreateInstance($el).dispose();"
-        data-bs-toggle="tooltip"
-        data-bs-placement="bottom"
-        data-bs-delay={ ttDelay }
-        data-bs-title={ t.TTMove }
-        class="btn btn-sm bi bi-grip-horizontal border-0"
-        x-sort:handle>
-    </button>
 }
 
 templ summarizeFooter(data *Blueprint, t text) {

@@ -19,7 +19,7 @@ templ Content(dp *DegreePlan, t text, bpBtnRow PartialBlueprintAdd, bpBtnChecked
             @completionStatusBadges(&bloc, t)
             @blocName(&bloc, "d-md-none", "px-1 my-1", t)
             // table with courses
-            <table class="table table-sm degree-plan-table" :class="{ 'table-hover': !smallScreen }">
+            <table class="table table-sm degree-plan-table mb-4" :class="{ 'table-hover': !smallScreen }">
                 @tableHeader(&bloc, t)
                 <tbody>
                     for _, course := range bloc.Courses {
@@ -48,17 +48,23 @@ templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
 }
 
 templ completionStatusBadges(bloc *Bloc, t text) {
-    <div class="d-flex gap-2 status-badges">
-        <span class="badge bg-success">
-            { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.Limit) }
-        </span>
-        <span class="badge bg-blueprint">
-            { fmt.Sprintf("%d/%d", bloc.assignedCredits(), bloc.Limit) }
-        </span>
-        <span class="badge bg-unassigned">
-            { fmt.Sprintf("%d/%d", bloc.blueprintCredits(), bloc.Limit) }
-        </span>
-    </div>
+    <h5 class="d-flex gap-2 status-badges mb-0">
+        <div class="d-flex justify-content-start">
+            <span class="badge bg-success rounded-end-0 py-2">{ t.Completed }</span>
+            <span class="badge bg-success-dark rounded-start-0 py-2">
+                { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.Limit) }
+            </span>
+        </div>
+        <div class="d-flex justify-content-start">
+            <span class="badge bg-blueprint rounded-end-0 py-2">{ t.Blueprint }</span>
+            <span class="badge bg-blueprint-dark rounded-start-0 py-2">
+                { fmt.Sprintf("%d/%d", bloc.assignedCredits(), bloc.Limit) }
+                if bloc.assignedCredits() != bloc.blueprintCredits() {
+                    <span class="small-dark-text">{ fmt.Sprintf("%d/%d", bloc.blueprintCredits(), bloc.Limit) }</span>
+                }
+            </span>
+        </div>
+    </h5>
 }
 
 templ tableHeader(bloc *Bloc, t text) {
@@ -125,12 +131,18 @@ templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         @mouseleave="hoverRow = false">
         // checkbox + status
         <td
-            class="text-center align-middle"
-            @click="if (smallScreen && !$event.target.closest('input[type=checkbox]')) handleTdClick($event)">
+            class="text-center align-middle position-relative"
+            @click.self="if (smallScreen) handleTdClick($event)">
             @checkbox(course)
+            <div class="d-md-none">
+                @warningIcon(course, t)
+            </div>
         </td>
         // code
-        <td class="d-none d-md-table-cell"> @utils.CourseLink(course.Code, t.Utils) </td>
+        <td class="d-none d-md-table-cell position-relative">
+            @utils.CourseLink(course.Code, t.Utils)
+            @warningIcon(course, t) 
+        </td>
         // title
         <td>
             <div class="d-flex justify-content-between">
@@ -181,6 +193,17 @@ templ checkbox(course *Course) {
             </div>
         </div>
     </div>
+}
+
+templ warningIcon(course *Course, t text) {
+    if course.isUnassigned() && !course.isAssigned() {
+        <span
+            class="bi bi-exclamation-lg text-danger fs-4 position-absolute dp-warning"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title={ t.CourseIsUnassigned }>
+        </span>
+    }
 }
 
 templ mobileInfoTd(course *Course, isCompulsory bool, t text) {
