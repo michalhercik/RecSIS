@@ -90,6 +90,7 @@ func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string
 }
 
 func (s Server) searchDegreePlan(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
 	query := r.FormValue("q")
 	results, err := s.DPSearch.QuickSearch(QuickRequest{
 		query: query,
@@ -100,7 +101,7 @@ func (s Server) searchDegreePlan(w http.ResponseWriter, r *http.Request) {
 		log.Printf("searchDegreePlan error: %v", err)
 		return
 	}
-	QuickSearchResultsContent(results.DegreePlans).Render(r.Context(), w)
+	QuickSearchResultsContent(results.DegreePlans, texts[lang]).Render(r.Context(), w)
 }
 
 func (s Server) show(w http.ResponseWriter, r *http.Request) {

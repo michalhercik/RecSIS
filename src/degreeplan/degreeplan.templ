@@ -8,37 +8,13 @@ import (
 templ Content(dp *DegreePlan, t text, bpBtnRow PartialBlueprintAdd, bpBtnChecked PartialBlueprintAdd) {
     <div
         id="degreeplan-content"
-        class="container"
+        class="container position-relative"
         x-data="{ checkedNumber: 0, smallScreen: window.innerWidth < 768, searchOpened: false }"
         x-init="$nextTick(() => updateStickyOffset())"
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"
     >
-        <div x-show="searchOpened" x-cloak>
-            <div class="position-fixed top-0 start-0 z-1 w-100 h-100" style="background-color:rgba(0,0,0,0.5);"></div>
-            <div class="position-fixed top-50 start-50 z-2 translate-middle">
-                <div class="text-end mb-2">
-                    <button class="btn btn-danger" x-on:click="searchOpened = false">X</button>
-                </div>
-                <div class="row justify-content-center" style="width: 600px; height:300px">
-                    <div class="search-container">
-                        <input
-                            type="text"
-                            name="q"
-                            class="form-control search-input"
-                            placeholder="e.g. NISD23N"
-                            hx-get="/degreeplan/search"
-                            hx-trigger="keyup changed delay:200ms"
-                            hx-target="#dp-results"
-                        >
-                        <label for="dp-year" style="background-color: white">Year:</label>
-                        <input type="number" name="dp-year">
-                        @quickSearchResults()
-                    </div>
-                </div>
-            </div>
-        </div>
-        <button class="btn btn-secondary" x-on:click="searchOpened = true">Search</button>
+        @chooseDegreePlanModal(t)
         @checkedCoursesMenu(dp.bpNumberOfSemesters(), bpBtnChecked, t)
         for _, bloc := range dp.blocs {
             // bloc title, icon, credits and limit
@@ -58,30 +34,81 @@ templ Content(dp *DegreePlan, t text, bpBtnRow PartialBlueprintAdd, bpBtnChecked
     </div>
 }
 
+templ chooseDegreePlanModal(t text) {
+    <button
+        type="button"
+        class="btn bg-degreeplan position-absolute choose-degree-plan-btn"
+        data-bs-toggle="modal" data-bs-target="#chooseDegreePlanModal">
+        { t.ShowDegreePlan }
+    </button>
+
+    <div class="modal fade" id="chooseDegreePlanModal" tabindex="-1" aria-labelledby="chooseDegreePlanModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="chooseDegreePlanModalLabel">{ t.ChooseDegreePlan }</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="choose-degree-plan-modal-body" class="modal-body">
+                    <div class="input-group mb-3">
+                        <input
+                            type="text"
+                            name="q"
+                            class="form-control search-input"
+                            placeholder={ t.DegreePlanPlaceholder }
+                            hx-get={ t.Utils.Language.Path("/degreeplan/search") }
+                            hx-trigger="keyup changed delay:200ms"
+                            hx-target="#dp-results"
+                            autocomplete="off">
+                        <div class="form-floating">
+                            <select id="dp-year" class="form-select" name="dp-year">
+                                <option selected value="2025">2025/2026</option>
+                                for i := 2024; i >= 2015; i-- {
+                                    <option value={ fmt.Sprintf("%d", i) }>{ fmt.Sprintf("%d/%d", i, i+1) }</option>
+                                }
+                            </select>
+                            <label for="dp-year">{ t.EnrollmentYear }</label>
+                        </div>
+                    </div>
+                    @quickSearchResults()
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 templ quickSearchResults() {
     <div id="dp-results">
         { children... }
     </div>
 }
 
-templ QuickSearchResultsContent(results []QuickDegreePlan) {
+templ QuickSearchResultsContent(results []QuickDegreePlan, t text) {
     @quickSearchResults() {
-        for _, result := range results {
-            <a style="background-color: rgba(255,255,255,0.9)"
-                href={ templ.URL("/degreeplan/"+result.Code) }
-                hx-include="input[name=dp-year]"
-                class="d-flex flex-row justify-content-between"
-            >
-                <div class="p-1">
-                    <span class="text-monospace">{ result.Code }</span>
-                </div>
-                <div class="p-1">
-                    <span>{ result.Name }</span>
-                </div>
-                <div class="p-1">
-                    <span class="badge bg-info">{ result.Type }</span>
-                </div>
-            </a>
+        if len(results) == 0 {
+            <div class="alert alert-info" role="alert">
+                { t.NoDegreePlanResults }
+            </div>
+        } else {
+            <table class="table table-sm table-borderless mb-0" hx-include="#dp-year">
+                for _, result := range results {
+                    <tr>
+                        <td><a
+                            href={ templ.URL(t.Utils.Language.Path("/degreeplan/" + result.Code)) }
+                            data-bs-dismiss="modal">
+                            { result.Code }
+                        </a></td>
+                        <td class="text-wrap"><a
+                            href={ templ.URL(t.Utils.Language.Path("/degreeplan/" + result.Code)) }
+                            data-bs-dismiss="modal">
+                            { result.Name }
+                        </a> </td>
+                        <td class="text-end">
+                            <span class="badge bg-info">{ result.Type }</span>
+                        </td>
+                    </tr>
+                }
+            </table>
         }
     }
 }

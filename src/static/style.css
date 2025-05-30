@@ -313,7 +313,7 @@ tr:target td {
 }
 
 .bg-degreeplan {
-    background-color: rgb(240, 116, 0);
+    background-color: rgb(240, 116, 0) !important;
     color: white !important;
 }
 
@@ -720,6 +720,18 @@ tr:target td {
     #dp-checked-courses-menu-skeleton {
         height: 60px;
     }
+}
+
+/* DP -> choose degree plan button styles */
+.choose-degree-plan-btn {
+    z-index: 1000 !important;
+    top: 12px;
+    right: 12px;
+}
+
+/* DP -> choose degree plan modal styles */
+#choose-degree-plan-modal-body {
+    min-height: 400px;
 }
 
 /* DP -> Checkbox styles */
