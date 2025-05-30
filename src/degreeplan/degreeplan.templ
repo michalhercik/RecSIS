@@ -62,9 +62,9 @@ templ chooseDegreePlanModal(t text) {
                             autocomplete="off">
                         <div class="form-floating">
                             <select id="dp-year" class="form-select" name="dp-year">
-                                <option selected value="2025">2025/2026</option>
+                                <option selected value="2025">2025</option>
                                 for i := 2024; i >= 2015; i-- {
-                                    <option value={ fmt.Sprintf("%d", i) }>{ fmt.Sprintf("%d/%d", i, i+1) }</option>
+                                    <option value={ fmt.Sprintf("%d", i) }>{ fmt.Sprintf("%d", i) }</option>
                                 }
                             </select>
                             <label for="dp-year">{ t.EnrollmentYear }</label>
@@ -222,7 +222,7 @@ templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         // code
         <td class="d-none d-md-table-cell position-relative">
             @utils.CourseLink(course.Code, t.Utils)
-            @warningIcon(course, t) 
+            @warningIcon(course, t)
         </td>
         // title
         <td>
