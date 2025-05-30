@@ -11,8 +11,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      recommender:
-        condition: service_healthy
     networks:
       - recsis-network
     volumes:
