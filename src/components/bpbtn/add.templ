@@ -42,7 +42,7 @@ templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, 
     <button
         type="button"
         class={ "btn btn-outline-blueprint assign-to-unassigned-btn", classes }
-        if len(model.semesters) > 0 {
+        if len(model.semesters) > 1 {
             { alpineClassesTrue... }
         } else {
             { alpineClassesFalse... }

@@ -60,7 +60,7 @@ templ chooseDegreePlanModal(t text) {
                             hx-trigger="keyup changed delay:200ms"
                             hx-target="#dp-results"
                             autocomplete="off">
-                        <div class="form-floating">
+                        <div class="form-floating dp-select-year-width">
                             <select id="dp-year" class="form-select" name="dp-year">
                                 <option selected value="2025">2025</option>
                                 for i := 2024; i >= 2015; i-- {
@@ -123,7 +123,7 @@ templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
                 @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur();">
             </button>
             // assign
-            @bpBtn("outerHTML", "body", "input:checked[name=selected]", make([]bool, semCount))
+            @bpBtn("outerHTML", "#degreeplan-content", "input:checked[name=selected]", make([]bool, semCount))
         </div>
     </div>
 }
@@ -246,7 +246,7 @@ templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         <td class="d-none d-xl-table-cell">{ course.Guarantors.string() }</td>
         // blueprint button
         <td class="d-none d-md-table-cell text-start align-middle p-0">
-            @bpBtn("outerHTML", "body", "", course.BlueprintSemesters, course.Code)
+            @bpBtn("outerHTML", "#degreeplan-content", "", course.BlueprintSemesters, course.Code)
         </td>
     </tr>
 }
