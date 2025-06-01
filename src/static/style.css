@@ -734,6 +734,11 @@ tr:target td {
     min-height: 400px;
 }
 
+/* DP -> degree plan year select styles */
+.dp-select-year-width {
+    max-width: 120px;
+}
+
 /* DP -> Checkbox styles */
 .dp-checkbox {
     position: relative;

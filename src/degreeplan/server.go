@@ -46,7 +46,6 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	// TODO: should we differentiate between BpBtnRow and BpBtnChecked here?
 	courseCode, year, semester, err := s.BpBtn.ParseRequest(r)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -54,15 +53,13 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	courseCode = append(courseCode, r.Form["selected"]...)
-	// courseCode := r.Form["selected"]
-	// TODO: should we differentiate between BpBtn and BpBtnChecked here?
 	_, err = s.BpBtn.Action(userID, year, semester, courseCode...)
 	if err != nil {
 		http.Error(w, "Unable to add course to blueprint", http.StatusInternalServerError)
 		log.Printf("HandlePage error: %v", err)
 		return
 	}
-	s.renderPage(w, r, userID, language.FromContext(r.Context()))
+	s.renderContent(w, r, userID, language.FromContext(r.Context()))
 }
 
 func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
@@ -87,6 +84,19 @@ func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string
 	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
 	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
 	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
+}
+
+func (s Server) renderContent(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
+	t := texts[lang]
+	dp, err := s.Data.UserDegreePlan(userID, lang)
+	if err != nil {
+		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
+		log.Printf("renderPage: %v", err)
+		return
+	}
+	partialBpBtn := s.BpBtn.PartialComponent(lang)
+	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
+	Content(dp, t, partialBpBtn, partialBpBtnChecked).Render(r.Context(), w)
 }
 
 func (s Server) searchDegreePlan(w http.ResponseWriter, r *http.Request) {

@@ -72,7 +72,7 @@ templ Header(model pageModel) {
                         }
                     </div>
                     <div class="d-flex justify-content-between flex-row-reverse flex-lg-row py-2 py-lg-0">
-                        @profileBtn(model)
+                        @profileBtn(model, model.text)
                         switch model.lang {
                             case language.CS:
                                 @langBtn(language.EN)
@@ -132,7 +132,7 @@ templ langBtn(l language.Language) {
 }
 
 // TODO: put real data here
-templ profileBtn(model pageModel) {
+templ profileBtn(model pageModel, t Text) {
     // Mobile version
     <div class="d-lg-none">
         <div class="d-flex justify-content-end">
@@ -145,7 +145,7 @@ templ profileBtn(model pageModel) {
                 <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
                 <li>
                     <form hx-boost="false" method="POST" action={ templ.URL(model.lang.Path("/logout")) }>
-                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Log out</button>
+                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.Logout }</button>
                     </form>
                 </li>
             </ul>
@@ -161,7 +161,7 @@ templ profileBtn(model pageModel) {
             <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
             <li>
                 <form hx-boost="false" method="POST" action={ templ.URL(model.lang.Path("/logout")) }>
-                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Log out</button>
+                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.Logout }</button>
                 </form>
             </li>
         </ul>
