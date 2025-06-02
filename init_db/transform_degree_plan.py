@@ -3,6 +3,21 @@ import pandas as pd
 degree_plans = pd.read_csv("./init_db/degree_plans.csv", dtype={
     "BLOC_LIMIT": pd.Int64Dtype()
 })
+courses = pd.read_csv("./init_db/POVINN.csv", usecols=["POVINN", "VEBODY", "VPLATIOD"])
+courses = courses.groupby("POVINN").max()["VEBODY"]
+
+sums = pd.merge(degree_plans, courses, left_on="CODE", right_on="POVINN", how="left")
+sums = sums[sums["INTERCHANGEABILITY"].isna()]
+sums = sums.groupby(["PLAN_CODE", "PLAN_YEAR", "BLOC_SUBJECT_CODE"])["VEBODY"].sum().astype("int64").to_dict()
+# print(sums[("NISD20N", 2025, 352)])
+# print(sums[(sums["BLOC_SUBJECT_CODE"] == 352) & (sums["PLAN_YEAR"] == 2025)])
+# exit()
+
+
+
+degree_plans["BLOC_LIMIT"] = degree_plans[["PLAN_YEAR", "PLAN_CODE","BLOC_LIMIT", "BLOC_TYPE", "BLOC_SUBJECT_CODE"]] \
+    .apply(lambda x: x["BLOC_LIMIT"] if x["BLOC_TYPE"] != "A" else sums[(x["PLAN_CODE"], x["PLAN_YEAR"], x["BLOC_SUBJECT_CODE"])], axis=1)
+
 common = ["PLAN_CODE","PLAN_YEAR","CODE","INTERCHANGEABILITY","BLOC_SUBJECT_CODE","BLOC_TYPE","BLOC_LIMIT","SEQ"]
 dp_cs = degree_plans[common + ["BLOC_NAME_CZ","BLOC_NOTE_CZ","NOTE_CZ"]].rename(columns={"BLOC_NAME_CZ":"BLOC_NAME","BLOC_NOTE_CZ":"BLOC_NOTE","NOTE_CZ":"NOTE"})
 dp_cs["LANG"] = "cs"
