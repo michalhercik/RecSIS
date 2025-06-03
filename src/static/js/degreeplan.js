@@ -101,7 +101,7 @@ function updateCheckedCoursesMenu(semesterCount) {
         dropdownItems.forEach((item, idx) => {
             if (item.disabled) {
                 // Mark this semester as disabled
-                disabledSemesters[idx] = true;
+                disabledSemesters[idx + 1] = true;
             }
         });
     });
@@ -122,7 +122,7 @@ function updateCheckedCoursesMenu(semesterCount) {
     const dropdownItems = innerDiv.querySelectorAll('.dropdown-menu .dropdown-item');
     dropdownItems.forEach((item, idx) => {
         if (idx < disabledSemesters.length) {
-            item.disabled = disabledSemesters[idx];
+            item.disabled = disabledSemesters[idx + 1];
         }
     });
 }

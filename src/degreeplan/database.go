@@ -52,16 +52,11 @@ func add(dp *degreePlanPage, record DBDegreePlanRecord) {
 		}
 	}
 	if blocIndex == -1 {
-		// TODO: this is temporary FE hack, remove limit, if, and set Limit to record.BlocLimit
-		limit := record.BlocLimit
-		if record.IsBlocCompulsory {
-			limit = 42
-		}
 		dp.blocs = append(dp.blocs, bloc{
 			Name:         record.BlocName,
 			Code:         record.BlocCode,
 			Note:         record.BlocNote,
-			Limit:        limit,
+			Limit:        record.BlocLimit,
 			IsCompulsory: record.IsBlocCompulsory,
 		})
 		blocIndex = len(dp.blocs) - 1
