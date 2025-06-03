@@ -7,28 +7,24 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/michalhercik/RecSIS/dbds"
+	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
 )
 
-const courseIndex = "courses"
-const pageParam = "page"
-const hitsPerPageParam = "hitsPerPage"
+//================================================================================
+// Server Type
+//================================================================================
 
 type Server struct {
 	router  *http.ServeMux
-	Data    DBManager
-	Search  SearchEngine
 	Auth    Authentication
-	Filters filters.Filters
 	BpBtn   BlueprintAddButton
+	Data    DBManager
+	Filters filters.Filters
+	Search  SearchEngine
 	Page    Page
 }
-
-//================================================================================
-// Interface
-//================================================================================
 
 func (s *Server) Init() {
 	if err := s.Filters.Init(); err != nil {
@@ -41,8 +37,25 @@ func (s Server) Router() http.Handler {
 	return s.router
 }
 
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
+}
+
+type BlueprintAddButton interface {
+	PartialComponent(lang language.Language) PartialBlueprintAdd
+	ParseRequest(r *http.Request) ([]string, int, int, error)
+	Action(userID string, year int, semester int, course ...string) ([]int, error)
+}
+
+type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, years []bool, course ...string) templ.Component
+
+type Page interface {
+	View(main templ.Component, lang language.Language, title string, searchParam string, userID string) templ.Component
+	SearchParam() string
+}
+
 //================================================================================
-// Init
+// Routing
 //================================================================================
 
 func (s *Server) initRouter() {
@@ -60,6 +73,12 @@ func (s *Server) initRouter() {
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
+	userID, err := s.Auth.UserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		log.Printf("page: %v", err)
+		return
+	}
 	req, err := s.parseQueryRequest(w, r)
 	if err != nil {
 		// TODO: handle error
@@ -73,9 +92,9 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	result.templ = s.BpBtn.PartialComponent(lang)
+	result.bpBtn = s.BpBtn.PartialComponent(lang)
 	main := Content(&result, t)
-	s.Page.View(main, lang, t.PageTitle, req.query).Render(r.Context(), w)
+	s.Page.View(main, lang, t.pageTitle, req.query, userID).Render(r.Context(), w)
 }
 
 func (s Server) content(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +116,7 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	// Set the HX-Push-Url header to update the browser URL without a full reload
 	w.Header().Set("HX-Push-Url", s.parseUrl(r.URL.Query(), t))
 
-	coursesPage.templ = s.BpBtn.PartialComponent(lang)
+	coursesPage.bpBtn = s.BpBtn.PartialComponent(lang)
 	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
@@ -170,7 +189,7 @@ func (s Server) parseUrl(queryValues url.Values, t text) string {
 	}
 	// TODO: possibly add more defaults to exclude
 
-	return fmt.Sprintf("%s?%s", t.Utils.Language.Path("/courses"), queryValues.Encode())
+	return fmt.Sprintf("%s?%s", t.utils.Language.Path("/courses"), queryValues.Encode())
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
@@ -205,33 +224,4 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	CourseCard(&courses[0], t, btn).Render(r.Context(), w)
 
 	// btn.Render(r.Context(), w)
-}
-
-func parseYearSemester(r *http.Request) (int, dbds.SemesterAssignment, error) {
-	year, err := parseYear(r)
-	if err != nil {
-		return 0, 0, err
-	}
-	semester, err := parseSemester(r)
-	if err != nil {
-		return year, 0, err
-	}
-	return year, semester, nil
-}
-
-func parseYear(r *http.Request) (int, error) {
-	year, err := strconv.Atoi(r.FormValue("year"))
-	if err != nil {
-		return year, err
-	}
-	return year, nil
-}
-
-func parseSemester(r *http.Request) (dbds.SemesterAssignment, error) {
-	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
-	if err != nil {
-		return 0, err
-	}
-	semester := dbds.SemesterAssignment(semesterInt)
-	return semester, nil
 }

@@ -10,8 +10,8 @@ import (
 	"golang.org/x/net/html"
 )
 
-func (d *Description) SanitizeContent(squash bool) string {
-	content := d.Content
+func (d *description) SanitizeContent(squash bool) string {
+	content := d.content
 	// parse content to html
 	htmlContent := parseToHTML(content, squash)
 	// clean html elements

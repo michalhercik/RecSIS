@@ -25,13 +25,20 @@ type Server struct {
 	Page   Page
 }
 
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
+}
+
+type Page interface {
+	View(main templ.Component, lang language.Language, title string, userID string) templ.Component
+}
+
 func (s *Server) Init() {
 	s.router = http.NewServeMux()
 	s.router.HandleFunc("GET /", s.page)
 	s.router.HandleFunc("POST /year", s.yearAddition)
 	s.router.HandleFunc("DELETE /year", s.yearRemoval)
 	s.router.HandleFunc("PATCH /{year}/{semester}", s.foldSemester)
-	//s.router.HandleFunc("POST /course/{code}", s.courseAddition)
 	s.router.HandleFunc("PATCH /course/{id}", s.courseMovement)
 	s.router.HandleFunc("PATCH /courses", s.coursesMovement)
 	s.router.HandleFunc("DELETE /course/{id}", s.courseRemoval)
@@ -243,7 +250,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	} else {
 		result = Content(data, t)
 	}
-	s.Page.View(result, lang, t.PageTitle).Render(r.Context(), w)
+	s.Page.View(result, lang, t.PageTitle, userID).Render(r.Context(), w)
 }
 
 // ===============================================================================================================================

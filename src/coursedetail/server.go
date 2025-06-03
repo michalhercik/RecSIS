@@ -6,30 +6,24 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
 )
 
-type Filters interface {
-	Init() error
-	ParseURLQuery(query url.Values) (Expression, error)
-	Facets() []string
-	IterFacets() any // TODO
-}
+//================================================================================
+// Server Type
+//================================================================================
 
 type Server struct {
 	router  *http.ServeMux
+	Auth    Authentication
+	BpBtn   BlueprintAddButton
 	Data    DBManager
 	Filters filters.Filters
-	Auth    Authentication
-	Page    Page
-	BpBtn   BlueprintAddButton
 	Search  Search
+	Page    Page
 }
-
-//================================================================================
-// Interface
-//================================================================================
 
 func (s *Server) Init() {
 	var err error
@@ -43,8 +37,32 @@ func (s Server) Router() http.Handler {
 	return s.router
 }
 
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
+}
+
+type BlueprintAddButton interface {
+	Component(semesters []bool, lang language.Language, course ...string) templ.Component
+	PartialComponent(lang language.Language) PartialBlueprintAdd
+	Action(userID string, year int, semester int, course ...string) ([]int, error)
+	ParseRequest(r *http.Request) ([]string, int, int, error)
+}
+
+type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, semesters []bool, course ...string) templ.Component
+
+type Page interface {
+	View(main templ.Component, lang language.Language, title string, userID string) templ.Component
+}
+
+type Filters interface {
+	Init() error
+	ParseURLQuery(query url.Values) (Expression, error)
+	Facets() []string
+	IterFacets() any // TODO
+}
+
 //================================================================================
-// Init
+// Routing
 //================================================================================
 
 func (s *Server) initRouter() {
@@ -79,13 +97,17 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	title := course.code + " - " + course.title
 	btn := s.BpBtn.PartialComponent(lang)
-	main := Content(course, t, btn)
-	s.Page.View(main, lang, course.Code+" - "+course.Name).Render(r.Context(), w)
+	courseDetailPage := courseDetailPage{
+		course: course,
+	}
+	main := Content(&courseDetailPage, t, btn)
+	s.Page.View(main, lang, title, userID).Render(r.Context(), w)
 }
 
-func (s Server) course(userID, code string, lang language.Language) (*Course, error) {
-	var result *Course
+func (s Server) course(userID, code string, lang language.Language) (*course, error) {
+	var result *course
 	result, err := s.Data.Course(userID, code, lang)
 	if err != nil {
 		return nil, err
@@ -113,8 +135,8 @@ func (s Server) survey(w http.ResponseWriter, r *http.Request) {
 	SurveyFiltersContent(model, texts[model.lang]).Render(r.Context(), w)
 }
 
-func (s Server) surveyViewModel(r *http.Request) (SurveyViewModel, error) {
-	var result SurveyViewModel
+func (s Server) surveyViewModel(r *http.Request) (surveyViewModel, error) {
+	var result surveyViewModel
 	code := r.PathValue("code")
 	req, err := s.parseQueryRequest(r)
 	if err != nil {
@@ -155,7 +177,7 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 	// get language
 	lang := language.FromContext(r.Context())
 	// render the overall rating
-	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code, texts[lang]).Render(r.Context(), w)
+	OverallRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
 }
 
 func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
@@ -172,7 +194,7 @@ func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 	// get language
 	lang := language.FromContext(r.Context())
 	// render the overall rating
-	OverallRating(updatedRating.UserRating, updatedRating.AvgRating, updatedRating.RatingCount, code, texts[lang]).Render(r.Context(), w)
+	OverallRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
 }
 
 func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
@@ -249,8 +271,10 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Course not found", http.StatusNotFound)
 		return
 	}
-	main := Content(course, t, btn)
-	s.Page.View(main, lang, course.Code+" - "+course.Name).Render(r.Context(), w)
+	courseDetailPage := courseDetailPage{
+		course: course,
+	}
+	Content(&courseDetailPage, t, btn).Render(r.Context(), w)
 }
 
 func (s Server) parseQueryRequest(r *http.Request) (Request, error) {

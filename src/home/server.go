@@ -11,7 +11,7 @@ import (
 )
 
 type Page interface {
-	View(main templ.Component, lang language.Language, title string) templ.Component
+	View(main templ.Component, lang language.Language, title string, userID string) templ.Component
 }
 
 type Server struct {
@@ -36,6 +36,12 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 
+	userID, err := s.Auth.UserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	recommended, _ := s.fetchCourses("recommended", lang)
 	newest, _ := s.fetchCourses("newest", lang)
 
@@ -45,7 +51,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 
 	main := Content(&content, t)
-	s.Page.View(main, lang, t.PageTitle).Render(r.Context(), w)
+	s.Page.View(main, lang, t.PageTitle, userID).Render(r.Context(), w)
 }
 
 func (s Server) fetchCourses(endpoint string, lang language.Language) ([]Course, error) {

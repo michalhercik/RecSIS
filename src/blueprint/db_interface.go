@@ -4,10 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 
-	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -24,14 +22,6 @@ type DataManager interface {
 	AddYear(userID string) error
 	RemoveYear(userID string) error
 	FoldSemester(userID string, year int, semester SemesterAssignment, folded bool) error
-}
-
-type Authentication interface {
-	UserID(r *http.Request) (string, error)
-}
-
-type Page interface {
-	View(main templ.Component, lang language.Language, title string) templ.Component
 }
 
 const (
@@ -51,13 +41,6 @@ const (
 	summerStr     = "summer"
 	unassignedStr = "unassigned"
 )
-
-// type DBLang string
-
-// const (
-// 	DBLangCS DBLang = "cs"
-// 	DBLangEN DBLang = "en"
-// )
 
 type Teacher struct {
 	SisId       int    `json:"KOD"`

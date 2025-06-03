@@ -18,8 +18,8 @@ type PageWithNoFiltersAndForgetsSearchQueryOnRefresh struct {
 	Page
 }
 
-func (p PageWithNoFiltersAndForgetsSearchQueryOnRefresh) View(main templ.Component, lang language.Language, title string) templ.Component {
-	return p.view(main, lang, title, "", false)
+func (p PageWithNoFiltersAndForgetsSearchQueryOnRefresh) View(main templ.Component, lang language.Language, title string, userID string) templ.Component {
+	return p.view(main, lang, title, "", false, userID)
 }
 
 type Page struct {
@@ -45,11 +45,11 @@ func (p Page) Router() *http.ServeMux {
 
 }
 
-func (p Page) View(main templ.Component, lang language.Language, title string, searchQuery string) templ.Component {
-	return p.view(main, lang, title, searchQuery, true)
+func (p Page) View(main templ.Component, lang language.Language, title string, searchQuery string, userID string) templ.Component {
+	return p.view(main, lang, title, searchQuery, true, userID)
 }
 
-func (p Page) view(main templ.Component, lang language.Language, title string, searchQuery string, includeFilters bool) templ.Component {
+func (p Page) view(main templ.Component, lang language.Language, title string, searchQuery string, includeFilters bool, userID string) templ.Component {
 	searchBarView := p.SearchBar.View(searchQuery, lang, includeFilters)
 	model := pageModel{
 		title:    title,
@@ -59,6 +59,7 @@ func (p Page) view(main templ.Component, lang language.Language, title string, s
 		search:   searchBarView,
 		home:     p.Home,
 		navItems: p.NavItems,
+		userID:   userID,
 	}
 	return PageView(model)
 }
@@ -82,6 +83,7 @@ type pageModel struct {
 	search   templ.Component
 	home     string
 	navItems []NavItem
+	userID   string
 }
 
 type NavItem struct {

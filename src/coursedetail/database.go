@@ -21,7 +21,7 @@ type courseDetail struct {
 	// blueprintAssignments []dbds.BlueprintAssignment
 }
 
-func (reader DBManager) Course(userID string, code string, lang language.Language) (*Course, error) {
+func (reader DBManager) Course(userID string, code string, lang language.Language) (*course, error) {
 	var result courseDetail
 	if err := reader.DB.Get(&result, sqlquery.Course, userID, code, lang); err != nil {
 		return nil, err
@@ -35,105 +35,104 @@ func (reader DBManager) Course(userID string, code string, lang language.Languag
 	return &course, nil
 }
 
-func (db DBManager) RateCategory(userID string, code string, category string, rating int, lang language.Language) ([]CourseCategoryRating, error) {
+func (db DBManager) RateCategory(userID string, code string, category string, rating int, lang language.Language) ([]courseCategoryRating, error) {
 	var updatedRating []dbds.CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.RateCategory, userID, code, category, rating)
 	if err != nil {
-		return []CourseCategoryRating{}, err
+		return []courseCategoryRating{}, err
 	}
 	if err = db.DB.Select(&updatedRating, sqlquery.Rating, userID, code, lang); err != nil {
-		return []CourseCategoryRating{}, err
+		return []courseCategoryRating{}, err
 	}
 	return intoCategoryRatingSlice(updatedRating), err
 }
 
-func (db DBManager) DeleteCategoryRating(userID string, code string, category string, lang language.Language) ([]CourseCategoryRating, error) {
+func (db DBManager) DeleteCategoryRating(userID string, code string, category string, lang language.Language) ([]courseCategoryRating, error) {
 	var updatedRating []dbds.CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.DeleteCategoryRating, userID, code, category)
 	if err != nil {
-		return []CourseCategoryRating{}, err
+		return []courseCategoryRating{}, err
 	}
 	if err = db.DB.Select(&updatedRating, sqlquery.Rating, userID, code, lang); err != nil {
-		return []CourseCategoryRating{}, err
+		return []courseCategoryRating{}, err
 	}
 	return intoCategoryRatingSlice(updatedRating), err
 }
 
-func (db DBManager) Rate(userID string, code string, value int) (CourseRating, error) {
+func (db DBManager) Rate(userID string, code string, value int) (courseRating, error) {
 	var rating dbds.OverallRating
 	_, err := db.DB.Exec(sqlquery.Rate, userID, code, value)
 	if err != nil {
-		return CourseRating{}, err
+		return courseRating{}, err
 	}
 	if err = db.DB.Get(&rating, sqlquery.CourseOverallRating, userID, code); err != nil {
-		return CourseRating{}, err
+		return courseRating{}, err
 	}
 	return intoCourseRating(rating), err
 }
 
-func (db DBManager) DeleteRating(userID string, code string) (CourseRating, error) {
+func (db DBManager) DeleteRating(userID string, code string) (courseRating, error) {
 	var rating dbds.OverallRating
 	_, err := db.DB.Exec(sqlquery.DeleteRating, userID, code)
 	if err != nil {
-		return CourseRating{}, err
+		return courseRating{}, err
 	}
 	if err = db.DB.Get(&rating, sqlquery.CourseOverallRating, userID, code); err != nil {
-		return CourseRating{}, err
+		return courseRating{}, err
 	}
 	return intoCourseRating(rating), err
 }
 
-func intoCourse(course *courseDetail) Course {
-	return Course{
-		Code:                   course.Code,
-		Name:                   course.Title,
-		Faculty:                course.Faculty,
-		GuarantorDepartment:    course.Department,
-		State:                  course.State,
-		Start:                  TeachingSemester(course.Start),
-		Language:               course.Language.String,
-		LectureRangeWinter:     course.LectureRangeWinter,
-		SeminarRangeWinter:     course.SeminarRangeWinter,
-		LectureRangeSummer:     course.LectureRangeSummer,
-		SeminarRangeSummer:     course.SeminarRangeSummer,
-		ExamType:               course.ExamType,
-		Credits:                course.Credits,
-		Guarantors:             intoTeacherSlice(course.Guarantors),
-		Teachers:               intoTeacherSlice(course.Teachers),
-		MinEnrollment:          Capacity(course.MinOccupancy.Int64),
-		Capacity:               course.MaxOccupancy.String,
-		Annotation:             intoNullDesc(course.Annotation),
-		Syllabus:               intoNullDesc(course.Syllabus),
-		PassingTerms:           intoNullDesc(course.PassingTerms),
-		Literature:             intoNullDesc(course.Literature),
-		AssessmentRequirements: intoNullDesc(course.AssesmentRequirements),
-		EntryRequirements:      intoNullDesc(course.EntryRequirements),
-		Aim:                    intoNullDesc(course.Aim),
-		Prereq:                 []string(course.Prereq),
-		Coreq:                  []string(course.Coreq),
-		Incompa:                []string(course.Incompa),
-		Interchange:            []string(course.Interchange),
-		Classes:                intoClassSlice(course.Classes),
-		Classifications:        intoClassSlice(course.Classifications),
-		CourseRating:           intoCourseRating(course.OverallRating),
-		CategoryRatings:        intoCategoryRatingSlice(course.CategoryRatings),
-		BlueprintAssignments:   intoBlueprintAssignmentSlice(course.BlueprintSemesters),
-		BlueprintSemesters:     course.BlueprintSemesters,
-		InDegreePlan:           course.InDegreePlan,
+func intoCourse(from *courseDetail) course {
+	return course{
+		code:                   from.Code,
+		title:                  from.Title,
+		faculty:                from.Faculty,
+		guarantorDepartment:    from.Department,
+		state:                  from.State,
+		semester:               teachingSemester(from.Start),
+		language:               from.Language.String,
+		lectureRangeWinter:     from.LectureRangeWinter,
+		seminarRangeWinter:     from.SeminarRangeWinter,
+		lectureRangeSummer:     from.LectureRangeSummer,
+		seminarRangeSummer:     from.SeminarRangeSummer,
+		examType:               from.ExamType,
+		credits:                from.Credits,
+		guarantors:             intoTeacherSlice(from.Guarantors),
+		teachers:               intoTeacherSlice(from.Teachers),
+		capacity:               from.MaxOccupancy.String,
+		annotation:             intoNullDesc(from.Annotation),
+		syllabus:               intoNullDesc(from.Syllabus),
+		passingTerms:           intoNullDesc(from.PassingTerms),
+		literature:             intoNullDesc(from.Literature),
+		assessmentRequirements: intoNullDesc(from.AssesmentRequirements),
+		entryRequirements:      intoNullDesc(from.EntryRequirements),
+		aim:                    intoNullDesc(from.Aim),
+		prerequisites:          []string(from.Prereq),
+		corequisites:           []string(from.Coreq),
+		incompatible:           []string(from.Incompa),
+		interchange:            []string(from.Interchange),
+		classes:                intoClassSlice(from.Classes),
+		classifications:        intoClassSlice(from.Classifications),
+		overallRating:          intoCourseRating(from.OverallRating),
+		categoryRatings:        intoCategoryRatingSlice(from.CategoryRatings),
+		blueprintAssignments:   intoBlueprintAssignmentSlice(from.BlueprintSemesters),
+		blueprintSemesters:     from.BlueprintSemesters,
+		inDegreePlan:           from.InDegreePlan,
 	}
 }
 
-func intoBlueprintAssignmentSlice(from pq.BoolArray) []Assignment {
-	result := []Assignment{}
+func intoBlueprintAssignmentSlice(from pq.BoolArray) []assignment {
+	result := []assignment{}
 	if len(from) > 0 && from[0] {
-		a := Assignment{year: 0, semester: SemesterAssignment(0)}
+		a := assignment{year: 0, semester: semesterAssignment(0)}
 		result = append(result, a)
 	}
 	for j, assigned := range from[1:] {
 		if assigned {
-			a := Assignment{
+			a := assignment{
 				year:     (j / 2) + 1,
-				semester: SemesterAssignment((j % 2) + 1),
+				semester: semesterAssignment((j % 2) + 1),
 			}
 			result = append(result, a)
 		}
@@ -141,49 +140,61 @@ func intoBlueprintAssignmentSlice(from pq.BoolArray) []Assignment {
 	return result
 }
 
-func intoCourseRating(from dbds.OverallRating) CourseRating {
-	return CourseRating{
-		UserRating:  NullInt64(from.UserRating),
-		AvgRating:   NullFloat64(from.AvgRating),
-		RatingCount: NullInt64(from.Count),
+func intoCourseRating(from dbds.OverallRating) courseRating {
+	return courseRating{
+		userRating:  from.UserRating,
+		avgRating:   from.AvgRating,
+		ratingCount: from.Count,
 	}
 }
 
-func intoCategoryRatingSlice(from []dbds.CourseCategoryRating) []CourseCategoryRating {
-	result := make([]CourseCategoryRating, len(from))
+func intoCategoryRatingSlice(from []dbds.CourseCategoryRating) []courseCategoryRating {
+	result := make([]courseCategoryRating, len(from))
 	for i, c := range from {
-		result[i] = CourseCategoryRating{
-			Code:  c.Code,
-			Title: c.Title,
-			CourseRating: CourseRating{
-				UserRating:  NullInt64(c.UserRating),
-				AvgRating:   NullFloat64(c.AvgRating),
-				RatingCount: NullInt64(c.RatingCount),
+		result[i] = courseCategoryRating{
+			code:  c.Code,
+			title: c.Title,
+			courseRating: courseRating{
+				userRating:  c.UserRating,
+				avgRating:   c.AvgRating,
+				ratingCount: c.RatingCount,
 			},
 		}
 	}
 	return result
 }
 
-func intoClassSlice(from dbds.ClassSlice) []Class {
-	result := make([]Class, len(from))
+func intoClassSlice(from dbds.ClassSlice) []class {
+	result := make([]class, len(from))
 	for i, c := range from {
-		result[i] = Class(c)
+		result[i] = class{
+			code: c.Code,
+			name: c.Name,
+		}
 	}
 	return result
 }
 
-func intoNullDesc(from dbds.NullDescription) NullDescription {
-	return NullDescription{
-		Description: Description(from.Description),
-		Valid:       from.Valid,
+func intoNullDesc(from dbds.NullDescription) nullDescription {
+	return nullDescription{
+		description: description{
+			title:   from.Title,
+			content: from.Content,
+		},
+		valid: from.Valid,
 	}
 }
 
-func intoTeacherSlice(from dbds.TeacherSlice) []Teacher {
-	result := make([]Teacher, len(from))
+func intoTeacherSlice(from dbds.TeacherSlice) []teacher {
+	result := make([]teacher, len(from))
 	for i, t := range from {
-		result[i] = Teacher(t)
+		result[i] = teacher{
+			SISID:       t.SISID,
+			LastName:    t.LastName,
+			FirstName:   t.FirstName,
+			TitleBefore: t.TitleBefore,
+			TitleAfter:  t.TitleAfter,
+		}
 	}
 	return result
 }

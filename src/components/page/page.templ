@@ -140,7 +140,7 @@ templ profileBtn(model pageModel, t Text) {
         </div>
         <div class="collapse" id="userCollapse">
             <ul class="list-unstyled ps-3">
-                <li><span class="dropdown-item disabled text-center text-decoration-line-through">Jan Novák</span></li>
+                <li><span class="dropdown-item disabled text-center">{ model.userID }</span></li>
                 <hr>
                 <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
                 <li>
@@ -156,7 +156,7 @@ templ profileBtn(model pageModel, t Text) {
     <li class="dropdown d-none d-lg-block">
         <button class="btn btn-outline-secondary bi bi-person-circle border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
         <ul class="dropdown-menu dropdown-menu-end">
-            <li><span class="dropdown-item disabled text-center text-decoration-line-through">Jan Novák</span></li>
+            <li><span class="dropdown-item disabled text-center">{ model.userID }</span></li>
             <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
             <li>

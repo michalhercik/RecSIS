@@ -3,14 +3,14 @@ package degreeplan
 import (
     "github.com/michalhercik/RecSIS/utils"
     "fmt"
+    "time"
 )
 
-templ Content(dp *DegreePlan, t text, bpBtnRow PartialBlueprintAdd, bpBtnChecked PartialBlueprintAdd) {
+templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChecked PartialBlueprintAdd) {
     <div
         id="degreeplan-content"
         class="container position-relative"
         x-data="{ checkedNumber: 0, smallScreen: window.innerWidth < 768, searchOpened: false }"
-        x-init="$nextTick(() => updateStickyOffset())"
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"
     >
@@ -62,8 +62,8 @@ templ chooseDegreePlanModal(t text) {
                             autocomplete="off">
                         <div class="form-floating dp-select-year-width">
                             <select id="dp-year" class="form-select" name="dp-year">
-                                <option selected value="2025">2025</option>
-                                for i := 2024; i >= 2015; i-- {
+                                <option selected value={ fmt.Sprintf("%d", time.Now().Year()) }>{ fmt.Sprintf("%d", time.Now().Year()) }</option>
+                                for i := time.Now().Year() - 1; i >= 2015; i-- {
                                     <option value={ fmt.Sprintf("%d", i) }>{ fmt.Sprintf("%d", i) }</option>
                                 }
                             </select>
@@ -104,7 +104,7 @@ templ QuickSearchResultsContent(results []QuickDegreePlan, t text) {
                             { result.Name }
                         </a> </td>
                         <td class="text-end">
-                            <span class="badge bg-info">{ result.Type }</span>
+                            <span class="badge bg-degreeplan">{ result.Type }</span>
                         </td>
                     </tr>
                 }
@@ -128,7 +128,7 @@ templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
     </div>
 }
 
-templ completionStatusBadges(bloc *Bloc, t text) {
+templ completionStatusBadges(bloc *bloc, t text) {
     <h5 class="d-flex gap-2 status-badges mb-0">
         <div class="d-flex justify-content-start">
             <span class="badge bg-success rounded-end-0 py-2 text-decoration-line-through">{ t.Completed }</span>
@@ -148,7 +148,7 @@ templ completionStatusBadges(bloc *Bloc, t text) {
     </h5>
 }
 
-templ tableHeader(bloc *Bloc, t text) {
+templ tableHeader(bloc *bloc, t text) {
     <thead>
         <tr>
             // checkbox + status
@@ -182,7 +182,7 @@ templ tableHeader(bloc *Bloc, t text) {
     </thead>
 }
 
-templ blocName(bloc *Bloc, show, classes string, t text) {
+templ blocName(bloc *bloc, show, classes string, t text) {
     if bloc.Name != "" {
         <h5 class={ "mb-0", classes, show }>
             { utils.CapitalizeFirstLetter(bloc.Name) }
@@ -191,7 +191,7 @@ templ blocName(bloc *Bloc, show, classes string, t text) {
     }
 }
 
-templ statusIcon(bloc *Bloc, t text) {
+templ statusIcon(bloc *bloc, t text) {
     if bloc.isCompleted() {
         // most important is completion status
         <i class="bi bi-check-lg text-success"></i>
@@ -204,7 +204,7 @@ templ statusIcon(bloc *Bloc, t text) {
     }
 }
 
-templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t text) {
+templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t text) {
     <tr
         id={ fmt.Sprintf("dp-row-%s", course.Code) }
         x-data="{ hoverRow: false }"
@@ -231,7 +231,7 @@ templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
                     @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils)
                 </span>
                 <span class="d-none d-md-inline d-lg-none dp-lg-semester">
-                    { fmt.Sprintf("%s %s, %s", semesterString(course, t), hoursString(course, t), course.ExamType) }
+                    { fmt.Sprintf("%s %s, %s", course.Semester.string(t), hoursString(course, t), course.ExamType) }
                 </span>
             </div>
             @mobileInfoTd(course, isCompulsory, t)
@@ -251,7 +251,7 @@ templ CourseRow(course *Course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
     </tr>
 }
 
-templ checkbox(course *Course) {
+templ checkbox(course *course) {
     <div class="checkbox-container position-relative">
         // circle under the checkbox - course status
         <div class={ "circle-underlay", course.statusBackgroundColor() }></div>
@@ -276,7 +276,7 @@ templ checkbox(course *Course) {
     </div>
 }
 
-templ warningIcon(course *Course, t text) {
+templ warningIcon(course *course, t text) {
     if course.isUnassigned() && !course.isAssigned() {
         <span
             class="bi bi-exclamation-lg text-danger fs-4 position-absolute dp-warning"
@@ -287,14 +287,14 @@ templ warningIcon(course *Course, t text) {
     }
 }
 
-templ mobileInfoTd(course *Course, isCompulsory bool, t text) {
+templ mobileInfoTd(course *course, isCompulsory bool, t text) {
     <div class="d-flex flex-column d-md-none">
         <div class="d-flex justify-content-between align-items-center small lh-1">
             <span class="text-muted dp-mobile-code">
                 { course.Code }
             </span>
             <span class="text-muted dp-mobile-semester">
-                { fmt.Sprintf("%s %s, %s", semesterString(course, t), hoursString(course, t), course.ExamType) }
+                { fmt.Sprintf("%s %s, %s", course.Semester.string(t), hoursString(course, t), course.ExamType) }
             </span>
             <span class="text-muted dp-mobile-credits">
                 { fmt.Sprintf("%s: %d", t.CreditsShort, course.Credits) }
@@ -304,84 +304,4 @@ templ mobileInfoTd(course *Course, isCompulsory bool, t text) {
             @utils.TitleCourseLink(course.Code, course.Title, true, t.Utils)
         </span>
     </div>
-}
-
-func winterString(course *Course) string {
-    winterText := ""
-    if course.Start == teachingWinterOnly || course.Start == teachingBoth {
-        winterText = fmt.Sprintf("%d/%d, %s", course.LectureRange1, course.SeminarRange1, course.ExamType)
-    } else {
-        winterText = "---"
-    }
-    return winterText
-}
-
-func summerString(course *Course) string {
-    summerText := ""
-    if course.Start == teachingSummerOnly {
-        summerText = fmt.Sprintf("%d/%d, %s", course.LectureRange2, course.SeminarRange2, course.ExamType)
-    } else if course.Start == teachingBoth {
-        summerText = fmt.Sprintf("%d/%d, %s", course.LectureRange1, course.SeminarRange1, course.ExamType)
-    } else {
-        summerText = "---"
-    }
-    return summerText
-}
-
-func semesterString(c *Course, t text) string {
-    switch c.Start {
-        case teachingBoth:
-            return t.Both
-        case teachingWinterOnly:
-            return t.Winter
-        case teachingSummerOnly:
-            return t.Summer
-        default:
-            return ""
-    }
-}
-
-// TODO: after refactor to lectureWinter + valid, etc use this
-// func hoursString(course *Course, t text) string {
-//     result := ""
-//     winter := course.LectureRangeWinter.Valid && course.SeminarRangeWinter.Valid
-//     summer := course.LectureRangeSummer.Valid && course.SeminarRangeSummer.Valid
-//     if winter {
-//         result += fmt.Sprintf("%d/%d", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64)
-//     }
-//     if winter && summer {
-//         result += ", "
-//     }
-//     if summer {
-//         result += fmt.Sprintf("%d/%d", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64)
-//     }
-//     return result
-// }
-func hoursString(course *Course, t text) string {
-    result := ""
-    both := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
-    winter := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
-    summer := fmt.Sprintf("%d/%d", course.LectureRange2, course.SeminarRange2)
-
-    switch course.Start {
-        case teachingWinterOnly:
-            result += winter
-        case teachingSummerOnly:
-            result += summer
-        case teachingBoth:
-            result += both
-    }
-
-    if course.SemesterCount == 2 {
-        switch course.Start {
-        case teachingWinterOnly:
-            result += " " + t.Summer + " " + summer
-        case teachingSummerOnly:
-            result += " " + t.Winter + " " + winter
-        case teachingBoth:
-            result = "ERROR" // TODO: what should be done in this case? can it even happen?
-        }
-    }
-
-    return result
 }

@@ -10,7 +10,7 @@ import (
 templ Skeleton(lang language.Language) {
     {{
         const seed = 21
-        rand.Seed(int64(seed))
+        rng := rand.New(rand.NewSource(int64(seed)))
     }}
     <div
         id="home-skeleton"
@@ -27,54 +27,19 @@ templ Skeleton(lang language.Language) {
 
         <div class="pb-4">
             <h4> @placeholder(3) </h4>
-            @skeletonCardsRow("rec")
+            @skeletonCardsRow("rec", rng)
         </div>
 
         <div class="pb-4">
             <h4> @placeholder(2) </h4>
-            @skeletonCardsRow("new")
+            @skeletonCardsRow("new", rng)
         </div>
 
-        <script>
-            setSkeletonCardsWidth();
-
-            function setSkeletonCardsWidth() {
-                const container = document.querySelector(".container");
-                const recContainer = document.getElementById("skeleton-cards-row-rec");
-                const newContainer = document.getElementById("skeleton-cards-row-new");
-                if (recContainer && newContainer) {
-                    const recCards = recContainer.querySelectorAll(".card");
-                    const newCards = newContainer.querySelectorAll(".card");
-
-                    // Set the width of the cards to be the same
-                    const recCardWidth = calculateSkeletonCardWidth(container);
-                    recCards.forEach(card => {
-                        card.style.width = `${recCardWidth}px`;
-                        card.style.minWidth = `${recCardWidth}px`;
-                    });
-
-                    const newCardWidth = calculateSkeletonCardWidth(container);
-                    newCards.forEach(card => {
-                        card.style.width = `${newCardWidth}px`;
-                        card.style.minWidth = `${newCardWidth}px`;
-                    });
-                }
-            }
-
-            function calculateSkeletonCardWidth(container) {
-                const containerWidth = container.clientWidth - 84; // Subtracting 8px for the padding of the inner container and 2 * 26px for buttons and 24px for container padding
-                const minCardWidth = 200; // Minimum width for each card
-                const gap = 4; // Gap between cards
-
-                // Calculate the width of each card based on the container width and number of visible cards
-                const visibleCards = Math.max(Math.floor((containerWidth + gap) / (minCardWidth + gap)), 1);
-                return (containerWidth - (visibleCards - 1) * gap) / visibleCards;
-            }
-        </script>
+        @skeletonScripts()
     </div>
 }
 
-templ skeletonCardsRow(ID string) {
+templ skeletonCardsRow(ID string, rng *rand.Rand) {
     <div class="d-flex justify-content-between align-items-center pt-2">
         @skeletonChevron()
         <div id={ fmt.Sprintf("skeleton-cards-row-%s", ID) } class="d-flex flex-row flex-no-wrap overflow-hidden w-100 gap-1 px-1">
@@ -92,8 +57,8 @@ templ skeletonCardsRow(ID string) {
                     <div class="card-body justify-content-between d-flex flex-column h-100">
                         // title
                         <h6 class="card-title pb-1">
-                            for j := 0; j < 3+rand.Intn(6); j++ {
-                                @placeholder(2 + rand.Intn(4))&nbsp;
+                            for j := 0; j < 3+rng.Intn(6); j++ {
+                                @placeholder(2 + rng.Intn(4))&nbsp;
                             }
                         </h6>
                         // guarantors
@@ -114,6 +79,45 @@ templ skeletonChevron() {
         class="btn px-0 py-2 placeholder bg-secondary">
         <i class="bi bi-chevron-compact-left fs-4 opacity-0"></i>
     </button>
+}
+
+templ skeletonScripts() {
+    <script>
+        setSkeletonCardsWidth();
+
+        function setSkeletonCardsWidth() {
+            const container = document.querySelector(".container");
+            const recContainer = document.getElementById("skeleton-cards-row-rec");
+            const newContainer = document.getElementById("skeleton-cards-row-new");
+            if (recContainer && newContainer) {
+                const recCards = recContainer.querySelectorAll(".card");
+                const newCards = newContainer.querySelectorAll(".card");
+
+                // Set the width of the cards to be the same
+                const recCardWidth = calculateSkeletonCardWidth(container);
+                recCards.forEach(card => {
+                    card.style.width = `${recCardWidth}px`;
+                    card.style.minWidth = `${recCardWidth}px`;
+                });
+
+                const newCardWidth = calculateSkeletonCardWidth(container);
+                newCards.forEach(card => {
+                    card.style.width = `${newCardWidth}px`;
+                    card.style.minWidth = `${newCardWidth}px`;
+                });
+            }
+        }
+
+        function calculateSkeletonCardWidth(container) {
+            const containerWidth = container.clientWidth - 84; // Subtracting 8px for the padding of the inner container and 2 * 26px for buttons and 24px for container padding
+            const minCardWidth = 200; // Minimum width for each card
+            const gap = 4; // Gap between cards
+
+            // Calculate the width of each card based on the container width and number of visible cards
+            const visibleCards = Math.max(Math.floor((containerWidth + gap) / (minCardWidth + gap)), 1);
+            return (containerWidth - (visibleCards - 1) * gap) / visibleCards;
+        }
+    </script>
 }
 
 templ placeholder(size int) {

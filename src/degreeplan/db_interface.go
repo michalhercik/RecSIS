@@ -1,6 +1,7 @@
 package degreeplan
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strings"
@@ -8,6 +9,10 @@ import (
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/language"
 )
+
+//================================================================================
+// Interfaces
+//================================================================================
 
 type Authentication interface {
 	UserID(r *http.Request) (string, error)
@@ -20,17 +25,22 @@ type BlueprintAddButton interface {
 	Action(userID string, year int, semester int, course ...string) ([]int, error)
 }
 
-type Page interface {
-	View(main templ.Component, lang language.Language, title string) templ.Component
-}
-
 type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, years []bool, course ...string) templ.Component
 
-type DegreePlan struct {
-	blocs []Bloc
+type Page interface {
+	View(main templ.Component, lang language.Language, title string, userID string) templ.Component
 }
 
-func (dp *DegreePlan) bpNumberOfSemesters() int {
+//================================================================================
+// Data Types and Methods
+//================================================================================
+
+// all data needed for the degree plan page
+type degreePlanPage struct {
+	blocs []bloc
+}
+
+func (dp *degreePlanPage) bpNumberOfSemesters() int {
 	if len(dp.blocs) == 0 {
 		return 0
 	}
@@ -40,28 +50,29 @@ func (dp *DegreePlan) bpNumberOfSemesters() int {
 	return len(dp.blocs[0].Courses[0].BlueprintSemesters)
 }
 
-type Bloc struct {
+// bloc info with courses
+type bloc struct {
 	Name         string
 	Code         int
 	Note         string
 	Limit        int
 	IsCompulsory bool
-	Courses      []Course
+	Courses      []course
 }
 
-func (b *Bloc) hasLimit() bool {
+func (b *bloc) hasLimit() bool {
 	return b.Limit > -1
 }
 
-// ignores courses unassigned in the blueprint
-func (b *Bloc) isAssigned() bool {
+func (b *bloc) isAssigned() bool {
+	// ignores courses unassigned in the blueprint
 	if b.hasLimit() && b.assignedCredits() >= b.Limit {
 		return true
 	}
 	return false
 }
 
-func (b *Bloc) assignedCredits() int {
+func (b *bloc) assignedCredits() int {
 	credits := 0
 	for _, c := range b.Courses {
 		if c.isAssigned() {
@@ -71,14 +82,14 @@ func (b *Bloc) assignedCredits() int {
 	return credits
 }
 
-func (b *Bloc) isCompleted() bool {
+func (b *bloc) isCompleted() bool {
 	if b.hasLimit() && b.completedCredits() >= b.Limit {
 		return true
 	}
 	return false
 }
 
-func (b *Bloc) completedCredits() int {
+func (b *bloc) completedCredits() int {
 	credits := 0
 	for _, c := range b.Courses {
 		// TODO: add course completion status -> change `false` to `course.Completed`
@@ -89,15 +100,14 @@ func (b *Bloc) completedCredits() int {
 	return credits
 }
 
-// gets all courses in the blueprint
-func (b *Bloc) isInBlueprint() bool {
+func (b *bloc) isInBlueprint() bool {
 	if b.hasLimit() && b.blueprintCredits() >= b.Limit {
 		return true
 	}
 	return false
 }
 
-func (b *Bloc) blueprintCredits() int {
+func (b *bloc) blueprintCredits() int {
 	credits := 0
 	for _, c := range b.Courses {
 		if c.isInBlueprint() {
@@ -107,24 +117,24 @@ func (b *Bloc) blueprintCredits() int {
 	return credits
 }
 
-type Course struct {
+// course representation
+type course struct {
 	Code               string
 	Title              string
 	Note               string
 	Credits            int
-	Start              TeachingSemester
+	Semester           TeachingSemester
 	Guarantors         TeacherSlice
-	LectureRange1      int
-	SeminarRange1      int
-	LectureRange2      int
-	SeminarRange2      int
-	SemesterCount      int
+	LectureRangeWinter sql.NullInt64
+	SeminarRangeWinter sql.NullInt64
+	LectureRangeSummer sql.NullInt64
+	SeminarRangeSummer sql.NullInt64
 	ExamType           string
 	BlueprintSemesters []bool
 }
 
 // if is (un)assigned in the blueprint
-func (c *Course) isInBlueprint() bool {
+func (c *course) isInBlueprint() bool {
 	for _, isIn := range c.BlueprintSemesters {
 		if isIn {
 			return true
@@ -134,7 +144,7 @@ func (c *Course) isInBlueprint() bool {
 }
 
 // if is assigned in the blueprint
-func (c *Course) isAssigned() bool {
+func (c *course) isAssigned() bool {
 	if len(c.BlueprintSemesters) < 2 {
 		return false
 	}
@@ -147,14 +157,14 @@ func (c *Course) isAssigned() bool {
 }
 
 // if is unassigned in the blueprint
-func (c *Course) isUnassigned() bool {
+func (c *course) isUnassigned() bool {
 	if len(c.BlueprintSemesters) < 1 {
 		return false
 	}
 	return c.BlueprintSemesters[0]
 }
 
-func (c *Course) statusBackgroundColor() string {
+func (c *course) statusBackgroundColor() string {
 	// TODO: add course completion status -> change `false` to `course.Completed`
 	if false {
 		// most important is completion status
@@ -171,6 +181,7 @@ func (c *Course) statusBackgroundColor() string {
 	}
 }
 
+// semester type - winter, summer, or both
 type TeachingSemester int
 
 const (
@@ -179,6 +190,34 @@ const (
 	teachingBoth
 )
 
+func (ts TeachingSemester) string(t text) string {
+	switch ts {
+	case teachingBoth:
+		return t.Both
+	case teachingWinterOnly:
+		return t.Winter
+	case teachingSummerOnly:
+		return t.Summer
+	default:
+		return ""
+	}
+}
+
+// wrapper for teacher slice
+type TeacherSlice []Teacher
+
+func (t TeacherSlice) string() string {
+	names := []string{}
+	for _, teacher := range t {
+		names = append(names, teacher.String())
+	}
+	if len(names) == 0 {
+		return "---"
+	}
+	return strings.Join(names, ", ")
+}
+
+// teacher type
 type Teacher struct {
 	SISID       string
 	LastName    string
@@ -199,15 +238,44 @@ func (t Teacher) String() string {
 	return t.LastName
 }
 
-type TeacherSlice []Teacher
+//================================================================================
+// Helper Functions
+//================================================================================
 
-func (t TeacherSlice) string() string {
-	names := []string{}
-	for _, teacher := range t {
-		names = append(names, teacher.String())
+func winterString(course *course) string {
+	winterText := ""
+	if course.Semester == teachingWinterOnly || course.Semester == teachingBoth {
+		winterText = fmt.Sprintf("%d/%d, %s", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64, course.ExamType)
+	} else {
+		winterText = "---"
 	}
-	if len(names) == 0 {
-		return "---"
+	return winterText
+}
+
+func summerString(course *course) string {
+	summerText := ""
+	if course.Semester == teachingSummerOnly {
+		summerText = fmt.Sprintf("%d/%d, %s", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64, course.ExamType)
+	} else if course.Semester == teachingBoth {
+		summerText = fmt.Sprintf("%d/%d, %s", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64, course.ExamType)
+	} else {
+		summerText = "---"
 	}
-	return strings.Join(names, ", ")
+	return summerText
+}
+
+func hoursString(course *course, t text) string {
+	result := ""
+	winter := course.LectureRangeWinter.Valid && course.SeminarRangeWinter.Valid
+	summer := course.LectureRangeSummer.Valid && course.SeminarRangeSummer.Valid
+	if winter {
+		result += fmt.Sprintf("%d/%d", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64)
+	}
+	if winter && summer {
+		result += ", "
+	}
+	if summer {
+		result += fmt.Sprintf("%d/%d", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64)
+	}
+	return result
 }

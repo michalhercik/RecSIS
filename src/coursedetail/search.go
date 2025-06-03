@@ -58,7 +58,7 @@ type Request struct {
 
 type Response struct {
 	EstimatedTotalHits int
-	Survey             []Comment
+	Survey             []survey
 	FacetDistribution  map[string]map[string]int
 }
 
@@ -69,7 +69,7 @@ type MultiResponse struct {
 func (r *Response) UnmarshalJSON(data []byte) error {
 	var hit struct {
 		EstimatedTotalHits int                       `json:"estimatedTotalHits"`
-		Hits               []Comment                 `json:"Hits"`
+		Hits               []survey                  `json:"Hits"`
 		FacetDistribution  map[string]map[string]int `json:"FacetDistribution"`
 	}
 	if err := json.Unmarshal(data, &hit); err != nil {

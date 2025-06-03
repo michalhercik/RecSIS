@@ -1,12 +1,11 @@
 package courses
 
 import (
-	"github.com/michalhercik/RecSIS/utils"
     "fmt"
     "net/url"
+    
+	"github.com/michalhercik/RecSIS/utils"
 )
-
-const coursesPerPage = 24
 
 templ Content(coursesPage *coursesPage, t text) {
     <div id="courses-page" class="container" hx-indicator="#loader">
@@ -27,7 +26,7 @@ templ filterSection(cp *coursesPage, t text) {
     <div id="filters-wrapper">
         <form
             id="filter-form"
-            hx-get={ t.Utils.Language.Path("/courses/search") }
+            hx-get={ t.utils.Language.Path("/courses/search") }
             hx-target="#courses-page"
             hx-swap="outerHTML"
             hx-include="#search-form"
@@ -46,7 +45,7 @@ templ filterSection(cp *coursesPage, t text) {
                         type="button"
                         class="btn btn-submit-input-green d-inline my-2 bi bi-chevron-down"
                         @click="expandedFilters = !expandedFilters; sessionStorage.setItem('expanded-filters', expandedFilters); window.scrollTo({ top: 0, left: 0, behavior: 'instant' })"
-                        x-text={ fmt.Sprintf("expandedFilters ? ' %s' : ' %s'", t.ShowResults, t.FilterButton) }>
+                        x-text={ fmt.Sprintf("expandedFilters ? ' %s' : ' %s'", t.showResults, t.filterButton) }>
                     </a>
                 </div>
             </div>
@@ -80,7 +79,7 @@ templ filtersInternal(cp *coursesPage, t text) {
                     hx-ignore="true"
                     type="button"
                     class="btn btn-link text-secondary p-0"
-                    x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore(category.Size() - limit), category.Size() - limit) }
+                    x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.showLess, t.showMore(category.Size() - limit), category.Size() - limit) }
                     @click={ fmt.Sprintf("expanded = !expanded; sessionStorage.setItem('expanded-%s', expanded)", category.ID()) }>
                 </button>
             }
@@ -107,7 +106,7 @@ templ moveToTopLink(t text) {
         href="#"
         class="icon-link">
         <i class="bi bi-chevron-up lh-1 my-auto"></i>
-        { t.TopFilter }
+        { t.topFilter }
     </a>
 }
 
@@ -154,11 +153,11 @@ templ activeFilters(cp *coursesPage, t text) {
         if anyActive {
             <button
                 class="btn btn-link text-secondary p-0 pb-3"
-                hx-get={ t.Utils.Language.Path("/courses/search") }
+                hx-get={ t.utils.Language.Path("/courses/search") }
                 hx-target="#courses-page"
                 hx-include="#search-form"
                 hx-swap="outerHTML show:window:top">
-                { t.CancelFilters }
+                { t.cancelFilters }
             </button>
         }
     </div>
@@ -168,10 +167,10 @@ templ Courses(cp *coursesPage, t text) {
     <div id="courses">
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 row-cols-xxl-4 g-0">
             if cp.totalPages == 0 {
-                <p>{ t.NoCoursesFound }</p>
+                <p>{ t.noCoursesFound }</p>
             } else {
                 for _, course := range cp.courses {
-                    @CourseCard(&course, t, cp.templ)
+                    @CourseCard(&course, t, cp.bpBtn)
                 }
             }
             // dummy cards for alignment
@@ -185,18 +184,22 @@ templ Courses(cp *coursesPage, t text) {
     </div>
 }
 
-templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
+templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
     <div
-        id={ fmt.Sprintf("course-card-%s", course.Code) }
+        id={ fmt.Sprintf("course-card-%s", course.code) }
         class="card col rounded-0 px-0 mb-0"
         x-data="{ expanded: false, isLong: false }"
         x-init="isLong = $refs.annotation.scrollHeight > 300; $nextTick(() => requestAnimationFrame(() => { isLong = $refs.annotation.scrollHeight > 300 }))"
     >
         // header
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">{ course.Code }</h6> // code
-            <small>{ semesterHoursExamsString(course, t) }</small> // semester, hours, exams
-            <small>{ fmt.Sprintf("%s: %d", t.Credits, course.Credits) }</small> // credits
+            <h6 class="mb-0">{ course.code }</h6> // code
+            <small> // semester, hours, exams
+                { fmt.Sprintf("%s %s, %s", course.semester.string(t), hoursString(course), course.examType) }
+            </small>
+            <small> // credits
+                { fmt.Sprintf("%s: %d", t.credits, course.credits) }
+            </small>
         </div>
         // body
         <div class="card-body d-flex flex-column position-relative">
@@ -206,43 +209,43 @@ templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
             >
                 // course title (link to detail page)
                 <h5 class="card-title">
-                    @utils.TitleCourseLink(course.Code, course.Name, false, t.Utils)
+                    @utils.TitleCourseLink(course.code, course.title, false, t.utils)
                 </h5>
                 // guarantors
-                <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string(t) }</h6>
+                <h6 class="card-subtitle mb-2 text-muted">{ course.guarantors.string(t) }</h6>
                 // course description (annotation)
-                <p class="card-text annotation-text">{ course.Annotation.string() }</p>
+                <p class="card-text annotation-text">{ course.annotation.string() }</p>
             </div>
             // show rest/less of annotation button
             <button
                 class="btn btn-link text-secondary"
                 @click="expanded = !expanded"
                 x-show="isLong"
-                x-text={ fmt.Sprintf("expanded ? '%s' : '%s'", t.ReadLess, t.ReadMore) }>
+                x-text={ fmt.Sprintf("expanded ? '%s' : '%s'", t.readLess, t.readMore) }>
             </button>
             // status badges
             <div class="d-flex flex-wrap mt-auto pt-3 pb-1">
-                for _, ba := range course.BlueprintAssignments.Sort() {
+                for _, ba := range course.blueprintAssignments.Sort() {
                     @badge(course, ba, t)
                 }
                 // TODO: add degree plan and completed badges
             </div>
             // add to blueprint button
             <div class="d-flex justify-content-end">
-                @addBtn("outerHTML", "#course-card-" + course.Code, "", course.BlueprintSemesters, course.Code)
+                @addBtn("outerHTML", "#course-card-" + course.code, "", course.blueprintSemesters, course.code)
             </div>
         </div>
     </div>
 }
 
-templ badge(course *Course, ba Assignment, t text) {
-    if ba.Year == 0 {
-        @clickableBadge("blueprint", fmt.Sprintf("bp-unassigned-row-%s", course.Code), "bg-unassigned", t) {
-            { ba.String(t.Utils.Language) }
+templ badge(course *course, ba assignment, t text) {
+    if ba.year == 0 {
+        @clickableBadge("blueprint", fmt.Sprintf("bp-unassigned-row-%s", course.code), "bg-unassigned", t) {
+            { ba.string(t.utils.Language) }
         }
     } else {
-        @clickableBadge("blueprint", fmt.Sprintf("bp-%d-%s-row-%s", ba.Year, ba.Semester.IDstring(), course.Code), "bg-blueprint", t) {
-            { ba.String(t.Utils.Language) }
+        @clickableBadge("blueprint", fmt.Sprintf("bp-%d-%s-row-%s", ba.year, ba.semester.stringID(), course.code), "bg-blueprint", t) {
+            { ba.string(t.utils.Language) }
         }
     }
 }
@@ -252,7 +255,7 @@ templ clickableBadge(target, fragment, bgColor string, t text) {
         role="button"
         hx-boost="false"
         class={ "badge rounded-pill me-1 mb-1", bgColor }
-        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.Utils.Language.Path(target), url.PathEscape(fragment))) }>
+        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.utils.Language.Path(target), url.PathEscape(fragment))) }>
         { children... }
     </a>
 }
@@ -261,7 +264,7 @@ templ clickableBadge(target, fragment, bgColor string, t text) {
 // templ ribbon(ba AssignmentSlice, t text) {
 //     if len(ba) > 0 {
 //         <div class="ribbon">
-//             <span>{ ba.String(t.Utils.Language) }</span>
+//             <span>{ ba.String(t.utils.Language) }</span>
 //         </div>
 //     }
 // }
@@ -306,7 +309,7 @@ templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
         <div
             role="button"
             class={ "page-link", templ.KV("disabled", cp.page == page || page < 1 || page > cp.totalPages) }
-            hx-get={ t.Utils.Language.Path("/courses/search") }
+            hx-get={ t.utils.Language.Path("/courses/search") }
             hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
         >
             <i class={ icon }></i>
@@ -319,7 +322,7 @@ templ paginationNumberButton(page int, cp *coursesPage, t text) {
         <div
             role="button"
             class={ "page-link", templ.KV("active", cp.page == page) }
-            hx-get={ t.Utils.Language.Path("/courses/search") }
+            hx-get={ t.utils.Language.Path("/courses/search") }
             hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
         >
             { fmt.Sprintf("%d", page) }
@@ -338,55 +341,12 @@ templ threeDots() {
 templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
     <button
         class="btn btn-outline-primary"
-        hx-get={ t.Utils.Language.Path("/courses/search") }
+        hx-get={ t.utils.Language.Path("/courses/search") }
         hx-target="#courses-page"
         hx-include="#filter-form, #search-form"
         hx-swap="outerHTML"
         hx-vals={ fmt.Sprintf(`"%s": %d`, hitsPerPageParam, newPageSize) }
     >
-        { t.LoadMore }
+        { t.loadMore }
     </button>
-}
-
-func semesterHoursExamsString(course *Course, t text) string {
-    result := course.Start.String(t.Utils.Language) + " "
-    both := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
-    winter := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
-    summer := fmt.Sprintf("%d/%d", course.LectureRange2, course.SeminarRange2)
-
-    switch course.Start {
-    case teachingWinterOnly:
-        result += winter
-    case teachingSummerOnly:
-        result += summer
-    case teachingBoth:
-        result += both
-    }
-
-    if course.SemesterCount == 2 {
-        switch course.Start {
-        case teachingWinterOnly:
-            result += " " + t.SummerAssign + " " + summer
-        case teachingSummerOnly:
-            result += " " + t.WinterAssign + " " + winter
-        case teachingBoth:
-            result = "ERROR" // TODO: what should be done in this case? can it even happen?
-        }
-    }
-
-    return result + ", " + course.ExamType
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func min(a, b int) int {
-    if a < b {
-        return a
-    }
-    return b
 }

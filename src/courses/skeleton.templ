@@ -10,19 +10,19 @@ import (
 templ Skeleton(lang language.Language) {
     {{
         const seed = 21
-        rand.Seed(int64(seed))
+        rnd := rand.New(rand.NewSource(int64(seed)))
     }}
     <div
         id="courses-skeleton"
         class="container placeholder-glow"
         x-data
-        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].PageTitle) }>
+        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].pageTitle) }>
         <div class="row mx-0">
             <div id="filter-section-skeleton" class="col-12 col-sm px-1 py-3 p-sm-3">
                 @skeletonFilters()
             </div>
             <div class="col-12 col-sm pt-0 pt-sm-4 px-0">
-                @skeletonGrid()
+                @skeletonGrid(rnd)
             </div>
         </div>
     </div>
@@ -89,15 +89,15 @@ templ skeletonFilterCategory(name1, name2 int, values []int, hide bool) {
     }
 }
 
-templ skeletonGrid() {
+templ skeletonGrid(rnd *rand.Rand) {
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 row-cols-xxl-4 g-0">
         for i := 0; i < coursesPerPage; i++ {
-            @skeletonCard()
+            @skeletonCard(rnd)
         }
     </div>
 }
 
-templ skeletonCard() {
+templ skeletonCard(rnd *rand.Rand) {
     <div class="card col rounded-0 px-0 mb-0">
         // header
         <div class="card-header d-flex justify-content-between align-items-center" style="height: 37px;">
@@ -113,8 +113,8 @@ templ skeletonCard() {
             <div class="annotation-container">
                 // course title (link to detail page)
                 <h5 class="card-title">
-                    for i := 0; i < 2+rand.Intn(5); i++ {
-                        @placeholder(3 + rand.Intn(4))&nbsp;
+                    for i := 0; i < 2+rnd.Intn(5); i++ {
+                        @placeholder(3 + rnd.Intn(4))&nbsp;
                     }
                 </h5>
                 // guarantors
