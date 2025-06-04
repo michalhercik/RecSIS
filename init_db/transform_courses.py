@@ -25,6 +25,38 @@ faculties = pd.read_csv('init_db/faculties.csv', dtype={"FACULTY_ID": str}, usec
 texts_titles = pd.read_csv('init_db/memo_title.csv')
 course_langs = pd.read_csv('init_db/POVINN2JAZYK.csv')
 languages = pd.read_csv('init_db/JAZYK.csv')
+ankecy = pd.read_csv('init_db/ankecy_transformed.csv', dtype={"SROC": pd.Int32Dtype()}, usecols=["POVINN", "LANG", "NAZEV", "SROC", "SOBOR", "SSKR", "PRDMTYP", "TEACHER", "MEMO"])
+preq = pd.read_csv('init_db/PREQ.csv')
+ptrida  = pd.read_csv('init_db/PTRIDA.csv')
+trida = pd.read_csv('init_db/TRIDA.csv', usecols=["KOD", "NAZEV"])
+pklas = pd.read_csv('init_db/PKLAS.csv')
+klas = pd.read_csv('init_db/KLAS.csv')
+
+klas = pd.merge(klas, pklas, left_on="KOD", right_on="PKLAS")
+klas_cs = klas[["POVINN", "KOD", "NAZEV"]].copy()
+klas_cs["LANG"] = "cs"
+klas_en = klas[["POVINN", "KOD", "ANAZEV"]].rename(columns={"ANAZEV": "NAZEV"})
+klas_en["LANG"] = "en"
+klas = pd.concat([klas_cs, klas_en])
+klas = klas.set_index(["POVINN", "LANG"])
+klas = klas.apply(lambda x: x.replace({pd.NA: None}).to_dict(), axis=1)
+klas = klas.groupby(["POVINN", "LANG"]).agg(lambda x: json.dumps(list(x))).rename("CLASSIFICATIONS")
+
+trida = pd.merge(ptrida, trida, left_on="PTRIDA", right_on="KOD")
+trida = trida.drop(columns=["PTRIDA"])
+trida = trida.set_index("POVINN")
+trida = trida.apply(lambda x: x.replace({pd.NA: None}).to_dict(), axis=1)
+trida = trida.groupby("POVINN").agg(lambda x: json.dumps(list(x))).rename("CLASSES")
+
+preq = preq.groupby(["POVINN", "REQTYP"]).agg(lambda x: json.dumps(list(x)))
+preq = preq.pivot_table(columns=["REQTYP"], values=["REQPOVINN"], index=["POVINN"], aggfunc="first")
+preq = preq.droplevel(0, axis=1)
+preq.columns.name = None
+
+ankecy["TEACHER"] = ankecy["TEACHER"].apply(lambda x: json.loads(x) if pd.notna(x) else None)
+comments = ankecy.set_index(["POVINN", "LANG"])
+comments = comments.apply(lambda x: x.replace({pd.NA: None}).to_dict(), axis=1)
+comments = comments.groupby(["POVINN", "LANG"]).agg(list).rename("COMMENTS")
 
 fac = faculties.reset_index().set_index("FACULTY_ID")
 fac_cs = pd.DataFrame(fac["FACULTY_NAME_CS"].rename("FACULTY_NAME"))
@@ -108,6 +140,10 @@ cou = pd.merge(cou, gua, on="POVINN", how="left")
 cou = pd.merge(cou, tex, on=["POVINN", "LANG"], how="left")
 cou = pd.merge(cou, tea, on="POVINN", how="left")
 cou = pd.merge(cou, fac, left_on=["PFAKULTA", "LANG"], right_on=["FACULTY_ID", "LANG"], how="left")
+cou = pd.merge(cou, comments, on=["POVINN", "LANG"], how="left")
+cou = pd.merge(cou, preq, how="left", on=["POVINN"])
+cou = pd.merge(cou, trida, how="left", on=["POVINN"])
+cou = pd.merge(cou, klas, how="left", on=["POVINN", "LANG"])
 cou = cou.drop(columns="PFAKULTA")
 
 
@@ -115,6 +151,8 @@ cou["GUARANTORS"] = cou["GUARANTORS"].replace({pd.NA: None})
 cou["GUARANTORS"] = cou["GUARANTORS"].apply(lambda x: json.dumps(x))
 cou["TEACHERS"] = cou["TEACHERS"].replace({pd.NA: None})
 cou["TEACHERS"] = cou["TEACHERS"].apply(lambda x: json.dumps(x))
+cou["COMMENTS"] = cou["COMMENTS"].replace({pd.NA: None})
+cou["COMMENTS"] = cou["COMMENTS"].apply(lambda x: json.dumps(x))
 
 def condition(row, first, second):
     if pd.notna(row["VSEMZAC"]) and row["VSEMZAC"] == 2:

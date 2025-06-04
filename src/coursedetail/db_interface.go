@@ -4,100 +4,183 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strings"
+	"iter"
+	"net/http"
+	"sort"
+	"strconv"
+
+	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/filters"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 // TODO: change interface name if interface changes
 type DataManager interface {
-	Course(sessionID string, code string, lang DBLang) (*Course, error)
-	RateCategory(sessionID string, code string, category string, rating int) error
-	DeleteCategoryRating(sessionID string, code string, category string) error
-	Rate(sessionID string, code string, value int) error
-	DeleteRating(sessionID string, code string) error
+	Course(sessionID string, code string, lang language.Language) (*Course, error)
+	RateCategory(sessionID string, code string, category string, rating int, lang language.Language) ([]CourseCategoryRating, error)
+	DeleteCategoryRating(sessionID string, code string, category string, lang language.Language) ([]CourseCategoryRating, error)
+	Rate(sessionID string, code string, value int) (CourseRating, error)
+	DeleteRating(sessionID string, code string) (CourseRating, error)
 }
 
-type DBLang string
-
-const (
-	cs DBLang = "cs"
-	en DBLang = "en"
-)
-
-type Faculty struct {
-	SisID int
-	Name  string
-	Abbr  string
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
 }
 
-type Semester int
+type Page interface {
+	View(templ.Component, language.Language, string) templ.Component
+}
+
+type BlueprintAddButton interface {
+	Component(semesters []bool, lang language.Language, course ...string) templ.Component
+	PartialComponent(lang language.Language) PartialBlueprintAdd
+	Action(userID string, year int, semester int, course ...string) ([]int, error)
+	ParseRequest(r *http.Request) ([]string, int, int, error)
+}
+type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, semesters []bool, course ...string) templ.Component
 
 const (
-	winter Semester = iota + 1
-	summer
-	both
+	positiveRating   = 1
+	negativeRating   = 0
+	numberOfComments = 20
+	searchQuery      = "survey-search"
+	surveyOffset     = "survey-offset"
 )
 
-func (s Semester) String(lang string) string {
-	switch s {
-	case winter:
-		return texts[lang].Winter
-	case summer:
-		return texts[lang].Summer
-	case both:
-		return texts[lang].Both
+type SurveyViewModel struct {
+	lang   language.Language
+	code   string
+	query  string
+	survey []Comment
+	offset int
+	isEnd  bool
+	facets iter.Seq[filters.FacetIterator] // TODO
+}
+
+type Course struct {
+	Code                   string
+	Name                   string
+	Faculty                string
+	GuarantorDepartment    string
+	State                  string
+	Start                  TeachingSemester
+	Language               string
+	LectureRangeWinter     sql.NullInt64
+	SeminarRangeWinter     sql.NullInt64
+	LectureRangeSummer     sql.NullInt64
+	SeminarRangeSummer     sql.NullInt64
+	ExamType               string
+	Credits                int
+	Guarantors             TeacherSlice
+	Teachers               TeacherSlice
+	MinEnrollment          Capacity
+	Capacity               string
+	Annotation             NullDescription
+	Syllabus               NullDescription
+	PassingTerms           NullDescription
+	Literature             NullDescription
+	AssessmentRequirements NullDescription
+	EntryRequirements      NullDescription
+	Aim                    NullDescription
+	Prereq                 []string
+	Coreq                  []string
+	Incompa                []string
+	Interchange            []string
+	Classes                []Class
+	Classifications        []Class
+	CourseRating
+	Link                 string // link to course webpage (not SIS)
+	BlueprintAssignments AssignmentSlice
+	BlueprintSemesters   []bool
+	InDegreePlan         bool
+	CategoryRatings      []CourseCategoryRating
+	//Comments             []Comment
+}
+
+func (c Course) IsTaughtInWinter() bool {
+	return c.LectureRangeWinter.Valid && c.SeminarRangeWinter.Valid
+}
+
+func (c Course) IsTaughtInSummer() bool {
+	return c.LectureRangeSummer.Valid && c.SeminarRangeSummer.Valid
+}
+
+func (c Course) IsTaughtBoth() bool {
+	return c.IsTaughtInWinter() && c.IsTaughtInSummer()
+}
+
+func (c Course) courseStyleClass() string {
+	switch c.Start {
+	case teachingBoth:
+		return "bg-both"
+	case teachingWinterOnly:
+		return "bg-winter"
+	case teachingSummerOnly:
+		return "bg-summer"
 	default:
-		return "unknown"
+		return ""
 	}
 }
 
+type Comment struct {
+	Student
+	CommentTarget
+	AcademicYear int `json:"academic_year"`
+	// Semester string `json:"semester"`
+	Content string `json:"content"`
+}
+
+func (c Comment) AcademicYearString() string {
+	return strconv.Itoa(c.AcademicYear)
+}
+
+type CommentTarget struct {
+	Type          string  `json:"target_type"` // Lecture or Seminar
+	CourseCode    string  `json:"course_code"`
+	TargetTeacher Teacher `json:"teacher"`
+}
+
 type Teacher struct {
-	SisID       int    `json:"KOD"`
-	FirstName   string `json:"JMENO"`
+	SISID       string `json:"KOD"`
 	LastName    string `json:"PRIJMENI"`
+	FirstName   string `json:"JMENO"`
 	TitleBefore string `json:"TITULPRED"`
 	TitleAfter  string `json:"TITULZA"`
 }
 
-func (t Teacher) String() string {
-	if t.TitleBefore == "" && t.TitleAfter == "" {
-		return fmt.Sprintf("%s %s", t.FirstName, t.LastName)
-	}
-	if t.TitleBefore == "" {
-		return fmt.Sprintf("%s %s, %s",
-			t.FirstName, t.LastName, t.TitleAfter)
-	}
-	if t.TitleAfter == "" {
-		return fmt.Sprintf("%s %s %s",
-			t.TitleBefore, t.FirstName, t.LastName)
-	}
-	return fmt.Sprintf("%s %s %s, %s",
-		t.TitleBefore, t.FirstName, t.LastName, t.TitleAfter)
+type Student struct {
+	StudyYear  int       `json:"study_year"`
+	StudyField string    `json:"study_field"`
+	Study      StudyType `json:"study_type"`
 }
 
-type TeacherSlice []Teacher
-
-func (t TeacherSlice) string() string {
-	names := []string{}
-	for _, teacher := range t {
-		names = append(names, teacher.String())
-	}
-	if len(names) == 0 {
-		return "---"
-	}
-	return strings.Join(names, ", ")
+func (c Comment) StudiesYearString() string {
+	return strconv.Itoa(c.StudyYear)
 }
 
-func (ts *TeacherSlice) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case []byte:
-		json.Unmarshal(v, &ts)
-		return nil
-	case string:
-		json.Unmarshal([]byte(v), &ts)
-		return nil
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
+type StudyType struct {
+	// Code string `json:"code"`
+	// Abbr string `json:"abbr"`
+	Name string `json:"name"`
+}
+
+func (st *StudyType) UnmarshalJSON(val []byte) error {
+	var tmp struct {
+		Code string `json:"code"`
+		// Abbr   string `json:"abbr"`
+		NameCs string `json:"name_cs"`
+		NameEn string `json:"name_en"`
 	}
+	if err := json.Unmarshal(val, &tmp); err != nil {
+		return err
+	}
+	// st.Code = tmp.Code
+	// st.Abbr = tmp.Abbr
+	st.Name = tmp.NameCs
+	if len(st.Name) == 0 {
+		st.Name = tmp.NameEn
+	}
+	return nil
 }
 
 type TeachingSemester int
@@ -108,80 +191,11 @@ const (
 	teachingBoth
 )
 
-func (ts *TeachingSemester) String(lang string) string {
-	semester := ""
-	switch *ts {
-	case teachingWinterOnly:
-		semester = texts[lang].WinterAssign
-	case teachingSummerOnly:
-		semester = texts[lang].SummerAssign
-	case teachingBoth:
-		semester = texts[lang].BothAssign
-	default:
-		semester = "unsupported"
-	}
-	return semester
-}
-
-type Assignment struct {
-	year     int
-	semester Semester
-}
-
-func (a Assignment) String(lang string) string {
-	// semester := ""
-	// switch a.semester {
-	// case assignmentNone:
-	// 	semester = texts[lang].N
-	// case assignmentWinter:
-	// 	semester = texts[lang].W
-	// case assignmentSummer:
-	// 	semester = texts[lang].S
-	// default:
-	// 	semester = texts[lang].ER
-	// }
-
-	// result := fmt.Sprintf("%d%s", a.year, semester)
-	// if a.year == 0 {
-	// 	result = texts[lang].UN
-	// }
-	// return result
-	return "TODO" // TODO NOT IMPLEMENTED
-}
-
-type Assignments []Assignment
-
-func (a Assignments) String(lang string) string {
-	assignments := []string{}
-	for _, assignment := range a {
-		assignments = append(assignments, assignment.String(lang))
-	}
-	if len(assignments) == 0 {
-		return "TODO"
-	}
-	return strings.Join(assignments, " ")
-}
+type TeacherSlice []Teacher
 
 type Description struct {
-	Title   string `json:"TITLE"`
-	Content string `json:"MEMO"`
-}
-
-func (d *Description) Scan(val interface{}) error {
-	switch v := val.(type) {
-	case []byte:
-		json.Unmarshal(v, &d)
-		return nil
-	case string:
-		json.Unmarshal([]byte(v), &d)
-		return nil
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
-}
-
-func (d Description) Value() (interface{}, error) {
-	return json.Marshal(d)
+	Title   string
+	Content string
 }
 
 type NullDescription struct {
@@ -189,38 +203,76 @@ type NullDescription struct {
 	Valid bool
 }
 
-func (d *NullDescription) Scan(val interface{}) error {
-	if val == nil {
-		d.Valid = false
-		return nil
+type SemesterAssignment int
+
+const (
+	assignmentNone SemesterAssignment = iota
+	assignmentWinter
+	assignmentSummer
+)
+
+func (sa SemesterAssignment) IDstring() string {
+	switch sa {
+	case assignmentNone:
+		return "none"
+	case assignmentWinter:
+		return "winter"
+	case assignmentSummer:
+		return "summer"
+	default:
+		return "unsupported"
 	}
-	if err := d.Description.Scan(val); err != nil {
-		return err
+}
+
+type Assignment struct {
+	year     int
+	semester SemesterAssignment
+}
+
+func (a Assignment) String(lang language.Language) string {
+	t := texts[lang]
+	semester := ""
+	switch a.semester {
+	case assignmentNone:
+		semester = "unsupported"
+	case assignmentWinter:
+		semester = t.WinterAssign
+	case assignmentSummer:
+		semester = t.SummerAssign
+	default:
+		semester = "unsupported"
 	}
-	d.Valid = true
-	return nil
+
+	result := fmt.Sprintf("%s %s", t.YearStr(a.year), semester)
+	if a.year == 0 {
+		result = t.Unassigned
+	}
+	return result
+}
+
+type AssignmentSlice []Assignment
+
+func (a AssignmentSlice) Sort() AssignmentSlice {
+	sort.Slice(a, func(i, j int) bool {
+		if a[i].year == a[j].year {
+			return a[i].semester < a[j].semester
+		}
+		return a[i].year < a[j].year
+	})
+	return a
 }
 
 type Capacity int
 
 func (c Capacity) String(lang string) string {
+	l := language.Language(lang)
 	if c == -1 { // -1 means no limit
-		return texts[lang].CapacityNoLimit
+		return texts[l].CapacityNoLimit
 	}
 	return fmt.Sprintf("%d", c)
 }
 
 type NullInt64 sql.NullInt64
-
-func (n *NullInt64) Scan(value interface{}) error {
-	var i sql.NullInt64
-	err := i.Scan(value)
-	if err != nil {
-		return err
-	}
-	*n = NullInt64(i)
-	return nil
-}
 
 func (n NullInt64) String() string {
 	if !n.Valid {
@@ -229,48 +281,28 @@ func (n NullInt64) String() string {
 	return fmt.Sprintf("%d", n.Int64)
 }
 
+type NullFloat64 sql.NullFloat64
+
+func (n NullFloat64) String() string {
+	if !n.Valid {
+		return "NULL"
+	}
+	return fmt.Sprintf("%f", n.Float64)
+}
+
+type CourseRating struct {
+	UserRating  NullInt64
+	AvgRating   NullFloat64
+	RatingCount NullInt64
+}
+
 type CourseCategoryRating struct {
-	Code   int    `db:"category_code"`
-	Title  string `db:"rating_title"`
-	Rating int    `db:"rating"`
+	Code  int
+	Title string
+	CourseRating
 }
 
-type CourseInfo struct {
-	Code                  string 		   `db:"code"`
-	Name                  string 		   `db:"title"`
-	Faculty               string 		   `db:"faculty"`
-	GuarantorDepartment   string 		   `db:"guarantor"`
-	State                 string 		   `db:"taught"`
-	Start                 TeachingSemester `db:"start_semester"`
-	SemesterCount         int    		   `db:"semester_count"`
-	Language              string           `db:"taught_lang"`
-	LectureRange1         int              `db:"lecture_range1"`
-	SeminarRange1         int              `db:"seminar_range1"`
-	LectureRange2         int              `db:"lecture_range2"`
-	SeminarRange2         int              `db:"seminar_range2"`
-	ExamType              string           `db:"exam_type"`
-	Credits               int              `db:"credits"`
-	Guarantors            TeacherSlice     `db:"guarantors"`
-	Teachers              TeacherSlice     `db:"teachers"`
-	MinEnrollment         Capacity         `db:"min_number"`
-	Capacity              string           `db:"capacity"`
-	Annotation            NullDescription  `db:"annotation"`
-	Syllabus              NullDescription  `db:"syllabus"`
-	PassingTerms          NullDescription  `db:"terms_of_passing"`
-	Literature            NullDescription  `db:"literature"`
-	AssesmentRequirements NullDescription  `db:"requirements_for_assesment"`
-	EntryRequirements     NullDescription  `db:"entry_requirements"`
-	Aim                   NullDescription  `db:"aim"`
-}
-
-type Course struct {
-	CourseInfo
-	// TODO what is this
-	Classifications []string
-	// TODO what is this
-	Classes              []string
-	Link                 string // link to course webpage (not SIS)
-	BlueprintAssignments []Assignment
-	OverallRating        NullInt64
-	CategoryRatings      []CourseCategoryRating
+type Class struct {
+	Code string
+	Name string
 }

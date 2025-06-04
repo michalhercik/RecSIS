@@ -1,33 +1,359 @@
 package courses
 
 import (
-    "github.com/michalhercik/RecSIS/utils"
-	"github.com/michalhercik/RecSIS/courses/internal/filter"
-    "strconv"
+	"github.com/michalhercik/RecSIS/utils"
+    "fmt"
+    "net/url"
 )
 
-const coursesPerPage = 30
+const coursesPerPage = 24
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
+templ Content(coursesPage *coursesPage, t text) {
+    <div id="courses-page" class="container" hx-indicator="#loader">
+        <div class="row mx-0">
+            <div id="filter-section" class="col-12 col-sm px-1 py-3 p-sm-3">
+                @filterSection(coursesPage, t)
+            </div>
+            <div class="col-12 col-sm pt-0 pt-sm-4 px-0">
+                @activeFilters(coursesPage, t)
+                @Courses(coursesPage, t)
+            </div>
+        </div>
+        <script defer src="/js/courses.js"></script>
+    </div>
 }
 
-func min(a, b int) int {
-    if a < b {
-        return a
+templ filterSection(cp *coursesPage, t text) {
+    <div id="filters-wrapper">
+        <form
+            id="filter-form"
+            hx-get={ t.Utils.Language.Path("/courses/search") }
+            hx-target="#courses-page"
+            hx-swap="outerHTML"
+            hx-include="#search-form"
+            hx-trigger="change"
+            x-data="{ showFilters: window.innerWidth > 575.5, expandedFilters: JSON.parse(sessionStorage.getItem('expanded-filters')) || false }"
+            @resize.window="showFilters = window.innerWidth > 575.5"
+        >
+            <div class="bg-filters rounded-5">
+                <div x-cloak x-show="showFilters || expandedFilters">
+                    <div class="px-4 px-sm-0 pb-4 pb-sm-0">
+                        @filtersInternal(cp, t)
+                    </div>
+                </div>
+                <div class="d-flex d-sm-none justify-content-center py-2 position-sticky bottom-0 bg-filters-buttons rounded-5 shadow-sm">
+                    <a
+                        type="button"
+                        class="btn btn-submit-input-green d-inline my-2 bi bi-chevron-down"
+                        @click="expandedFilters = !expandedFilters; sessionStorage.setItem('expanded-filters', expandedFilters); window.scrollTo({ top: 0, left: 0, behavior: 'instant' })"
+                        x-text={ fmt.Sprintf("expandedFilters ? ' %s' : ' %s'", t.ShowResults, t.FilterButton) }>
+                    </a>
+                </div>
+            </div>
+        </form>
+        // move to the top of the page button
+        <div id="move-to-filters-btn" class="d-none d-sm-flex justify-content-center mt-3">
+            @moveToTopLink(t)
+        </div>
+    </div>
+}
+
+templ filtersInternal(cp *coursesPage, t text) {
+    for category := range cp.facets {
+        <div x-data={ fmt.Sprintf("{ expanded: JSON.parse(sessionStorage.getItem('expanded-%s')) || false }", category.ID()) }>
+            // category title (with help icon)
+            <div class="d-flex justify-content-start align-items-end">
+                <p class="form-label fw-semibold mb-0 mt-2">{ category.Title() }</p>
+                if category.Desc() != "" {
+                    @helpIcon(category.Desc())
+                }
+            </div>
+            // checkboxes with values
+            for i, value := range category.IterWithFacets() {
+                <div x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
+                    @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
+                </div>
+            }
+            if limit := category.DisplayedValueLimit(); category.Size() > limit {
+                // show more/less button
+                <button
+                    hx-ignore="true"
+                    type="button"
+                    class="btn btn-link text-secondary p-0"
+                    x-text={ fmt.Sprintf("expanded ? '%s' : '%s %d'", t.ShowLess, t.ShowMore(category.Size() - limit), category.Size() - limit) }
+                    @click={ fmt.Sprintf("expanded = !expanded; sessionStorage.setItem('expanded-%s', expanded)", category.ID()) }>
+                </button>
+            }
+        </div>
     }
-    return b
+}
+
+templ checkboxInput(name, value, label, desc string, count int, checked bool) {
+    <div class="form-check">
+        <input role="button" class="form-check-input" disabled?={ count == 0 }
+            type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
+        <label role="button" class="form-check-label" for={ name + "-" + value }>
+            <span>{ label }</span>
+            if desc != "" {
+                @helpIcon(desc)
+            }
+            <span class="text-muted small">{ fmt.Sprintf("(%d)", count) }</span>
+        </label>
+    </div>
+}
+
+templ moveToTopLink(t text) {
+    <a
+        href="#"
+        class="icon-link">
+        <i class="bi bi-chevron-up lh-1 my-auto"></i>
+        { t.TopFilter }
+    </a>
+}
+
+templ helpIcon(content string) {
+    <i
+        x-data="{ hoverHelp: false }"
+        class="mx-1 cursor-help bi"
+        :class="hoverHelp ? 'bi-question-circle-fill' : 'bi-question-circle'"
+        @mouseover="hoverHelp = true"
+        @mouseleave="hoverHelp = false"
+        data-bs-toggle="tooltip"
+        data-bs-placement="right"
+        data-bs-delay="200"
+        data-bs-title={ content }>
+    </i>
+}
+
+templ activeFilters(cp *coursesPage, t text) {
+    <div id="active-filters">
+        {{ anyActive := false }}
+        for category := range cp.facets {
+            if category.Active() {
+                {{ anyActive = true }}
+                <div class="d-flex flex-row mb-1 w-auto">
+                    <span class="px-2 bg-body border rounded-start align-self-start">{ category.Title() }</span>
+                    <div class="d-flex flex-row flex-wrap rounded-row-end">
+                    for _, value := range category.IterWithFacets() {
+                        if value.Checked {
+                            // x-data is necessary for x-on:click to work
+                            <div class="border bg-light px-2" x-data>
+                                <span class="fw-semibold">{ value.Title }</span>
+                                <i
+                                    role="button"
+                                    class="bi bi-x-lg"
+                                    @click={ fmt.Sprintf("uncheck('par%s-%s')", category.ID(), value.ID) }>
+                                </i>
+                            </div>
+                        }
+                    }
+                    </div>
+                </div>
+            }
+        }
+        if anyActive {
+            <button
+                class="btn btn-link text-secondary p-0 pb-3"
+                hx-get={ t.Utils.Language.Path("/courses/search") }
+                hx-target="#courses-page"
+                hx-include="#search-form"
+                hx-swap="outerHTML show:window:top">
+                { t.CancelFilters }
+            </button>
+        }
+    </div>
+}
+
+templ Courses(cp *coursesPage, t text) {
+    <div id="courses">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 row-cols-xxl-4 g-0">
+            if cp.totalPages == 0 {
+                <p>{ t.NoCoursesFound }</p>
+            } else {
+                for _, course := range cp.courses {
+                    @CourseCard(&course, t, cp.templ)
+                }
+            }
+            // dummy cards for alignment
+            for i := 0; i < 10; i++ {
+                <div class="card custom-card border-0"></div>
+            }
+        </div>
+        if cp.totalPages > 1 {
+            @pagination(cp, t)
+        }
+    </div>
+}
+
+templ CourseCard(course *Course, t text, addBtn PartialBlueprintAdd) {
+    <div
+        id={ fmt.Sprintf("course-card-%s", course.Code) }
+        class="card col rounded-0 px-0 mb-0"
+        x-data="{ expanded: false, isLong: false }"
+        x-init="isLong = $refs.annotation.scrollHeight > 300; $nextTick(() => requestAnimationFrame(() => { isLong = $refs.annotation.scrollHeight > 300 }))"
+    >
+        // header
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">{ course.Code }</h6> // code
+            <small>{ semesterHoursExamsString(course, t) }</small> // semester, hours, exams
+            <small>{ fmt.Sprintf("%s: %d", t.Credits, course.Credits) }</small> // credits
+        </div>
+        // body
+        <div class="card-body d-flex flex-column position-relative">
+            <div
+                :class="{ 'expanded': expanded, 'annotation-container': isLong }"
+                x-ref="annotation"
+            >
+                // course title (link to detail page)
+                <h5 class="card-title">
+                    @utils.TitleCourseLink(course.Code, course.Name, false, t.Utils)
+                </h5>
+                // guarantors
+                <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string(t) }</h6>
+                // course description (annotation)
+                <p class="card-text annotation-text">{ course.Annotation.string() }</p>
+            </div>
+            // show rest/less of annotation button
+            <button
+                class="btn btn-link text-secondary"
+                @click="expanded = !expanded"
+                x-show="isLong"
+                x-text={ fmt.Sprintf("expanded ? '%s' : '%s'", t.ReadLess, t.ReadMore) }>
+            </button>
+            // status badges
+            <div class="d-flex flex-wrap mt-auto pt-3 pb-1">
+                for _, ba := range course.BlueprintAssignments.Sort() {
+                    @badge(course, ba, t)
+                }
+                // TODO: add degree plan and completed badges
+            </div>
+            // add to blueprint button
+            <div class="d-flex justify-content-end">
+                @addBtn("outerHTML", "#course-card-" + course.Code, "", course.BlueprintSemesters, course.Code)
+            </div>
+        </div>
+    </div>
+}
+
+templ badge(course *Course, ba Assignment, t text) {
+    if ba.Year == 0 {
+        @clickableBadge("blueprint", fmt.Sprintf("bp-unassigned-row-%s", course.Code), "bg-unassigned", t) {
+            { ba.String(t.Utils.Language) }
+        }
+    } else {
+        @clickableBadge("blueprint", fmt.Sprintf("bp-%d-%s-row-%s", ba.Year, ba.Semester.IDstring(), course.Code), "bg-blueprint", t) {
+            { ba.String(t.Utils.Language) }
+        }
+    }
+}
+
+templ clickableBadge(target, fragment, bgColor string, t text) {
+    <a
+        role="button"
+        hx-boost="false"
+        class={ "badge rounded-pill me-1 mb-1", bgColor }
+        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.Utils.Language.Path(target), url.PathEscape(fragment))) }>
+        { children... }
+    </a>
+}
+
+// TODO: keep this for later usage (if not used, remove it)
+// templ ribbon(ba AssignmentSlice, t text) {
+//     if len(ba) > 0 {
+//         <div class="ribbon">
+//             <span>{ ba.String(t.Utils.Language) }</span>
+//         </div>
+//     }
+// }
+
+templ pagination(cp *coursesPage, t text) {
+    // disable pagination if loaded more courses
+    if cp.pageSize == coursesPerPage {
+        <div class="mt-3 d-flex justify-content-center">
+            <ul
+                class="pagination mt-3"
+                hx-target="#courses-page"
+                hx-include="#filter-form, #search-form"
+                hx-swap="outerHTML show:window:top"
+                hx-trigger="click"
+            >
+                @paginationIconButton(cp.page - 1, "bi bi-chevron-left", cp, t)
+                @paginationNumberButton(1, cp, t)
+                if cp.page > 4 {
+                    @threeDots()
+                }
+                for i := max(2, cp.page - 2); i <= min(cp.page + 2, cp.totalPages - 1); i++ {
+                    @paginationNumberButton(i, cp, t)
+                }
+                if cp.page < cp.totalPages - 3 {
+                    @threeDots()
+                }
+                @paginationNumberButton(cp.totalPages, cp, t)
+                @paginationIconButton(cp.page + 1, "bi bi-chevron-right", cp, t)
+            </ul>
+        </div>
+    }
+    // disable load more button if it is not the first page
+    if cp.page == 1 {
+        <div class="mt-3 d-flex justify-content-center">
+            @loadMoreButton(cp.pageSize + coursesPerPage, cp, t)
+        </div>
+    }
+}
+
+templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
+    <li class="page-item">
+        <div
+            role="button"
+            class={ "page-link", templ.KV("disabled", cp.page == page || page < 1 || page > cp.totalPages) }
+            hx-get={ t.Utils.Language.Path("/courses/search") }
+            hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
+        >
+            <i class={ icon }></i>
+        </div>
+    </li>
+}
+
+templ paginationNumberButton(page int, cp *coursesPage, t text) {
+    <li class="page-item">
+        <div
+            role="button"
+            class={ "page-link", templ.KV("active", cp.page == page) }
+            hx-get={ t.Utils.Language.Path("/courses/search") }
+            hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
+        >
+            { fmt.Sprintf("%d", page) }
+        </div>
+    </li>
+}
+
+templ threeDots() {
+    <li class="page-item">
+        <div class="page-link">
+            <i class="bi bi-three-dots"></i>
+        </div>
+    </li>
+}
+
+templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
+    <button
+        class="btn btn-outline-primary"
+        hx-get={ t.Utils.Language.Path("/courses/search") }
+        hx-target="#courses-page"
+        hx-include="#filter-form, #search-form"
+        hx-swap="outerHTML"
+        hx-vals={ fmt.Sprintf(`"%s": %d`, hitsPerPageParam, newPageSize) }
+    >
+        { t.LoadMore }
+    </button>
 }
 
 func semesterHoursExamsString(course *Course, t text) string {
-    result := course.Start.String(t.Language) + " "
-    both := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
-    winter := strconv.Itoa(course.LectureRange1) + "/" + strconv.Itoa(course.SeminarRange1)
-    summer := strconv.Itoa(course.LectureRange2) + "/" + strconv.Itoa(course.SeminarRange2)
-    
+    result := course.Start.String(t.Utils.Language) + " "
+    both := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
+    winter := fmt.Sprintf("%d/%d", course.LectureRange1, course.SeminarRange1)
+    summer := fmt.Sprintf("%d/%d", course.LectureRange2, course.SeminarRange2)
+
     switch course.Start {
     case teachingWinterOnly:
         result += winter
@@ -51,323 +377,16 @@ func semesterHoursExamsString(course *Course, t text) string {
     return result + ", " + course.ExamType
 }
 
-templ QuickResults(res *QuickResponse, t text) {
-    <div
-        id="quick-search-results"
-        class="dropdown-menu w-100 shadow-sm show"
-    >
-        if res.approxHits == -1 {
-            // Don't render anything if approxHits is -1
-        } else if len(res.courses) == 0 {
-            <div class="dropdown-item text-muted">{ t.NoCoursesFound }</div>
-        } else {
-            for _, course := range res.courses {
-                <a
-                    href={ templ.URL(t.Utils.LangLink("/course/" + course.code)) }
-                    class="dropdown-item text-truncate"
-                    hx-boost="false"
-                >
-                    { course.code + " - " + course.name }
-                </a>
-            }
-        }
-    </div>
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
-templ search(coursesPage *coursesPage, t text) {
-    <form
-        id="search-form"
-        hx-get={ t.Utils.LangLink("/courses/search") }
-        hx-target="#courses"
-        hx-swap="outerHTML"
-        hx-include="#filter-form"
-        class="pt-3 pb-3"
-        x-data="{ quickResOpen: false }"
-    >
-        <div class="justify-content-center mx-5">
-            <div class="dropdown" @click.away="quickResOpen = false">
-                <div class="input-group">
-                    <input type="text" name={ searchParam } id="search" class="form-control" placeholder={ t.SearchPlaceholder } autocomplete="off"
-                        x-model="searchInput"
-                        @click="quickResOpen = true"
-                        @keydown="quickResOpen = true"
-                        @keydown.escape="quickResOpen = false"
-                        @focus="quickResOpen = true; if (searchInput !== '') $dispatch('triggerSearch')"
-                        hx-get={ t.Utils.LangLink("/courses/quicksearch") }
-                        hx-trigger="input changed, triggerSearch from:body"
-                        hx-target="#quick-search-results"
-                        hx-swap="outerHTML"
-                        hx-push-url="false"
-                    />
-                    <button type="submit" class="btn btn-primary" @click="quickResOpen = false">{ t.SearchButton }</button>
-                </div>
-                <div x-cloak x-show="quickResOpen && searchInput.length > 0">
-                    @QuickResults(&QuickResponse{
-                        approxHits: -1,
-                        courses: []QuickCourse{},
-                    }, t)
-                </div>
-            </div>
-        </div>
-    </form>
-}
-
-templ checkboxInput(name, value, label string, count int, t text) {
-    <div class="form-check">
-        <input role="button" class="form-check-input" 
-            type="checkbox" name={ name } id={ name + "-" + value } value={ value }>
-        <label role="button" class="form-check-label" for={ name + "-" + value }>
-            { label + " (" + strconv.Itoa(count) + ")" }
-        </label>
-    </div>
-}
-
-// TODO: currently cannot use, because param is not exported
-// templ filterOptions(cp *coursesPage, p filter.param, t text) {
-//     for f := range cp.facets.ParamDistribution(p) {
-//         @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(p)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-//     }
-// }
-
-
-templ filterSection(cp *coursesPage, t text) {
-    <div class="form-group" style="height: 100%;">
-        <form
-            id="filter-form"
-            hx-get={ t.Utils.LangLink("/courses/search") }
-            hx-target="#courses"
-            hx-swap="outerHTML"
-            hx-include="#search-form"
-            hx-trigger="change"
-        >
-            // semester filter
-            <div>
-                <p class="form-label">{ t.SemesterFilter + ":" }</p>
-                for f := range cp.facets.ParamDistribution(filter.StartSemester) {
-                    @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(filter.StartSemester)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-                }
-            </div>
-            // faculty filter
-            <div>
-                <p class="form-label">{ t.FacultyFilter + ":" }</p>
-                for f := range cp.facets.ParamDistribution(filter.Faculty) {
-                    @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(filter.Faculty)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-                }
-            </div>
-            // credits filter
-            <div>
-                <p class="form-label">{ t.CreditsFilter + ":" }</p>
-                for f := range cp.facets.ParamDistribution(filter.Credits) {
-                    @checkboxInput(filter.ParamPrefix + strconv.Itoa(int(filter.Credits)), strconv.Itoa(f.Code), f.Label, f.Count, t)
-                }
-            </div>
-        </form>
-        // move to the top of the page button
-        <div class="text-center justify-content-center d-flex mt-3" style="position: sticky; top: 72px;">
-            <p
-                role="button"
-                @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
-                class="link-primary"
-            >
-                <i class="bi bi-chevron-up"></i>
-                { t.TopFilter }
-            </p>
-        </div>
-    </div>
-}
-
-templ ribbon(ba AssignmentSlice, t text) {
-    if len(ba) > 0 {
-        <div class="ribbon">
-            <span>{ ba.String(t.Language) }</span>
-        </div>
+func min(a, b int) int {
+    if a < b {
+        return a
     }
-}
-
-templ blueprintAssignment(code string, t text) {
-    <div class="d-flex justify-content-end mt-auto pt-3">
-        <div class="btn-group">
-            <button type="button" class="btn btn-outline-blueprint"
-                hx-post={ "/blueprint/course/" + code }
-                hx-vals={ `"year": 0, "semester": 0, "lang": "` + t.Language + `"` }
-            >
-                { t.Assign }
-            </button>
-            <button type="button" class="btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split"
-                data-bs-toggle="dropdown" aria-expanded="false">
-            </button>
-            <ul class="dropdown-menu">
-            // TODO: make dynamic, NOT 3 fixed years
-                for year := 1; year <= 3; year++ {
-                    <li class="mx-3"><button class="dropdown-item text-center"
-                        hx-post={ "/blueprint/course/" + code }
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 1, "lang": "` + t.Language + `"` }
-                    >
-                    { t.YearStr(year) + " " + t.WinterAssign }
-                    </button></li>
-                    <li class="mx-3"><button class="dropdown-item text-center"
-                        hx-post={ "/blueprint/course/" + code }
-                        hx-vals={ `"year": ` + strconv.Itoa(year) + `, "semester": 2, "lang": "` + t.Language + `"` }
-                    >
-                    { t.YearStr(year) + " " + t.SummerAssign }
-                    </button></li>
-                }
-            </ul>
-        </div>
-    </div>
-}
-
-templ courseCard(course *Course, t text) {
-    <div
-        class="card custom-card rounded-0"
-        x-data="{ expanded: false, showButton: false, isHovered: false }"
-        @mouseenter="isHovered = true"
-        @mouseleave="isHovered = false"
-        x-init="$nextTick(() => { showButton = $refs.annotation.scrollHeight > 350 })"
-    >
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">{ course.Code }</h6>
-            <small>{ semesterHoursExamsString(course, t) }</small>
-            <small>{ t.Credits + ": " + strconv.Itoa(course.Credits) }</small>
-        </div>
-        <div class="card-body d-flex flex-column position-relative">
-            @ribbon(course.BlueprintAssignments, t)
-            <div
-                :class="{ 'expanded': expanded, 'annotation-container': showButton }" :style="isHovered && { 'z-index': '100' }"
-                x-ref="annotation"
-            >
-                <h5 class="card-title"><a class="link-body-emphasis link-offset-2 link-underline-opacity-0 link-underline-opacity-75-hover" href={ templ.URL(t.Utils.LangLink("/course/" + course.Code)) }>{ course.Name }</a></h5>
-                // TODO take care of no guarantors
-                <h6 class="card-subtitle mb-2 text-muted">{ course.Guarantors.string() }</h6>
-                <p class="card-text annotation-text">{ course.Annotation.string() }</p>
-            </div>
-            <button class="btn btn-link text-secondary" @click="expanded = !expanded" x-show="showButton" x-text={ "expanded ? '" + t.ReadLess + "' : '" + t.ReadMore + "'" }></button>
-            @blueprintAssignment(course.Code, t)
-        </div>
-    </div>
-}
-
-templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
-    <li class="page-item">
-        <div
-            role="button"
-            class="page-link"
-            :class={ strconv.FormatBool(cp.page == page || page < 1 || page > cp.totalPages) + " && 'disabled'" }
-            hx-get={ t.Utils.LangLink("/courses/search") }
-            hx-vals={ `"` + pageParam + `": ` + strconv.Itoa(page) }
-        >
-            <i class={ icon }></i>
-        </div>
-    </li>
-}
-
-templ paginationNumberButton(page int, cp *coursesPage, t text) {
-    <li class="page-item">
-        <div
-            role="button"
-            class="page-link"
-            :class={ strconv.FormatBool(cp.page == page) + " && 'active'" }
-            hx-get={ t.Utils.LangLink("/courses/search") }
-            hx-vals={ `"` + pageParam + `": ` + strconv.Itoa(page) }
-        >
-            { strconv.Itoa(page) }
-        </div>
-    </li>
-}
-
-templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
-    <button
-        class="btn btn-outline-primary"
-        hx-get={ t.Utils.LangLink("/courses/search") }
-        hx-vals={ `"` + hitsPerPageParam + `": ` + strconv.Itoa(newPageSize) }
-        hx-target="#courses"
-        hx-include="#filter-form, #search-form"
-        hx-swap="outerHTML"
-    >
-        { t.LoadMore }
-    </button>
-}
-
-templ threeDots() {
-    <li class="page-item">
-        <div class="page-link">
-            <i class="bi bi-three-dots"></i>
-        </div>
-    </li>
-}
-
-templ pagination(cp *coursesPage, t text) {
-    // disable pagination if loaded more courses
-    if cp.pageSize == coursesPerPage {
-        <div class="mt-3 d-flex justify-content-center">
-            <ul
-                class="pagination justify-content-center mt-3"
-                hx-target="#courses"
-                hx-include="#filter-form, #search-form"
-                hx-swap="outerHTML show:window:top"
-                hx-trigger="click"
-            >
-                @paginationIconButton(cp.page - 1, "bi bi-chevron-left", cp, t)
-                @paginationNumberButton(1, cp, t)
-                if cp.page > 4 {
-                    @threeDots()
-                }
-                for i := max(2, cp.page - 2); i <= min(cp.page + 2, cp.totalPages - 1); i++ {
-                    @paginationNumberButton(i, cp, t)
-                }
-                if cp.page < cp.totalPages - 3 {
-                    @threeDots()
-                }
-                @paginationNumberButton(cp.totalPages, cp, t)
-                @paginationIconButton(cp.page + 1, "bi bi-chevron-right", cp, t)
-            </ul>
-        </div>
-    }
-    // disable load more button if it is not the first page
-    if cp.page == 1 {
-        <div class="d-flex justify-content-center mt-3">
-            @loadMoreButton(cp.pageSize + coursesPerPage, cp, t)
-        </div>
-    }
-}
-
-templ Courses(cp *coursesPage, t text) {
-    <div id="courses">
-        <div class="grid-cards">
-            if cp.totalPages == 0 {
-                <p>{ t.NoCoursesFound }</p>
-            } else {
-                for _, course := range cp.courses {
-                    @courseCard(&course, t)
-                }
-            }
-            // dummy cards for alignment
-            for i := 0; i < 10; i++ {
-                <div class="card custom-card border-0"></div>
-            }
-        </div>
-        if cp.totalPages > 1 {
-            @pagination(cp, t)
-        }
-    </div>
-}
-
-templ Content(coursesPage *coursesPage, t text) {
-    // TODO: define x-data, x-model and x-init for all filters to survive page reload
-    // x-data is needed for x-bind:class to work
-    <div id="courses-page" class="grid-page" x-data="{ searchInput: '' }" x-init={ "searchInput = '" + coursesPage.search + "';" }>
-        <div class="filter bg-body-secondary">
-            @filterSection(coursesPage, t)
-        </div>
-        <div class="main-content">
-            @search(coursesPage, t)
-            @Courses(coursesPage, t)
-        </div>
-    </div>
-}
-
-templ Page(coursesPage *coursesPage, t text) {
-    @utils.Page(t.Utils.Courses, t.Utils) {
-        @Content(coursesPage, t)
-    }
+    return b
 }

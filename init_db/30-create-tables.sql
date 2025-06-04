@@ -86,7 +86,14 @@ CREATE TABLE courses(
     literature JSONB,
     requirements_for_assesment JSONB,
     entry_requirements JSONB,
-    aim JSONB
+    aim JSONB,
+    comments JSONB,
+    preqrequisities JSONB,
+    corequisities JSONB,
+    incompatibilities JSONB,
+    interchangebilities JSONB,
+    classes JSONB,
+    classifications JSONB
 );
 
 -- CREATE TABLE classifications(
@@ -168,12 +175,12 @@ CREATE TABLE studies(
 );
 
 CREATE TABLE users (
-    id INT PRIMARY KEY
+    id VARCHAR(8) PRIMARY KEY
 );
 
 CREATE TABLE blueprint_years(
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(id),
+    user_id VARCHAR(8) NOT NULL REFERENCES users(id),
     academic_year INT NOT NULL,
     UNIQUE (user_id, academic_year)
 );
@@ -182,6 +189,7 @@ CREATE TABLE blueprint_semesters(
     id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     blueprint_year_id INT NOT NULL,
     semester INT NOT NULL,
+    folded BOOLEAN NOT NULL DEFAULT false,
     FOREIGN KEY (blueprint_year_id) REFERENCES blueprint_years(id) ON DELETE CASCADE,
     UNIQUE (blueprint_year_id, semester)
 );
@@ -238,7 +246,7 @@ WHEN (pg_trigger_depth() = 0)
 EXECUTE FUNCTION blueprint_course_reordering();
 
 CREATE TABLE bla_blueprints (
-    user_id INT REFERENCES users(id),
+    user_id VARCHAR(8) REFERENCES users(id),
     lang CHAR(2) NOT NULL,
     blueprint JSONB NOT NULL
 );
@@ -246,7 +254,7 @@ CREATE TABLE bla_blueprints (
 -- TODO: rename
 CREATE TABLE bla_studies (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id INT REFERENCES users(id) NOT NULL,
+    user_id VARCHAR(8) REFERENCES users(id) NOT NULL,
     degree_plan_code VARCHAR(15) NOT NULL,
     start_year INT NOT NULL
 );
@@ -254,7 +262,8 @@ CREATE TABLE bla_studies (
 -- TODO: Clean up expired sessions
 CREATE TABLE sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id INT REFERENCES users(id),
+    user_id VARCHAR(8) REFERENCES users(id),
+    ticket VARCHAR(42) NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL
 );
 
@@ -267,7 +276,7 @@ CREATE TABLE course_rating_categories (
 CREATE DOMAIN course_overall_rating_domain AS INT CHECK (VALUE = 0 OR VALUE = 1);
 
 CREATE TABLE course_overall_ratings (
-    user_id INT NOT NULL REFERENCES users(id),
+    user_id VARCHAR(8) NOT NULL REFERENCES users(id),
     course_code VARCHAR(10) NOT NULL,
     rating course_overall_rating_domain NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -277,7 +286,7 @@ CREATE TABLE course_overall_ratings (
 CREATE DOMAIN course_rating_domain AS INT CHECK (VALUE > 0 OR VALUE <= 5);
 
 CREATE TABLE course_ratings (
-    user_id INT NOT NULL REFERENCES users(id),
+    user_id VARCHAR(8) NOT NULL REFERENCES users(id),
     course_code VARCHAR(10) NOT NULL,
     category_code INT NOT NULL,
     rating course_rating_domain NOT NULL,
@@ -290,13 +299,65 @@ CREATE TABLE course_ratings (
 --     labels VARCHAR(50)[] NOT NULL
 -- )
 
-CREATE TABLE filter_labels (
-    id INT NOT NULL,
-    lang CHAR(2) NOT NULL,
-    label VARCHAR(50) NOT NULL
+-- CREATE TABLE filter_labels (
+--     id INT NOT NULL,
+--     lang CHAR(2) NOT NULL,
+--     label VARCHAR(50) NOT NULL
+-- );
+
+-- CREATE TABLE filter_params (
+--     param_name VARCHAR(30) NOT NULL,
+--     value_id INT NOT NULL
+-- );
+
+-- CREATE TABLE course_filter_categories (
+--     id GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     position INT NOT NULL,
+-- )
+
+-- CREATE TABLE course_filter_category_desc (
+--     lang CHAR(2) NOT NULL,
+--     category_id INT NOT NULL REFERENCES course_filter_categories(id),
+--     title VARCHAR(50) NOT NULL,
+--     description VARCHAR(200) NOT NULL,
+-- )
+
+-- CREATE TABLE course_filter_category_values (
+--     id GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     category_id INT NOT NULL REFERENCES course_filter_categories(id),
+--     position INT NOT NULL,
+-- )
+
+-- CREATE TABLE course_filter_category_values_desc (
+--     lang CHAR(2) NOT NULL,
+--     value_id INT NOT NULL REFERENCES course_filter_category_values(id),
+--     title VARCHAR(50) NOT NULL,
+--     description VARCHAR(200) NOT NULL,
+-- )
+
+CREATE TABLE filters (
+    id VARCHAR(50) PRIMARY KEY
 );
 
-CREATE TABLE filter_params (
-    param_name VARCHAR(30) NOT NULL,
-    value_id INT NOT NULL
+CREATE TABLE filter_categories (
+    id INT PRIMARY KEY,
+    filter_id VARCHAR(50) NOT NULL REFERENCES filters(id),
+    facet_id VARCHAR(50) NOT NULL,
+    title_cs VARCHAR(50) NOT NULL,
+    title_en VARCHAR(50) NOT NULL,
+    description_cs VARCHAR(200),
+    description_en VARCHAR(200),
+    displayed_value_limit INT NOT NULL,
+    position INT NOT NULL
+);
+
+CREATE TABLE filter_values (
+    id INT PRIMARY KEY,
+    category_id INT NOT NULL REFERENCES filter_categories(id),
+    facet_id VARCHAR(50) NOT NULL,
+    title_cs VARCHAR(50) NOT NULL,
+    title_en VARCHAR(50) NOT NULL,
+    description_cs VARCHAR(200),
+    description_en VARCHAR(200),
+    position INT NOT NULL
 );

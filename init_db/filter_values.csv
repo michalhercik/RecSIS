@@ -1,245 +1,1196 @@
-index,variable,value
-0,cs,32-UCJF
-1,cs,32-KSI
-2,cs,32-KPMS
-3,cs,32-KTIML
-4,cs,32-FUUK
-5,cs,32-KMF
-6,cs,32-KCHFO
-7,cs,32-MUUK
-8,cs,32-KNM
-9,cs,32-KSVI
-10,cs,32-KFPP
-11,cs,32-KDF
-12,cs,32-KG
-13,cs,32-KFKL
-14,cs,32-STUD
-15,cs,32-KAM
-16,cs,32-KFNT
-17,cs,32-KVOF
-18,cs,32-AUUK
-19,cs,32-KDM
-20,cs,32-KFA
-21,cs,32-UTF
-22,cs,32-KA
-23,cs,32-KTV
-24,cs,32-#EXT
-25,cs,32-UFAL
-26,cs,32-KFM
-27,cs,32-#PRX
-28,cs,32-KMA
-29,cs,32-SISAL
-30,cs,32-KJP
-31,cs,32-KDSS
-32,cs,32-FFUK
-33,cs,32-MUAV
-34,cs,32-IUUK
-35,cs,32-UTIAAV
-36,cs,32-PASSAU
-37,cs,Vyučován
-38,cs,Nevyučován
-39,cs,1
-40,cs,2
-41,cs,3
-42,cs,HT
-43,cs,HS
-44,cs,TS
-45,cs,DS
-46,cs,Zk
-47,cs,Z+Zk
-48,cs,Z
-49,cs,KZ
-50,cs,Z*
-51,cs,-
-52,cs,Q
-53,cs,J
-54,cs,X
-55,cs,KK
-56,cs,ZZ
-57,cs,I
-58,cs,D
-59,cs,P
-60,cs,R
-61,cs,**
-62,cs,S
-63,cs,8
-64,cs,4
-65,cs,5
-66,cs,9
-67,cs,12
-68,cs,6
-69,cs,0
-70,cs,7
-71,cs,10
-72,cs,15
-73,cs,27
-74,cs,Neomezená
-75,cs,60
-76,cs,25
-77,cs,575
-78,cs,180
-79,cs,385
-80,cs,Matematicko-fyzikální fakulta
-81,cs,20
-82,cs,18
-83,cs,30
-84,cs,Čínština
-85,cs,Arménština
-86,cs,Běloruština
-87,cs,Bulharština
-88,cs,Český znakový jazyk
-89,cs,Čeština
-90,cs,Dánština
-91,cs,Nizozemština
-92,cs,Angličtina
-93,cs,Estonština
-94,cs,Finština
-95,cs,Francouzština
-96,cs,Gruzínština
-97,cs,Němčina
-98,cs,Starořečtina
-99,cs,Řečtina
-100,cs,Maďarština
-101,cs,Italština
-102,cs,Japonština
-103,cs,Korejština
-104,cs,Lotyšština
-105,cs,Litevština
-106,cs,Norština
-107,cs,Polština
-108,cs,Portugalština
-109,cs,Rumunština
-110,cs,Ruština
-111,cs,Srbština
-112,cs,Chorvatština
-113,cs,Slovenština
-114,cs,Slovinština
-115,cs,Španělština
-116,cs,Švédština
-117,cs,Turečtina
-118,cs,Ukrajinština
-119,cs,Vietnamština
-120,cs,Galicijština
-121,cs,Bosenština
-0,en,32-UCJF
-1,en,32-KSI
-2,en,32-KPMS
-3,en,32-KTIML
-4,en,32-FUUK
-5,en,32-KMF
-6,en,32-KCHFO
-7,en,32-MUUK
-8,en,32-KNM
-9,en,32-KSVI
-10,en,32-KFPP
-11,en,32-KDF
-12,en,32-KG
-13,en,32-KFKL
-14,en,32-STUD
-15,en,32-KAM
-16,en,32-KFNT
-17,en,32-KVOF
-18,en,32-AUUK
-19,en,32-KDM
-20,en,32-KFA
-21,en,32-UTF
-22,en,32-KA
-23,en,32-KTV
-24,en,32-#EXT
-25,en,32-UFAL
-26,en,32-KFM
-27,en,32-#PRX
-28,en,32-KMA
-29,en,32-SISAL
-30,en,32-KJP
-31,en,32-KDSS
-32,en,32-FFUK
-33,en,32-MUAV
-34,en,32-IUUK
-35,en,32-UTIAAV
-36,en,32-PASSAU
-37,en,Taught
-38,en,Not taught
-39,en,1
-40,en,2
-41,en,3
-42,en,HT
-43,en,HS
-44,en,TS
-45,en,DS
-46,en,Ex
-47,en,C+Ex
-48,en,C
-49,en,MC
-50,en,Z*
-51,en,-
-52,en,Q
-53,en,J
-54,en,X
-55,en,KK
-56,en,ZZ
-57,en,I
-58,en,D
-59,en,P
-60,en,R
-61,en,**
-62,en,S
-63,en,8
-64,en,4
-65,en,5
-66,en,9
-67,en,12
-68,en,6
-69,en,0
-70,en,7
-71,en,10
-72,en,15
-73,en,27
-74,en,Unlimited
-75,en,60
-76,en,25
-77,en,575
-78,en,180
-79,en,385
-80,en,Faculty of Mathematics and Physics
-81,en,20
-82,en,18
-83,en,30
-84,en,Chinese
-85,en,Armenian
-86,en,Belarusian
-87,en,Bulgarian
-88,en,Czech sign language
-89,en,Czech
-90,en,Danish
-91,en,Dutch
-92,en,English
-93,en,Estonian
-94,en,Finnish
-95,en,French
-96,en,Georgian
-97,en,German
-98,en,Ancient greek
-99,en,Greek
-100,en,Hungarian
-101,en,Italian
-102,en,Japanese
-103,en,Korean
-104,en,Latvian
-105,en,Lithuanian
-106,en,Norwegian
-107,en,Polish
-108,en,Portuguese
-109,en,Romanian
-110,en,Russian
-111,en,Serbian
-112,en,Croatian
-113,en,Slovak
-114,en,Slovenian
-115,en,Spanish
-116,en,Swedish
-117,en,Turkish
-118,en,Ukrainian
-119,en,Vietnamese
-120,en,Galician
-121,en,Bosnian
+,title_cs,title_en,category,description_cs,description_en,facet_id,position
+0,Čeština,Czech,7,,,czech,0
+1,Angličtina,English,7,,,english,1
+2,Němčina,German,7,,,german,2
+3,Francouzština,French,7,,,french,3
+4,Španělština,Spanish,7,,,spanish,4
+5,Ruština,Russian,7,,,russian,5
+6,0,0,5,,,0,0
+7,1,1,5,,,1,1
+8,2,2,5,,,2,2
+9,3,3,5,,,3,3
+10,4,4,5,,,4,4
+11,6,6,5,,,6,5
+12,20,20,5,,,20,6
+13,0,0,6,,,0,0
+14,1,1,6,,,1,1
+15,2,2,6,,,2,2
+16,3,3,6,,,3,3
+17,4,4,6,,,4,4
+18,5,5,6,,,5,5
+19,6,6,6,,,6,6
+20,8,8,6,,,8,7
+21,10,10,6,,,10,8
+22,12,12,6,,,12,9
+23,18,18,6,,,18,10
+24,20,20,6,,,20,11
+25,30,30,6,,,30,12
+26,Matematicko-fyzikální fakulta,Faculty of Mathematics and Physics,0,,,faculty_of_mathematics_and_physics,0
+27,Nevyučován,Not taught,1,,,not_taught,0
+28,Vyučován,Taught,1,,,taught,1
+29,1,1,2,,,1,0
+30,2,2,2,,,2,1
+31,3,3,2,,,3,2
+32,0,0,3,,,0,0
+33,1,1,3,,,1,1
+34,2,2,3,,,2,2
+35,3,3,3,,,3,3
+36,4,4,3,,,4,4
+37,5,5,3,,,5,5
+38,6,6,3,,,6,6
+39,7,7,3,,,7,7
+40,8,8,3,,,8,8
+41,9,9,3,,,9,9
+42,10,10,3,,,10,10
+43,12,12,3,,,12,11
+44,15,15,3,,,15,12
+45,27,27,3,,,27,13
+46,1,1,4,,,1,0
+47,2,2,4,,,2,1
+48,Z+Zk,C+Ex,8,,,c+ex,0
+49,Zk,Ex,8,,,ex,1
+50,KZ,MC,8,,,mc,2
+51,Z,C,8,,,c,3
+52,Z*,Z*,8,,,z*,5
+53,-,-,8,,,-,6
+54,Q,Q,8,,,q,7
+55,J,J,8,,,j,8
+56,X,X,8,,,x,9
+57,KK,KK,8,,,kk,10
+58,ZZ,ZZ,8,,,zz,11
+59,1,1,8,,,1,12
+60,I,I,8,,,i,13
+61,D,D,8,,,d,14
+62,P,P,8,,,p,15
+63,R,R,8,,,r,16
+64,**,**,8,,,**,17
+65,S,S,8,,,s,18
+66,DS,DS,9,,,ds,0
+67,HS,HS,9,,,hs,1
+68,HT,HT,9,,,ht,2
+69,TS,TS,9,,,ts,3
+70,32-#EXT,32-#EXT,10,,,32-#ext,0
+71,32-#PRX,32-#PRX,10,,,32-#prx,1
+72,32-AUUK,32-AUUK,10,,,32-auuk,2
+73,32-FFUK,32-FFUK,10,,,32-ffuk,3
+74,32-FUUK,32-FUUK,10,,,32-fuuk,4
+75,32-IUUK,32-IUUK,10,,,32-iuuk,5
+76,32-KA,32-KA,10,,,32-ka,6
+77,32-KAM,32-KAM,10,,,32-kam,7
+78,32-KCHFO,32-KCHFO,10,,,32-kchfo,8
+79,32-KDF,32-KDF,10,,,32-kdf,9
+80,32-KDM,32-KDM,10,,,32-kdm,10
+81,32-KDSS,32-KDSS,10,,,32-kdss,11
+82,32-KFA,32-KFA,10,,,32-kfa,12
+83,32-KFKL,32-KFKL,10,,,32-kfkl,13
+84,32-KFM,32-KFM,10,,,32-kfm,14
+85,32-KFNT,32-KFNT,10,,,32-kfnt,15
+86,32-KFPP,32-KFPP,10,,,32-kfpp,16
+87,32-KG,32-KG,10,,,32-kg,17
+88,32-KJP,32-KJP,10,,,32-kjp,18
+89,32-KMA,32-KMA,10,,,32-kma,19
+90,32-KMF,32-KMF,10,,,32-kmf,20
+91,32-KNM,32-KNM,10,,,32-knm,21
+92,32-KPMS,32-KPMS,10,,,32-kpms,22
+93,32-KSI,32-KSI,10,,,32-ksi,23
+94,32-KSVI,32-KSVI,10,,,32-ksvi,24
+95,32-KTIML,32-KTIML,10,,,32-ktiml,25
+96,32-KTV,32-KTV,10,,,32-ktv,26
+97,32-KVOF,32-KVOF,10,,,32-kvof,27
+98,32-MUAV,32-MUAV,10,,,32-muav,28
+99,32-MUUK,32-MUUK,10,,,32-muuk,29
+100,32-PASSAU,32-PASSAU,10,,,32-passau,30
+101,32-SISAL,32-SISAL,10,,,32-sisal,31
+102,32-STUD,32-STUD,10,,,32-stud,32
+103,32-UCJF,32-UCJF,10,,,32-ucjf,33
+104,32-UFAL,32-UFAL,10,,,32-ufal,34
+105,32-UTF,32-UTF,10,,,32-utf,35
+106,32-UTIAAV,32-UTIAAV,10,,,32-utiaav,36
+107,Adam Dingle,Adam Dingle,11,,,Adam Dingle,0
+108,Adam Geršl,Adam Geršl,11,,,Adam Geršl,1
+109,Adam Klepáč,Adam Klepáč,11,,,Adam Klepáč,2
+110,Adam Novozámský,Adam Novozámský,11,,,Adam Novozámský,3
+111,Adam Sporka,Adam Sporka,11,,,Adam Sporka,4
+112,Adam Šmelko,Adam Šmelko,11,,,Adam Šmelko,5
+113,Adolf Středa,Adolf Středa,11,,,Adolf Středa,6
+114,Adéla Hladká,Adéla Hladká,11,,,Adéla Hladká,7
+115,Alena Jarolímová,Alena Jarolímová,11,,,Alena Jarolímová,8
+116,Alexander Kupčo,Alexander Kupčo,11,,,Alexander Kupčo,9
+117,Alexander Slávik,Alexander Slávik,11,,,Alexander Slávik,10
+118,Alexander Wilkie,Alexander Wilkie,11,,,Alexander Wilkie,11
+119,Alexandr Kazda,Alexandr Kazda,11,,,Alexandr Kazda,12
+120,Aleš Pultr,Aleš Pultr,11,,,Aleš Pultr,13
+121,Alfredo Iorio,Alfredo Iorio,11,,,Alfredo Iorio,14
+122,Andrea Gagna,Andrea Gagna,11,,,Andrea Gagna,15
+123,Andreas Emil Feldmann,Andreas Emil Feldmann,11,,,Andreas Emil Feldmann,16
+124,Andrew Goodall,Andrew Goodall,11,,,Andrew Goodall,17
+125,Andrew Kozlík,Andrew Kozlík,11,,,Andrew Kozlík,18
+126,Andrey Shukurov,Andrey Shukurov,11,,,Andrey Shukurov,19
+127,Aneta Pokorná,Aneta Pokorná,11,,,Aneta Pokorná,20
+128,Anna Fučíková,Anna Fučíková,11,,,Anna Fučíková,21
+129,Anna Mlezivová,Anna Mlezivová,11,,,Anna Mlezivová,22
+130,Anna Nedoluzhko,Anna Nedoluzhko,11,,,Anna Nedoluzhko,23
+131,Antoine Mottet,Antoine Mottet,11,,,Antoine Mottet,24
+132,Antonín Kučera,Antonín Kučera,11,,,Antonín Kučera,25
+133,Antonín Slavík,Antonín Slavík,11,,,Antonín Slavík,26
+134,Antonín Češík,Antonín Češík,11,,,Antonín Češík,27
+135,Arnošt Komárek,Arnošt Komárek,11,,,Arnošt Komárek,28
+136,Artem Ryabov,Artem Ryabov,11,,,Artem Ryabov,29
+137,Artur Slobodeniuk,Artur Slobodeniuk,11,,,Artur Slobodeniuk,30
+138,Attila Mészáros,Attila Mészáros,11,,,Attila Mészáros,31
+139,Barbora Benešová,Barbora Benešová,11,,,Barbora Benešová,32
+140,Barbora Dohnalová,Barbora Dohnalová,11,,,Barbora Dohnalová,33
+141,Barbora Hudcová,Barbora Hudcová,11,,,Barbora Hudcová,34
+142,Bedřich Roskovec,Bedřich Roskovec,11,,,Bedřich Roskovec,35
+143,Benjamin Vejnar,Benjamin Vejnar,11,,,Benjamin Vejnar,36
+144,Bohdan Maslowski,Bohdan Maslowski,11,,,Bohdan Maslowski,37
+145,Bohumír Opic,Bohumír Opic,11,,,Bohumír Opic,38
+146,Bohuslav Rudolf,Bohuslav Rudolf,11,,,Bohuslav Rudolf,39
+147,Branislav Jurčo,Branislav Jurčo,11,,,Branislav Jurčo,40
+148,Bruno Jungwiert,Bruno Jungwiert,11,,,Bruno Jungwiert,41
+149,Burak Aygun,Burak Aygun,11,,,Burak Aygun,42
+150,Błażej Żmija,Błażej Żmija,11,,,Błażej Żmija,43
+151,Carl Feghali,Carl Feghali,11,,,Carl Feghali,44
+152,Carles Noguera,Carles Noguera,11,,,Carles Noguera,45
+153,Christoph Allolio,Christoph Allolio,11,,,Christoph Allolio,46
+154,Christopher Donald Good,Christopher Donald Good,11,,,Christopher Donald Good,47
+155,Cyril Brom,Cyril Brom,11,,,Cyril Brom,48
+156,Cyril Kotecký,Cyril Kotecký,11,,,Cyril Kotecký,49
+157,Dalibor Pražák,Dalibor Pražák,11,,,Dalibor Pražák,50
+158,Dalibor Preisler,Dalibor Preisler,11,,,Dalibor Preisler,51
+159,Dalibor Zeman,Dalibor Zeman,11,,,Dalibor Zeman,52
+160,Dalibor Šmíd,Dalibor Šmíd,11,,,Dalibor Šmíd,53
+161,Dana Mandíková,Dana Mandíková,11,,,Dana Mandíková,54
+162,Daniel Beďatš,Daniel Beďatš,11,,,Daniel Beďatš,55
+163,Daniel Cameron Campbell,Daniel Cameron Campbell,11,,,Daniel Cameron Campbell,56
+164,Daniel Hlubinka,Daniel Hlubinka,11,,,Daniel Hlubinka,57
+165,Daniel Komárek,Daniel Komárek,11,,,Daniel Komárek,58
+166,Daniel Scheirich,Daniel Scheirich,11,,,Daniel Scheirich,59
+167,Daniel Zeman,Daniel Zeman,11,,,Daniel Zeman,60
+168,Daniela Korčáková,Daniela Korčáková,11,,,Daniela Korčáková,61
+169,Daniela Lněničková,Daniela Lněničková,11,,,Daniela Lněničková,62
+170,Danylo Khalyeyev,Danylo Khalyeyev,11,,,Danylo Khalyeyev,63
+171,Daria Drozdenko,Daria Drozdenko,11,,,Daria Drozdenko,64
+172,Daria Dunina,Daria Dunina,11,,,Daria Dunina,65
+173,David Bednárek,David Bednárek,11,,,David Bednárek,66
+174,David Chodounský,David Chodounský,11,,,David Chodounský,67
+175,David Heyrovský,David Heyrovský,11,,,David Heyrovský,68
+176,David Hoksza,David Hoksza,11,,,David Hoksza,69
+177,David Klusáček,David Klusáček,11,,,David Klusáček,70
+178,David Kofroň,David Kofroň,11,,,David Kofroň,71
+179,David Kubizňák,David Kubizňák,11,,,David Kubizňák,72
+180,David Kuboň,David Kuboň,11,,,David Kuboň,73
+181,David Mareček,David Mareček,11,,,David Mareček,74
+182,David Mikšaník,David Mikšaník,11,,,David Mikšaník,75
+183,David Obdržálek,David Obdržálek,11,,,David Obdržálek,76
+184,David Ryzák,David Ryzák,11,,,David Ryzák,77
+185,David Schmoranzer,David Schmoranzer,11,,,David Schmoranzer,78
+186,David Stanovský,David Stanovský,11,,,David Stanovský,79
+187,David Sychrovský,David Sychrovský,11,,,David Sychrovský,80
+188,David Čepelík,David Čepelík,11,,,David Čepelík,81
+189,David Šosvald,David Šosvald,11,,,David Šosvald,82
+190,Dennis Ferner,Dennis Ferner,11,,,Dennis Ferner,83
+191,Denys Bulavka,Denys Bulavka,11,,,Denys Bulavka,84
+192,Dita Strachotová,Dita Strachotová,11,,,Dita Strachotová,85
+193,Dita Strouhalová,Dita Strouhalová,11,,,Dita Strouhalová,86
+194,Dmitrii Zhuk,Dmitrii Zhuk,11,,,Dmitrii Zhuk,87
+195,Dominik Beck,Dominik Beck,11,,,Dominik Beck,88
+196,Dominik Krasula,Dominik Krasula,11,,,Dominik Krasula,89
+197,Dominika Zákutná,Dominika Zákutná,11,,,Dominika Zákutná,90
+198,Dorota Šimonová,Dorota Šimonová,11,,,Dorota Šimonová,91
+199,Dušan Pokorný,Dušan Pokorný,11,,,Dušan Pokorný,92
+200,Dávid Uhrik,Dávid Uhrik,11,,,Dávid Uhrik,93
+201,Dáša Teššerová,Dáša Teššerová,11,,,Dáša Teššerová,94
+202,Ela Krejčová,Ela Krejčová,11,,,Ela Krejčová,95
+203,Elena Šikudová,Elena Šikudová,11,,,Elena Šikudová,96
+204,Elif Garajová,Elif Garajová,11,,,Elif Garajová,97
+205,Emil Jeřábek,Emil Jeřábek,11,,,Emil Jeřábek,98
+206,Emil Varga,Emil Varga,11,,,Emil Varga,99
+207,Erin Claire Carson,Erin Claire Carson,11,,,Erin Claire Carson,100
+208,Ester Sgallová,Ester Sgallová,11,,,Ester Sgallová,101
+209,Eva Holtanová,Eva Holtanová,11,,,Eva Holtanová,102
+210,Eva Kočišová,Eva Kočišová,11,,,Eva Kočišová,103
+211,Eva Mikušová,Eva Mikušová,11,,,Eva Mikušová,104
+212,Eva Schmoranzerová,Eva Schmoranzerová,11,,,Eva Schmoranzerová,105
+213,Faruk Göloglu,Faruk Göloglu,11,,,Faruk Göloglu,106
+214,Filip Bialas,Filip Bialas,11,,,Filip Bialas,107
+215,Filip Děchtěrenko,Filip Děchtěrenko,11,,,Filip Děchtěrenko,108
+216,Filip Filipi,Filip Filipi,11,,,Filip Filipi,109
+217,Filip Fryš,Filip Fryš,11,,,Filip Fryš,110
+218,Filip Jankovec,Filip Jankovec,11,,,Filip Jankovec,111
+219,Filip Kastl,Filip Kastl,11,,,Filip Kastl,112
+220,Filip Kliber,Filip Kliber,11,,,Filip Kliber,113
+221,Filip Richter,Filip Richter,11,,,Filip Richter,114
+222,Filip Strakoš,Filip Strakoš,11,,,Filip Strakoš,115
+223,Filip Zavoral,Filip Zavoral,11,,,Filip Zavoral,116
+224,Filip Šebesta,Filip Šebesta,11,,,Filip Šebesta,117
+225,Filip Šroubek,Filip Šroubek,11,,,Filip Šroubek,118
+226,Filip Štědronský,Filip Štědronský,11,,,Filip Štědronský,119
+227,Filippo Spaggiari,Filippo Spaggiari,11,,,Filippo Spaggiari,120
+228,František Chmelík,František Chmelík,11,,,František Chmelík,121
+229,František Gallovič,František Gallovič,11,,,František Gallovič,122
+230,František Knapp,František Knapp,11,,,František Knapp,123
+231,František Mejzlík,František Mejzlík,11,,,František Mejzlík,124
+232,František Mráz,František Mráz,11,,,František Mráz,125
+233,František Němec,František Němec,11,,,František Němec,126
+234,František Plášil,František Plášil,11,,,František Plášil,127
+235,František Trojánek,František Trojánek,11,,,František Trojánek,128
+236,František Šanda,František Šanda,11,,,František Šanda,129
+237,Frederik Ďalak,Frederik Ďalak,11,,,Frederik Ďalak,130
+238,Gabriela Kadlecová,Gabriela Kadlecová,11,,,Gabriela Kadlecová,131
+239,Gaurav Sunil Kucheriya,Gaurav Sunil Kucheriya,11,,,Gaurav Sunil Kucheriya,132
+240,Georgios Loukes Gerakopoulos,Georgios Loukes Gerakopoulos,11,,,Georgios Loukes Gerakopoulos,133
+241,Giacomo Cherubini,Giacomo Cherubini,11,,,Giacomo Cherubini,134
+242,Gilbert Pi,Gilbert Pi,11,,,Gilbert Pi,135
+243,Global,Global,11,,,Global,136
+244,Guillaume Aubian,Guillaume Aubian,11,,,Guillaume Aubian,137
+245,Guillermo Andres Gamboa Quintero,Guillermo Andres Gamboa Quintero,11,,,Guillermo Andres Gamboa Quintero,138
+246,Hadi Zamani,Hadi Zamani,11,,,Hadi Zamani,139
+247,Hana Dvořáková Suchánková,Hana Dvořáková Suchánková,11,,,Hana Dvořáková Suchánková,140
+248,Hana Kudrnová,Hana Kudrnová,11,,,Hana Kudrnová,141
+249,Hana Turčinová,Hana Turčinová,11,,,Hana Turčinová,142
+250,Hana Čížková,Hana Čížková,11,,,Hana Čížková,143
+251,Hans Raj Tiwary,Hans Raj Tiwary,11,,,Hans Raj Tiwary,144
+252,Helena Kommová,Helena Kommová,11,,,Helena Kommová,145
+253,Helena Krejčí,Helena Krejčí,11,,,Helena Krejčí,146
+254,Helena Valentová,Helena Valentová,11,,,Helena Valentová,147
+255,Helena Štěpánková,Helena Štěpánková,11,,,Helena Štěpánková,148
+256,Hong Van Le,Hong Van Le,11,,,Hong Van Le,149
+257,Hynek Bednář,Hynek Bednář,11,,,Hynek Bednář,150
+258,Ida Kantor,Ida Kantor,11,,,Ida Kantor,151
+259,Ingrid Knapová,Ingrid Knapová,11,,,Ingrid Knapová,152
+260,Irena Dvořáková,Irena Dvořáková,11,,,Irena Dvořáková,153
+261,Irena Holubová,Irena Holubová,11,,,Irena Holubová,154
+262,Irena Penev,Irena Penev,11,,,Irena Penev,155
+263,Isabella Pavelková,Isabella Pavelková,11,,,Isabella Pavelková,156
+264,Iva Karafiátová,Iva Karafiátová,11,,,Iva Karafiátová,157
+265,Ivan Barvík,Ivan Barvík,11,,,Ivan Barvík,158
+266,Ivan Di Liberti,Ivan Di Liberti,11,,,Ivan Di Liberti,159
+267,Ivan Mizera,Ivan Mizera,11,,,Ivan Mizera,160
+268,Ivan Ošťádal,Ivan Ošťádal,11,,,Ivan Ošťádal,161
+269,Ivana Sixtová,Ivana Sixtová,11,,,Ivana Sixtová,162
+270,Iveta Hnětynková,Iveta Hnětynková,11,,,Iveta Hnětynková,163
+271,Iveta Mrázová,Iveta Mrázová,11,,,Iveta Mrázová,164
+272,Ivo Křivka,Ivo Křivka,11,,,Ivo Křivka,165
+273,Jakub Benda,Jakub Benda,11,,,Jakub Benda,166
+274,Jakub Bulín,Jakub Bulín,11,,,Jakub Bulín,167
+275,Jakub Galgonek,Jakub Galgonek,11,,,Jakub Galgonek,168
+276,Jakub Gemrot,Jakub Gemrot,11,,,Jakub Gemrot,169
+277,Jakub Kašpar,Jakub Kašpar,11,,,Jakub Kašpar,170
+278,Jakub Klímek,Jakub Klímek,11,,,Jakub Klímek,171
+279,Jakub Knesel,Jakub Knesel,11,,,Jakub Knesel,172
+280,Jakub Koucký,Jakub Koucký,11,,,Jakub Koucký,173
+281,Jakub Krásenský,Jakub Krásenský,11,,,Jakub Krásenský,174
+282,Jakub Lokoč,Jakub Lokoč,11,,,Jakub Lokoč,175
+283,Jakub Mestek,Jakub Mestek,11,,,Jakub Mestek,176
+284,Jakub Novotný,Jakub Novotný,11,,,Jakub Novotný,177
+285,Jakub Pekárek,Jakub Pekárek,11,,,Jakub Pekárek,178
+286,Jakub Pšenčík,Jakub Pšenčík,11,,,Jakub Pšenčík,179
+287,Jakub Rondoš,Jakub Rondoš,11,,,Jakub Rondoš,180
+288,Jakub Staněk,Jakub Staněk,11,,,Jakub Staněk,181
+289,Jakub Sýkora,Jakub Sýkora,11,,,Jakub Sýkora,182
+290,Jakub Töpfer,Jakub Töpfer,11,,,Jakub Töpfer,183
+291,Jakub Vaverka,Jakub Vaverka,11,,,Jakub Vaverka,184
+292,Jakub Velímský,Jakub Velímský,11,,,Jakub Velímský,185
+293,Jakub Yaghob,Jakub Yaghob,11,,,Jakub Yaghob,186
+294,Jakub Zázvorka,Jakub Zázvorka,11,,,Jakub Zázvorka,187
+295,Jakub Černý,Jakub Černý,11,,,Jakub Černý,188
+296,Jakub Čížek,Jakub Čížek,11,,,Jakub Čížek,189
+297,Jakub Švec,Jakub Švec,11,,,Jakub Švec,190
+298,Jan Alster,Jan Alster,11,,,Jan Alster,191
+299,Jan Bednář,Jan Bednář,11,,,Jan Bednář,192
+300,Jan Blechta,Jan Blechta,11,,,Jan Blechta,193
+301,Jan Bok,Jan Bok,11,,,Jan Bok,194
+302,Jan Flusser,Jan Flusser,11,,,Jan Flusser,195
+303,Jan Franc,Jan Franc,11,,,Jan Franc,196
+304,Jan Hajič,Jan Hajič,11,,,Jan Hajič,197
+305,Jan Hanuš,Jan Hanuš,11,,,Jan Hanuš,198
+306,Jan Horáček,Jan Horáček,11,,,Jan Horáček,199
+307,Jan Hric,Jan Hric,11,,,Jan Hric,200
+308,Jan Hubička,Jan Hubička,11,,,Jan Hubička,201
+309,Jan Hurt,Jan Hurt,11,,,Jan Hurt,202
+310,Jan Hála,Jan Hála,11,,,Jan Hála,203
+311,Jan Karlický,Jan Karlický,11,,,Jan Karlický,204
+312,Jan Kofroň,Jan Kofroň,11,,,Jan Kofroň,205
+313,Jan Kolomazník,Jan Kolomazník,11,,,Jan Kolomazník,206
+314,Jan Kotrbatý,Jan Kotrbatý,11,,,Jan Kotrbatý,207
+315,Jan Krajíček,Jan Krajíček,11,,,Jan Krajíček,208
+316,Jan Kratochvíl,Jan Kratochvíl,11,,,Jan Kratochvíl,209
+317,Jan Kunc,Jan Kunc,11,,,Jan Kunc,210
+318,Jan Kvasil,Jan Kvasil,11,,,Jan Kvasil,211
+319,Jan Kynčl,Jan Kynčl,11,,,Jan Kynčl,212
+320,Jan Lang,Jan Lang,11,,,Jan Lang,213
+321,Jan Matoušek,Jan Matoušek,11,,,Jan Matoušek,214
+322,Jan Pacovský,Jan Pacovský,11,,,Jan Pacovský,215
+323,Jan Palouš,Jan Palouš,11,,,Jan Palouš,216
+324,Jan Papesch,Jan Papesch,11,,,Jan Papesch,217
+325,Jan Papež,Jan Papež,11,,,Jan Papež,218
+326,Jan Pechanec,Jan Pechanec,11,,,Jan Pechanec,219
+327,Jan Prokleška,Jan Prokleška,11,,,Jan Prokleška,220
+328,Jan Rataj,Jan Rataj,11,,,Jan Rataj,221
+329,Jan Sedlák,Jan Sedlák,11,,,Jan Sedlák,222
+330,Jan Seidler,Jan Seidler,11,,,Jan Seidler,223
+331,Jan Soukup,Jan Soukup,11,,,Jan Soukup,224
+332,Jan Střeleček,Jan Střeleček,11,,,Jan Střeleček,225
+333,Jan Swart,Jan Swart,11,,,Jan Swart,226
+334,Jan Trlifaj,Jan Trlifaj,11,,,Jan Trlifaj,227
+335,Jan Uhlík,Jan Uhlík,11,,,Jan Uhlík,228
+336,Jan Ulrych,Jan Ulrych,11,,,Jan Ulrych,229
+337,Jan Valenta,Jan Valenta,11,,,Jan Valenta,230
+338,Jan Večeř,Jan Večeř,11,,,Jan Večeř,231
+339,Jan Václavek,Jan Václavek,11,,,Jan Václavek,232
+340,Jan Vávra,Jan Vávra,11,,,Jan Vávra,233
+341,Jan Wild,Jan Wild,11,,,Jan Wild,234
+342,Jan Šaroch,Jan Šaroch,11,,,Jan Šaroch,235
+343,Jan Šťovíček,Jan Šťovíček,11,,,Jan Šťovíček,236
+344,Jan Žemlička,Jan Žemlička,11,,,Jan Žemlička,237
+345,Jana Faltová,Jana Faltová,11,,,Jana Faltová,238
+346,Jana Hromadová,Jana Hromadová,11,,,Jana Hromadová,239
+347,Jana Kalbáčová Vejpravová,Jana Kalbáčová Vejpravová,11,,,Jana Kalbáčová Vejpravová,240
+348,Jana Maxová,Jana Maxová,11,,,Jana Maxová,241
+349,Jana Pospíšilová,Jana Pospíšilová,11,,,Jana Pospíšilová,242
+350,Jana Roupcová,Jana Roupcová,11,,,Jana Roupcová,243
+351,Jana Straková,Jana Straková,11,,,Jana Straková,244
+352,Jana Vráblíková,Jana Vráblíková,11,,,Jana Vráblíková,245
+353,Jana Zachová,Jana Zachová,11,,,Jana Zachová,246
+354,Jana Šafránková,Jana Šafránková,11,,,Jana Šafránková,247
+355,Jana Šmilauerová,Jana Šmilauerová,11,,,Jana Šmilauerová,248
+356,Jarmila Robová,Jarmila Robová,11,,,Jarmila Robová,249
+357,Jaromír Antoch,Jaromír Antoch,11,,,Jaromír Antoch,250
+358,Jaromír Mielec,Jaromír Mielec,11,,,Jaromír Mielec,251
+359,Jaroslav Brož,Jaroslav Brož,11,,,Jaroslav Brož,252
+360,Jaroslav Burda,Jaroslav Burda,11,,,Jaroslav Burda,253
+361,Jaroslav Haas,Jaroslav Haas,11,,,Jaroslav Haas,254
+362,Jaroslav Hamrle,Jaroslav Hamrle,11,,,Jaroslav Hamrle,255
+363,Jaroslav Hron,Jaroslav Hron,11,,,Jaroslav Hron,256
+364,Jaroslav Kohout,Jaroslav Kohout,11,,,Jaroslav Kohout,257
+365,Jaroslav Nešetřil,Jaroslav Nešetřil,11,,,Jaroslav Nešetřil,258
+366,Jaroslav Paidar,Jaroslav Paidar,11,,,Jaroslav Paidar,259
+367,Jaroslav Pokorný,Jaroslav Pokorný,11,,,Jaroslav Pokorný,260
+368,Jaroslav Richter,Jaroslav Richter,11,,,Jaroslav Richter,261
+369,Jaroslav Zamastil,Jaroslav Zamastil,11,,,Jaroslav Zamastil,262
+370,Jaroslava Piešová,Jaroslava Piešová,11,,,Jaroslava Piešová,263
+371,Jay Michael Kashdan,Jay Michael Kashdan,11,,,Jay Michael Kashdan,264
+372,Jindřich Bečvář,Jindřich Bečvář,11,,,Jindřich Bečvář,265
+373,Jindřich Libovický,Jindřich Libovický,11,,,Jindřich Libovický,266
+374,Jindřich Michalik,Jindřich Michalik,11,,,Jindřich Michalik,267
+375,Jindřich Vodrážka,Jindřich Vodrážka,11,,,Jindřich Vodrážka,268
+376,Jitka Houfková,Jitka Houfková,11,,,Jitka Houfková,269
+377,Jitka Stráská,Jitka Stráská,11,,,Jitka Stráská,270
+378,Jitka Zichová,Jitka Zichová,11,,,Jitka Zichová,271
+379,Jiří Beneš,Jiří Beneš,11,,,Jiří Beneš,272
+380,Jiří Bičák,Jiří Bičák,11,,,Jiří Bičák,273
+381,Jiří Dolejší,Jiří Dolejší,11,,,Jiří Dolejší,274
+382,Jiří Dvořák,Jiří Dvořák,11,,,Jiří Dvořák,275
+383,Jiří Englich,Jiří Englich,11,,,Jiří Englich,276
+384,Jiří Felcman,Jiří Felcman,11,,,Jiří Felcman,277
+385,Jiří Fiala,Jiří Fiala,11,,,Jiří Fiala,278
+386,Jiří Filek,Jiří Filek,11,,,Jiří Filek,279
+387,Jiří Fink,Jiří Fink,11,,,Jiří Fink,280
+388,Jiří Frantál,Jiří Frantál,11,,,Jiří Frantál,281
+389,Jiří Hana,Jiří Hana,11,,,Jiří Hana,282
+390,Jiří Helus,Jiří Helus,11,,,Jiří Helus,283
+391,Jiří Hořejší,Jiří Hořejší,11,,,Jiří Hořejší,284
+392,Jiří Kalvoda,Jiří Kalvoda,11,,,Jiří Kalvoda,285
+393,Jiří Klepl,Jiří Klepl,11,,,Jiří Klepl,286
+394,Jiří Klimeš,Jiří Klimeš,11,,,Jiří Klimeš,287
+395,Jiří Kozlík,Jiří Kozlík,11,,,Jiří Kozlík,288
+396,Jiří Mayer,Jiří Mayer,11,,,Jiří Mayer,289
+397,Jiří Mikšovský,Jiří Mikšovský,11,,,Jiří Mikšovský,290
+398,Jiří Novotný,Jiří Novotný,11,,,Jiří Novotný,291
+399,Jiří Nárožný,Jiří Nárožný,11,,,Jiří Nárožný,292
+400,Jiří Pavlů,Jiří Pavlů,11,,,Jiří Pavlů,293
+401,Jiří Pelc,Jiří Pelc,11,,,Jiří Pelc,294
+402,Jiří Podolský,Jiří Podolský,11,,,Jiří Podolský,295
+403,Jiří Pospíšil,Jiří Pospíšil,11,,,Jiří Pospíšil,296
+404,Jiří Prchal,Jiří Prchal,11,,,Jiří Prchal,297
+405,Jiří Sgall,Jiří Sgall,11,,,Jiří Sgall,298
+406,Jiří Spurný,Jiří Spurný,11,,,Jiří Spurný,299
+407,Jiří Svoboda,Jiří Svoboda,11,,,Jiří Svoboda,300
+408,Jiří Teplý,Jiří Teplý,11,,,Jiří Teplý,301
+409,Jiří Tůma,Jiří Tůma,11,,,Jiří Tůma,302
+410,Jiří Vorba,Jiří Vorba,11,,,Jiří Vorba,303
+411,Jiří Witzany,Jiří Witzany,11,,,Jiří Witzany,304
+412,Jiří Zahradník,Jiří Zahradník,11,,,Jiří Zahradník,305
+413,Jiří Šejnoha,Jiří Šejnoha,11,,,Jiří Šejnoha,306
+414,Jiří Švancara,Jiří Švancara,11,,,Jiří Švancara,307
+415,Johana Prokop Brokešová,Johana Prokop Brokešová,11,,,Johana Prokop Brokešová,308
+416,Jonáš Havelka,Jonáš Havelka,11,,,Jonáš Havelka,309
+417,Josef Amemori,Josef Amemori,11,,,Josef Amemori,310
+418,Josef Dvořák,Josef Dvořák,11,,,Josef Dvořák,311
+419,Josef Martínek,Josef Martínek,11,,,Josef Martínek,312
+420,Josef Matějka,Josef Matějka,11,,,Josef Matějka,313
+421,Josef Montag,Josef Montag,11,,,Josef Montag,314
+422,Josef Mysliveček,Josef Mysliveček,11,,,Josef Mysliveček,315
+423,Josef Málek,Josef Málek,11,,,Josef Málek,316
+424,Josef Pelikán,Josef Pelikán,11,,,Josef Pelikán,317
+425,Josef Starýchfojtů,Josef Starýchfojtů,11,,,Josef Starýchfojtů,318
+426,Josef Stráský,Josef Stráský,11,,,Josef Stráský,319
+427,Josef Tkadlec,Josef Tkadlec,11,,,Josef Tkadlec,320
+428,Josef Ďurech,Josef Ďurech,11,,,Josef Ďurech,321
+429,Josef Šivic,Josef Šivic,11,,,Josef Šivic,322
+430,Josef Štěpánek,Josef Štěpánek,11,,,Josef Štěpánek,323
+431,Jozef Veselý,Jozef Veselý,11,,,Jozef Veselý,324
+432,Julian David Giraldo Barreto,Julian David Giraldo Barreto,11,,,Julian David Giraldo Barreto,325
+433,Juliana Vacková Wernerová,Juliana Vacková Wernerová,11,,,Juliana Vacková Wernerová,326
+434,Julie Šťastná,Julie Šťastná,11,,,Julie Šťastná,327
+435,Juraj Glosík,Juraj Glosík,11,,,Juraj Glosík,328
+436,Jáchym Bártík,Jáchym Bártík,11,,,Jáchym Bártík,329
+437,Ján Antolík,Ján Antolík,11,,,Ján Antolík,330
+438,Ján Matejka,Ján Matejka,11,,,Ján Matejka,331
+439,Karel Carva,Karel Carva,11,,,Karel Carva,332
+440,Karel Houfek,Karel Houfek,11,,,Karel Houfek,333
+441,Karel Kozmík,Karel Kozmík,11,,,Karel Kozmík,334
+442,Karel Král,Karel Král,11,,,Karel Král,335
+443,Karel Mašek,Karel Mašek,11,,,Karel Mašek,336
+444,Karel Netočný,Karel Netočný,11,,,Karel Netočný,337
+445,Karel Rohlena,Karel Rohlena,11,,,Karel Rohlena,338
+446,Karel Tůma,Karel Tůma,11,,,Karel Tůma,339
+447,Karel Vlachovský,Karel Vlachovský,11,,,Karel Vlachovský,340
+448,Karel Zimmermann,Karel Zimmermann,11,,,Karel Zimmermann,341
+449,Karolína Korvasová,Karolína Korvasová,11,,,Karolína Korvasová,342
+450,Katarína Studeničová,Katarína Studeničová,11,,,Katarína Studeničová,343
+451,Kate Konczycki,Kate Konczycki,11,,,Kate Konczycki,344
+452,Kateřina Fuková,Kateřina Fuková,11,,,Kateřina Fuková,345
+453,Kateřina Henclová,Kateřina Henclová,11,,,Kateřina Henclová,346
+454,Kateřina Hofbauerová,Kateřina Hofbauerová,11,,,Kateřina Hofbauerová,347
+455,Kateřina Lembke,Kateřina Lembke,11,,,Kateřina Lembke,348
+456,Kateřina Macková,Kateřina Macková,11,,,Kateřina Macková,349
+457,Kateřina Mladá,Kateřina Mladá,11,,,Kateřina Mladá,350
+458,Kateřina Nohlová,Kateřina Nohlová,11,,,Kateřina Nohlová,351
+459,Kateřina Pawlasová,Kateřina Pawlasová,11,,,Kateřina Pawlasová,352
+460,Kateřina Sýkorová,Kateřina Sýkorová,11,,,Kateřina Sýkorová,353
+461,Kateřina Šindelářová,Kateřina Šindelářová,11,,,Kateřina Šindelářová,354
+462,Klára Grinerová,Klára Grinerová,11,,,Klára Grinerová,355
+463,Klára Kalousová,Klára Kalousová,11,,,Klára Kalousová,356
+464,Klára Karasová,Klára Karasová,11,,,Klára Karasová,357
+465,Klára Pešková,Klára Pešková,11,,,Klára Pešková,358
+466,Klára Uhlířová,Klára Uhlířová,11,,,Klára Uhlířová,359
+467,Kristina Asimi,Kristina Asimi,11,,,Kristina Asimi,360
+468,Kristína Mišlanová,Kristína Mišlanová,11,,,Kristína Mišlanová,361
+469,Kristýna Kuncová,Kristýna Kuncová,11,,,Kristýna Kuncová,362
+470,Kristýna Pantůčková,Kristýna Pantůčková,11,,,Kristýna Pantůčková,363
+471,Ladislav Drážný,Ladislav Drážný,11,,,Ladislav Drážný,364
+472,Ladislav Hanyk,Ladislav Hanyk,11,,,Ladislav Hanyk,365
+473,Ladislav Havela,Ladislav Havela,11,,,Ladislav Havela,366
+474,Ladislav Kvasz,Ladislav Kvasz,11,,,Ladislav Kvasz,367
+475,Ladislav Peška,Ladislav Peška,11,,,Ladislav Peška,368
+476,Ladislav Skrbek,Ladislav Skrbek,11,,,Ladislav Skrbek,369
+477,Ladislav Šubr,Ladislav Šubr,11,,,Ladislav Šubr,370
+478,Lenka Forstová,Lenka Forstová,11,,,Lenka Forstová,371
+479,Lenka Kopfová,Lenka Kopfová,11,,,Lenka Kopfová,372
+480,Lenka Ptáčková,Lenka Ptáčková,11,,,Lenka Ptáčková,373
+481,Lenka Slavíková,Lenka Slavíková,11,,,Lenka Slavíková,374
+482,Lenka Vachalovská,Lenka Vachalovská,11,,,Lenka Vachalovská,375
+483,Leoš Dvořák,Leoš Dvořák,11,,,Leoš Dvořák,376
+484,Lev Klebanov,Lev Klebanov,11,,,Lev Klebanov,377
+485,Libor Barto,Libor Barto,11,,,Libor Barto,378
+486,Libor Forst,Libor Forst,11,,,Libor Forst,379
+487,Liran Shaul,Liran Shaul,11,,,Liran Shaul,380
+488,Lluís Sabater Rojas,Lluís Sabater Rojas,11,,,Lluís Sabater Rojas,381
+489,Lubomír Bulej,Lubomír Bulej,11,,,Lubomír Bulej,382
+490,Lubomír Přech,Lubomír Přech,11,,,Lubomír Přech,383
+491,Luboš Pick,Luboš Pick,11,,,Luboš Pick,384
+492,Lucia Tódová,Lucia Tódová,11,,,Lucia Tódová,385
+493,Lucie Augustovičová,Lucie Augustovičová,11,,,Lucie Augustovičová,386
+494,Lucie Hladilová,Lucie Hladilová,11,,,Lucie Hladilová,387
+495,Lucie Mazurová,Lucie Mazurová,11,,,Lucie Mazurová,388
+496,Lucie Steidlová,Lucie Steidlová,11,,,Lucie Steidlová,389
+497,Lucie Wintrová,Lucie Wintrová,11,,,Lucie Wintrová,390
+498,Ludvík Bohman,Ludvík Bohman,11,,,Ludvík Bohman,391
+499,Luděk Beneš,Luděk Beneš,11,,,Luděk Beneš,392
+500,Luděk Kučera,Luděk Kučera,11,,,Luděk Kučera,393
+501,Luděk Zajíček,Luděk Zajíček,11,,,Luděk Zajíček,394
+502,Luděk Šafařík,Luděk Šafařík,11,,,Luděk Šafařík,395
+503,Lukáš Folwarczný,Lukáš Folwarczný,11,,,Lukáš Folwarczný,396
+504,Lukáš Horák,Lukáš Horák,11,,,Lukáš Horák,397
+505,Lukáš Hozda,Lukáš Hozda,11,,,Lukáš Hozda,398
+506,Lukáš Kolek,Lukáš Kolek,11,,,Lukáš Kolek,399
+507,Lukáš Krump,Lukáš Krump,11,,,Lukáš Krump,400
+508,Lukáš Kyjánek,Lukáš Kyjánek,11,,,Lukáš Kyjánek,401
+509,Lukáš Nádvorník,Lukáš Nádvorník,11,,,Lukáš Nádvorník,402
+510,Lukáš Ondráček,Lukáš Ondráček,11,,,Lukáš Ondráček,403
+511,Lukáš Prokop,Lukáš Prokop,11,,,Lukáš Prokop,404
+512,Lukáš Vacek,Lukáš Vacek,11,,,Lukáš Vacek,405
+513,Magda Ševčíková,Magda Ševčíková,11,,,Magda Ševčíková,406
+514,Magdalena Hykšová,Magdalena Hykšová,11,,,Magdalena Hykšová,407
+515,Malte Laurens Kampschulte,Malte Laurens Kampschulte,11,,,Malte Laurens Kampschulte,408
+516,Marcello Ortaggio,Marcello Ortaggio,11,,,Marcello Ortaggio,409
+517,Marek Cúth,Marek Cúth,11,,,Marek Cúth,410
+518,Marek Filakovský,Marek Filakovský,11,,,Marek Filakovský,411
+519,Marek Malý,Marek Malý,11,,,Marek Malý,412
+520,Marek Omelka,Marek Omelka,11,,,Marek Omelka,413
+521,Marek Paulík,Marek Paulík,11,,,Marek Paulík,414
+522,Marek Piliarik,Marek Piliarik,11,,,Marek Piliarik,415
+523,Marek Procházka,Marek Procházka,11,,,Marek Procházka,416
+524,Marek Teller,Marek Teller,11,,,Marek Teller,417
+525,Marek Wolf,Marek Wolf,11,,,Marek Wolf,418
+526,Maria Trnková,Maria Trnková,11,,,Maria Trnková,419
+527,Marie Běhounková,Marie Běhounková,11,,,Marie Běhounková,420
+528,Marie Hubálek Kalbáčová,Marie Hubálek Kalbáčová,11,,,Marie Hubálek Kalbáčová,421
+529,Marie Hušková,Marie Hušková,11,,,Marie Hušková,422
+530,Marie Krejčová,Marie Krejčová,11,,,Marie Krejčová,423
+531,Marie Snětinová,Marie Snětinová,11,,,Marie Snětinová,424
+532,Marika Ivanová,Marika Ivanová,11,,,Marika Ivanová,425
+533,Marián Kolesár,Marián Kolesár,11,,,Marián Kolesár,426
+534,Markéta Lopatková,Markéta Lopatková,11,,,Markéta Lopatková,427
+535,Markéta Machová,Markéta Machová,11,,,Markéta Machová,428
+536,Maroš Grego,Maroš Grego,11,,,Maroš Grego,429
+537,Marta Kossaczká,Marta Kossaczká,11,,,Marta Kossaczká,430
+538,Marta Vomlelová,Marta Vomlelová,11,,,Marta Vomlelová,431
+539,Martin Balko,Martin Balko,11,,,Martin Balko,432
+540,Martin Blicha,Martin Blicha,11,,,Martin Blicha,433
+541,Martin Borýsek,Martin Borýsek,11,,,Martin Borýsek,434
+542,Martin Branda,Martin Branda,11,,,Martin Branda,435
+543,Martin Chvál,Martin Chvál,11,,,Martin Chvál,436
+544,Martin Diviš,Martin Diviš,11,,,Martin Diviš,437
+545,Martin Hlavatý,Martin Hlavatý,11,,,Martin Hlavatý,438
+546,Martin Holeňa,Martin Holeňa,11,,,Martin Holeňa,439
+547,Martin Holub,Martin Holub,11,,,Martin Holub,440
+548,Martin Jeřáb,Martin Jeřáb,11,,,Martin Jeřáb,441
+549,Martin Kahoun,Martin Kahoun,11,,,Martin Kahoun,442
+550,Martin Kihoulou,Martin Kihoulou,11,,,Martin Kihoulou,443
+551,Martin Klazar,Martin Klazar,11,,,Martin Klazar,444
+552,Martin Koreček,Martin Koreček,11,,,Martin Koreček,445
+553,Martin Koutecký,Martin Koutecký,11,,,Martin Koutecký,446
+554,Martin Kozák,Martin Kozák,11,,,Martin Kozák,447
+555,Martin Kruliš,Martin Kruliš,11,,,Martin Kruliš,448
+556,Martin Kružík,Martin Kružík,11,,,Martin Kružík,449
+557,Martin Kuthan,Martin Kuthan,11,,,Martin Kuthan,450
+558,Martin Liška,Martin Liška,11,,,Martin Liška,451
+559,Martin Loebl,Martin Loebl,11,,,Martin Loebl,452
+560,Martin Mareš,Martin Mareš,11,,,Martin Mareš,453
+561,Martin Matoušek,Martin Matoušek,11,,,Martin Matoušek,454
+562,Martin Nečaský,Martin Nečaský,11,,,Martin Nečaský,455
+563,Martin Otava,Martin Otava,11,,,Martin Otava,456
+564,Martin Pergel,Martin Pergel,11,,,Martin Pergel,457
+565,Martin Pilát,Martin Pilát,11,,,Martin Pilát,458
+566,Martin Popel,Martin Popel,11,,,Martin Popel,459
+567,Martin Raška,Martin Raška,11,,,Martin Raška,460
+568,Martin Rmoutil,Martin Rmoutil,11,,,Martin Rmoutil,461
+569,Martin Rybář,Martin Rybář,11,,,Martin Rybář,462
+570,Martin Setvák,Martin Setvák,11,,,Martin Setvák,463
+571,Martin Suda,Martin Suda,11,,,Martin Suda,464
+572,Martin Svoboda,Martin Svoboda,11,,,Martin Svoboda,465
+573,Martin Sýkora,Martin Sýkora,11,,,Martin Sýkora,466
+574,Martin Tancer,Martin Tancer,11,,,Martin Tancer,467
+575,Martin Veis,Martin Veis,11,,,Martin Veis,468
+576,Martin Vejbora,Martin Vejbora,11,,,Martin Vejbora,469
+577,Martin Vlach,Martin Vlach,11,,,Martin Vlach,470
+578,Martin Zdráhal,Martin Zdráhal,11,,,Martin Zdráhal,471
+579,Martin Zika,Martin Zika,11,,,Martin Zika,472
+580,Martin Černý,Martin Černý,11,,,Martin Černý,473
+581,Martin Čížek,Martin Čížek,11,,,Martin Čížek,474
+582,Martin Šolc,Martin Šolc,11,,,Martin Šolc,475
+583,Martin Žofka,Martin Žofka,11,,,Martin Žofka,476
+584,Martin Žonda,Martin Žonda,11,,,Martin Žonda,477
+585,Martina Kekule,Martina Kekule,11,,,Martina Kekule,478
+586,Martina Petráková,Martina Petráková,11,,,Martina Petráková,479
+587,Martina Škorpilová,Martina Škorpilová,11,,,Martina Škorpilová,480
+588,Maryia Kapytka,Maryia Kapytka,11,,,Maryia Kapytka,481
+589,Matej Lieskovský,Matej Lieskovský,11,,,Matej Lieskovský,482
+590,Matouš Menčík,Matouš Menčík,11,,,Matouš Menčík,483
+591,Matyáš Lorenc,Matyáš Lorenc,11,,,Matyáš Lorenc,484
+592,Matúš Goliaš,Matúš Goliaš,11,,,Matúš Goliaš,485
+593,Matúš Maciak,Matúš Maciak,11,,,Matúš Maciak,486
+594,Matěj Doležálek,Matěj Doležálek,11,,,Matěj Doležálek,487
+595,Matěj Konečný,Matěj Konečný,11,,,Matěj Konečný,488
+596,Matěj Machů,Matěj Machů,11,,,Matěj Machů,489
+597,Matěj Ryston,Matěj Ryston,11,,,Matěj Ryston,490
+598,Maximilian Hadek,Maximilian Hadek,11,,,Maximilian Hadek,491
+599,Michael Batanin,Michael Batanin,11,,,Michael Batanin,492
+600,Michael Kompatscher,Michael Kompatscher,11,,,Michael Kompatscher,493
+601,Michael Skotnica,Michael Skotnica,11,,,Michael Skotnica,494
+602,Michaela Prokešová,Michaela Prokešová,11,,,Michaela Prokešová,495
+603,Michaela Seifrtová,Michaela Seifrtová,11,,,Michaela Seifrtová,496
+604,Michaela Štolová,Michaela Štolová,11,,,Michaela Štolová,497
+605,Michal Belda,Michal Belda,11,,,Michal Belda,498
+606,Michal Doucha,Michal Doucha,11,,,Michal Doucha,499
+607,Michal Fárník,Michal Fárník,11,,,Michal Fárník,500
+608,Michal Hájek,Michal Hájek,11,,,Michal Hájek,501
+609,Michal Johanis,Michal Johanis,11,,,Michal Johanis,502
+610,Michal Knapek,Michal Knapek,11,,,Michal Knapek,503
+611,Michal Kopecký,Michal Kopecký,11,,,Michal Kopecký,504
+612,Michal Koucký,Michal Koucký,11,,,Michal Koucký,505
+613,Michal Kovaľ,Michal Kovaľ,11,,,Michal Kovaľ,506
+614,Michal Kulich,Michal Kulich,11,,,Michal Kulich,507
+615,Michal Kupsa,Michal Kupsa,11,,,Michal Kupsa,508
+616,Michal Malinský,Michal Malinský,11,,,Michal Malinský,509
+617,Michal Maršálek,Michal Maršálek,11,,,Michal Maršálek,510
+618,Michal Nožička,Michal Nožička,11,,,Michal Nožička,511
+619,Michal Opler,Michal Opler,11,,,Michal Opler,512
+620,Michal Outrata,Michal Outrata,11,,,Michal Outrata,513
+621,Michal Pavelka,Michal Pavelka,11,,,Michal Pavelka,514
+622,Michal Pešta,Michal Pešta,11,,,Michal Pešta,515
+623,Michal Töpfer,Michal Töpfer,11,,,Michal Töpfer,516
+624,Michal Vališka,Michal Vališka,11,,,Michal Vališka,517
+625,Michal Vaner,Michal Vaner,11,,,Michal Vaner,518
+626,Michal Zdražil,Michal Zdražil,11,,,Michal Zdražil,519
+627,Michal Švanda,Michal Švanda,11,,,Michal Švanda,520
+628,Michal Žemlička,Michal Žemlička,11,,,Michal Žemlička,521
+629,Michal Žák,Michal Žák,11,,,Michal Žák,522
+630,Mikuláš Zindulka,Mikuláš Zindulka,11,,,Mikuláš Zindulka,523
+631,Milan Boháček,Milan Boháček,11,,,Milan Boháček,524
+632,Milan Hladík,Milan Hladík,11,,,Milan Hladík,525
+633,Milan Klicpera,Milan Klicpera,11,,,Milan Klicpera,526
+634,Milan Krtička,Milan Krtička,11,,,Milan Krtička,527
+635,Milan Pokorný,Milan Pokorný,11,,,Milan Pokorný,528
+636,Milan Předota,Milan Předota,11,,,Milan Předota,529
+637,Milan Straka,Milan Straka,11,,,Milan Straka,530
+638,Milan Tichý,Milan Tichý,11,,,Milan Tichý,531
+639,Milan Šafr,Milan Šafr,11,,,Milan Šafr,532
+640,Milena Dundrová,Milena Dundrová,11,,,Milena Dundrová,533
+641,Miloslav Feistauer,Miloslav Feistauer,11,,,Miloslav Feistauer,534
+642,Miloš Janeček,Miloš Janeček,11,,,Miloš Janeček,535
+643,Miloš Kopa,Miloš Kopa,11,,,Miloš Kopa,536
+644,Miloš Rotter,Miloš Rotter,11,,,Miloš Rotter,537
+645,Miloš Zahradník,Miloš Zahradník,11,,,Miloš Zahradník,538
+646,Miluša Bubeníková,Miluša Bubeníková,11,,,Miluša Bubeníková,539
+647,Mirko Rokyta,Mirko Rokyta,11,,,Mirko Rokyta,540
+648,Miroslav Brož,Miroslav Brož,11,,,Miroslav Brož,541
+649,Miroslav Bulíček,Miroslav Bulíček,11,,,Miroslav Bulíček,542
+650,Miroslav Cieslar,Miroslav Cieslar,11,,,Miroslav Cieslar,543
+651,Miroslav Hušek,Miroslav Hušek,11,,,Miroslav Hušek,544
+652,Miroslav Kratochvíl,Miroslav Kratochvíl,11,,,Miroslav Kratochvíl,545
+653,Miroslav Kučera,Miroslav Kučera,11,,,Miroslav Kučera,546
+654,Miroslav Palanský,Miroslav Palanský,11,,,Miroslav Palanský,547
+655,Miroslav Pospíšil,Miroslav Pospíšil,11,,,Miroslav Pospíšil,548
+656,Miroslav Tůma,Miroslav Tůma,11,,,Miroslav Tůma,549
+657,Miroslav Zelený,Miroslav Zelený,11,,,Miroslav Zelený,550
+658,Monika Balázsová,Monika Balázsová,11,,,Monika Balázsová,551
+659,Mykhaylo Tyomkyn,Mykhaylo Tyomkyn,11,,,Mykhaylo Tyomkyn,552
+660,Mykyta Narusevych,Mykyta Narusevych,11,,,Mykyta Narusevych,553
+661,Mária Šoltésová,Mária Šoltésová,11,,,Mária Šoltésová,554
+662,Naděžda Krylová,Naděžda Krylová,11,,,Naděžda Krylová,555
+663,Nese Günes,Nese Günes,11,,,Nese Günes,556
+664,Nicolas Daans,Nicolas Daans,11,,,Nicolas Daans,557
+665,Nikola Jedličková,Nikola Jedličková,11,,,Nikola Jedličková,558
+666,Nikola Kalábová,Nikola Kalábová,11,,,Nikola Kalábová,559
+667,Nino Peterek,Nino Peterek,11,,,Nino Peterek,560
+668,Oldřich Odvárko,Oldřich Odvárko,11,,,Oldřich Odvárko,561
+669,Oldřich Semerák,Oldřich Semerák,11,,,Oldřich Semerák,562
+670,Oleg Petrov,Oleg Petrov,11,,,Oleg Petrov,563
+671,Oleksandr Minakov,Oleksandr Minakov,11,,,Oleksandr Minakov,564
+672,Ondřej Bartoš,Ondřej Bartoš,11,,,Ondřej Bartoš,565
+673,Ondřej Bojar,Ondřej Bojar,11,,,Ondřej Bojar,566
+674,Ondřej Dušek,Ondřej Dušek,11,,,Ondřej Dušek,567
+675,Ondřej Ježil,Ondřej Ježil,11,,,Ondřej Ježil,568
+676,Ondřej Kalenda,Ondřej Kalenda,11,,,Ondřej Kalenda,569
+677,Ondřej Kincl,Ondřej Kincl,11,,,Ondřej Kincl,570
+678,Ondřej Kreml,Ondřej Kreml,11,,,Ondřej Kreml,571
+679,Ondřej Kylián,Ondřej Kylián,11,,,Ondřej Kylián,572
+680,Ondřej Macháč,Ondřej Macháč,11,,,Ondřej Macháč,573
+681,Ondřej Maršálek,Ondřej Maršálek,11,,,Ondřej Maršálek,574
+682,Ondřej Mička,Ondřej Mička,11,,,Ondřej Mička,575
+683,Ondřej Pangrác,Ondřej Pangrác,11,,,Ondřej Pangrác,576
+684,Ondřej Pejcha,Ondřej Pejcha,11,,,Ondřej Pejcha,577
+685,Ondřej Santolík,Ondřej Santolík,11,,,Ondřej Santolík,578
+686,Ondřej Schneider,Ondřej Schneider,11,,,Ondřej Schneider,579
+687,Ondřej Souček,Ondřej Souček,11,,,Ondřej Souček,580
+688,Ondřej Týbl,Ondřej Týbl,11,,,Ondřej Týbl,581
+689,Ondřej Vejpustek,Ondřej Vejpustek,11,,,Ondřej Vejpustek,582
+690,Ondřej Votava,Ondřej Votava,11,,,Ondřej Votava,583
+691,Ondřej Čadek,Ondřej Čadek,11,,,Ondřej Čadek,584
+692,Ondřej Čepek,Ondřej Čepek,11,,,Ondřej Čepek,585
+693,Ondřej Šrámek,Ondřej Šrámek,11,,,Ondřej Šrámek,586
+694,Otakar Svítek,Otakar Svítek,11,,,Otakar Svítek,587
+695,Otakar Trunda,Otakar Trunda,11,,,Otakar Trunda,588
+696,Pankaj Kumar,Pankaj Kumar,11,,,Pankaj Kumar,589
+697,Patrik Dobroň,Patrik Dobroň,11,,,Patrik Dobroň,590
+698,Patrik Dokoupil,Patrik Dokoupil,11,,,Patrik Dokoupil,591
+699,Patrícia Martinková,Patrícia Martinková,11,,,Patrícia Martinková,592
+700,Pavel Baláž,Pavel Baláž,11,,,Pavel Baláž,593
+701,Pavel Cejnar,Pavel Cejnar,11,,,Pavel Cejnar,594
+702,Pavel Charamza,Pavel Charamza,11,,,Pavel Charamza,595
+703,Pavel Dvořák,Pavel Dvořák,11,,,Pavel Dvořák,596
+704,Pavel Hubáček,Pavel Hubáček,11,,,Pavel Hubáček,597
+705,Pavel Höschl,Pavel Höschl,11,,,Pavel Höschl,598
+706,Pavel Ježek,Pavel Ježek,11,,,Pavel Ježek,599
+707,Pavel Kocán,Pavel Kocán,11,,,Pavel Kocán,600
+708,Pavel Koupil,Pavel Koupil,11,,,Pavel Koupil,601
+709,Pavel Krtouš,Pavel Krtouš,11,,,Pavel Krtouš,602
+710,Pavel Kudrna,Pavel Kudrna,11,,,Pavel Kudrna,603
+711,Pavel Kříž,Pavel Kříž,11,,,Pavel Kříž,604
+712,Pavel Lipavský,Pavel Lipavský,11,,,Pavel Lipavský,605
+713,Pavel Malý,Pavel Malý,11,,,Pavel Malý,606
+714,Pavel Moravec,Pavel Moravec,11,,,Pavel Moravec,607
+715,Pavel Parízek,Pavel Parízek,11,,,Pavel Parízek,608
+716,Pavel Paták,Pavel Paták,11,,,Pavel Paták,609
+717,Pavel Pecina,Pavel Pecina,11,,,Pavel Pecina,610
+718,Pavel Pudlák,Pavel Pudlák,11,,,Pavel Pudlák,611
+719,Pavel Pyrih,Pavel Pyrih,11,,,Pavel Pyrih,612
+720,Pavel Příhoda,Pavel Příhoda,11,,,Pavel Příhoda,613
+721,Pavel Růžička,Pavel Růžička,11,,,Pavel Růžička,614
+722,Pavel Sobotík,Pavel Sobotík,11,,,Pavel Sobotík,615
+723,Pavel Solař,Pavel Solař,11,,,Pavel Solař,616
+724,Pavel Soldán,Pavel Soldán,11,,,Pavel Soldán,617
+725,Pavel Stránský,Pavel Stránský,11,,,Pavel Stránský,618
+726,Pavel Turinský,Pavel Turinský,11,,,Pavel Turinský,619
+727,Pavel Töpfer,Pavel Töpfer,11,,,Pavel Töpfer,620
+728,Pavel Valtr,Pavel Valtr,11,,,Pavel Valtr,621
+729,Pavel Veselý,Pavel Veselý,11,,,Pavel Veselý,622
+730,Pavel Řezníček,Pavel Řezníček,11,,,Pavel Řezníček,623
+731,Pavel Šimerda,Pavel Šimerda,11,,,Pavel Šimerda,624
+732,Pavel Šodek,Pavel Šodek,11,,,Pavel Šodek,625
+733,Pavla Mendlová,Pavla Mendlová,11,,,Pavla Mendlová,626
+734,Pavlo Yatsyna,Pavlo Yatsyna,11,,,Pavlo Yatsyna,627
+735,Peter Guba,Peter Guba,11,,,Peter Guba,628
+736,Peter Huszár,Peter Huszár,11,,,Peter Huszár,629
+737,Peter Kodyš,Peter Kodyš,11,,,Peter Kodyš,630
+738,Peter Kvasnička,Peter Kvasnička,11,,,Peter Kvasnička,631
+739,Peter Kúš,Peter Kúš,11,,,Peter Kúš,632
+740,Peter Matvija,Peter Matvija,11,,,Peter Matvija,633
+741,Peter Minárik,Peter Minárik,11,,,Peter Minárik,634
+742,Peter Mojzeš,Peter Mojzeš,11,,,Peter Mojzeš,635
+743,Peter Zeman,Peter Zeman,11,,,Peter Zeman,636
+744,Peter Žilavý,Peter Žilavý,11,,,Peter Žilavý,637
+745,Petr Bartoň,Petr Bartoň,11,,,Petr Bartoň,638
+746,Petr Božovský,Petr Božovský,11,,,Petr Božovský,639
+747,Petr Chmel,Petr Chmel,11,,,Petr Chmel,640
+748,Petr Chvosta,Petr Chvosta,11,,,Petr Chvosta,641
+749,Petr Dohnal,Petr Dohnal,11,,,Petr Dohnal,642
+750,Petr Dostál,Petr Dostál,11,,,Petr Dostál,643
+751,Petr Gabriel,Petr Gabriel,11,,,Petr Gabriel,644
+752,Petr Gregor,Petr Gregor,11,,,Petr Gregor,645
+753,Petr Heřman,Petr Heřman,11,,,Petr Heřman,646
+754,Petr Hnětynka,Petr Hnětynka,11,,,Petr Hnětynka,647
+755,Petr Holický,Petr Holický,11,,,Petr Holický,648
+756,Petr Honzík,Petr Honzík,11,,,Petr Honzík,649
+757,Petr Hruška,Petr Hruška,11,,,Petr Hruška,650
+758,Petr Illner,Petr Illner,11,,,Petr Illner,651
+759,Petr Janský,Petr Janský,11,,,Petr Janský,652
+760,Petr Kaplický,Petr Kaplický,11,,,Petr Kaplický,653
+761,Petr Knobloch,Petr Knobloch,11,,,Petr Knobloch,654
+762,Petr Kolman,Petr Kolman,11,,,Petr Kolman,655
+763,Petr Kolář,Petr Kolář,11,,,Petr Kolář,656
+764,Petr Král,Petr Král,11,,,Petr Král,657
+765,Petr Kučera,Petr Kučera,11,,,Petr Kučera,658
+766,Petr Kužel,Petr Kužel,11,,,Petr Kužel,659
+767,Petr Kácovský,Petr Kácovský,11,,,Petr Kácovský,660
+768,Petr Lachout,Petr Lachout,11,,,Petr Lachout,661
+769,Petr Malý,Petr Malý,11,,,Petr Malý,662
+770,Petr Martinek,Petr Martinek,11,,,Petr Martinek,663
+771,Petr Mácha,Petr Mácha,11,,,Petr Mácha,664
+772,Petr Němec,Petr Němec,11,,,Petr Němec,665
+773,Petr Pišoft,Petr Pišoft,11,,,Petr Pišoft,666
+774,Petr Sedláček,Petr Sedláček,11,,,Petr Sedláček,667
+775,Petr Somberg,Petr Somberg,11,,,Petr Somberg,668
+776,Petr Tichý,Petr Tichý,11,,,Petr Tichý,669
+777,Petr Tůma,Petr Tůma,11,,,Petr Tůma,670
+778,Petr Vacek,Petr Vacek,11,,,Petr Vacek,671
+779,Petr Vaško,Petr Vaško,11,,,Petr Vaško,672
+780,Petr Vejmělka,Petr Vejmělka,11,,,Petr Vejmělka,673
+781,Petr Zacharov,Petr Zacharov,11,,,Petr Zacharov,674
+782,Petr Zasche,Petr Zasche,11,,,Petr Zasche,675
+783,Petr Zima,Petr Zima,11,,,Petr Zima,676
+784,Petr Čermák,Petr Čermák,11,,,Petr Čermák,677
+785,Petr Čoupek,Petr Čoupek,11,,,Petr Čoupek,678
+786,Petr Škoda,Petr Škoda,11,,,Petr Škoda,679
+787,Petr Šácha,Petr Šácha,11,,,Petr Šácha,680
+788,Petra Pelikánová,Petra Pelikánová,11,,,Petra Pelikánová,681
+789,Petra Surynková,Petra Surynková,11,,,Petra Surynková,682
+790,Přemysl Kolorenč,Přemysl Kolorenč,11,,,Přemysl Kolorenč,683
+791,Radek Hendrych,Radek Hendrych,11,,,Radek Hendrych,684
+792,Radek Honzík,Radek Honzík,11,,,Radek Honzík,685
+793,Radek Hušek,Radek Hušek,11,,,Radek Hušek,686
+794,Radek Kříček,Radek Kříček,11,,,Radek Kříček,687
+795,Radek Olšák,Radek Olšák,11,,,Radek Olšák,688
+796,Radek Plašil,Radek Plašil,11,,,Radek Plašil,689
+797,Radek Zikmund,Radek Zikmund,11,,,Radek Zikmund,690
+798,Radek Žlebčík,Radek Žlebčík,11,,,Radek Žlebčík,691
+799,Radomír Kužel,Radomír Kužel,11,,,Radomír Kužel,692
+800,Radomír Pánek,Radomír Pánek,11,,,Radomír Pánek,693
+801,Re O'Buachalla,Re O'Buachalla,11,,,Re O'Buachalla,694
+802,Richard Korytár,Richard Korytár,11,,,Richard Korytár,695
+803,Richard Wünsch,Richard Wünsch,11,,,Richard Wünsch,696
+804,Robert El Bashir,Robert El Bashir,11,,,Robert El Bashir,697
+805,Robert Král,Robert Král,11,,,Robert Král,698
+806,Robert Švarc,Robert Švarc,11,,,Robert Švarc,699
+807,Robert Šámal,Robert Šámal,11,,,Robert Šámal,700
+808,Roman Antoš,Roman Antoš,11,,,Roman Antoš,701
+809,Roman Barták,Roman Barták,11,,,Roman Barták,702
+810,Roman Dědic,Roman Dědic,11,,,Roman Dědic,703
+811,Roman Golovko,Roman Golovko,11,,,Roman Golovko,704
+812,Roman Grill,Roman Grill,11,,,Roman Grill,705
+813,Roman Lávička,Roman Lávička,11,,,Roman Lávička,706
+814,Roman Neruda,Roman Neruda,11,,,Roman Neruda,707
+815,Roman Čurík,Roman Čurík,11,,,Roman Čurík,708
+816,Ross Harvey Colman,Ross Harvey Colman,11,,,Ross Harvey Colman,709
+817,Rudolf Rosa,Rudolf Rosa,11,,,Rudolf Rosa,710
+818,Rupert Leitner,Rupert Leitner,11,,,Rupert Leitner,711
+819,Ryan Simpson,Ryan Simpson,11,,,Ryan Simpson,712
+820,Rémy Cagnol,Rémy Cagnol,11,,,Rémy Cagnol,713
+821,Sante Carloni,Sante Carloni,11,,,Sante Carloni,714
+822,Scott Congreve,Scott Congreve,11,,,Scott Congreve,715
+823,Sebastian Schwarzacher,Sebastian Schwarzacher,11,,,Sebastian Schwarzacher,716
+824,Silvie Černá,Silvie Černá,11,,,Silvie Černá,717
+825,Simona Hlavinková,Simona Hlavinková,11,,,Simona Hlavinková,718
+826,Siu Hang Man,Siu Hang Man,11,,,Siu Hang Man,719
+827,Stanislav Cita,Stanislav Cita,11,,,Stanislav Cita,720
+828,Stanislav Daniš,Stanislav Daniš,11,,,Stanislav Daniš,721
+829,Stanislav Gottwald,Stanislav Gottwald,11,,,Stanislav Gottwald,722
+830,Stanislav Hencl,Stanislav Hencl,11,,,Stanislav Hencl,723
+831,Stanislav Nagy,Stanislav Nagy,11,,,Stanislav Nagy,724
+832,Stanislav Valenta,Stanislav Valenta,11,,,Stanislav Valenta,725
+833,Stefano Pozza,Stefano Pozza,11,,,Stefano Pozza,726
+834,Stefanos Lappas,Stefanos Lappas,11,,,Stefanos Lappas,727
+835,Stevan Gajović,Stevan Gajović,11,,,Stevan Gajović,728
+836,Sudatta Bhattacharya,Sudatta Bhattacharya,11,,,Sudatta Bhattacharya,729
+837,Svatopluk Krýsl,Svatopluk Krýsl,11,,,Svatopluk Krýsl,730
+838,Sára Šůstek Vyhnalová,Sára Šůstek Vyhnalová,11,,,Sára Šůstek Vyhnalová,731
+839,Tereza Hannemann,Tereza Hannemann,11,,,Tereza Hannemann,732
+840,Tereza Klimošová,Tereza Klimošová,11,,,Tereza Klimošová,733
+841,Tereza Uhlířová,Tereza Uhlířová,11,,,Tereza Uhlířová,734
+842,Tibor Rózsa,Tibor Rózsa,11,,,Tibor Rózsa,735
+843,Tobiáš Krupa,Tobiáš Krupa,11,,,Tobiáš Krupa,736
+844,Todor Antić,Todor Antić,11,,,Todor Antić,737
+845,Tomáš Bureš,Tomáš Bureš,11,,,Tomáš Bureš,738
+846,Tomáš Bárta,Tomáš Bárta,11,,,Tomáš Bárta,739
+847,Tomáš Bílý,Tomáš Bílý,11,,,Tomáš Bílý,740
+848,Tomáš Cipra,Tomáš Cipra,11,,,Tomáš Cipra,741
+849,Tomáš Davídek,Tomáš Davídek,11,,,Tomáš Davídek,742
+850,Tomáš Domes,Tomáš Domes,11,,,Tomáš Domes,743
+851,Tomáš Drozdík,Tomáš Drozdík,11,,,Tomáš Drozdík,744
+852,Tomáš Dvořák,Tomáš Dvořák,11,,,Tomáš Dvořák,745
+853,Tomáš Dytrych,Tomáš Dytrych,11,,,Tomáš Dytrych,746
+854,Tomáš Faltín,Tomáš Faltín,11,,,Tomáš Faltín,747
+855,Tomáš Gronych,Tomáš Gronych,11,,,Tomáš Gronych,748
+856,Tomáš Halenka,Tomáš Halenka,11,,,Tomáš Halenka,749
+857,Tomáš Hammerbauer,Tomáš Hammerbauer,11,,,Tomáš Hammerbauer,750
+858,Tomáš Holan,Tomáš Holan,11,,,Tomáš Holan,751
+859,Tomáš Hons,Tomáš Hons,11,,,Tomáš Hons,752
+860,Tomáš Horák,Tomáš Horák,11,,,Tomáš Horák,753
+861,Tomáš Iser,Tomáš Iser,11,,,Tomáš Iser,754
+862,Tomáš Jaroš,Tomáš Jaroš,11,,,Tomáš Jaroš,755
+863,Tomáš Jungwirth,Tomáš Jungwirth,11,,,Tomáš Jungwirth,756
+864,Tomáš Kadavý,Tomáš Kadavý,11,,,Tomáš Kadavý,757
+865,Tomáš Karella,Tomáš Karella,11,,,Tomáš Karella,758
+866,Tomáš Kekule,Tomáš Kekule,11,,,Tomáš Kekule,759
+867,Tomáš Kmječ,Tomáš Kmječ,11,,,Tomáš Kmječ,760
+868,Tomáš Ledvinka,Tomáš Ledvinka,11,,,Tomáš Ledvinka,761
+869,Tomáš Los,Tomáš Los,11,,,Tomáš Los,762
+870,Tomáš Mančal,Tomáš Mančal,11,,,Tomáš Mančal,763
+871,Tomáš Musil,Tomáš Musil,11,,,Tomáš Musil,764
+872,Tomáš Novotný,Tomáš Novotný,11,,,Tomáš Novotný,765
+873,Tomáš Němeček,Tomáš Němeček,11,,,Tomáš Němeček,766
+874,Tomáš Ostatnický,Tomáš Ostatnický,11,,,Tomáš Ostatnický,767
+875,Tomáš Pajdla,Tomáš Pajdla,11,,,Tomáš Pajdla,768
+876,Tomáš Petříček,Tomáš Petříček,11,,,Tomáš Petříček,769
+877,Tomáš Rosa,Tomáš Rosa,11,,,Tomáš Rosa,770
+878,Tomáš Rusý,Tomáš Rusý,11,,,Tomáš Rusý,771
+879,Tomáš Salač,Tomáš Salač,11,,,Tomáš Salač,772
+880,Tomáš Skopal,Tomáš Skopal,11,,,Tomáš Skopal,773
+881,Tomáš Souček,Tomáš Souček,11,,,Tomáš Souček,774
+882,Tomáš Svoboda,Tomáš Svoboda,11,,,Tomáš Svoboda,775
+883,Tomáš Vlasák,Tomáš Vlasák,11,,,Tomáš Vlasák,776
+884,Tomáš Volf,Tomáš Volf,11,,,Tomáš Volf,777
+885,Tomáš Zadražil,Tomáš Zadražil,11,,,Tomáš Zadražil,778
+886,Tomáš Čelko,Tomáš Čelko,11,,,Tomáš Čelko,779
+887,Tomáš Čížek,Tomáš Čížek,11,,,Tomáš Čížek,780
+888,Tung Anh Vu,Tung Anh Vu,11,,,Tung Anh Vu,781
+889,Vahid Borji,Vahid Borji,11,,,Vahid Borji,782
+890,Veronika Bartová,Veronika Bartová,11,,,Veronika Bartová,783
+891,Veronika Blaho Vitošková,Veronika Blaho Vitošková,11,,,Veronika Blaho Vitošková,784
+892,Veronika Fišerová,Veronika Fišerová,11,,,Veronika Fišerová,785
+893,Veronika Kodetová,Veronika Kodetová,11,,,Veronika Kodetová,786
+894,Veronika Králová,Veronika Králová,11,,,Veronika Králová,787
+895,Viktor Beneš,Viktor Beneš,11,,,Viktor Beneš,788
+896,Viktor Fuglík,Viktor Fuglík,11,,,Viktor Fuglík,789
+897,Viktor Holubec,Viktor Holubec,11,,,Viktor Holubec,790
+898,Viktor Johánek,Viktor Johánek,11,,,Viktor Johánek,791
+899,Viktor Němeček,Viktor Němeček,11,,,Viktor Němeček,792
+900,Viktor Vašátko,Viktor Vašátko,11,,,Viktor Vašátko,793
+901,Vladan Majerech,Vladan Majerech,11,,,Vladan Majerech,794
+902,Vladimír Baumruk,Vladimír Baumruk,11,,,Vladimír Baumruk,795
+903,Vladimír Chudý,Vladimír Chudý,11,,,Vladimír Chudý,796
+904,Vladimír Fuka,Vladimír Fuka,11,,,Vladimír Fuka,797
+905,Vladimír Janovský,Vladimír Janovský,11,,,Vladimír Janovský,798
+906,Vladimír Karas,Vladimír Karas,11,,,Vladimír Karas,799
+907,Vladimír Kopecký,Vladimír Kopecký,11,,,Vladimír Kopecký,800
+908,Vladimír Kotal,Vladimír Kotal,11,,,Vladimír Kotal,801
+909,Vladimír Souček,Vladimír Souček,11,,,Vladimír Souček,802
+910,Vladimír Šíma,Vladimír Šíma,11,,,Vladimír Šíma,803
+911,Vladislav Kuboň,Vladislav Kuboň,11,,,Vladislav Kuboň,804
+912,Vlasta Moravcová,Vlasta Moravcová,11,,,Vlasta Moravcová,805
+913,Vlastimil Dort,Vlastimil Dort,11,,,Vlastimil Dort,806
+914,Vojtěch Aschenbrenner,Vojtěch Aschenbrenner,11,,,Vojtěch Aschenbrenner,807
+915,Vojtěch Chlan,Vojtěch Chlan,11,,,Vojtěch Chlan,808
+916,Vojtěch Gaďurek,Vojtěch Gaďurek,11,,,Vojtěch Gaďurek,809
+917,Vojtěch Hanzal,Vojtěch Hanzal,11,,,Vojtěch Hanzal,810
+918,Vojtěch Horký,Vojtěch Horký,11,,,Vojtěch Horký,811
+919,Vojtěch Jákl,Vojtěch Jákl,11,,,Vojtěch Jákl,812
+920,Vojtěch Kika,Vojtěch Kika,11,,,Vojtěch Kika,813
+921,Vojtěch Patkóš,Vojtěch Patkóš,11,,,Vojtěch Patkóš,814
+922,Vojtěch Patočka,Vojtěch Patočka,11,,,Vojtěch Patočka,815
+923,Vojtěch Pleskot,Vojtěch Pleskot,11,,,Vojtěch Pleskot,816
+924,Vojtěch Tázlar,Vojtěch Tázlar,11,,,Vojtěch Tázlar,817
+925,Vojtěch Černý,Vojtěch Černý,11,,,Vojtěch Černý,818
+926,Vojtěch Žák,Vojtěch Žák,11,,,Vojtěch Žák,819
+927,Václav Březina,Václav Březina,11,,,Václav Březina,820
+928,Václav Chvátal,Václav Chvátal,11,,,Václav Chvátal,821
+929,Václav Dědič,Václav Dědič,11,,,Václav Dědič,822
+930,Václav Hlaváč,Václav Hlaváč,11,,,Václav Hlaváč,823
+931,Václav Holý,Václav Holý,11,,,Václav Holý,824
+932,Václav Janiš,Václav Janiš,11,,,Václav Janiš,825
+933,Václav Kozmík,Václav Kozmík,11,,,Václav Kozmík,826
+934,Václav Kučera,Václav Kučera,11,,,Václav Kučera,827
+935,Václav Lepič,Václav Lepič,11,,,Václav Lepič,828
+936,Václav Luňák,Václav Luňák,11,,,Václav Luňák,829
+937,Václav Novotný,Václav Novotný,11,,,Václav Novotný,830
+938,Václav Pech,Václav Pech,11,,,Václav Pech,831
+939,Václav Profant,Václav Profant,11,,,Václav Profant,832
+940,Václav Vlasák,Václav Vlasák,11,,,Václav Vlasák,833
+941,Václav Římal,Václav Římal,11,,,Václav Římal,834
+942,Václava Kopecká,Václava Kopecká,11,,,Václava Kopecká,835
+943,Vít Dolejší,Vít Dolejší,11,,,Vít Dolejší,836
+944,Vít Jelínek,Vít Jelínek,11,,,Vít Jelínek,837
+945,Vít Kabele,Vít Kabele,11,,,Vít Kabele,838
+946,Vít Procházka,Vít Procházka,11,,,Vít Procházka,839
+947,Vít Průša,Vít Průša,11,,,Vít Průša,840
+948,Vít Vorobel,Vít Vorobel,11,,,Vít Vorobel,841
+949,Vít Šefl,Vít Šefl,11,,,Vít Šefl,842
+950,Vít Šisler,Vít Šisler,11,,,Vít Šisler,843
+951,Vítězslav Kala,Vítězslav Kala,11,,,Vítězslav Kala,844
+952,Věra Hrachová,Věra Hrachová,11,,,Věra Hrachová,845
+953,Věra Koudelková,Věra Koudelková,11,,,Věra Koudelková,846
+954,William DeMeo,William DeMeo,11,,,William DeMeo,847
+955,Yagmur Sak,Yagmur Sak,11,,,Yagmur Sak,848
+956,Yifan Zhang,Yifan Zhang,11,,,Yifan Zhang,849
+957,Yurii Yakovlev,Yurii Yakovlev,11,,,Yurii Yakovlev,850
+958,Zbyněk Pawlas,Zbyněk Pawlas,11,,,Zbyněk Pawlas,851
+959,Zbyněk Šír,Zbyněk Šír,11,,,Zbyněk Šír,852
+960,Zdeněk Doležal,Zdeněk Doležal,11,,,Zdeněk Doležal,853
+961,Zdeněk Drozd,Zdeněk Drozd,11,,,Zdeněk Drozd,854
+962,Zdeněk Dvořák,Zdeněk Dvořák,11,,,Zdeněk Dvořák,855
+963,Zdeněk Halas,Zdeněk Halas,11,,,Zdeněk Halas,856
+964,Zdeněk Hlávka,Zdeněk Hlávka,11,,,Zdeněk Hlávka,857
+965,Zdeněk Janů,Zdeněk Janů,11,,,Zdeněk Janů,858
+966,Zdeněk Kasner,Zdeněk Kasner,11,,,Zdeněk Kasner,859
+967,Zdeněk Mašín,Zdeněk Mašín,11,,,Zdeněk Mašín,860
+968,Zdeněk Němeček,Zdeněk Němeček,11,,,Zdeněk Němeček,861
+969,Zdeněk Strakoš,Zdeněk Strakoš,11,,,Zdeněk Strakoš,862
+970,Zdeněk Žabokrtský,Zdeněk Žabokrtský,11,,,Zdeněk Žabokrtský,863
+971,Zdeňka Koupilová,Zdeňka Koupilová,11,,,Zdeňka Koupilová,864
+972,Zuzana Hořká,Zuzana Hořká,11,,,Zuzana Hořká,865
+973,Zuzana Patáková,Zuzana Patáková,11,,,Zuzana Patáková,866
+974,Zuzana Procházková,Zuzana Procházková,11,,,Zuzana Procházková,867
+975,Zuzana Prášková,Zuzana Prášková,11,,,Zuzana Prášková,868
+976,Zuzana Vaníčková,Zuzana Vaníčková,11,,,Zuzana Vaníčková,869
+977,Šimon Midlik,Šimon Midlik,11,,,Šimon Midlik,870
+978,Štefan Višňovský,Štefan Višňovský,11,,,Štefan Višňovský,871
+979,Štěpán Holub,Štěpán Holub,11,,,Štěpán Holub,872
+980,Štěpán Hudeček,Štěpán Hudeček,11,,,Štěpán Hudeček,873
+981,Štěpán Marek,Štěpán Marek,11,,,Štěpán Marek,874
+982,Štěpán Stenchlák,Štěpán Stenchlák,11,,,Štěpán Stenchlák,875
+983,Šárka Hudecová,Šárka Hudecová,11,,,Šárka Hudecová,876
+984,Šárka Zikánová,Šárka Zikánová,11,,,Šárka Zikánová,877
+985,Žaneta Semanišinová,Žaneta Semanišinová,11,,,Žaneta Semanišinová,878
+986,2020,2020,12,,,2020,0
+987,2021,2021,12,,,2021,1
+988,2022,2022,12,,,2022,2
+989,2023,2023,12,,,2023,3
+990,2024,2024,12,,,2024,4
+991,#5140,#5140,13,,,#5140,0
+992,#6115,#6115,13,,,#6115,1
+993,#6121,#6121,13,,,#6121,2
+994,#6122,#6122,13,,,#6122,3
+995,0421,0421,13,,,0421,4
+996,0421TA,0421TA,13,,,0421TA,5
+997,1LOG,1LOG,13,,,1LOG,6
+998,1LOG  1SIN,1LOG  1SIN,13,,,1LOG  1SIN,7
+999,1VES,1VES,13,,,1VES,8
+1000,5PSY,5PSY,13,,,5PSY,9
+1001,7PP,7PP,13,,,7PP,10
+1002,B-BINF,B-BINF,13,,,B-BINF,11
+1003,B-BIO,B-BIO,13,,,B-BIO,12
+1004,B-CHEM,B-CHEM,13,,,B-CHEM,13
+1005,B-CHFM,B-CHFM,13,,,B-CHFM,14
+1006,B-GEOL,B-GEOL,13,,,B-GEOL,15
+1007,BA-SCI,BA-SCI,13,,,BA-SCI,16
+1008,BBINF,BBINF,13,,,BBINF,17
+1009,BCHEM,BCHEM,13,,,BCHEM,18
+1010,BMOBIBO,BMOBIBO,13,,,BMOBIBO,19
+1011,D-AFGG,D-AFGG,13,,,D-AFGG,20
+1012,EF,EF,13,,,EF,21
+1013,FAAP,FAAP,13,,,FAAP,22
+1014,FAMKP,FAMKP,13,,,FAMKP,23
+1015,FBCHF,FBCHF,13,,,FBCHF,24
+1016,FBCHP,FBCHP,13,,,FBCHP,25
+1017,FBCHPA,FBCHPA,13,,,FBCHPA,26
+1018,FBCHPE,FBCHPE,13,,,FBCHPE,27
+1019,FBCHPT,FBCHPT,13,,,FBCHPT,28
+1020,FCJFP,FCJFP,13,,,FCJFP,29
+1021,FFUM,FFUM,13,,,FFUM,30
+1022,FIUP,FIUP,13,,,FIUP,31
+1023,FKSM,FKSM,13,,,FKSM,32
+1024,FKSMP,FKSMP,13,,,FKSMP,33
+1025,FKSMPA,FKSMPA,13,,,FKSMPA,34
+1026,FMPMF,FMPMF,13,,,FMPMF,35
+1027,FMPMP,FMPMP,13,,,FMPMP,36
+1028,FMUP,FMUP,13,,,FMUP,37
+1029,FMUPN,FMUPN,13,,,FMUPN,38
+1030,FMUZV,FMUZV,13,,,FMUZV,39
+1031,FOF,FOF,13,,,FOF,40
+1032,FOFA,FOFA,13,,,FOFA,41
+1033,FOOE,FOOE,13,,,FOOE,42
+1034,FOOP,FOOP,13,,,FOOP,43
+1035,FP,FP,13,,,FP,44
+1036,FPPP,FPPP,13,,,FPPP,45
+1037,FTF,FTF,13,,,FTF,46
+1038,FTFA,FTFA,13,,,FTFA,47
+1039,FTFP,FTFP,13,,,FTFP,48
+1040,FTFPA,FTFPA,13,,,FTFPA,49
+1041,IDMP,IDMP,13,,,IDMP,50
+1042,IJTP,IJTP,13,,,IJTP,51
+1043,IJTPA,IJTPA,13,,,IJTPA,52
+1044,IOI,IOI,13,,,IOI,53
+1045,IOIA,IOIA,13,,,IOIA,54
+1046,IPA,IPA,13,,,IPA,55
+1047,IPA1,IPA1,13,,,IPA1,56
+1048,IPA5,IPA5,13,,,IPA5,57
+1049,IPGVPH,IPGVPH,13,,,IPGVPH,58
+1050,IPGVPHA,IPGVPHA,13,,,IPGVPHA,59
+1051,IPP,IPP,13,,,IPP,60
+1052,IPP1,IPP1,13,,,IPP1,61
+1053,IPP2,IPP2,13,,,IPP2,62
+1054,IPP3,IPP3,13,,,IPP3,63
+1055,IPP4,IPP4,13,,,IPP4,64
+1056,IPP5,IPP5,13,,,IPP5,65
+1057,IPP6,IPP6,13,,,IPP6,66
+1058,IPSS,IPSS,13,,,IPSS,67
+1059,ISDI,ISDI,13,,,ISDI,68
+1060,ISDP,ISDP,13,,,ISDP,69
+1061,ISDPA,ISDPA,13,,,ISDPA,70
+1062,ISS,ISS,13,,,ISS,71
+1063,ISWSP,ISWSP,13,,,ISWSP,72
+1064,ITIA,ITIA,13,,,ITIA,73
+1065,ITIP,ITIP,13,,,ITIP,74
+1066,ITIPA,ITIPA,13,,,ITIPA,75
+1067,IUI,IUI,13,,,IUI,76
+1068,IUIP,IUIP,13,,,IUIP,77
+1069,IUIPA,IUIPA,13,,,IUIPA,78
+1070,IVVP,IVVP,13,,,IVVP,79
+1071,IVVPA,IVVPA,13,,,IVVPA,80
+1072,JU-F B,JU-F B,13,,,JU-F B,81
+1073,LOG,LOG,13,,,LOG,82
+1074,MA,MA,13,,,MA,83
+1075,MAP,MAP,13,,,MAP,84
+1076,MAPA,MAPA,13,,,MAPA,85
+1077,MAUP,MAUP,13,,,MAUP,86
+1078,MCUP,MCUP,13,,,MCUP,87
+1079,MCUPN,MCUPN,13,,,MCUPN,88
+1080,MDUP,MDUP,13,,,MDUP,89
+1081,MDUPN,MDUPN,13,,,MDUPN,90
+1082,MFAPM,MFAPM,13,,,MFAPM,91
+1083,MFMAT,MFMAT,13,,,MFMAT,92
+1084,MFMP,MFMP,13,,,MFMP,93
+1085,MFPP,MFPP,13,,,MFPP,94
+1086,MFUP,MFUP,13,,,MFUP,95
+1087,MFUPN,MFUPN,13,,,MFUPN,96
+1088,MITP,MITP,13,,,MITP,97
+1089,MITPN,MITPN,13,,,MITPN,98
+1090,MIUP,MIUP,13,,,MIUP,99
+1091,MIUPN,MIUPN,13,,,MIUPN,100
+1092,MMFP,MMFP,13,,,MMFP,101
+1093,MMIT,MMIT,13,,,MMIT,102
+1094,MMOP,MMOP,13,,,MMOP,103
+1095,MMUI,MMUI,13,,,MMUI,104
+1096,MNUP,MNUP,13,,,MNUP,105
+1097,MNVMA,MNVMA,13,,,MNVMA,106
+1098,MNVP,MNVP,13,,,MNVP,107
+1099,MNVPA,MNVPA,13,,,MNVPA,108
+1100,MOM,MOM,13,,,MOM,109
+1101,MOMA,MOMA,13,,,MOMA,110
+1102,MOMP,MOMP,13,,,MOMP,111
+1103,MPMSE,MPMSE,13,,,MPMSE,112
+1104,MPMSEA,MPMSEA,13,,,MPMSEA,113
+1105,MPSP,MPSP,13,,,MPSP,114
+1106,MPSPA,MPSPA,13,,,MPSPA,115
+1107,MPSPEK,MPSPEK,13,,,MPSPEK,116
+1108,MPSPMS,MPSPMS,13,,,MPSPMS,117
+1109,MPSPN,MPSPN,13,,,MPSPN,118
+1110,MPSPTP,MPSPTP,13,,,MPSPTP,119
+1111,MSPN,MSPN,13,,,MSPN,120
+1112,MSPNA,MSPNA,13,,,MSPNA,121
+1113,MSTR,MSTR,13,,,MSTR,122
+1114,MSTRA,MSTRA,13,,,MSTRA,123
+1115,MZUFF,MZUFF,13,,,MZUFF,124
+1116,MZUIZV,MZUIZV,13,,,MZUIZV,125
+1117,N-BINF,N-BINF,13,,,N-BINF,126
+1118,N-FYCHBF,N-FYCHBF,13,,,N-FYCHBF,127
+1119,NEF,NEF,13,,,NEF,128
+1120,NP_NEFBPF,NP_NEFBPF,13,,,NP_NEFBPF,129
+1121,NP_POL,NP_POL,13,,,NP_POL,130
+1122,P4F1,P4F1,13,,,P4F1,131
+1123,P4F11,P4F11,13,,,P4F11,132
+1124,P4F11A,P4F11A,13,,,P4F11A,133
+1125,P4F12,P4F12,13,,,P4F12,134
+1126,P4F12A,P4F12A,13,,,P4F12A,135
+1127,P4F13A,P4F13A,13,,,P4F13A,136
+1128,P4F1A,P4F1A,13,,,P4F1A,137
+1129,P4F2A,P4F2A,13,,,P4F2A,138
+1130,P4F3,P4F3,13,,,P4F3,139
+1131,P4F3A,P4F3A,13,,,P4F3A,140
+1132,P4F4,P4F4,13,,,P4F4,141
+1133,P4F4A,P4F4A,13,,,P4F4A,142
+1134,P4F5A,P4F5A,13,,,P4F5A,143
+1135,P4F6,P4F6,13,,,P4F6,144
+1136,P4F6A,P4F6A,13,,,P4F6A,145
+1137,P4F7A,P4F7A,13,,,P4F7A,146
+1138,P4F8A,P4F8A,13,,,P4F8A,147
+1139,P4F9,P4F9,13,,,P4F9,148
+1140,P4F9A,P4F9A,13,,,P4F9A,149
+1141,P4I1,P4I1,13,,,P4I1,150
+1142,P4I1A,P4I1A,13,,,P4I1A,151
+1143,P4I2,P4I2,13,,,P4I2,152
+1144,P4I2A,P4I2A,13,,,P4I2A,153
+1145,P4I3,P4I3,13,,,P4I3,154
+1146,P4I3A,P4I3A,13,,,P4I3A,155
+1147,P4I4A,P4I4A,13,,,P4I4A,156
+1148,P4I5,P4I5,13,,,P4I5,157
+1149,P4I5A,P4I5A,13,,,P4I5A,158
+1150,P4M1,P4M1,13,,,P4M1,159
+1151,P4M1A,P4M1A,13,,,P4M1A,160
+1152,P4M2A,P4M2A,13,,,P4M2A,161
+1153,P4M3,P4M3,13,,,P4M3,162
+1154,P4M3A,P4M3A,13,,,P4M3A,163
+1155,P4M6,P4M6,13,,,P4M6,164
+1156,P4M6A,P4M6A,13,,,P4M6A,165
+1157,P4M8,P4M8,13,,,P4M8,166
+1158,P4M8A,P4M8A,13,,,P4M8A,167
+1159,P4M9,P4M9,13,,,P4M9,168
+1160,SHV18,SHV18,13,,,SHV18,169
+1161,TVSIF,TVSIF,13,,,TVSIF,170
+1162,TVSMA,TVSMA,13,,,TVSMA,171
+1163,UB-BM,UB-BM,13,,,UB-BM,172
+1164,UB-CHF,UB-CHF,13,,,UB-CHF,173
+1165,UB-CHM,UB-CHM,13,,,UB-CHM,174
+1166,UB-ZM,UB-ZM,13,,,UB-ZM,175
+1167,UBCHM,UBCHM,13,,,UBCHM,176
+1168,UCTVSMA,UCTVSMA,13,,,UCTVSMA,177
+1169,UN-CHF,UN-CHF,13,,,UN-CHF,178
+1170,UN-ZM,UN-ZM,13,,,UN-ZM,179
+1171,VSEOB,VSEOB,13,,,VSEOB,180
+1172,B,B,14,,,B,0
+1173,D,D,14,,,D,1
+1174,M,M,14,,,M,2
+1175,N,N,14,,,N,3
+1176,O,O,14,,,O,4
+1177,P,P,14,,,P,5
+1178,1,1,15,,,1,0
+1179,2,2,15,,,2,1
+1180,3,3,15,,,3,2
+1181,4,4,15,,,4,3
+1182,5,5,15,,,5,4
+1183,8,8,15,,,8,5
+1184,cvičení,cvičení,16,,,cvičení,0
+1185,elektronický kurz,elektronický kurz,16,,,elektronický kurz,1
+1186,laboratorní práce,laboratorní práce,16,,,laboratorní práce,2
+1187,nic,nic,16,,,nic,3
+1188,praktická cvičení,praktická cvičení,16,,,praktická cvičení,4
+1189,praxe,praxe,16,,,praxe,5
+1190,proseminář,proseminář,16,,,proseminář,6
+1191,přednáška,přednáška,16,,,přednáška,7
+1192,samostatná práce,samostatná práce,16,,,samostatná práce,8
+1193,seminář,seminář,16,,,seminář,9
+1194,soustředění,soustředění,16,,,soustředění,10

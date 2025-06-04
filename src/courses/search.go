@@ -5,24 +5,31 @@ import (
 	"fmt"
 
 	"github.com/meilisearch/meilisearch-go"
-	"github.com/michalhercik/RecSIS/courses/internal/filter"
+	"github.com/michalhercik/RecSIS/language"
 )
 
+type Expression interface {
+	String() string
+	Except() func(func(string, string) bool)
+	ConditionsCount() int
+}
+
 type Request struct {
-	sessionID   string
+	userID      string
 	query       string
 	indexUID    string
 	page        int
 	hitsPerPage int
-	lang        Language
-	filter      filter.Expression
+	lang        language.Language
+	filter      Expression
+	facets      []string
 }
 
 type Response struct {
 	TotalHits         int
 	TotalPages        int
 	Courses           []string
-	FacetDistribution map[string]map[int]int
+	FacetDistribution map[string]map[string]int
 }
 
 type MultiResponse struct {
@@ -36,7 +43,7 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 		Hits       []struct {
 			Code string `json:"code"`
 		} `json:"Hits"`
-		FacetDistribution map[string]map[int]int `json:"FacetDistribution"`
+		FacetDistribution map[string]map[string]int `json:"FacetDistribution"`
 	}
 	if err := json.Unmarshal(data, &hit); err != nil {
 		return err
@@ -56,7 +63,7 @@ type QuickRequest struct {
 	indexUID string
 	limit    int64
 	offset   int64
-	lang     Language
+	lang     language.Language
 }
 
 type QuickCourse struct {
@@ -111,8 +118,8 @@ type MeiliSearch struct {
 
 func (s MeiliSearch) FacetDistribution() (map[string]map[int]int, error) {
 	searchReq := &meilisearch.SearchRequest{
-		Limit:  0, // TODO: not working, probably bug in meilisearch-go -> write own client...
-		Facets: filter.SliceOfParamStr(),
+		Limit:  0,          // TODO: not working, probably bug in meilisearch-go -> write own client...
+		Facets: []string{}, //filter.SliceOfParamStr(),
 	}
 	response, err := s.Client.Index(s.Courses.Uid).Search("", searchReq)
 	if err != nil {
@@ -141,7 +148,7 @@ func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisear
 		HitsPerPage:          int64(r.hitsPerPage),
 		AttributesToRetrieve: []string{"code"},
 		Filter:               r.filter.String(),
-		Facets:               filter.SliceOfParamStr(),
+		Facets:               r.facets,
 	})
 	for param, filter := range r.filter.Except() {
 		_ = param
@@ -152,7 +159,7 @@ func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisear
 			Limit:                0,          // TODO: not working, probably bug in meilisearch-go -> write own client...
 			AttributesToRetrieve: []string{}, // TODO: not working, probably bug in meilisearch-go -> write own client...
 			Filter:               filter,
-			Facets:               []string{param.String()},
+			Facets:               []string{param},
 		})
 	}
 	return result
@@ -206,9 +213,9 @@ func buildQuickSearchRequest(r QuickRequest) (*meilisearch.SearchRequest, error)
 		Offset: r.offset,
 	}
 	switch r.lang {
-	case cs:
+	case language.CS:
 		result.AttributesToRetrieve = []string{"code", "cs.NAME"}
-	case en:
+	case language.EN:
 		result.AttributesToRetrieve = []string{"code", "en.NAME"}
 	default:
 		return result, fmt.Errorf("SearchRequest: unsupported language: %v", r.lang)

@@ -7,83 +7,87 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/michalhercik/RecSIS/courses/internal/filter"
+	"github.com/michalhercik/RecSIS/dbds"
+	"github.com/michalhercik/RecSIS/filters"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 const courseIndex = "courses"
-const searchParam = "search"
 const pageParam = "page"
 const hitsPerPageParam = "hitsPerPage"
 
 type Server struct {
-	Data   DataManager
-	Search SearchEngine
+	router  *http.ServeMux
+	Data    DBManager
+	Search  SearchEngine
+	Auth    Authentication
+	Filters filters.Filters
+	BpBtn   BlueprintAddButton
+	Page    Page
 }
 
-func (s Server) Register(router *http.ServeMux, prefix string) {
-	//router.HandleFunc(fmt.Sprintf("GET %s", prefix), s.page) // TODO get language from http header
-	router.HandleFunc(fmt.Sprintf("GET /cs%s", prefix), s.csPage)
-	router.HandleFunc(fmt.Sprintf("GET /en%s", prefix), s.enPage)
-	//router.HandleFunc(fmt.Sprintf("GET %s/search", prefix), s.content) // TODO get language from http header
-	router.HandleFunc(fmt.Sprintf("GET /cs%s/search", prefix), s.csContent)
-	router.HandleFunc(fmt.Sprintf("GET /en%s/search", prefix), s.enContent)
-	//router.HandleFunc(fmt.Sprintf("GET %s/quicksearch", prefix), s.quickSearch) // TODO get language from http header
-	router.HandleFunc(fmt.Sprintf("GET /cs%s/quicksearch", prefix), s.csQuickSearch)
-	router.HandleFunc(fmt.Sprintf("GET /en%s/quicksearch", prefix), s.enQuickSearch)
+//================================================================================
+// Interface
+//================================================================================
+
+func (s *Server) Init() {
+	if err := s.Filters.Init(); err != nil {
+		log.Fatal("courses.Init: ", err)
+	}
+	s.initRouter()
 }
 
-func (s Server) csPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, cs, texts["cs"])
+func (s Server) Router() http.Handler {
+	return s.router
 }
 
-func (s Server) enPage(w http.ResponseWriter, r *http.Request) {
-	s.page(w, r, en, texts["en"])
+//================================================================================
+// Init
+//================================================================================
+
+func (s *Server) initRouter() {
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", s.page)
+	router.HandleFunc("GET /search", s.content)
+	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
+	s.router = router
 }
 
-func (s Server) page(w http.ResponseWriter, r *http.Request, lang Language, t text) {
-	req, err := parseQueryRequest(r, lang)
+//================================================================================
+// Handlers
+//================================================================================
+
+func (s Server) page(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+	req, err := s.parseQueryRequest(w, r)
 	if err != nil {
 		// TODO: handle error
 		log.Printf("search: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	var result coursesPage
-	if len(req.query) > 0 {
-		result, err = s.search(req)
-		if err != nil {
-			log.Printf("search: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	} else {
-		result, err = s.facetDistribution(lang)
-		if err != nil {
-			log.Printf("facetDistribution: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
-	Page(&result, t).Render(r.Context(), w)
-}
-
-func (s Server) csContent(w http.ResponseWriter, r *http.Request) {
-	s.content(w, r, cs, texts["cs"])
-}
-
-func (s Server) enContent(w http.ResponseWriter, r *http.Request) {
-	s.content(w, r, en, texts["en"])
-}
-
-func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t text) {
-	req, err := parseQueryRequest(r, lang)
+	result, err := s.search(req, r)
 	if err != nil {
-		// TODO: handle error
 		log.Printf("search: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	res, err := s.search(req)
+	result.templ = s.BpBtn.PartialComponent(lang)
+	main := Content(&result, t)
+	s.Page.View(main, lang, t.PageTitle, req.query).Render(r.Context(), w)
+}
+
+func (s Server) content(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+	req, err := s.parseQueryRequest(w, r)
+	if err != nil {
+		// TODO: handle error
+		log.Printf("search: %v", err)
+		return
+	}
+	coursesPage, err := s.search(req, r)
 	if err != nil {
 		log.Printf("search: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -91,46 +95,21 @@ func (s Server) content(w http.ResponseWriter, r *http.Request, lang Language, t
 	}
 
 	// Set the HX-Push-Url header to update the browser URL without a full reload
-	w.Header().Set("HX-Push-Url", parseUrl(r.URL.Query(), t))
+	w.Header().Set("HX-Push-Url", s.parseUrl(r.URL.Query(), t))
 
-	// coursesPage := createPageContent(res, req)
-	coursesPage := res
-	Courses(&coursesPage, t).Render(r.Context(), w)
+	coursesPage.templ = s.BpBtn.PartialComponent(lang)
+	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
-func (s Server) csQuickSearch(w http.ResponseWriter, r *http.Request) {
-	s.quickSearch(w, r, cs, texts["cs"])
-}
-
-func (s Server) enQuickSearch(w http.ResponseWriter, r *http.Request) {
-	s.quickSearch(w, r, en, texts["en"])
-}
-
-func (s Server) quickSearch(w http.ResponseWriter, r *http.Request, lang Language, t text) {
-	query := r.FormValue(searchParam)
-	req := QuickRequest{
-		query:    query,
-		indexUID: courseIndex,
-		limit:    5,
-		offset:   0,
-		lang:     lang,
-	}
-	res, err := s.Search.QuickSearch(req)
-	if err != nil {
-		log.Printf("quickSearch: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	QuickResults(&res, t).Render(r.Context(), w)
-}
-
-func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
+func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Request, error) {
 	var req Request
-	sessionCookie, err := r.Cookie("recsis_session_key")
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return req, err
 	}
-	query := r.FormValue(searchParam)
+	lang := language.FromContext(r.Context())
+	query := r.FormValue(s.Page.SearchParam())
 	page, err := strconv.Atoi(r.FormValue(pageParam))
 	if err != nil {
 		page = 1
@@ -139,77 +118,120 @@ func parseQueryRequest(r *http.Request, lang Language) (Request, error) {
 	if err != nil {
 		hitsPerPage = coursesPerPage
 	}
-	filter, err := filter.ParseFilters(r.URL.Query())
+	filter, err := s.Filters.ParseURLQuery(r.URL.Query())
 	if err != nil {
 		// TODO: handle error
 		log.Printf("search error: %v", err)
 	}
 
 	req = Request{
-		sessionID:   sessionCookie.Value,
+		userID:      userID,
 		query:       query,
 		indexUID:    courseIndex,
 		page:        page,
 		hitsPerPage: hitsPerPage,
 		lang:        lang,
 		filter:      filter,
+		facets:      s.Filters.Facets(),
 	}
 	return req, nil
 }
 
-func (s Server) search(req Request) (coursesPage, error) {
+func (s Server) search(req Request, httpReq *http.Request) (coursesPage, error) {
 	// search for courses
 	var result coursesPage
 	searchResponse, err := s.Search.Search(req)
 	if err != nil {
 		return result, err
 	}
-	coursesData, err := s.Data.Courses(req.sessionID, searchResponse.Courses, req.lang)
+	coursesData, err := s.Data.Courses(req.userID, searchResponse.Courses, req.lang)
 	if err != nil {
 		return result, err
 	}
-	paramLabels, err := s.Data.ParamLabels(req.lang)
-	if err != nil {
-		return result, err
-	}
-	facets := filter.MakeFacetDistribution(searchResponse.FacetDistribution, paramLabels)
 	result = coursesPage{
-		courses:    coursesData,
-		page:       int(req.page),
-		pageSize:   int(req.hitsPerPage),
-		totalPages: searchResponse.TotalPages,
-		search:     req.query,
-		facets:     facets,
+		courses:     coursesData,
+		page:        int(req.page),
+		pageSize:    int(req.hitsPerPage),
+		searchParam: s.Page.SearchParam(),
+		totalPages:  searchResponse.TotalPages,
+		search:      req.query,
+		facets:      s.Filters.IterFiltersWithFacets(searchResponse.FacetDistribution, httpReq.URL.Query(), req.lang),
 	}
 	return result, nil
 }
 
-func (s Server) facetDistribution(lang Language) (coursesPage, error) {
-	var result coursesPage
-	f, err := s.Search.FacetDistribution()
-	if err != nil {
-		return result, err
-	}
-	param, err := s.Data.ParamLabels(lang)
-	if err != nil {
-		return result, err
-	}
-	facets := filter.MakeFacetDistribution(f, param)
-	result = coursesPage{
-		facets: facets,
-	}
-	return result, nil
-}
-
-func parseUrl(queryValues url.Values, t text) string {
+func (s Server) parseUrl(queryValues url.Values, t text) string {
 	// exclude default values from the URL
-	if queryValues.Get("search") == "" {
-		queryValues.Del("search")
+	if queryValues.Get(s.Page.SearchParam()) == "" {
+		queryValues.Del(s.Page.SearchParam())
 	}
-	if queryValues.Get("page") == "1" {
-		queryValues.Del("page")
+	if queryValues.Get(pageParam) == "1" {
+		queryValues.Del(pageParam)
 	}
 	// TODO: possibly add more defaults to exclude
 
-	return t.Utils.LangLink("/courses?" + queryValues.Encode())
+	return fmt.Sprintf("%s?%s", t.Utils.Language.Path("/courses"), queryValues.Encode())
+}
+
+func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
+	userID, err := s.Auth.UserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		log.Printf("addCourseToBlueprint: %v", err)
+		return
+	}
+	lang := language.FromContext(r.Context())
+	courseCodes, year, semester, err := s.BpBtn.ParseRequest(r)
+	if err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		log.Printf("addCourseToBlueprint: %v", err)
+		return
+	}
+	_, err = s.BpBtn.Action(userID, year, semester, courseCodes[0])
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("failed to create button: %v", err)
+		return
+	}
+
+	t := texts[lang]
+	courses, err := s.Data.Courses(userID, courseCodes, lang)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("failed to create button: %v", err)
+		return
+	}
+	btn := s.BpBtn.PartialComponent(lang)
+	CourseCard(&courses[0], t, btn).Render(r.Context(), w)
+
+	// btn.Render(r.Context(), w)
+}
+
+func parseYearSemester(r *http.Request) (int, dbds.SemesterAssignment, error) {
+	year, err := parseYear(r)
+	if err != nil {
+		return 0, 0, err
+	}
+	semester, err := parseSemester(r)
+	if err != nil {
+		return year, 0, err
+	}
+	return year, semester, nil
+}
+
+func parseYear(r *http.Request) (int, error) {
+	year, err := strconv.Atoi(r.FormValue("year"))
+	if err != nil {
+		return year, err
+	}
+	return year, nil
+}
+
+func parseSemester(r *http.Request) (dbds.SemesterAssignment, error) {
+	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
+	if err != nil {
+		return 0, err
+	}
+	semester := dbds.SemesterAssignment(semesterInt)
+	return semester, nil
 }
