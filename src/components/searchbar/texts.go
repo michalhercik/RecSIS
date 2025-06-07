@@ -2,27 +2,29 @@ package searchbar
 
 import (
 	"github.com/michalhercik/RecSIS/language"
-	"github.com/michalhercik/RecSIS/utils"
 )
 
-type Text struct {
-	NoCoursesFound    string
-	SearchPlaceholder string
-	SearchButton      string
-	Utils             utils.Text
+type text struct {
+	noCoursesFound    string
+	searchPlaceholder string
+	searchButton      string
+	// language
+	language language.Language
 }
 
-var texts = map[language.Language]Text{
+var texts = map[language.Language]text{
 	language.CS: {
-		NoCoursesFound:    "Žádné předměty nebyly nalezeny.",
-		SearchPlaceholder: "Hledej předmět...",
-		SearchButton:      "Hledej",
-		Utils:             utils.Texts[language.CS],
+		noCoursesFound:    "Žádné předměty nebyly nalezeny.",
+		searchPlaceholder: "Hledej předmět...",
+		searchButton:      "Hledej",
+		// language
+		language: language.CS,
 	},
 	language.EN: {
-		NoCoursesFound:    "No courses found.",
-		SearchPlaceholder: "Search for course...",
-		SearchButton:      "Search",
-		Utils:             utils.Texts[language.EN],
+		noCoursesFound:    "No courses found.",
+		searchPlaceholder: "Search for course...",
+		searchButton:      "Search",
+		// language
+		language: language.EN,
 	},
 }

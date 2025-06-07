@@ -69,11 +69,11 @@ templ badges(course *course, t text) {
                 for _, ba := range course.blueprintAssignments.sort() {
                     if ba.year == 0 {
                         @clickableBadge("blueprint", fmt.Sprintf("bp-unassigned-row-%s", course.code), "bg-unassigned", t) {
-                            <i class="bi bi-inbox"></i> { ba.string(t.utils.Language) }
+                            <i class="bi bi-inbox"></i> { ba.string(t.language) }
                         }
                     } else {
                         @clickableBadge("blueprint", fmt.Sprintf("bp-%d-%s-row-%s", ba.year, ba.semester.stringID(), course.code), "bg-blueprint", t) {
-                            <i class="bi bi-basket2"></i> { ba.string(t.utils.Language) }
+                            <i class="bi bi-basket2"></i> { ba.string(t.language) }
                         }
                     }
                 }
@@ -98,7 +98,7 @@ templ clickableBadge(target, fragment, bgColor string, t text) {
         role="button"
         hx-boost="false"
         class={ "badge rounded-pill align-self-start fs-6 mb-1", bgColor }
-        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.utils.Language.Path(target), url.PathEscape(fragment))) }>
+        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.language.Path(target), url.PathEscape(fragment))) }>
         { children... }
     </a>
 }
@@ -282,7 +282,7 @@ templ surveys(code string, t text) {
     </div>
     <div
         id="survey-filters-content"
-        hx-get={ t.utils.Language.Path(fmt.Sprintf("/course/survey/%s", code)) }
+        hx-get={ t.language.Path(fmt.Sprintf("/course/survey/%s", code)) }
         hx-trigger="intersect once"
         hx-target="this"
         hx-swap="innerHTML"
@@ -294,7 +294,7 @@ templ surveySearch(code string, t text) {
     <form
         id="survey-search-form"
         class="position-relative"
-        hx-get={ t.utils.Language.Path(fmt.Sprintf("/course/survey/%s", code)) }
+        hx-get={ t.language.Path(fmt.Sprintf("/course/survey/%s", code)) }
         hx-target="#survey-filters-content"
         hx-swap="innerHTML"
         hx-include="#survey-filters-form"
@@ -345,7 +345,7 @@ templ surveyFilters(model surveyViewModel, t text) {
     <form
         id="survey-filters-form"
         class="d-flex flex-row flex-wrap justify-content-end gap-1 w-100 bg-light p-2 rounded"
-        hx-get={ t.utils.Language.Path(fmt.Sprintf("/course/survey/%s", model.code)) }
+        hx-get={ t.language.Path(fmt.Sprintf("/course/survey/%s", model.code)) }
         hx-target="#survey-filters-content"
         hx-swap="innerHTML"
         hx-include="#survey-search-form"
@@ -419,7 +419,7 @@ templ surveyActiveFilters(model surveyViewModel, t text) {
         if anyActive {
             <button
                 class="btn btn-link text-secondary p-0 pb-2"
-                hx-get={ t.utils.Language.Path(fmt.Sprintf("/course/survey/%s", model.code)) }
+                hx-get={ t.language.Path(fmt.Sprintf("/course/survey/%s", model.code)) }
                 hx-target="#survey-filters-content"
                 hx-swap="innerHTML"
                 hx-include="#survey-search-form"
@@ -452,7 +452,7 @@ templ SurveysContent(model surveyViewModel, t text) {
     if (!model.isEnd) {
         // lazy loading of more surveys
         <div
-            hx-get={ t.utils.Language.Path(fmt.Sprintf("/course/survey/next/%s", model.code)) }
+            hx-get={ t.language.Path(fmt.Sprintf("/course/survey/next/%s", model.code)) }
             hx-trigger="intersect once"
             hx-include="#survey-search-form, #survey-filters-form"
             hx-target="#surveys-content"
@@ -542,9 +542,9 @@ templ requisitesLinksRow(req []string, title string, t text) {
         @infoRow(title) {
             for i, c := range req {
                 if i != len(req) - 1 {
-                    @utils.CourseLink(c, t.utils)<span>, </span>
+                    @utils.CourseLink(c, t.language)<span>, </span>
                 } else {
-                    @utils.CourseLink(c, t.utils)
+                    @utils.CourseLink(c, t.language)
                 }
             }
         }
@@ -638,9 +638,9 @@ templ rateButton(rating sql.NullInt64, icon, code string, rate int64, t text, cl
             templ.KV(icon, !rating.Valid || rating.Int64 != rate),
         }
         if rating.Valid && rating.Int64 == rate {
-            hx-delete={ t.utils.Language.Path("/course/rating/" + code) }
+            hx-delete={ t.language.Path("/course/rating/" + code) }
         } else {
-            hx-put={ t.utils.Language.Path("/course/rating/" + code) }
+            hx-put={ t.language.Path("/course/rating/" + code) }
             hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
         }
         hx-target="#simple-rating"
@@ -697,7 +697,7 @@ templ ratingCategoryInput(c courseCategoryRating, code string, t text) {
     <div class="d-flex align-items-center gap-2 pb-3" x-data={ fmt.Sprintf("{ value: %d, valid: %t}", c.userRating.Int64, c.userRating.Valid) }>
         <button
             class="btn btn-outline-none bi bi-trash-fill p-0"
-            hx-delete={ t.utils.Language.Path(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
+            hx-delete={ t.language.Path(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
             hx-target="#category-rating"
             hx-swap="outerHTML"
             @click="valid = false">
@@ -717,7 +717,7 @@ templ ratingCategoryInput(c courseCategoryRating, code string, t text) {
                 min="0" max="10" step="1"
                 x-model="value"
                 @click="valid = true"
-                hx-put={ t.utils.Language.Path(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
+                hx-put={ t.language.Path(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
                 hx-target="#category-rating"
                 hx-swap="outerHTML"
                 :hx-trigger="valid ? 'change' : 'click'">

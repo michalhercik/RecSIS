@@ -17,13 +17,13 @@ import (
 //================================================================================
 
 type Server struct {
-	router  *http.ServeMux
 	Auth    Authentication
 	BpBtn   BlueprintAddButton
 	Data    DBManager
 	Filters filters.Filters
-	Search  SearchEngine
 	Page    Page
+	router  *http.ServeMux
+	Search  SearchEngine
 }
 
 func (s *Server) Init() {
@@ -189,7 +189,7 @@ func (s Server) parseUrl(queryValues url.Values, t text) string {
 	}
 	// TODO: possibly add more defaults to exclude
 
-	return fmt.Sprintf("%s?%s", t.utils.Language.Path("/courses"), queryValues.Encode())
+	return fmt.Sprintf("%s?%s", t.language.Path("/courses"), queryValues.Encode())
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {

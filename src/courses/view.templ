@@ -26,7 +26,7 @@ templ filterSection(cp *coursesPage, t text) {
     <div id="filters-wrapper">
         <form
             id="filter-form"
-            hx-get={ t.utils.Language.Path("/courses/search") }
+            hx-get={ t.language.Path("/courses/search") }
             hx-target="#courses-page"
             hx-swap="outerHTML"
             hx-include="#search-form"
@@ -153,7 +153,7 @@ templ activeFilters(cp *coursesPage, t text) {
         if anyActive {
             <button
                 class="btn btn-link text-secondary p-0 pb-3"
-                hx-get={ t.utils.Language.Path("/courses/search") }
+                hx-get={ t.language.Path("/courses/search") }
                 hx-target="#courses-page"
                 hx-include="#search-form"
                 hx-swap="outerHTML show:window:top">
@@ -195,7 +195,7 @@ templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
         <div class="card-header d-flex justify-content-between align-items-center">
             <h6 class="mb-0">{ course.code }</h6> // code
             <small> // semester, hours, exams
-                { fmt.Sprintf("%s %s, %s", course.semester.string(t), hoursString(course), course.examType) }
+                { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
             </small>
             <small> // credits
                 { fmt.Sprintf("%s: %d", t.credits, course.credits) }
@@ -209,7 +209,7 @@ templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
             >
                 // course title (link to detail page)
                 <h5 class="card-title">
-                    @utils.TitleCourseLink(course.code, course.title, false, t.utils)
+                    @utils.TitleCourseLink(course.code, course.title, false, t.language)
                 </h5>
                 // guarantors
                 <h6 class="card-subtitle mb-2 text-muted">{ course.guarantors.string(t) }</h6>
@@ -241,11 +241,11 @@ templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
 templ badge(course *course, ba assignment, t text) {
     if ba.year == 0 {
         @clickableBadge("blueprint", fmt.Sprintf("bp-unassigned-row-%s", course.code), "bg-unassigned", t) {
-            { ba.string(t.utils.Language) }
+            { ba.string(t.language) }
         }
     } else {
         @clickableBadge("blueprint", fmt.Sprintf("bp-%d-%s-row-%s", ba.year, ba.semester.stringID(), course.code), "bg-blueprint", t) {
-            { ba.string(t.utils.Language) }
+            { ba.string(t.language) }
         }
     }
 }
@@ -255,7 +255,7 @@ templ clickableBadge(target, fragment, bgColor string, t text) {
         role="button"
         hx-boost="false"
         class={ "badge rounded-pill me-1 mb-1", bgColor }
-        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.utils.Language.Path(target), url.PathEscape(fragment))) }>
+        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.language.Path(target), url.PathEscape(fragment))) }>
         { children... }
     </a>
 }
@@ -264,7 +264,7 @@ templ clickableBadge(target, fragment, bgColor string, t text) {
 // templ ribbon(ba AssignmentSlice, t text) {
 //     if len(ba) > 0 {
 //         <div class="ribbon">
-//             <span>{ ba.String(t.utils.Language) }</span>
+//             <span>{ ba.String(t.language) }</span>
 //         </div>
 //     }
 // }
@@ -309,7 +309,7 @@ templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
         <div
             role="button"
             class={ "page-link", templ.KV("disabled", cp.page == page || page < 1 || page > cp.totalPages) }
-            hx-get={ t.utils.Language.Path("/courses/search") }
+            hx-get={ t.language.Path("/courses/search") }
             hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
         >
             <i class={ icon }></i>
@@ -322,7 +322,7 @@ templ paginationNumberButton(page int, cp *coursesPage, t text) {
         <div
             role="button"
             class={ "page-link", templ.KV("active", cp.page == page) }
-            hx-get={ t.utils.Language.Path("/courses/search") }
+            hx-get={ t.language.Path("/courses/search") }
             hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
         >
             { fmt.Sprintf("%d", page) }
@@ -341,7 +341,7 @@ templ threeDots() {
 templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
     <button
         class="btn btn-outline-primary"
-        hx-get={ t.utils.Language.Path("/courses/search") }
+        hx-get={ t.language.Path("/courses/search") }
         hx-target="#courses-page"
         hx-include="#filter-form, #search-form"
         hx-swap="outerHTML"

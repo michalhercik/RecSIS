@@ -14,7 +14,7 @@ import (
 
 type DoubleAdd struct {
 	Add
-	TemplSecond func(ViewModel, Text) templ.Component
+	TemplSecond func(ViewModel, text) templ.Component
 }
 
 func (b DoubleAdd) PartialComponentSecond(lang language.Language) func(string, string, string, []bool, ...string) templ.Component {
@@ -34,7 +34,7 @@ func (b DoubleAdd) PartialComponentSecond(lang language.Language) func(string, s
 
 type Add struct {
 	DB      *sqlx.DB
-	Templ   func(ViewModel, Text) templ.Component
+	Templ   func(ViewModel, text) templ.Component
 	Options Options
 }
 

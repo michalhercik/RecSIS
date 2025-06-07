@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/michalhercik/RecSIS/language"
-	"github.com/michalhercik/RecSIS/utils"
 )
 
 type text struct {
@@ -53,14 +52,14 @@ type text struct {
 	noDetail                string
 	courseWithCode          string
 	notFound                string
-	// utils
-	utils utils.Text
+	// language
+	language language.Language
 }
 
 func (t text) yearStr(year int) string {
-	if t.utils.Language == language.CS {
+	if t.language == language.CS {
 		return strconv.Itoa(year) + ". " + t.year
-	} else if t.utils.Language == language.EN {
+	} else if t.language == language.EN {
 		return t.year + " " + strconv.Itoa(year)
 	}
 	return ""
@@ -113,8 +112,8 @@ var texts = map[language.Language]text{
 		noDetail:                "Pro tento předmět nejsou k dispozici žádné podrobnosti.",
 		courseWithCode:          "Předmět s kódem ",
 		notFound:                " nenalezen.",
-		// utils
-		utils: utils.Texts[language.CS],
+		// language
+		language: language.CS,
 	},
 	language.EN: {
 		faculty:                 "Faculty",
@@ -162,7 +161,7 @@ var texts = map[language.Language]text{
 		noDetail:                "No detailed information available for this course.",
 		courseWithCode:          "Course with code ",
 		notFound:                " not found.",
-		// utils
-		utils: utils.Texts[language.EN],
+		// language
+		language: language.EN,
 	},
 }

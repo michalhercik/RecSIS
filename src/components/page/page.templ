@@ -30,7 +30,7 @@ templ PageView(model pageModel) {
             <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
             // Google Fonts
             <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;700&display=swap" rel="stylesheet">
-            <script src="/js/utils.js"></script>
+            <script src="/js/page.js"></script>
         </head>
         <body hx-boost="true" class="position-relative">
             // @watermark()
@@ -132,7 +132,7 @@ templ langBtn(l language.Language) {
 }
 
 // TODO: put real data here
-templ profileBtn(model pageModel, t Text) {
+templ profileBtn(model pageModel, t text) {
     // Mobile version
     <div class="d-lg-none">
         <div class="d-flex justify-content-end">
@@ -145,7 +145,7 @@ templ profileBtn(model pageModel, t Text) {
                 <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
                 <li>
                     <form hx-boost="false" method="POST" action={ templ.URL(model.lang.Path("/logout")) }>
-                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.Logout }</button>
+                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
                     </form>
                 </li>
             </ul>
@@ -161,7 +161,7 @@ templ profileBtn(model pageModel, t Text) {
             <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
             <li>
                 <form hx-boost="false" method="POST" action={ templ.URL(model.lang.Path("/logout")) }>
-                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.Logout }</button>
+                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
                 </form>
             </li>
         </ul>
@@ -171,7 +171,7 @@ templ profileBtn(model pageModel, t Text) {
 templ Footer(model pageModel) {
     <footer class="text-center text-body-secondary pb-3 position-absolute bottom-0 w-100">
         <hr/>
-        { model.text.Contact }
+        { model.text.contact }
         <a href="mailto:TODO@TODO.com">TODO@TODO.com</a>
     </footer>
 }

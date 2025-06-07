@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -14,11 +15,32 @@ import (
 
 type Server struct {
 	router   *http.ServeMux
-	Data     DBManager
 	Auth     Authentication
 	BpBtn    BlueprintAddButton
+	Data     DBManager
 	DPSearch MeiliSearch
 	Page     Page
+}
+
+func (s Server) Router() http.Handler {
+	return s.router
+}
+
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
+}
+
+type BlueprintAddButton interface {
+	PartialComponent(lang language.Language) PartialBlueprintAdd
+	PartialComponentSecond(lang language.Language) PartialBlueprintAdd
+	ParseRequest(r *http.Request) ([]string, int, int, error)
+	Action(userID string, year int, semester int, course ...string) ([]int, error)
+}
+
+type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, years []bool, course ...string) templ.Component
+
+type Page interface {
+	View(main templ.Component, lang language.Language, title string, userID string) templ.Component
 }
 
 //================================================================================
@@ -32,10 +54,6 @@ func (s *Server) Init() {
 	router.HandleFunc("GET /search", s.searchDegreePlan)
 	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
 	s.router = router
-}
-
-func (s Server) Router() http.Handler {
-	return s.router
 }
 
 //================================================================================
@@ -76,7 +94,7 @@ func (s Server) show(w http.ResponseWriter, r *http.Request) {
 	partialBpBtn := s.BpBtn.PartialComponent(lang)
 	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
 	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
-	s.Page.View(main, lang, t.PageTitle, userID).Render(r.Context(), w)
+	s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
 }
 
 func (s Server) searchDegreePlan(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +145,7 @@ func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string
 	partialBpBtn := s.BpBtn.PartialComponent(lang)
 	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
 	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
-	s.Page.View(main, lang, t.PageTitle, userID).Render(r.Context(), w)
+	s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
 }
 
 func (s Server) renderContent(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {

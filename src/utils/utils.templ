@@ -3,6 +3,8 @@ package utils
 import (
     "strings"
     "unicode/utf8"
+
+	"github.com/michalhercik/RecSIS/language"
 )
 
 templ watermark() {
@@ -20,18 +22,18 @@ templ watermark() {
     </div>
 }
 
-templ CourseLink(code string, t Text) {
+templ CourseLink(code string, l language.Language) {
     <a
         class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
-        href={ templ.URL(t.Language.Path("/course/" + code)) }>
+        href={ templ.URL(l.Path("/course/" + code)) }>
         { code }
     </a>
 }
 
-templ TitleCourseLink(code, title string, lowUnderline bool, t Text) {
+templ TitleCourseLink(code, title string, lowUnderline bool, l language.Language) {
     <a
         class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover", templ.KV("link-offset-2", lowUnderline) }
-        href={ templ.URL(t.Language.Path("/course/" + code)) }>
+        href={ templ.URL(l.Path("/course/" + code)) }>
         { title }
     </a>
 }

@@ -10,16 +10,32 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
+//================================================================================
+// Server Type
+//================================================================================
+
+type Server struct {
+	Auth        Authentication
+	Page        Page
+	Recommender string
+	router      *http.ServeMux
+}
+
+func (s Server) Router() http.Handler {
+	return s.router
+}
+
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
+}
+
 type Page interface {
 	View(main templ.Component, lang language.Language, title string, userID string) templ.Component
 }
 
-type Server struct {
-	router      *http.ServeMux
-	Page        Page
-	Auth        Authentication
-	Recommender string
-}
+//================================================================================
+// Routing
+//================================================================================
 
 func (s *Server) Init() {
 	router := http.NewServeMux()
@@ -28,9 +44,9 @@ func (s *Server) Init() {
 	s.router = router
 }
 
-func (s Server) Router() http.Handler {
-	return s.router
-}
+//================================================================================
+// Handlers
+//================================================================================
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
@@ -45,16 +61,16 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	recommended, _ := s.fetchCourses("recommended", lang)
 	newest, _ := s.fetchCourses("newest", lang)
 
-	content := HomePage{
-		RecommendedCourses: recommended,
-		NewCourses:         newest,
+	content := homePage{
+		recommendedCourses: recommended,
+		newCourses:         newest,
 	}
 
 	main := Content(&content, t)
-	s.Page.View(main, lang, t.PageTitle, userID).Render(r.Context(), w)
+	s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
 }
 
-func (s Server) fetchCourses(endpoint string, lang language.Language) ([]Course, error) {
+func (s Server) fetchCourses(endpoint string, lang language.Language) ([]course, error) {
 	url := fmt.Sprintf("%s/%s?lang=%s", s.Recommender, endpoint, lang)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -68,7 +84,7 @@ func (s Server) fetchCourses(endpoint string, lang language.Language) ([]Course,
 	if err != nil {
 		return nil, err
 	}
-	var courses []Course
+	var courses []course
 	err = json.Unmarshal(body, &courses)
 	return courses, err
 }

@@ -16,7 +16,7 @@ templ Skeleton(lang language.Language) {
         id="home-skeleton"
         class="container pt-3 placeholder-glow"
         x-data
-        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].PageTitle) }
+        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].pageTitle) }
         @resize.window="setSkeletonCardsWidth()">
         <h4> @placeholder(1) </h4>
         <p>

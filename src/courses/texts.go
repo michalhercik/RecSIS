@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/michalhercik/RecSIS/language"
-	"github.com/michalhercik/RecSIS/utils"
 )
 
 type text struct {
@@ -40,14 +39,14 @@ type text struct {
 	page              string
 	of                string
 	noCoursesFound    string
-	// utils
-	utils utils.Text
+	// language
+	language language.Language
 }
 
 func (t text) yearStr(year int) string {
-	if t.utils.Language == language.CS {
+	if t.language == language.CS {
 		return strconv.Itoa(year) + ". " + t.year
-	} else if t.utils.Language == language.EN {
+	} else if t.language == language.EN {
 		return t.year + " " + strconv.Itoa(year)
 	}
 	return ""
@@ -95,8 +94,8 @@ var texts = map[language.Language]text{
 		page:              "Strana",
 		of:                "z",
 		noCoursesFound:    "Žádné předměty nebyly nalezeny.",
-		// utils
-		utils: utils.Texts[language.CS],
+		// language
+		language: language.CS,
 	},
 	language.EN: {
 		pageTitle:         "Search",
@@ -131,7 +130,7 @@ var texts = map[language.Language]text{
 		page:              "Page",
 		of:                "of",
 		noCoursesFound:    "No courses found.",
-		// utils
-		utils: utils.Texts[language.EN],
+		// language
+		language: language.EN,
 	},
 }

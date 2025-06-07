@@ -27,28 +27,27 @@ VALUES (
 	(SELECT max_academic_year + 1 FROM max_year)
 )
 RETURNING id;
-;
 `
 
 // TODO: Delete only if last year
 const DeleteYear = `--sql
 WITH max_academic_year AS (
-        SELECT MAX(academic_year) AS academic_year FROM blueprint_years b
-        WHERE b.user_id = $1
+	SELECT MAX(academic_year) AS academic_year FROM blueprint_years b
+	WHERE b.user_id = $1
 )
 DELETE FROM blueprint_years b
 USING max_academic_year m
 WHERE b.user_id = $1
-AND b.academic_year = m.academic_year
-;
+AND m.academic_year != 0
+AND b.academic_year = m.academic_year;
 `
 
 const FoldSemester = `--sql
 UPDATE blueprint_semesters bs
 SET folded = $4
-FROM blueprint_years BY
+FROM blueprint_years by
 WHERE bs.blueprint_year_id = by.id
 AND by.user_id = $1
 AND by.academic_year = $2
-AND bs.semester = $3
+AND bs.semester = $3;
 `

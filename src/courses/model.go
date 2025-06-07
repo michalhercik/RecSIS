@@ -191,18 +191,18 @@ func (sa semesterAssignment) stringID() string {
 // Helper Functions
 // ================================================================================
 
-func hoursString(course *course) string {
+func (c *course) hoursString() string {
 	result := ""
-	winter := course.lectureRangeWinter.Valid && course.seminarRangeWinter.Valid
-	summer := course.lectureRangeSummer.Valid && course.seminarRangeSummer.Valid
+	winter := c.lectureRangeWinter.Valid && c.seminarRangeWinter.Valid
+	summer := c.lectureRangeSummer.Valid && c.seminarRangeSummer.Valid
 	if winter {
-		result += fmt.Sprintf("%d/%d", course.lectureRangeWinter.Int64, course.seminarRangeWinter.Int64)
+		result += fmt.Sprintf("%d/%d", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64)
 	}
 	if winter && summer {
 		result += ", "
 	}
 	if summer {
-		result += fmt.Sprintf("%d/%d", course.lectureRangeSummer.Int64, course.seminarRangeSummer.Int64)
+		result += fmt.Sprintf("%d/%d", c.lectureRangeSummer.Int64, c.seminarRangeSummer.Int64)
 	}
 	return result
 }

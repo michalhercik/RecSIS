@@ -5,16 +5,16 @@ import (
     "strings"
 )
 
-templ AddBtn(model ViewModel, t Text) {
+templ AddBtn(model ViewModel, t text) {
     <div class="btn-group">
         @assignToUnassignedBtn(model, "", nil, nil, t) {
-            { t.Assign }
+            { t.assign }
         }
         @dropdown(model, "", nil, nil, true, t)
     </div>
 }
 
-templ PlusSignBtn(model ViewModel, t Text) {
+templ PlusSignBtn(model ViewModel, t text) {
     <div
         class="btn-group w-100"
         x-cloak
@@ -27,7 +27,7 @@ templ PlusSignBtn(model ViewModel, t Text) {
     </div>
 }
 
-templ PlusSignBtnChecked(model ViewModel, t Text) {
+templ PlusSignBtnChecked(model ViewModel, t text) {
     <div
         class="btn-group dropdown-center"
         x-data="{ hover: false, hoverSelection: false }"
@@ -38,7 +38,7 @@ templ PlusSignBtnChecked(model ViewModel, t Text) {
     </div>
 }
 
-templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, alpineClassesFalse templ.Attributes, t Text) {
+templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, alpineClassesFalse templ.Attributes, t text) {
     <button
         type="button"
         class={ "btn btn-outline-blueprint assign-to-unassigned-btn", classes }
@@ -47,7 +47,7 @@ templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, 
         } else {
             { alpineClassesFalse... }
         }
-        hx-post={ t.Utils.Language.Path(model.hxPostBase + "/blueprint") }
+        hx-post={ t.language.Path(model.hxPostBase + "/blueprint") }
         hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "courses": ["%s"]`, strings.Join(model.courses, `","`)) }
         hx-swap={ model.hxSwap }
         hx-target={ model.hxTarget }
@@ -58,7 +58,7 @@ templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, 
     </button>
 }
 
-templ dropdown(model ViewModel, classes string, alpineClasses, ulAttributes templ.Attributes, menuEnd bool, t Text) {
+templ dropdown(model ViewModel, classes string, alpineClasses, ulAttributes templ.Attributes, menuEnd bool, t text) {
     if (len(model.semesters) > 1) {
         <button
             class={ "btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split", classes }
@@ -71,24 +71,24 @@ templ dropdown(model ViewModel, classes string, alpineClasses, ulAttributes temp
             class={ "dropdown-menu", templ.KV("dropdown-menu-end", menuEnd) }
             { ulAttributes... }>
             for i, v := range iterateOverAssignedYears(model.semesters) {
-                @assignSemesterButton(t.WinterAssign, i, 1, v.disableWinter, t, model)
-                @assignSemesterButton(t.SummerAssign, i, 2, v.disableSummer, t, model)
+                @assignSemesterButton(t.winterAssign, i, 1, v.disableWinter, t, model)
+                @assignSemesterButton(t.summerAssign, i, 2, v.disableSummer, t, model)
             }
         </ul>
     }
 }
 
-templ assignSemesterButton(semesterText string, year, semester int, disabled bool, t Text, model ViewModel) {
+templ assignSemesterButton(semesterText string, year, semester int, disabled bool, t text, model ViewModel) {
     <li class="mx-3">
         <button
             class="dropdown-item rounded text-center dropdown-item-blueprint"
-            hx-post={ t.Utils.Language.Path(model.hxPostBase + "/blueprint") }
+            hx-post={ t.language.Path(model.hxPostBase + "/blueprint") }
             hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d, "courses": ["%s"]`, year, semester, strings.Join(model.courses, ",")) }
             hx-include={ model.hxInclude }
             hx-swap={ model.hxSwap }
             hx-target={ model.hxTarget }
             disabled?={ disabled }>
-            { fmt.Sprintf("%s %s", t.YearStr(year), semesterText) }
+            { fmt.Sprintf("%s %s", t.yearStr(year), semesterText) }
         </button>
     </li>
 }

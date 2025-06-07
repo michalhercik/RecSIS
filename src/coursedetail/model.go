@@ -286,9 +286,9 @@ func hoursString(course *course) string {
 }
 
 func courseSISLink(code string, t text) string {
-	if t.utils.Language == language.CS {
+	if t.language == language.CS {
 		return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
-	} else if t.utils.Language == language.EN {
+	} else if t.language == language.EN {
 		return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
 	}
 	// default to Czech if language is not recognized

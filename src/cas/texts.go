@@ -2,24 +2,24 @@ package cas
 
 import "github.com/michalhercik/RecSIS/language"
 
-type Text struct {
-	Title            string
-	PrimaryMessage   string
-	SecondaryMessage string
-	LogInButton      string
+type text struct {
+	title            string
+	primaryMessage   string
+	secondaryMessage string
+	logInButton      string
 }
 
-var texts = map[language.Language]Text{
+var texts = map[language.Language]text{
 	language.CS: {
-		Title:            "Odhlášení - RecSIS",
-		PrimaryMessage:   "Úspešné odhlášení",
-		SecondaryMessage: "Byli jste úspěšně odhlášeni.",
-		LogInButton:      "Přihlásit se",
+		title:            "Odhlášení - RecSIS",
+		primaryMessage:   "Úspešné odhlášení",
+		secondaryMessage: "Byli jste úspěšně odhlášeni.",
+		logInButton:      "Přihlásit se",
 	},
 	language.EN: {
-		Title:            "Logout - RecSIS",
-		PrimaryMessage:   "Logout Successful",
-		SecondaryMessage: "You have been logged out successfully.",
-		LogInButton:      "Log In",
+		title:            "Logout - RecSIS",
+		primaryMessage:   "Logout Successful",
+		secondaryMessage: "You have been logged out successfully.",
+		logInButton:      "Log In",
 	},
 }

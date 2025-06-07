@@ -79,7 +79,7 @@ type pageModel struct {
 	title    string
 	main     templ.Component
 	lang     language.Language
-	text     Text
+	text     text
 	search   templ.Component
 	home     string
 	navItems []NavItem

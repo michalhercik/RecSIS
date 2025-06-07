@@ -105,7 +105,7 @@ func intoCourse(from *courseDetail) course {
 		syllabus:               intoNullDesc(from.Syllabus),
 		passingTerms:           intoNullDesc(from.PassingTerms),
 		literature:             intoNullDesc(from.Literature),
-		assessmentRequirements: intoNullDesc(from.AssesmentRequirements),
+		assessmentRequirements: intoNullDesc(from.AssessmentRequirements),
 		entryRequirements:      intoNullDesc(from.EntryRequirements),
 		aim:                    intoNullDesc(from.Aim),
 		prerequisites:          []string(from.Prereq),

@@ -4,18 +4,18 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
-type Text struct {
-	Logout  string
-	Contact string
+type text struct {
+	logout  string
+	contact string
 }
 
-var texts = map[language.Language]Text{
+var texts = map[language.Language]text{
 	language.CS: {
-		Logout:  "Odhlásit se",
-		Contact: "V případě jakýchkoliv problémů kontaktujte tým RecSIS.",
+		logout:  "Odhlásit se",
+		contact: "V případě jakýchkoliv problémů kontaktujte tým RecSIS.",
 	},
 	language.EN: {
-		Logout:  "Logout",
-		Contact: "In case of any problems, please contact the RecSIS team.",
+		logout:  "Logout",
+		contact: "In case of any problems, please contact the RecSIS team.",
 	},
 }

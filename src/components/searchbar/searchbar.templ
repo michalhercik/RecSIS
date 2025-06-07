@@ -28,7 +28,7 @@ templ SearchBar(model searchBarModel) {
                         id="search"
                         class="form-control"
                         name={ model.searchParam }
-                        placeholder={ model.t.SearchPlaceholder }
+                        placeholder={ model.t.searchPlaceholder }
                         autocomplete="off"
                         x-model="searchInput"
                         x-ref="searchInput"
@@ -54,7 +54,7 @@ templ SearchBar(model searchBarModel) {
                         type="submit"
                         class="btn btn-submit-input-green d-none d-sm-inline"
                         @click="quickResOpen = false">
-                        <span class="d-none d-xl-inline">{ model.t.SearchButton }</span>
+                        <span class="d-none d-xl-inline">{ model.t.searchButton }</span>
                         <i class="bi bi-search d-inline d-xl-none"></i>
                     </button>
                 </div>
@@ -72,7 +72,7 @@ templ QuickResults(model quickResultsModel) {
             class="dropdown-menu w-100 shadow-sm show"
         >
             if len(model.courses) == 0 {
-                <div class="dropdown-item text-muted responsive-font">{ model.t.NoCoursesFound }</div>
+                <div class="dropdown-item text-muted responsive-font">{ model.t.noCoursesFound }</div>
             } else {
                 for _, course := range model.courses {
                     <a

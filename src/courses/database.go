@@ -20,12 +20,12 @@ type courses []struct {
 }
 
 func (m DBManager) Courses(userID string, courseCodes []string, lang language.Language) ([]course, error) {
-	dbResult := courses{}
-	if err := m.DB.Select(&dbResult, sqlquery.Courses, userID, pq.Array(courseCodes), lang); err != nil {
+	var result courses
+	if err := m.DB.Select(&result, sqlquery.Courses, userID, pq.Array(courseCodes), lang); err != nil {
 		return nil, fmt.Errorf("failed to fetch courses: %w", err)
 	}
-	result := intoCourses(dbResult)
-	return result, nil
+	courses := intoCourses(result)
+	return courses, nil
 }
 
 func intoCourses(from courses) []course {

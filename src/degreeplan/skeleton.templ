@@ -11,7 +11,7 @@ templ Skeleton(lang language.Language) {
         id="degreeplan-skeleton"
         class="container placeholder-glow"
         x-data
-        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].PageTitle) }>
+        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].pageTitle) }>
         // checked courses menu
         <div id="dp-checked-courses-menu-skeleton"></div>
         // first group

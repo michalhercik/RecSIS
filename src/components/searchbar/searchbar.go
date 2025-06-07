@@ -123,7 +123,7 @@ func (r *QuickResponse) UnmarshalJSON(data []byte) error {
 }
 
 type searchBarModel struct {
-	t                   Text
+	t                   text
 	lang                language.Language
 	searchInput         string
 	searchParam         string
@@ -134,7 +134,7 @@ type searchBarModel struct {
 }
 
 type quickResultsModel struct {
-	t                    Text
+	t                    text
 	lang                 language.Language
 	courses              []QuickCourse
 	resultDetailEndpoint func(code string) string
