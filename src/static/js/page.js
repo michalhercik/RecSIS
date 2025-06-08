@@ -27,6 +27,7 @@ function changeLanguage(lang) {
 
 document.addEventListener('htmx:afterSwap', () => {
     // Reinitialize Alpine when HTMX swaps in new content
+    console.log('HTMX content swapped, reinitializing Alpine');
     let initAlpine = new Event('alpine:init');
     document.dispatchEvent(initAlpine);
 });

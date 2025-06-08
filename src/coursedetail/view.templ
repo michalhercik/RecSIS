@@ -98,7 +98,7 @@ templ clickableBadge(target, fragment, bgColor string, t text) {
         role="button"
         hx-boost="false"
         class={ "badge rounded-pill align-self-start fs-6 mb-1", bgColor }
-        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.language.Path(target), url.PathEscape(fragment))) }>
+        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.language.LocalizeURL(target), url.PathEscape(fragment))) }>
         { children... }
     </a>
 }
@@ -241,7 +241,7 @@ templ descriptionItem(desc nullDescription, id string) {
         <div
             id={ "content-" + id }
             class="border-bottom mb-3"
-            x-init={ fmt.Sprintf("insertContent('%s', `%s`)", id, desc.SanitizeContent(id == "annotation")) }>
+            x-init={ fmt.Sprintf("insertContent('%s', `%s`)", id, desc.sanitizeContent(id == "annotation")) }>
         </div>
         // inserting content as shadow DOM
         <script>
@@ -282,7 +282,7 @@ templ surveys(code string, t text) {
     </div>
     <div
         id="survey-filters-content"
-        hx-get={ t.language.Path(fmt.Sprintf("/course/survey/%s", code)) }
+        hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", code)) }
         hx-trigger="intersect once"
         hx-target="this"
         hx-swap="innerHTML"
@@ -294,7 +294,7 @@ templ surveySearch(code string, t text) {
     <form
         id="survey-search-form"
         class="position-relative"
-        hx-get={ t.language.Path(fmt.Sprintf("/course/survey/%s", code)) }
+        hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", code)) }
         hx-target="#survey-filters-content"
         hx-swap="innerHTML"
         hx-include="#survey-filters-form"
@@ -345,7 +345,7 @@ templ surveyFilters(model surveyViewModel, t text) {
     <form
         id="survey-filters-form"
         class="d-flex flex-row flex-wrap justify-content-end gap-1 w-100 bg-light p-2 rounded"
-        hx-get={ t.language.Path(fmt.Sprintf("/course/survey/%s", model.code)) }
+        hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", model.code)) }
         hx-target="#survey-filters-content"
         hx-swap="innerHTML"
         hx-include="#survey-search-form"
@@ -354,7 +354,7 @@ templ surveyFilters(model surveyViewModel, t text) {
         @change="changed = true;"
         @hide-bs-dropdown.dot="if (changed) { changed = false; $dispatch('filters-changed'); }"
     >
-        for category := range filters.CategoryWithAtLeast(0, model.facets) {
+        for category := range model.facets {
             <button
                 type="button"
                 class="btn btn-light dropdown-toggle position-relative"
@@ -371,7 +371,7 @@ templ surveyFilters(model surveyViewModel, t text) {
             </button>
             <ul class="dropdown-menu dropdown-menu-end filters-dropdown-menu-scroll">
                 for _, value := range filters.SkipEmptyFacet(category.IterWithFacets()) {
-                    @dropdownFilter("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
+                    @dropdownFilter(value.Prefix + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
                 }
             </ul>
         }
@@ -407,7 +407,7 @@ templ surveyActiveFilters(model surveyViewModel, t text) {
                                 <i
                                     role="button"
                                     class="bi bi-x-lg"
-                                    @click={ fmt.Sprintf("uncheck('par%s-%s')", category.ID(), value.ID) }>
+                                    @click={ fmt.Sprintf("uncheck('%s%s-%s')", value.Prefix, category.ID(), value.ID) }>
                                 </i>
                             </div>
                         }
@@ -419,7 +419,7 @@ templ surveyActiveFilters(model surveyViewModel, t text) {
         if anyActive {
             <button
                 class="btn btn-link text-secondary p-0 pb-2"
-                hx-get={ t.language.Path(fmt.Sprintf("/course/survey/%s", model.code)) }
+                hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", model.code)) }
                 hx-target="#survey-filters-content"
                 hx-swap="innerHTML"
                 hx-include="#survey-search-form"
@@ -452,7 +452,7 @@ templ SurveysContent(model surveyViewModel, t text) {
     if (!model.isEnd) {
         // lazy loading of more surveys
         <div
-            hx-get={ t.language.Path(fmt.Sprintf("/course/survey/next/%s", model.code)) }
+            hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/next/%s", model.code)) }
             hx-trigger="intersect once"
             hx-include="#survey-search-form, #survey-filters-form"
             hx-target="#surveys-content"
@@ -480,7 +480,7 @@ templ scrollToSearchBtn(t text) {
 }
 
 templ teacherStyled(tt teacher, t text) {
-    if len(tt.SISID) == 0 {
+    if len(tt.SisID) == 0 {
         <span class="fs-6 text-dark fw-semibold">{ t.courseGlobalNotes }</span>
     } else {
         <span>
@@ -638,9 +638,9 @@ templ rateButton(rating sql.NullInt64, icon, code string, rate int64, t text, cl
             templ.KV(icon, !rating.Valid || rating.Int64 != rate),
         }
         if rating.Valid && rating.Int64 == rate {
-            hx-delete={ t.language.Path("/course/rating/" + code) }
+            hx-delete={ t.language.LocalizeURL("/course/rating/" + code) }
         } else {
-            hx-put={ t.language.Path("/course/rating/" + code) }
+            hx-put={ t.language.LocalizeURL("/course/rating/" + code) }
             hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
         }
         hx-target="#simple-rating"
@@ -696,8 +696,9 @@ templ rateModal(categories []courseCategoryRating, code string, t text) {
 templ ratingCategoryInput(c courseCategoryRating, code string, t text) {
     <div class="d-flex align-items-center gap-2 pb-3" x-data={ fmt.Sprintf("{ value: %d, valid: %t}", c.userRating.Int64, c.userRating.Valid) }>
         <button
-            class="btn btn-outline-none bi bi-trash-fill p-0"
-            hx-delete={ t.language.Path(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
+            class="btn bi bi-trash-fill p-0 border-0"
+            :class="valid || 'disabled'"
+            hx-delete={ t.language.LocalizeURL(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
             hx-target="#category-rating"
             hx-swap="outerHTML"
             @click="valid = false">
@@ -705,7 +706,7 @@ templ ratingCategoryInput(c courseCategoryRating, code string, t text) {
         <div class="flex-grow-1">
             <label for={ c.title + "-range" } class="form-label d-flex justify-content-between mb-0">
                 <span class="fw-semibold">{ c.title }</span>
-                <template x-if="valid"><span x-text="value" class="fw-semibold"></span></template>
+                <template x-if="valid"><span class="fw-semibold" x-text="value"></span></template>
                 <template x-if="!valid"><span class="fw-semibold">{ t.notRated }</span></template>
             </label>
             <input
@@ -716,11 +717,11 @@ templ ratingCategoryInput(c courseCategoryRating, code string, t text) {
                 id={ c.title + "-range" }
                 min="0" max="10" step="1"
                 x-model="value"
-                @click="valid = true"
-                hx-put={ t.language.Path(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
+                @click="if (!valid) { valid = true; $dispatch('rateTrigger'); }"
+                hx-put={ t.language.LocalizeURL(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
                 hx-target="#category-rating"
                 hx-swap="outerHTML"
-                :hx-trigger="valid ? 'change' : 'click'">
+                hx-trigger="change, rateTrigger">
             @ticks()
         </div>
     </div>

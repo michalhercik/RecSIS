@@ -4,13 +4,10 @@ import (
 	"regexp"
 	"strings"
 
-	"log"
-
 	"github.com/microcosm-cc/bluemonday"
-	"golang.org/x/net/html"
 )
 
-func (d *description) SanitizeContent(squash bool) string {
+func (d *description) sanitizeContent(squash bool) string {
 	content := d.content
 	// parse content to html
 	htmlContent := parseToHTML(content, squash)
@@ -18,14 +15,6 @@ func (d *description) SanitizeContent(squash bool) string {
 	cleanedContent := cleanHTML(htmlContent)
 	// sanitize html
 	sanitizedContent := sanitizeHTML(cleanedContent)
-
-	// ================== FOR TESTING PURPOSES ==================
-	// TODO: remove
-	removedTags := getRemovedTags(cleanedContent, sanitizedContent)
-	if len(removedTags) > 0 {
-		log.Println("Removed tags: ", removedTags)
-	}
-	// ==========================================================
 
 	return sanitizedContent
 }
@@ -136,44 +125,4 @@ func sanitizeHTML(content string) string {
 	p.AllowAttrs("border").OnElements("table")
 	// sanitize the content
 	return p.Sanitize(content)
-}
-
-// =============== FOR TESTING PURPOSES ===============
-func getRemovedTags(original string, sanitized string) []string {
-	// Parse the original and sanitized HTML into Go HTML nodes
-	originalTokens := tokenizeHTML(original)
-	sanitizedTokens := tokenizeHTML(sanitized)
-
-	// Find tags that were removed by comparing the tokens
-	var removedTags []string
-	for _, originalTag := range originalTokens {
-		if !contains(sanitizedTokens, originalTag) {
-			removedTags = append(removedTags, originalTag)
-		}
-	}
-	return removedTags
-}
-
-func tokenizeHTML(htmlContent string) []string {
-	var tags []string
-	tokenizer := html.NewTokenizer(strings.NewReader(htmlContent))
-	for {
-		tt := tokenizer.Next()
-		switch tt {
-		case html.ErrorToken:
-			return tags // end of document
-		case html.StartTagToken, html.SelfClosingTagToken:
-			tagName, _ := tokenizer.TagName()
-			tags = append(tags, string(tagName))
-		}
-	}
-}
-
-func contains(tokens []string, token string) bool {
-	for _, t := range tokens {
-		if t == token {
-			return true
-		}
-	}
-	return false
 }

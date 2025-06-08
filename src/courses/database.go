@@ -17,9 +17,10 @@ type DBManager struct {
 type courses []struct {
 	dbds.Course
 	BlueprintSemesters pq.BoolArray `db:"semesters"`
+	//InDegreePlan       bool         `db:"in_degree_plan"` // TODO add to sql query (copy from coursedetail)
 }
 
-func (m DBManager) Courses(userID string, courseCodes []string, lang language.Language) ([]course, error) {
+func (m DBManager) courses(userID string, courseCodes []string, lang language.Language) ([]course, error) {
 	var result courses
 	if err := m.DB.Select(&result, sqlquery.Courses, userID, pq.Array(courseCodes), lang); err != nil {
 		return nil, fmt.Errorf("failed to fetch courses: %w", err)
@@ -63,7 +64,7 @@ func intoTeacherSlice(from dbds.TeacherSlice) []teacher {
 	result := make([]teacher, len(from))
 	for i, t := range from {
 		result[i] = teacher{
-			sisID:       t.SISID,
+			sisID:       t.SisID,
 			firstName:   t.FirstName,
 			lastName:    t.LastName,
 			titleBefore: t.TitleBefore,

@@ -56,7 +56,7 @@ type Page interface {
 
 type Filters interface {
 	Init() error
-	ParseURLQuery(query url.Values) (Expression, error)
+	ParseURLQuery(query url.Values) (expression, error)
 	Facets() []string
 	IterFacets() any // TODO
 }
@@ -108,7 +108,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) course(userID, code string, lang language.Language) (*course, error) {
 	var result *course
-	result, err := s.Data.Course(userID, code, lang)
+	result, err := s.Data.course(userID, code, lang)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (s Server) surveyViewModel(r *http.Request) (surveyViewModel, error) {
 		return result, err
 	}
 	req.filter.Append("course_code", code)
-	searchResponse, err := s.Search.Comments(req)
+	searchResponse, err := s.Search.comments(req)
 	if err != nil {
 		return result, err
 	}
@@ -170,7 +170,7 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 		log.Printf("rate error: %v", err)
 		return
 	}
-	updatedRating, err := s.Data.Rate(userID, code, rating)
+	updatedRating, err := s.Data.rate(userID, code, rating)
 	if err != nil {
 		log.Printf("rate error: %v", err)
 	}
@@ -187,7 +187,7 @@ func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	code := r.PathValue("code")
-	updatedRating, err := s.Data.DeleteRating(userID, code)
+	updatedRating, err := s.Data.deleteRating(userID, code)
 	if err != nil {
 		log.Printf("deleteRating error: %v", err)
 	}
@@ -212,7 +212,7 @@ func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//TODO handle language properly
-	updatedRating, err := s.Data.RateCategory(userID, code, category, rating, lang)
+	updatedRating, err := s.Data.rateCategory(userID, code, category, rating, lang)
 	if err != nil {
 		log.Printf("rateCategory error: %v", err)
 	}
@@ -230,7 +230,7 @@ func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
 	category := r.PathValue("category")
 	//TODO handle language properly
-	updatedRating, err := s.Data.DeleteCategoryRating(userID, code, category, lang)
+	updatedRating, err := s.Data.deleteCategoryRating(userID, code, category, lang)
 	if err != nil {
 		log.Printf("deleteCategoryRating error: %v", err)
 	}
@@ -277,8 +277,8 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	Content(&courseDetailPage, t, btn).Render(r.Context(), w)
 }
 
-func (s Server) parseQueryRequest(r *http.Request) (Request, error) {
-	var req Request
+func (s Server) parseQueryRequest(r *http.Request) (request, error) {
+	var req request
 	userID, err := s.Auth.UserID(r)
 	if err != nil {
 		return req, err
@@ -295,14 +295,14 @@ func (s Server) parseQueryRequest(r *http.Request) (Request, error) {
 		log.Printf("search error: %v", err)
 	}
 
-	req = Request{
+	req = request{
 		userID:   userID,
 		query:    query,
 		indexUID: "courses-comments", // TODO
 		offset:   offset,
 		limit:    numberOfComments,
 		lang:     lang,
-		filter:   Expression(&filter),
+		filter:   expression(&filter),
 		facets:   s.Filters.Facets(),
 		sort:     "academic_year:desc", // TODO
 	}

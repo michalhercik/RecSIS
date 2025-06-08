@@ -26,7 +26,7 @@ templ filterSection(cp *coursesPage, t text) {
     <div id="filters-wrapper">
         <form
             id="filter-form"
-            hx-get={ t.language.Path("/courses/search") }
+            hx-get={ t.language.LocalizeURL("/courses/search") }
             hx-target="#courses-page"
             hx-swap="outerHTML"
             hx-include="#search-form"
@@ -70,7 +70,7 @@ templ filtersInternal(cp *coursesPage, t text) {
             // checkboxes with values
             for i, value := range category.IterWithFacets() {
                 <div x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
-                    @checkboxInput("par" + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
+                    @checkboxInput(value.Prefix + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
                 </div>
             }
             if limit := category.DisplayedValueLimit(); category.Size() > limit {
@@ -141,7 +141,7 @@ templ activeFilters(cp *coursesPage, t text) {
                                 <i
                                     role="button"
                                     class="bi bi-x-lg"
-                                    @click={ fmt.Sprintf("uncheck('par%s-%s')", category.ID(), value.ID) }>
+                                    @click={ fmt.Sprintf("uncheck('%s%s-%s')", value.Prefix, category.ID(), value.ID) }>
                                 </i>
                             </div>
                         }
@@ -153,7 +153,7 @@ templ activeFilters(cp *coursesPage, t text) {
         if anyActive {
             <button
                 class="btn btn-link text-secondary p-0 pb-3"
-                hx-get={ t.language.Path("/courses/search") }
+                hx-get={ t.language.LocalizeURL("/courses/search") }
                 hx-target="#courses-page"
                 hx-include="#search-form"
                 hx-swap="outerHTML show:window:top">
@@ -255,7 +255,7 @@ templ clickableBadge(target, fragment, bgColor string, t text) {
         role="button"
         hx-boost="false"
         class={ "badge rounded-pill me-1 mb-1", bgColor }
-        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.language.Path(target), url.PathEscape(fragment))) }>
+        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.language.LocalizeURL(target), url.PathEscape(fragment))) }>
         { children... }
     </a>
 }
@@ -309,7 +309,7 @@ templ paginationIconButton(page int, icon string, cp *coursesPage, t text) {
         <div
             role="button"
             class={ "page-link", templ.KV("disabled", cp.page == page || page < 1 || page > cp.totalPages) }
-            hx-get={ t.language.Path("/courses/search") }
+            hx-get={ t.language.LocalizeURL("/courses/search") }
             hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
         >
             <i class={ icon }></i>
@@ -322,7 +322,7 @@ templ paginationNumberButton(page int, cp *coursesPage, t text) {
         <div
             role="button"
             class={ "page-link", templ.KV("active", cp.page == page) }
-            hx-get={ t.language.Path("/courses/search") }
+            hx-get={ t.language.LocalizeURL("/courses/search") }
             hx-vals={ fmt.Sprintf(`"%s": %d`, pageParam, page) }
         >
             { fmt.Sprintf("%d", page) }
@@ -341,7 +341,7 @@ templ threeDots() {
 templ loadMoreButton(newPageSize int, cp *coursesPage, t text) {
     <button
         class="btn btn-outline-primary"
-        hx-get={ t.language.Path("/courses/search") }
+        hx-get={ t.language.LocalizeURL("/courses/search") }
         hx-target="#courses-page"
         hx-include="#filter-form, #search-form"
         hx-swap="outerHTML"

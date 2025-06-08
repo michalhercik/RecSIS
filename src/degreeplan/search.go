@@ -6,33 +6,33 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 )
 
-type QuickRequest struct {
+type quickRequest struct {
 	query string
 	limit int64
 }
 
-type QuickDegreePlan struct {
+type quickDegreePlan struct {
 	Code string `json:"SPLAN"`
 	Name string `json:"NAZEV"`
 	Type string `json:"ZKRATKA"`
 }
 
-type QuickResponse struct {
+type quickResponse struct {
 	ApproxHits  int               `json:"approxHits"`
-	DegreePlans []QuickDegreePlan `json:"Hits"`
+	DegreePlans []quickDegreePlan `json:"Hits"`
 }
 
-type SearchEngine interface {
-	QuickSearch(r QuickRequest) (QuickResponse, error)
-}
+// type searchEngine interface {
+// 	QuickSearch(r quickRequest) (quickResponse, error)
+// }
 
 type MeiliSearch struct {
 	Client      meilisearch.ServiceManager
 	DegreePlans meilisearch.IndexConfig
 }
 
-func (s MeiliSearch) QuickSearch(r QuickRequest) (QuickResponse, error) {
-	var result QuickResponse
+func (s MeiliSearch) QuickSearch(r quickRequest) (quickResponse, error) {
+	var result quickResponse
 	index := s.Client.Index(s.DegreePlans.Uid)
 	searchReq := &meilisearch.SearchRequest{
 		Limit:                r.limit,

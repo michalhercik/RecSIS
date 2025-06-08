@@ -113,17 +113,6 @@ func (b Add) CoursesFromRequest(r *http.Request) ([]string, error) {
 	return result, nil
 }
 
-// func (b Add) NumberOfYears(userID string) (int, error) {
-// 	const NumberOfBlueprintYears = `SELECT COUNT(*) FROM blueprint_years WHERE user_id = $1`
-// 	var numberOfYears int
-// 	err := b.DB.Get(&numberOfYears, NumberOfBlueprintYears, userID)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	numberOfYears -= 1
-// 	return numberOfYears, nil
-// }
-
 func (b Add) Action(userID string, year int, semester int, courses ...string) ([]int, error) {
 	const InsertCourse = `--sql
 		WITH target_position AS (

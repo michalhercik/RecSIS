@@ -1,17 +1,22 @@
 package sqlquery
 
 const UserDegreePlan = `
-WITH user_blueprint_semesters AS (
-        SELECT dp.course_code, array_agg(bc.course_code IS NOT NULL) AS semesters
-        FROM bla_studies s
-        LEFT JOIN degree_plans dp ON s.degree_plan_code = dp.plan_code AND s.start_year = dp.plan_year
-        LEFT JOIN blueprint_years by ON by.user_id=s.user_id
-        LEFT JOIN blueprint_semesters bs ON by.id = bs.blueprint_year_id
-        LEFT JOIN blueprint_courses bc ON bs.id = bc.blueprint_semester_id AND bc.course_code=dp.course_code
-        WHERE s.user_id=$1
-        AND dp.lang=$2
-        AND s.start_year = ( SELECT MIN(s.start_year) FROM bla_studies s WHERE s.user_id = $1 )
-        GROUP BY dp.course_code, dp.bloc_subject_code
+WITH min_year AS (
+  SELECT MIN(start_year) AS year FROM bla_studies WHERE user_id = $1
+),
+user_blueprint_semesters AS (
+	SELECT
+		dp.course_code,
+		array_agg(bc.course_code IS NOT NULL ORDER BY by.academic_year, bs.semester) AS semesters
+	FROM bla_studies s
+	INNER JOIN min_year my ON s.start_year = my.year
+	LEFT JOIN degree_plans dp ON s.degree_plan_code = dp.plan_code AND s.start_year = dp.plan_year
+	LEFT JOIN blueprint_years by ON by.user_id = s.user_id
+	LEFT JOIN blueprint_semesters bs ON by.id = bs.blueprint_year_id
+	LEFT JOIN blueprint_courses bc ON bs.id = bc.blueprint_semester_id AND bc.course_code = dp.course_code
+	WHERE s.user_id=$1
+		AND dp.lang=$2
+	GROUP BY dp.course_code, dp.bloc_subject_code
 )
 SELECT
 	dp.bloc_subject_code,
@@ -29,7 +34,7 @@ SELECT
 	c.seminar_range2,
 	c.exam_type,
 	c.guarantors,
-        ubs.semesters,
+    ubs.semesters,
 	CASE WHEN dp.bloc_type = 'A' THEN TRUE WHEN dp.bloc_type = 'B' THEN FALSE END AS is_compulsory
 FROM bla_studies s
 LEFT JOIN degree_plans dp ON s.degree_plan_code = dp.plan_code AND s.start_year = dp.plan_year

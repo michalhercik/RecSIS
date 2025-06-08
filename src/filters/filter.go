@@ -3,7 +3,6 @@ package filters
 import (
 	"database/sql"
 	"fmt"
-	"iter"
 	"net/url"
 	"strings"
 
@@ -11,48 +10,18 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
-type FilterBuilder struct {
-	categ []FilterCategory
-}
+const (
+	Prefix = "par"
+)
 
-func (fb FilterBuilder) IsLastCategory(categoryID string) bool {
-	if len(fb.categ) == 0 {
-		return true
-	}
-	lastID := fb.categ[len(fb.categ)-1].id
-	return lastID != categoryID
-}
-
-func (fb *FilterBuilder) Category(identity FilterIdentity, displayedValueLimit int) {
-	fb.categ = append(fb.categ, FilterCategory{
-		FilterIdentity:      identity,
-		displayedValueLimit: displayedValueLimit,
-		values:              []FilterValue{},
-	})
-}
-
-func (fb *FilterBuilder) Value(identity FilterIdentity) {
-	value := MakeFilterValue(identity)
-	category := fb.categ[len(fb.categ)-1]
-	category.values = append(category.values, value)
-	fb.categ[len(fb.categ)-1] = category
-}
-
-func (fb *FilterBuilder) Build() Filters {
-	return MakeFilters(fb.categ)
-}
-
-func (fb *FilterBuilder) FilterCategories() []FilterCategory {
-	return fb.categ
-}
-
+// Filters
 type Filters struct {
 	DB           *sqlx.DB
 	Filter       string
-	categories   []FilterCategory
+	categories   []filterCategory
 	facets       []string
-	idToCategory map[string]FilterCategory
-	idToValue    map[string]FilterValue
+	idToCategory map[string]filterCategory
+	idToValue    map[string]filterValue
 	prefix       string
 }
 
@@ -97,10 +66,10 @@ func (f *Filters) Init() error {
 		return fmt.Errorf("failed to fetch filters: %w", err)
 	}
 	// Parse
-	fb := FilterBuilder{}
+	fb := filterBuilder{}
 	for _, row := range tmpResult {
-		if fb.IsLastCategory(row.CategoryID) {
-			fb.Category(MakeFilterIdentity(
+		if fb.isLastCategory(row.CategoryID) {
+			fb.category(makeFilterIdentity(
 				row.CategoryID,
 				row.CategoryFacetID,
 				language.MakeLangString(row.CategoryTitleCS, row.CategoryTitleEN),
@@ -108,7 +77,7 @@ func (f *Filters) Init() error {
 			), row.CategoryDisplayedValueLimit)
 		}
 		if row.ValueID.Valid {
-			fb.Value(MakeFilterIdentity(
+			fb.value(makeFilterIdentity(
 				row.ValueID.String,
 				row.ValueFacetID.String,
 				language.MakeLangString(row.ValueTitleCS.String, row.ValueTitleEN.String),
@@ -116,9 +85,9 @@ func (f *Filters) Init() error {
 			))
 		}
 	}
-	f.categories = fb.FilterCategories()
-	f.idToCategory = make(map[string]FilterCategory)
-	f.idToValue = make(map[string]FilterValue)
+	f.categories = fb.filterCategories()
+	f.idToCategory = make(map[string]filterCategory)
+	f.idToValue = make(map[string]filterValue)
 	f.facets = make([]string, len(f.categories))
 
 	for i, category := range f.categories {
@@ -128,7 +97,7 @@ func (f *Filters) Init() error {
 			f.idToValue[value.id] = value
 		}
 	}
-	f.prefix = "par"
+	f.prefix = Prefix
 	return nil
 }
 
@@ -136,109 +105,25 @@ func (f Filters) Facets() []string {
 	return f.facets
 }
 
-func (f Filters) IterFacets(facets Facets, query url.Values, lang language.Language) iter.Seq[FacetIterator] {
-	return func(yield func(FacetIterator) bool) {
-		for _, c := range f.categories {
-			f := facets[c.facetID]
-			checked := query["par"+c.id]
-			result := FacetIterator{
-				title:   c.Title(lang),
-				desc:    c.Desc(lang),
-				filter:  c,
-				facets:  f,
-				lang:    lang,
-				checked: checked,
-			}
-			if !yield(result) {
-				return
-			}
-		}
-	}
-}
-
-type FilterCategory struct {
-	FilterIdentity
-	displayedValueLimit int
-	values              []FilterValue
-}
-
-func MakeFilterCategory(identity FilterIdentity, values []FilterValue) FilterCategory {
-	return FilterCategory{
-		FilterIdentity: identity,
-		values:         values,
-	}
-}
-
-func (fc FilterCategory) Values() []FilterValue {
-	return fc.values
-}
-
-func (fc FilterCategory) DisplayedValueLimit() int {
-	return fc.displayedValueLimit
-}
-
-type FilterValue struct {
-	FilterIdentity
-}
-
-func MakeFilterValue(identity FilterIdentity) FilterValue {
-	return FilterValue{
-		FilterIdentity: identity,
-	}
-}
-
-type FilterIdentity struct {
-	id      string
-	facetID string
-	title   language.LangString
-	desc    language.LangString
-}
-
-func MakeFilterIdentity(id, facetID string, title, desc language.LangString) FilterIdentity {
-	return FilterIdentity{
-		id:      id,
-		facetID: facetID,
-		title:   title,
-		desc:    desc,
-	}
-}
-
-func (fi FilterIdentity) Title(lang language.Language) string {
-	return fi.title.String(lang)
-}
-
-func (fi FilterIdentity) Desc(lang language.Language) string {
-	return fi.desc.String(lang)
-}
-
-func (fi FilterIdentity) ID() string {
-	return fi.id
-}
-
-func MakeFilters(categories []FilterCategory) Filters {
-	idToCategory := make(map[string]FilterCategory)
-	idToValue := make(map[string]FilterValue)
-	facets := make([]string, len(categories))
-
-	for i, category := range categories {
-		facets[i] = category.facetID
-		idToCategory[category.id] = category
-		for _, value := range category.values {
-			idToValue[value.id] = value
-		}
-	}
-	return Filters{
-		categories:   categories,
-		facets:       facets,
-		idToCategory: idToCategory,
-		idToValue:    idToValue,
-		prefix:       "par",
-	}
-}
-
-//===================================================================================
-// Methods
-//====================================================================================
+// func (f Filters) iterFacets(facets Facets, query url.Values, lang language.Language) iter.Seq[FacetIterator] {
+// 	return func(yield func(FacetIterator) bool) {
+// 		for _, c := range f.categories {
+// 			f := facets[c.facetID]
+// 			checked := query[Prefix+c.id]
+// 			result := FacetIterator{
+// 				title:   c.Title(lang),
+// 				desc:    c.Desc(lang),
+// 				filter:  c,
+// 				facets:  f,
+// 				lang:    lang,
+// 				checked: checked,
+// 			}
+// 			if !yield(result) {
+// 				return
+// 			}
+// 		}
+// 	}
+// }
 
 func (f Filters) ParseURLQuery(query url.Values) (expression, error) {
 	var result expression
@@ -276,3 +161,122 @@ func (f Filters) parseParams(k string, v []string) (condition, error) {
 	}
 	return result, nil
 }
+
+// filterCategory
+type filterCategory struct {
+	filterIdentity
+	displayedValueLimit int
+	values              []filterValue
+}
+
+func (fc filterCategory) Values() []filterValue {
+	return fc.values
+}
+
+func (fc filterCategory) DisplayedValueLimit() int {
+	return fc.displayedValueLimit
+}
+
+// func makeFilterCategory(identity filterIdentity, values []filterValue) filterCategory {
+// 	return filterCategory{
+// 		filterIdentity: identity,
+// 		values:         values,
+// 	}
+// }
+
+// filterBuilder
+type filterBuilder struct {
+	categ []filterCategory
+}
+
+func (fb filterBuilder) isLastCategory(categoryID string) bool {
+	if len(fb.categ) == 0 {
+		return true
+	}
+	lastID := fb.categ[len(fb.categ)-1].id
+	return lastID != categoryID
+}
+
+func (fb *filterBuilder) category(identity filterIdentity, displayedValueLimit int) {
+	fb.categ = append(fb.categ, filterCategory{
+		filterIdentity:      identity,
+		displayedValueLimit: displayedValueLimit,
+		values:              []filterValue{},
+	})
+}
+
+func (fb *filterBuilder) value(identity filterIdentity) {
+	value := makeFilterValue(identity)
+	category := fb.categ[len(fb.categ)-1]
+	category.values = append(category.values, value)
+	fb.categ[len(fb.categ)-1] = category
+}
+
+func (fb *filterBuilder) filterCategories() []filterCategory {
+	return fb.categ
+}
+
+// func (fb *filterBuilder) build() Filters {
+// 	return makeFilters(fb.categ)
+// }
+
+// filterValue
+type filterValue struct {
+	filterIdentity
+}
+
+func makeFilterValue(identity filterIdentity) filterValue {
+	return filterValue{
+		filterIdentity: identity,
+	}
+}
+
+// filterIdentity
+type filterIdentity struct {
+	id      string
+	facetID string
+	title   language.LangString
+	desc    language.LangString
+}
+
+func (fi filterIdentity) Title(lang language.Language) string {
+	return fi.title.String(lang)
+}
+
+func (fi filterIdentity) Desc(lang language.Language) string {
+	return fi.desc.String(lang)
+}
+
+func (fi filterIdentity) ID() string {
+	return fi.id
+}
+
+func makeFilterIdentity(id, facetID string, title, desc language.LangString) filterIdentity {
+	return filterIdentity{
+		id:      id,
+		facetID: facetID,
+		title:   title,
+		desc:    desc,
+	}
+}
+
+// func makeFilters(categories []filterCategory) Filters {
+// 	idToCategory := make(map[string]filterCategory)
+// 	idToValue := make(map[string]filterValue)
+// 	facets := make([]string, len(categories))
+
+// 	for i, category := range categories {
+// 		facets[i] = category.facetID
+// 		idToCategory[category.id] = category
+// 		for _, value := range category.values {
+// 			idToValue[value.id] = value
+// 		}
+// 	}
+// 	return Filters{
+// 		categories:   categories,
+// 		facets:       facets,
+// 		idToCategory: idToCategory,
+// 		idToValue:    idToValue,
+// 		prefix:       Prefix,
+// 	}
+// }

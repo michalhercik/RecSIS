@@ -217,7 +217,7 @@ templ popoverTitle(year, runningCredits, yearCredits, semesterCredits int, semes
 templ showHideCoursesButton(year int, semester semesterAssignment, folded bool, t text) {
     <button
         class={ "btn btn-sm btn-outline-secondary p-0 border-0 hide-semester-btn bi", templ.KV("bi-caret-right-fill", folded), templ.KV("bi-caret-down-fill", !folded) }
-        hx-patch={ t.language.Path("/blueprint/fold") }
+        hx-patch={ t.language.LocalizeURL("/blueprint/fold") }
         hx-vals={ mergeVals(vFolded(!folded), vYear(year), vSem(int(semester))) }
         hx-target="#blueprint-page"
         hx-swap="outerHTML">
@@ -389,7 +389,7 @@ templ summarizeFooter(years assignedYears, totalCredits int, t text) {
                 // for this to overflow left, text order is left to right so the elements are in the opposite order
                 <button
                     class="btn btn-sm btn-outline-secondary bi bi-plus"
-                    hx-post={ t.language.Path("/blueprint/year") }
+                    hx-post={ t.language.LocalizeURL("/blueprint/year") }
                     hx-target="#blueprint-page"
                     hx-swap="outerHTML">
                 </button>
@@ -406,7 +406,7 @@ templ summarizeFooter(years assignedYears, totalCredits int, t text) {
                     // if the last year is empty, show delete button
                     <button
                         class="btn btn-outline-secondary btn-sm bi bi-dash"
-                        hx-delete={ t.language.Path("/blueprint/year") }
+                        hx-delete={ t.language.LocalizeURL("/blueprint/year") }
                         hx-vals={ mergeVals(vUnassign(false), vYear(len(years) - 1)) }
                         hx-target="#blueprint-page"
                         hx-swap="outerHTML"
@@ -434,7 +434,7 @@ templ deleteYearModal(lastYear int, t text) {
                     <button
                         data-bs-dismiss="modal"
                         class="btn btn-primary"
-                        hx-delete={ t.language.Path("/blueprint/year") }
+                        hx-delete={ t.language.LocalizeURL("/blueprint/year") }
                         hx-vals={ mergeVals(vUnassign(false), vYear(lastYear)) }
                         hx-target="#blueprint-page"
                         hx-swap="outerHTML">
@@ -443,7 +443,7 @@ templ deleteYearModal(lastYear int, t text) {
                     <button
                         data-bs-dismiss="modal"
                         class="btn btn-primary"
-                        hx-delete={ t.language.Path("/blueprint/year") }
+                        hx-delete={ t.language.LocalizeURL("/blueprint/year") }
                         hx-vals={ mergeVals(vUnassign(true), vYear(lastYear)) }
                         hx-target="#blueprint-page"
                         hx-swap="outerHTML">
@@ -457,11 +457,11 @@ templ deleteYearModal(lastYear int, t text) {
 }
 
 templ assignCourseButton(tooltip string, yearCount, id int, t text) {
-    @assignCourseButtonInternal(tooltip, "hover && !isSorting", t.language.Path(fmt.Sprintf("/blueprint/course/%d", id)), "", "", yearCount, false, t)
+    @assignCourseButtonInternal(tooltip, "hover && !isSorting", t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id)), "", "", yearCount, false, t)
 }
 
 templ assignCoursesButton(yearCount int, t text) {
-    @assignCourseButtonInternal(t.ttAssignChecked, "", t.language.Path("/blueprint/courses"), `, ` + vType(selectedMove), "input[type=checkbox]:checked", yearCount, true, t)
+    @assignCourseButtonInternal(t.ttAssignChecked, "", t.language.LocalizeURL("/blueprint/courses"), `, ` + vType(selectedMove), "input[type=checkbox]:checked", yearCount, true, t)
 }
 
 templ assignCourseButtonInternal(tooltip, showCondButton, patch, vals, include string, yearCount int, big bool, t text) {
@@ -519,19 +519,19 @@ templ assignSemesterButton(year, semester int, patch, vals, include, semesterTex
 }
 
 templ removeCourseButton(id int, t text) {
-    @adjustCoursesButton("bi-trash-fill", "hover && !isSorting", t.ttRemove, "", "", false, templ.Attributes{"hx-delete": t.language.Path(fmt.Sprintf("/blueprint/course/%d", id))})
+    @adjustCoursesButton("bi-trash-fill", "hover && !isSorting", t.ttRemove, "", "", false, templ.Attributes{"hx-delete": t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id))})
 }
 
 templ unassignCourseButton(id int, t text) {
-    @adjustCoursesButton("bi-dash-circle", "hover && !isSorting", t.ttUnassign, mergeVals(vYear(0), vSem(0), vPos()), "", false, templ.Attributes{"hx-patch": t.language.Path(fmt.Sprintf("/blueprint/course/%d", id))})
+    @adjustCoursesButton("bi-dash-circle", "hover && !isSorting", t.ttUnassign, mergeVals(vYear(0), vSem(0), vPos()), "", false, templ.Attributes{"hx-patch": t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id))})
 }
 
 templ removeCoursesButton(tooltip, vals, include string, big bool, t text) {
-    @adjustCoursesButton("bi-trash-fill", "", tooltip, vals, include, big, templ.Attributes{"hx-delete": t.language.Path("/blueprint/courses")})
+    @adjustCoursesButton("bi-trash-fill", "", tooltip, vals, include, big, templ.Attributes{"hx-delete": t.language.LocalizeURL("/blueprint/courses")})
 }
 
 templ unassignCoursesButton(tooltip, vals, include string, big bool, t text) {
-    @adjustCoursesButton("bi-dash-circle", "", tooltip, vals, include, big, templ.Attributes{"hx-patch": t.language.Path("/blueprint/courses")})
+    @adjustCoursesButton("bi-dash-circle", "", tooltip, vals, include, big, templ.Attributes{"hx-patch": t.language.LocalizeURL("/blueprint/courses")})
 }
 
 templ adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, method templ.Attributes) {

@@ -18,10 +18,9 @@ type courseDetail struct {
 	CategoryRatings    []dbds.CourseCategoryRating
 	BlueprintSemesters pq.BoolArray `db:"semesters"`
 	InDegreePlan       bool         `db:"in_degree_plan"`
-	// blueprintAssignments []dbds.BlueprintAssignment
 }
 
-func (reader DBManager) Course(userID string, code string, lang language.Language) (*course, error) {
+func (reader DBManager) course(userID string, code string, lang language.Language) (*course, error) {
 	var result courseDetail
 	if err := reader.DB.Get(&result, sqlquery.Course, userID, code, lang); err != nil {
 		return nil, err
@@ -29,13 +28,11 @@ func (reader DBManager) Course(userID string, code string, lang language.Languag
 	if err := reader.DB.Select(&result.CategoryRatings, sqlquery.Rating, userID, code, lang); err != nil {
 		return nil, err
 	}
-	// if err := reader.DB.Select(&result.blueprintAssignments, sqlquery.BlueprintAssignments, userID, code); err != nil {
-	// }
 	course := intoCourse(&result)
 	return &course, nil
 }
 
-func (db DBManager) RateCategory(userID string, code string, category string, rating int, lang language.Language) ([]courseCategoryRating, error) {
+func (db DBManager) rateCategory(userID string, code string, category string, rating int, lang language.Language) ([]courseCategoryRating, error) {
 	var updatedRating []dbds.CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.RateCategory, userID, code, category, rating)
 	if err != nil {
@@ -47,7 +44,7 @@ func (db DBManager) RateCategory(userID string, code string, category string, ra
 	return intoCategoryRatingSlice(updatedRating), err
 }
 
-func (db DBManager) DeleteCategoryRating(userID string, code string, category string, lang language.Language) ([]courseCategoryRating, error) {
+func (db DBManager) deleteCategoryRating(userID string, code string, category string, lang language.Language) ([]courseCategoryRating, error) {
 	var updatedRating []dbds.CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.DeleteCategoryRating, userID, code, category)
 	if err != nil {
@@ -59,7 +56,7 @@ func (db DBManager) DeleteCategoryRating(userID string, code string, category st
 	return intoCategoryRatingSlice(updatedRating), err
 }
 
-func (db DBManager) Rate(userID string, code string, value int) (courseRating, error) {
+func (db DBManager) rate(userID string, code string, value int) (courseRating, error) {
 	var rating dbds.OverallRating
 	_, err := db.DB.Exec(sqlquery.Rate, userID, code, value)
 	if err != nil {
@@ -71,7 +68,7 @@ func (db DBManager) Rate(userID string, code string, value int) (courseRating, e
 	return intoCourseRating(rating), err
 }
 
-func (db DBManager) DeleteRating(userID string, code string) (courseRating, error) {
+func (db DBManager) deleteRating(userID string, code string) (courseRating, error) {
 	var rating dbds.OverallRating
 	_, err := db.DB.Exec(sqlquery.DeleteRating, userID, code)
 	if err != nil {
@@ -189,7 +186,7 @@ func intoTeacherSlice(from dbds.TeacherSlice) []teacher {
 	result := make([]teacher, len(from))
 	for i, t := range from {
 		result[i] = teacher{
-			SISID:       t.SISID,
+			SisID:       t.SisID,
 			LastName:    t.LastName,
 			FirstName:   t.FirstName,
 			TitleBefore: t.TitleBefore,

@@ -23,7 +23,7 @@ type Server struct {
 	Filters filters.Filters
 	Page    Page
 	router  *http.ServeMux
-	Search  SearchEngine
+	Search  searchEngine
 }
 
 func (s *Server) Init() {
@@ -120,8 +120,8 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	Content(&coursesPage, t).Render(r.Context(), w)
 }
 
-func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Request, error) {
-	var req Request
+func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (request, error) {
+	var req request
 	userID, err := s.Auth.UserID(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -143,7 +143,7 @@ func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Reque
 		log.Printf("search error: %v", err)
 	}
 
-	req = Request{
+	req = request{
 		userID:      userID,
 		query:       query,
 		indexUID:    courseIndex,
@@ -156,14 +156,14 @@ func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Reque
 	return req, nil
 }
 
-func (s Server) search(req Request, httpReq *http.Request) (coursesPage, error) {
+func (s Server) search(req request, httpReq *http.Request) (coursesPage, error) {
 	// search for courses
 	var result coursesPage
 	searchResponse, err := s.Search.Search(req)
 	if err != nil {
 		return result, err
 	}
-	coursesData, err := s.Data.Courses(req.userID, searchResponse.Courses, req.lang)
+	coursesData, err := s.Data.courses(req.userID, searchResponse.Courses, req.lang)
 	if err != nil {
 		return result, err
 	}
@@ -189,7 +189,7 @@ func (s Server) parseUrl(queryValues url.Values, t text) string {
 	}
 	// TODO: possibly add more defaults to exclude
 
-	return fmt.Sprintf("%s?%s", t.language.Path("/courses"), queryValues.Encode())
+	return fmt.Sprintf("%s?%s", t.language.LocalizeURL("/courses"), queryValues.Encode())
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
@@ -214,7 +214,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := texts[lang]
-	courses, err := s.Data.Courses(userID, courseCodes, lang)
+	courses, err := s.Data.courses(userID, courseCodes, lang)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Printf("failed to create button: %v", err)

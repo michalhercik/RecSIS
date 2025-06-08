@@ -239,7 +239,7 @@ type surveyTarget struct {
 }
 
 type teacher struct {
-	SISID       string `json:"KOD"`
+	SisID       string `json:"KOD"`
 	LastName    string `json:"PRIJMENI"`
 	FirstName   string `json:"JMENO"`
 	TitleBefore string `json:"TITULPRED"`

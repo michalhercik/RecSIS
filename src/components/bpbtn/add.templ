@@ -47,7 +47,7 @@ templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, 
         } else {
             { alpineClassesFalse... }
         }
-        hx-post={ t.language.Path(model.hxPostBase + "/blueprint") }
+        hx-post={ t.language.LocalizeURL(model.hxPostBase + "/blueprint") }
         hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "courses": ["%s"]`, strings.Join(model.courses, `","`)) }
         hx-swap={ model.hxSwap }
         hx-target={ model.hxTarget }
@@ -82,7 +82,7 @@ templ assignSemesterButton(semesterText string, year, semester int, disabled boo
     <li class="mx-3">
         <button
             class="dropdown-item rounded text-center dropdown-item-blueprint"
-            hx-post={ t.language.Path(model.hxPostBase + "/blueprint") }
+            hx-post={ t.language.LocalizeURL(model.hxPostBase + "/blueprint") }
             hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d, "courses": ["%s"]`, year, semester, strings.Join(model.courses, ",")) }
             hx-include={ model.hxInclude }
             hx-swap={ model.hxSwap }

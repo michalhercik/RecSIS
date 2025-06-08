@@ -120,7 +120,7 @@ func intoTeacherSlice(from []dbds.Teacher) []teacher {
 	teachers := make([]teacher, len(from))
 	for i, t := range from {
 		teachers[i] = teacher{
-			sisID:       t.SISID,
+			sisID:       t.SisID,
 			lastName:    t.LastName,
 			firstName:   t.FirstName,
 			titleBefore: t.TitleBefore,

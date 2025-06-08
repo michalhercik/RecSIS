@@ -9,7 +9,7 @@ templ SearchBar(model searchBarModel) {
     <form
         id="search-form"
         class="w-100"
-        hx-get={ model.lang.Path(model.searchEndpoint) }
+        hx-get={ model.lang.LocalizeURL(model.searchEndpoint) }
         hx-target="body"
         hx-push-url="true"
         if model.includeFilters {
@@ -35,7 +35,7 @@ templ SearchBar(model searchBarModel) {
                         @keyup.slash.outside="$el.focus(); $el.selectionStart = $el.selectionEnd = $el.value.length;"
                         @keyup.escape="$el.blur(); quickResOpen = false"
                         @focus="quickResOpen = true"
-                        hx-get={ model.lang.Path(model.quickSearchEndpoint) }
+                        hx-get={ model.lang.LocalizeURL(model.quickSearchEndpoint) }
                         hx-trigger="input changed delay:200ms, focus once"
                         hx-target="#quick-search-results"
                         hx-swap="outerHTML"
@@ -76,7 +76,7 @@ templ QuickResults(model quickResultsModel) {
             } else {
                 for _, course := range model.courses {
                     <a
-                        href={ templ.URL(model.lang.Path(model.resultDetailEndpoint(course.code))) }
+                        href={ templ.URL(model.lang.LocalizeURL(model.resultDetailEndpoint(course.code))) }
                         class="dropdown-item text-truncate responsive-font"
                         hx-boost="false"
                         tabindex="0"

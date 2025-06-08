@@ -81,7 +81,7 @@ func main() {
 	pageTempl := page.Page{
 		Home: "/home/",
 		NavItems: []page.NavItem{
-			{Title: language.MakeLangString("Domů", "Home"), Path: "/", Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
+			{Title: language.MakeLangString("Domů", "Home"), Path: "/home/", Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
 			{Title: language.MakeLangString("Hledání", "Search"), Path: "/courses/", Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
 			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: "/blueprint/", Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
 			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: "/degreeplan/", Skeleton: degreeplan.Skeleton, Indicator: "#degreeplan-skeleton"},
@@ -137,10 +137,13 @@ func main() {
 	}
 	coursedetail.Init()
 	courses := courses.Server{
-		Data:   courses.DBManager{DB: db},
-		Search: courses.MeiliSearch{Client: meiliClient, Courses: meilisearch.IndexConfig{Uid: "courses"}},
-		Auth:   cas.UserIDFromContext{},
-		Page:   pageTempl,
+		Data: courses.DBManager{DB: db},
+		Search: courses.MeiliSearch{
+			Client:  meiliClient,
+			Courses: meilisearch.IndexConfig{Uid: "courses"},
+		},
+		Auth: cas.UserIDFromContext{},
+		Page: pageTempl,
 		BpBtn: bpbtn.Add{
 			DB:    db,
 			Templ: bpbtn.AddBtn,

@@ -14,13 +14,19 @@ type DBManager struct {
 	DB *sqlx.DB
 }
 
-type DBDegreePlanRecord struct {
-	dbds.DegreePlanRecord
+type dbDegreePlanRecord struct {
+	BlocCode         int    `db:"bloc_subject_code"`
+	BlocLimit        int    `db:"bloc_limit"`
+	BlocName         string `db:"bloc_name"`
+	BlocNote         string `db:"bloc_note"`
+	IsBlocCompulsory bool   `db:"is_compulsory"`
+	Note             string `db:"note"`
+	dbds.Course
 	BlueprintSemesters pq.BoolArray `db:"semesters"`
 }
 
-func (m DBManager) UserDegreePlan(uid string, lang language.Language) (*degreePlanPage, error) {
-	var records []DBDegreePlanRecord
+func (m DBManager) userDegreePlan(uid string, lang language.Language) (*degreePlanPage, error) {
+	var records []dbDegreePlanRecord
 	if err := m.DB.Select(&records, sqlquery.UserDegreePlan, uid, lang); err != nil {
 		return nil, fmt.Errorf("degreePlan: %v", err)
 	}
@@ -31,8 +37,8 @@ func (m DBManager) UserDegreePlan(uid string, lang language.Language) (*degreePl
 	return &dp, nil
 }
 
-func (m DBManager) DegreePlan(uid, dpCode string, dpYear int, lang language.Language) (*degreePlanPage, error) {
-	var records []DBDegreePlanRecord
+func (m DBManager) degreePlan(uid, dpCode string, dpYear int, lang language.Language) (*degreePlanPage, error) {
+	var records []dbDegreePlanRecord
 	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, dpCode, dpYear, lang); err != nil {
 		return nil, fmt.Errorf("degreePlan: %v", err)
 	}
@@ -43,7 +49,7 @@ func (m DBManager) DegreePlan(uid, dpCode string, dpYear int, lang language.Lang
 	return &dp, nil
 }
 
-func add(dp *degreePlanPage, record DBDegreePlanRecord) {
+func add(dp *degreePlanPage, record dbDegreePlanRecord) {
 	blocIndex := -1
 	for i, b := range dp.blocs {
 		if b.code == record.BlocCode {
@@ -64,7 +70,7 @@ func add(dp *degreePlanPage, record DBDegreePlanRecord) {
 	dp.blocs[blocIndex].courses = append(dp.blocs[blocIndex].courses, intoCourse(record))
 }
 
-func intoCourse(from DBDegreePlanRecord) course {
+func intoCourse(from dbDegreePlanRecord) course {
 	return course{
 		code:               from.Code,
 		title:              from.Title,
@@ -85,7 +91,7 @@ func intoTeacherSlice(from []dbds.Teacher) []teacher {
 	teachers := make([]teacher, len(from))
 	for i, t := range from {
 		teachers[i] = teacher{
-			sisID:       t.SISID,
+			sisID:       t.SisID,
 			lastName:    t.LastName,
 			firstName:   t.FirstName,
 			titleBefore: t.TitleBefore,

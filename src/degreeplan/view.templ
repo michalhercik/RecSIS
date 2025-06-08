@@ -56,7 +56,7 @@ templ chooseDegreePlanModal(t text) {
                             name="q"
                             class="form-control search-input"
                             placeholder={ t.degreePlanPlaceholder }
-                            hx-get={ t.language.Path("/degreeplan/search") }
+                            hx-get={ t.language.LocalizeURL("/degreeplan/search") }
                             hx-trigger="keyup changed delay:200ms"
                             hx-target="#dp-results"
                             autocomplete="off">
@@ -83,7 +83,7 @@ templ quickSearchResults() {
     </div>
 }
 
-templ QuickSearchResultsContent(results []QuickDegreePlan, t text) {
+templ QuickSearchResultsContent(results []quickDegreePlan, t text) {
     @quickSearchResults() {
         if len(results) == 0 {
             <div class="alert alert-info" role="alert">
@@ -94,12 +94,12 @@ templ QuickSearchResultsContent(results []QuickDegreePlan, t text) {
                 for _, result := range results {
                     <tr>
                         <td><a
-                            href={ templ.URL(t.language.Path("/degreeplan/" + result.Code)) }
+                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
                             data-bs-dismiss="modal">
                             { result.Code }
                         </a></td>
                         <td class="text-wrap"><a
-                            href={ templ.URL(t.language.Path("/degreeplan/" + result.Code)) }
+                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
                             data-bs-dismiss="modal">
                             { result.Name }
                         </a> </td>

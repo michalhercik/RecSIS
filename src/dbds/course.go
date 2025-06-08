@@ -6,12 +6,6 @@ import (
 	"fmt"
 )
 
-type Faculty struct {
-	SisID int
-	Name  string
-	Abbr  string
-}
-
 type Course struct {
 	ID                     int             `db:"id"`
 	Code                   string          `db:"code"`
@@ -60,82 +54,6 @@ type CourseCategoryRating struct {
 	RatingCount sql.NullInt64   `db:"rating_count"`
 }
 
-type SemesterAssignment int
-
-func (sa *SemesterAssignment) Scan(val any) error {
-	switch v := val.(type) {
-	case int64:
-		*sa = SemesterAssignment(v)
-		return nil
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
-}
-
-func SemesterAssignmentFromString(s string) (SemesterAssignment, error) {
-	switch s {
-	case winterStr:
-		return assignmentWinter, nil
-	case summerStr:
-		return assignmentSummer, nil
-	case unassignedStr:
-		return assignmentNone, nil
-	default:
-		return 0, fmt.Errorf("unknown semester assignment %s", s)
-	}
-}
-
-const (
-	assignmentNone SemesterAssignment = iota
-	assignmentWinter
-	assignmentSummer
-)
-
-const (
-	winterStr     = "winter"
-	summerStr     = "summer"
-	unassignedStr = "unassigned"
-)
-
-type Description struct {
-	Title   string `json:"TITLE"`
-	Content string `json:"MEMO"`
-}
-
-func (d *Description) Scan(val any) error {
-	switch v := val.(type) {
-	case []byte:
-		json.Unmarshal(v, &d)
-		return nil
-	case string:
-		json.Unmarshal([]byte(v), &d)
-		return nil
-	default:
-		return fmt.Errorf("unsupported type: %T", v)
-	}
-}
-
-func (d Description) Value() (any, error) {
-	return json.Marshal(d)
-}
-
-type NullDescription struct {
-	Description
-	Valid bool
-}
-
-func (d *NullDescription) Scan(val any) error {
-	if val == nil {
-		d.Valid = false
-		return nil
-	}
-	if err := d.Description.Scan(val); err != nil {
-		return err
-	}
-	d.Valid = true
-	return nil
-}
-
 type JSONStringArray []string
 
 func (jsa *JSONStringArray) Scan(val any) error {
@@ -177,4 +95,49 @@ func (cs *ClassSlice) Scan(val any) error {
 type Class struct {
 	Code string `json:"KOD"`
 	Name string `json:"NAZEV"`
+}
+
+type NullDescription struct {
+	Description
+	Valid bool
+}
+
+func (d *NullDescription) Scan(val any) error {
+	if val == nil {
+		d.Valid = false
+		return nil
+	}
+	if err := d.Description.Scan(val); err != nil {
+		return err
+	}
+	d.Valid = true
+	return nil
+}
+
+type Description struct {
+	Title   string `json:"TITLE"`
+	Content string `json:"MEMO"`
+}
+
+func (d *Description) Scan(val any) error {
+	switch v := val.(type) {
+	case []byte:
+		json.Unmarshal(v, &d)
+		return nil
+	case string:
+		json.Unmarshal([]byte(v), &d)
+		return nil
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+func (d Description) Value() (any, error) {
+	return json.Marshal(d)
+}
+
+type Faculty struct {
+	SisID int
+	Name  string
+	Abbr  string
 }

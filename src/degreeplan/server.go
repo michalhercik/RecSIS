@@ -85,7 +85,7 @@ func (s Server) show(w http.ResponseWriter, r *http.Request) {
 		log.Printf("renderPage: %v", err)
 		return
 	}
-	dp, err := s.Data.DegreePlan(userID, dpCode, dpYear, lang)
+	dp, err := s.Data.degreePlan(userID, dpCode, dpYear, lang)
 	if err != nil {
 		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
 		log.Printf("renderPage: %v", err)
@@ -100,7 +100,7 @@ func (s Server) show(w http.ResponseWriter, r *http.Request) {
 func (s Server) searchDegreePlan(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	query := r.FormValue("q")
-	results, err := s.DPSearch.QuickSearch(QuickRequest{
+	results, err := s.DPSearch.QuickSearch(quickRequest{
 		query: query,
 		limit: 5,
 	})
@@ -136,7 +136,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
 	t := texts[lang]
-	dp, err := s.Data.UserDegreePlan(userID, lang)
+	dp, err := s.Data.userDegreePlan(userID, lang)
 	if err != nil {
 		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
 		log.Printf("renderPage: %v", err)
@@ -150,7 +150,7 @@ func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string
 
 func (s Server) renderContent(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
 	t := texts[lang]
-	dp, err := s.Data.UserDegreePlan(userID, lang)
+	dp, err := s.Data.userDegreePlan(userID, lang)
 	if err != nil {
 		http.Error(w, "Unable to retrieve degree plan", http.StatusInternalServerError)
 		log.Printf("renderPage: %v", err)

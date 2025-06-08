@@ -69,13 +69,15 @@ degree_plan AS (
 ),
 user_blueprint_semesters AS (
     SELECT array_agg(course_code IS NOT NULL) AS semesters FROM (
-        SELECT by.user_id, bc.course_code FROM blueprint_years by
+        SELECT
+            by.user_id,
+            bc.course_code
+        FROM blueprint_years by
         LEFT JOIN blueprint_semesters bs ON by.id = bs.blueprint_year_id
         LEFT JOIN blueprint_courses bc ON bs.id = bc.blueprint_semester_id AND bc.course_code=$2
         WHERE by.user_id=$1
         ORDER BY by.academic_year, bs.semester
     )
-    GROUP BY user_id
 )
 SELECT
     c.code,

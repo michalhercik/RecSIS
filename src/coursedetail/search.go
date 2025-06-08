@@ -13,8 +13,8 @@ type Search struct {
 }
 
 // TODO: write own meilisearch client
-func (s Search) Comments(r Request) (Response, error) {
-	var result Response
+func (s Search) comments(r request) (response, error) {
+	var result response
 	searchReq := makeMultiSearchRequest(r, s.Survey)
 	response, err := s.Client.MultiSearch(searchReq)
 	if err != nil {
@@ -24,7 +24,7 @@ func (s Search) Comments(r Request) (Response, error) {
 	if err != nil {
 		return result, err
 	}
-	multi := MultiResponse{}
+	multi := multiResponse{}
 	if err = json.Unmarshal(rawResponse, &multi); err != nil {
 		return result, err
 	}
@@ -37,51 +37,36 @@ func (s Search) Comments(r Request) (Response, error) {
 	return result, nil
 }
 
-type Expression interface {
+type expression interface {
 	String() string
 	Except() func(func(string, string) bool)
 	ConditionsCount() int
 	Append(param string, values ...string)
 }
 
-type Request struct {
+type request struct {
 	userID   string
 	query    string
 	indexUID string
 	offset   int
 	limit    int
 	lang     language.Language
-	filter   Expression
+	filter   expression
 	facets   []string
 	sort     string
 }
 
-type Response struct {
-	EstimatedTotalHits int
-	Survey             []survey
-	FacetDistribution  map[string]map[string]int
+type response struct {
+	EstimatedTotalHits int                       `json:"estimatedTotalHits"`
+	Survey             []survey                  `json:"Hits"`
+	FacetDistribution  map[string]map[string]int `json:"FacetDistribution"`
 }
 
-type MultiResponse struct {
-	Results []Response `json:"results"`
+type multiResponse struct {
+	Results []response `json:"results"`
 }
 
-func (r *Response) UnmarshalJSON(data []byte) error {
-	var hit struct {
-		EstimatedTotalHits int                       `json:"estimatedTotalHits"`
-		Hits               []survey                  `json:"Hits"`
-		FacetDistribution  map[string]map[string]int `json:"FacetDistribution"`
-	}
-	if err := json.Unmarshal(data, &hit); err != nil {
-		return err
-	}
-	r.EstimatedTotalHits = int(hit.EstimatedTotalHits)
-	r.Survey = hit.Hits
-	r.FacetDistribution = hit.FacetDistribution
-	return nil
-}
-
-func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
+func makeMultiSearchRequest(r request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
 	numOfReq := 1 + r.filter.ConditionsCount()
 	result := &meilisearch.MultiSearchRequest{
 		Queries: make([]*meilisearch.SearchRequest, 0, numOfReq),
