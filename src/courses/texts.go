@@ -1,8 +1,6 @@
 package courses
 
 import (
-	"strconv"
-
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -33,6 +31,7 @@ type text struct {
 	noGuarantors      string
 	readMore          string
 	readLess          string
+	inDegreePlan      string
 	loadMore          string
 	previousPage      string
 	nextPage          string
@@ -41,15 +40,6 @@ type text struct {
 	noCoursesFound    string
 	// language
 	language language.Language
-}
-
-func (t text) yearStr(year int) string {
-	if t.language == language.CS {
-		return strconv.Itoa(year) + ". " + t.year
-	} else if t.language == language.EN {
-		return t.year + " " + strconv.Itoa(year)
-	}
-	return ""
 }
 
 func (t text) showMore(rest int) string {
@@ -88,6 +78,7 @@ var texts = map[language.Language]text{
 		noGuarantors:      "Žádní garanti",
 		readMore:          "Číst dále",
 		readLess:          "Sbalit",
+		inDegreePlan:      "V studijním plánu",
 		loadMore:          "Zobrazit další",
 		previousPage:      "Předchozí stránka",
 		nextPage:          "Další stránka",
@@ -124,6 +115,7 @@ var texts = map[language.Language]text{
 		noGuarantors:      "No guarantors",
 		readMore:          "Read more",
 		readLess:          "Hide",
+		inDegreePlan:      "In degree plan",
 		loadMore:          "Show more",
 		previousPage:      "Previous page",
 		nextPage:          "Next page",

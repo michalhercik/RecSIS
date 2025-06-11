@@ -130,14 +130,7 @@ func intoTeacherSlice(from []dbds.Teacher) []teacher {
 	return teachers
 }
 
-// func (m DBManager) newCourse(userID string, course string, year int, semester semesterAssignment) (int, error) {
-// 	row := m.DB.QueryRow(sqlquery.InsertCourse, userID, year, int(semester), course)
-// 	var courseID int
-// 	err := row.Scan(&courseID)
-// 	return courseID, err
-// }
-
-func (m DBManager) insertCourses(userID string, year int, semester semesterAssignment, position int, courses ...int) error {
+func (m DBManager) moveCourses(userID string, year int, semester semesterAssignment, position int, courses ...int) error {
 	res, err := m.DB.Exec(sqlquery.MoveCourses, userID, pq.Array(courses), year, int(semester), position)
 	if err != nil {
 		return err
@@ -171,17 +164,17 @@ func (m DBManager) unassignSemester(userID string, year int, semester semesterAs
 }
 
 func (m DBManager) removeCourses(userID string, courses ...int) error {
-	_, err := m.DB.Exec(sqlquery.DeleteCoursesByID, userID, pq.Array(courses))
+	_, err := m.DB.Exec(sqlquery.RemoveCoursesByID, userID, pq.Array(courses))
 	return err
 }
 
 func (m DBManager) removeCoursesBySemester(userID string, year int, semester semesterAssignment) error {
-	_, err := m.DB.Exec(sqlquery.DeleteCoursesBySemester, userID, year, int(semester))
+	_, err := m.DB.Exec(sqlquery.RemoveCoursesBySemester, userID, year, int(semester))
 	return err
 }
 
 func (m DBManager) removeCoursesByYear(userID string, year int) error {
-	_, err := m.DB.Exec(sqlquery.DeleteCoursesByYear, userID, year)
+	_, err := m.DB.Exec(sqlquery.RemoveCoursesByYear, userID, year)
 	return err
 }
 

@@ -121,7 +121,7 @@ func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
 	if position == -1 {
 		err = s.Data.appendCourses(userID, year, semester, course)
 	} else if position >= 0 {
-		err = s.Data.insertCourses(userID, year, semester, position, course)
+		err = s.Data.moveCourses(userID, year, semester, position, course)
 	} else {
 		http.Error(w, "Invalid position", http.StatusBadRequest)
 		return
@@ -202,7 +202,7 @@ func (s Server) moveCourses(r *http.Request, userSession string) error {
 	if position == lastPosition {
 		err = s.Data.appendCourses(userSession, year, semester, courses...)
 	} else if position > 0 {
-		err = s.Data.insertCourses(userSession, year, semester, position, courses...)
+		err = s.Data.moveCourses(userSession, year, semester, position, courses...)
 	} else {
 		err = fmt.Errorf("invalid position %d", position)
 	}
@@ -271,6 +271,7 @@ func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
 	}
 	s.renderBlueprint(w, r, text)
 }
+
 func (s Server) removeCoursesByYear(r *http.Request, session string) error {
 	year, err := parseYear(r)
 	if err != nil {

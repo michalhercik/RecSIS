@@ -54,6 +54,7 @@ type course struct {
 	guarantors           teacherSlice
 	blueprintAssignments assignmentSlice
 	blueprintSemesters   []bool
+	inDegreePlan         bool
 }
 
 // wrapper for description that allows it to be nullable

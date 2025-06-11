@@ -17,7 +17,7 @@ type DBManager struct {
 type courses []struct {
 	dbds.Course
 	BlueprintSemesters pq.BoolArray `db:"semesters"`
-	//InDegreePlan       bool         `db:"in_degree_plan"` // TODO add to sql query (copy from coursedetail)
+	InDegreePlan       bool         `db:"in_degree_plan"`
 }
 
 func (m DBManager) courses(userID string, courseCodes []string, lang language.Language) ([]course, error) {
@@ -45,7 +45,7 @@ func intoCourses(from courses) []course {
 		result[i].guarantors = intoTeacherSlice(course.Guarantors)
 		result[i].blueprintSemesters = course.BlueprintSemesters
 		result[i].blueprintAssignments = intoBlueprintAssignmentSlice(course.BlueprintSemesters)
-
+		result[i].inDegreePlan = course.InDegreePlan
 	}
 	return result
 }

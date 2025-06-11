@@ -10,15 +10,11 @@ Params:
 
 	$1 student
 */
-const SelectYears = `--sql
-SELECT academic_year FROM blueprint_years b
-WHERE b.user_id=$1
-ORDER BY academic_year;
-`
 
 const InsertYear = `--sql
 WITH max_year AS (
-	SELECT MAX(academic_year) AS max_academic_year FROM blueprint_years b
+	SELECT MAX(academic_year) AS max_academic_year
+	FROM blueprint_years b
 	WHERE b.user_id = $1
 )
 INSERT INTO blueprint_years (user_id, academic_year)
@@ -38,16 +34,6 @@ WITH max_academic_year AS (
 DELETE FROM blueprint_years b
 USING max_academic_year m
 WHERE b.user_id = $1
-AND m.academic_year != 0
-AND b.academic_year = m.academic_year;
-`
-
-const FoldSemester = `--sql
-UPDATE blueprint_semesters bs
-SET folded = $4
-FROM blueprint_years by
-WHERE bs.blueprint_year_id = by.id
-AND by.user_id = $1
-AND by.academic_year = $2
-AND bs.semester = $3;
+	AND m.academic_year != 0
+	AND b.academic_year = m.academic_year;
 `

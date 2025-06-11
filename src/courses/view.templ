@@ -228,7 +228,12 @@ templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
                 for _, ba := range course.blueprintAssignments.Sort() {
                     @badge(course, ba, t)
                 }
-                // TODO: add degree plan and completed badges
+                if course.inDegreePlan {
+                    @clickableBadge("degreeplan", fmt.Sprintf("dp-row-%s", course.code), "bg-degreeplan", t) {
+                        { t.inDegreePlan }
+                    }
+                }
+                // TODO: add completed badges
             </div>
             // add to blueprint button
             <div class="d-flex justify-content-end">
