@@ -54,7 +54,7 @@ func (ts *teachingSemester) string(t text) string {
 
 // teacher types and methods
 type teacher struct {
-	SisID       int    `json:"KOD"`
+	SisID       string `json:"KOD"`
 	FirstName   string `json:"JMENO"`
 	LastName    string `json:"PRIJMENI"`
 	TitleBefore string `json:"TITULPRED"`

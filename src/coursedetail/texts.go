@@ -50,10 +50,25 @@ type text struct {
 	scrollToSearch          string
 	detail                  string
 	noDetail                string
-	courseWithCode          string
-	notFound                string
 	// language
 	language language.Language
+	// errors
+	errCourseNotFoundPre         string
+	errCourseNotFoundSuf         string
+	errCannotGetCourse           string
+	errCannotGetCourseRatings    string
+	errRatingMustBeInt           string
+	errInvalidRating0to10        string
+	errInvalidRating0or1         string
+	errCannotRateCategory        string
+	errCannotGetUpdatedRatings   string
+	errCannotDeleteRating        string
+	errUnableToRateCourse        string
+	errUnexpectedNumberOfCourses string
+	errCannotLoadSurvey          string
+	errCannotSearchForSurvey     string
+	errPageTitle                 string
+	errPageNotFound              string
 }
 
 func (t text) yearStr(year int) string {
@@ -80,7 +95,7 @@ var texts = map[language.Language]text{
 		year:                    "ročník",
 		assign:                  "Přiřadit",
 		eCredits:                "E-Kredity",
-		inDegreePlan:            "V studijním plánu",
+		inDegreePlan:            "Studijní plán",
 		completed:               "Splněno",
 		capacity:                "Kapacita",
 		scopeExam:               "Rozsah, examinace",
@@ -110,10 +125,25 @@ var texts = map[language.Language]text{
 		scrollToSearch:          "Nahoru na vyhledávání",
 		detail:                  "Detailní informace",
 		noDetail:                "Pro tento předmět nejsou k dispozici žádné podrobnosti.",
-		courseWithCode:          "Předmět s kódem ",
-		notFound:                " nenalezen.",
 		// language
 		language: language.CS,
+		// errors
+		errCourseNotFoundPre:         "Předmět s kódem ",
+		errCourseNotFoundSuf:         " nebyl nalezen",
+		errCannotGetCourse:           "Nebylo možné získat předmět z databáze",
+		errCannotGetCourseRatings:    "Nebylo možné získat hodnocení předmětu z databáze",
+		errRatingMustBeInt:           "Hodnocení musí být celé číslo",
+		errInvalidRating0to10:        "Hodnocení musí být v rozsahu 0-10",
+		errInvalidRating0or1:         "Hodnocení musí být 0 nebo 1",
+		errCannotRateCategory:        "Nebylo možné ohodnotit kategorii",
+		errCannotGetUpdatedRatings:   "Nebylo možné získat aktualizovaná hodnocení",
+		errCannotDeleteRating:        "Nebylo možné smazat hodnocení",
+		errUnableToRateCourse:        "Nebylo možné ohodnotit předmět",
+		errUnexpectedNumberOfCourses: "Neočekávaný počet předmětů pro přiřazení do Blueprintu",
+		errCannotLoadSurvey:          "Nebylo možné načíst anketu",
+		errCannotSearchForSurvey:     "vyhledávání selhalo",
+		errPageTitle:                 "Detail předmětu",
+		errPageNotFound:              "Stránka nenalezena",
 	},
 	language.EN: {
 		faculty:                 "Faculty",
@@ -129,7 +159,7 @@ var texts = map[language.Language]text{
 		year:                    "Year",
 		assign:                  "Assign",
 		eCredits:                "E-Credits",
-		inDegreePlan:            "In degree plan",
+		inDegreePlan:            "Degree plan",
 		completed:               "Completed",
 		capacity:                "Capacity",
 		scopeExam:               "Scope, examination",
@@ -159,9 +189,24 @@ var texts = map[language.Language]text{
 		scrollToSearch:          "Scroll to search",
 		detail:                  "Detailed information",
 		noDetail:                "No detailed information available for this course.",
-		courseWithCode:          "Course with code ",
-		notFound:                " not found.",
 		// language
 		language: language.EN,
+		// errors
+		errCourseNotFoundPre:         "Course with code ",
+		errCourseNotFoundSuf:         " was not found",
+		errCannotGetCourse:           "Unable to retrieve course from database",
+		errCannotGetCourseRatings:    "Unable to retrieve course ratings from database",
+		errRatingMustBeInt:           "Rating must be an integer",
+		errInvalidRating0to10:        "Rating must be between 0 and 10",
+		errInvalidRating0or1:         "Rating must be 0 or 1",
+		errCannotRateCategory:        "Unable to rate category",
+		errCannotGetUpdatedRatings:   "Unable to retrieve updated ratings from database",
+		errCannotDeleteRating:        "Unable to delete rating",
+		errUnableToRateCourse:        "Unable to rate course",
+		errUnexpectedNumberOfCourses: "Unexpected number of courses for Blueprint assignment",
+		errCannotLoadSurvey:          "Unable to load survey",
+		errCannotSearchForSurvey:     "Search failed",
+		errPageTitle:                 "Course Detail",
+		errPageNotFound:              "Page not found",
 	},
 }

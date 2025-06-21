@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -23,11 +24,12 @@ func (p PageWithNoFiltersAndForgetsSearchQueryOnRefresh) View(main templ.Compone
 }
 
 type Page struct {
+	Error           Error
 	Home            string
 	NavItems        []NavItem
 	QuickSearchPath string
-	SearchBar       SearchBar
 	router          *http.ServeMux
+	SearchBar       SearchBar
 }
 
 func (p Page) SearchParam() string {
@@ -69,10 +71,18 @@ func (p Page) quickSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.FormValue(p.SearchBar.SearchParam())
 	view, err := p.SearchBar.QuickSearchResult(query, lang)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		p.Error.Log(errorx.AddContext(err))
+		p.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
 	view.Render(r.Context(), w)
+}
+
+type Error interface {
+	Log(err error)
+	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
+	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
 }
 
 type pageModel struct {

@@ -15,6 +15,8 @@ import (
 //================================================================================
 
 const (
+	minRating        = 0
+	maxRating        = 10
 	negativeRating   = 0
 	positiveRating   = 1
 	numberOfComments = 20
@@ -44,6 +46,7 @@ type course struct {
 	seminarRangeWinter     sql.NullInt64
 	lectureRangeSummer     sql.NullInt64
 	seminarRangeSummer     sql.NullInt64
+	rangeUnit              sql.NullString
 	examType               string
 	credits                int
 	guarantors             teacherSlice

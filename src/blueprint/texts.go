@@ -63,6 +63,37 @@ type text struct {
 	wAssignedMoreThanOnce string
 	// language
 	language language.Language
+	// errors
+	errCannotGetBlueprint             string
+	errNoSemestersFound               string
+	errInvalidYearInDB                string
+	errInvalidSemesterInDB            string
+	errDuplicateCourseInBP            string
+	errDuplicateCoursesInBP           string
+	errDuplicateCoursesInBPUnassigned string
+	errCannotMoveCourses              string
+	errCannotAppendCourses            string
+	errCannotUnassignYear             string
+	errCannotUnassignSemester         string
+	errCannotRemoveCourses            string
+	errCannotAddYear                  string
+	errCannotRemoveYear               string
+	errCannotUnFoldSemester           string
+	errMissingCourseID                string
+	errInvalidCourseID                string
+	errInvalidMoveType                string
+	errInvalidRemoveType              string
+	errMissingUnassignParam           string
+	errInvalidUnassignParam           string
+	errMissingFoldedParam             string
+	errInvalidFoldedParam             string
+	errMissingYearParam               string
+	errInvalidYearParam               string
+	errMissingSemesterParam           string
+	errInvalidSemesterParam           string
+	errMissingPositionParam           string
+	errInvalidPositionParam           string
+	errPageNotFound                   string
 }
 
 func (t text) yearStr(year int) string {
@@ -132,6 +163,37 @@ var texts = map[language.Language]text{
 		wAssignedMoreThanOnce: "Předmět je zařazen více než jednou ",
 		// language
 		language: language.CS,
+		// errors
+		errCannotGetBlueprint:             "Nelze načíst stránku Blueprint z databáze",
+		errNoSemestersFound:               "Pro uživatele nebyl nalezen žádný semestr v databázi",
+		errInvalidYearInDB:                "Neplatný ročník v databázi",
+		errInvalidSemesterInDB:            "Neplatný semestr v databázi",
+		errDuplicateCourseInBP:            "Vybraný kurz je již ve vybraném ročníku a semestru v Blueprintu přiřazen",
+		errDuplicateCoursesInBP:           "Jeden nebo více zvolených kurzů jsou již ve vybraném ročníku a semestru v Blueprintu přiřazeny",
+		errDuplicateCoursesInBPUnassigned: "Jeden nebo více zvolených kurzů jsou již v nezařazených kurzech v Blueprintu",
+		errCannotMoveCourses:              "Nelze přesunout vybrané kurzy",
+		errCannotAppendCourses:            "Nelze přesunout vybrané kurzy",
+		errCannotUnassignYear:             "Nelze přesunout kurzy z ročníku do nezařazených",
+		errCannotUnassignSemester:         "Nelze přesunout kurzy z tohoto semestru do nezařazených",
+		errCannotRemoveCourses:            "Nelze odstranit vybrané kurzy",
+		errCannotAddYear:                  "Nelze přidat ročník",
+		errCannotRemoveYear:               "Nelze odstranit ročník",
+		errCannotUnFoldSemester:           "Nelze sbalit/rozbalit semestr",
+		errMissingCourseID:                "Chybí ID kurzu",
+		errInvalidCourseID:                "Neplatné ID kurzu (musí být celé kladné číslo)",
+		errInvalidMoveType:                "Neplatný typ přesunu předmětu",
+		errInvalidRemoveType:              "Neplatný typ odstranění předmětu",
+		errMissingUnassignParam:           "Chybí parametr jestli přesunout předměty do nezařazených",
+		errInvalidUnassignParam:           "Neplatný parametr přesunu předmětů do nezařazených (musí být true nebo false)",
+		errMissingFoldedParam:             "Chybí parametr jestli je semestr sbalený nebo rozbalený",
+		errInvalidFoldedParam:             "Neplatný parametr sbalení/rozbalení semestru (musí být true nebo false)",
+		errMissingYearParam:               "Chybí parametr ročníku",
+		errInvalidYearParam:               "Neplatný parametr ročníku (musí být celé kladné číslo větší nebo rovno 0)",
+		errMissingSemesterParam:           "Chybí parametr semestru",
+		errInvalidSemesterParam:           "Neplatný parametr semestru",
+		errMissingPositionParam:           "Chybí parametr pozice",
+		errInvalidPositionParam:           "Neplatný parametr pozice (musí být celé kladné číslo větší nebo rovno -1)",
+		errPageNotFound:                   "Stránka nenalezena",
 	},
 	language.EN: {
 		pageTitle:        "Blueprint",
@@ -190,5 +252,36 @@ var texts = map[language.Language]text{
 		wAssignedMoreThanOnce: "Course is assigned more than once ",
 		// language
 		language: language.EN,
+		// errors
+		errCannotGetBlueprint:             "Unable to retrieve Blueprint page from database",
+		errNoSemestersFound:               "No semesters found for user in database",
+		errInvalidYearInDB:                "Invalid year in database",
+		errInvalidSemesterInDB:            "Invalid semester in database",
+		errDuplicateCourseInBP:            "Selected course is already assigned in the selected year and semester in Blueprint",
+		errDuplicateCoursesInBP:           "One or more selected courses are already assigned in the selected year and semester in Blueprint",
+		errDuplicateCoursesInBPUnassigned: "One or more selected courses are already in the unassigned courses in Blueprint",
+		errCannotMoveCourses:              "Cannot move selected courses",
+		errCannotAppendCourses:            "Cannot append selected courses",
+		errCannotUnassignYear:             "Cannot unassign courses from this year",
+		errCannotUnassignSemester:         "Cannot unassign courses from this semester",
+		errCannotRemoveCourses:            "Cannot remove selected courses",
+		errCannotAddYear:                  "Cannot add year",
+		errCannotRemoveYear:               "Cannot remove year",
+		errCannotUnFoldSemester:           "Cannot fold/unfold semester",
+		errMissingCourseID:                "Missing course ID",
+		errInvalidCourseID:                "Invalid course ID (must be a positive integer)",
+		errInvalidMoveType:                "Invalid course move type",
+		errInvalidRemoveType:              "Invalid course remove type",
+		errMissingUnassignParam:           "Missing parameter if should unassign courses",
+		errInvalidUnassignParam:           "Invalid unassign parameter (must be true or false)",
+		errMissingFoldedParam:             "Missing parameter if semester is folded or unfolded",
+		errInvalidFoldedParam:             "Invalid folded parameter (must be true or false)",
+		errMissingYearParam:               "Missing year parameter",
+		errInvalidYearParam:               "Invalid year parameter (must be a positive integer greater than or equal to 0)",
+		errMissingSemesterParam:           "Missing semester parameter",
+		errInvalidSemesterParam:           "Invalid semester parameter",
+		errMissingPositionParam:           "Missing position parameter",
+		errInvalidPositionParam:           "Invalid position parameter (must be a positive integer greater than or equal to -1)",
+		errPageNotFound:                   "Page not found",
 	},
 }

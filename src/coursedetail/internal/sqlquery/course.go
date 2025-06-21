@@ -51,6 +51,7 @@ SELECT
 	c.seminar_range1,
 	c.lecture_range2,
 	c.seminar_range2,
+	c.range_unit,
 	c.exam_type,
 	c.credits,
 	c.guarantors,

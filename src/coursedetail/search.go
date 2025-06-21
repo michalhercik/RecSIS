@@ -2,8 +2,10 @@ package coursedetail
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -14,19 +16,32 @@ type Search struct {
 
 // TODO: write own meilisearch client
 func (s Search) comments(r request) (response, error) {
+	t := texts[r.lang]
 	var result response
 	searchReq := makeMultiSearchRequest(r, s.Survey)
 	response, err := s.Client.MultiSearch(searchReq)
 	if err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err),
+			http.StatusInternalServerError,
+			t.errCannotSearchForSurvey,
+		)
 	}
 	rawResponse, err := response.MarshalJSON()
 	if err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err),
+			http.StatusInternalServerError,
+			t.errCannotSearchForSurvey,
+		)
 	}
 	multi := multiResponse{}
 	if err = json.Unmarshal(rawResponse, &multi); err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err),
+			http.StatusInternalServerError,
+			t.errCannotSearchForSurvey,
+		)
 	}
 	result = multi.Results[0]
 	for _, res := range multi.Results[1:] {

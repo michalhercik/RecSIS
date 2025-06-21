@@ -1,10 +1,16 @@
 package coursedetail
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"net/http"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/coursedetail/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/dbds"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -23,10 +29,25 @@ type courseDetail struct {
 func (reader DBManager) course(userID string, code string, lang language.Language) (*course, error) {
 	var result courseDetail
 	if err := reader.DB.Get(&result, sqlquery.Course, userID, code, lang); err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errorx.NewHTTPErr(
+				errorx.AddContext(errors.New("course not found"), errorx.P("code", code), errorx.P("lang", lang)),
+				http.StatusNotFound,
+				fmt.Sprintf("%s%s%s", texts[lang].errCourseNotFoundPre, code, texts[lang].errCourseNotFoundSuf),
+			)
+		}
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.Course: %w", err), errorx.P("code", code), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetCourse,
+		)
 	}
 	if err := reader.DB.Select(&result.CategoryRatings, sqlquery.Rating, userID, code, lang); err != nil {
-		return nil, err
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.Rating: %w", err), errorx.P("code", code), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetCourseRatings,
+		)
 	}
 	course := intoCourse(&result)
 	return &course, nil
@@ -36,48 +57,80 @@ func (db DBManager) rateCategory(userID string, code string, category string, ra
 	var updatedRating []dbds.CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.RateCategory, userID, code, category, rating)
 	if err != nil {
-		return []courseCategoryRating{}, err
+		return []courseCategoryRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.RateCategory: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("rating", rating), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotRateCategory,
+		)
 	}
 	if err = db.DB.Select(&updatedRating, sqlquery.Rating, userID, code, lang); err != nil {
-		return []courseCategoryRating{}, err
+		return []courseCategoryRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.Rating: %w", err), errorx.P("code", code), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetUpdatedRatings,
+		)
 	}
-	return intoCategoryRatingSlice(updatedRating), err
+	return intoCategoryRatingSlice(updatedRating), nil
 }
 
 func (db DBManager) deleteCategoryRating(userID string, code string, category string, lang language.Language) ([]courseCategoryRating, error) {
 	var updatedRating []dbds.CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.DeleteCategoryRating, userID, code, category)
 	if err != nil {
-		return []courseCategoryRating{}, err
+		return []courseCategoryRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.DeleteCategoryRating: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotDeleteRating,
+		)
 	}
 	if err = db.DB.Select(&updatedRating, sqlquery.Rating, userID, code, lang); err != nil {
-		return []courseCategoryRating{}, err
+		return []courseCategoryRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.Rating: %w", err), errorx.P("code", code), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetUpdatedRatings,
+		)
 	}
-	return intoCategoryRatingSlice(updatedRating), err
+	return intoCategoryRatingSlice(updatedRating), nil
 }
 
-func (db DBManager) rate(userID string, code string, value int) (courseRating, error) {
+func (db DBManager) rate(userID string, code string, value int, lang language.Language) (courseRating, error) {
 	var rating dbds.OverallRating
 	_, err := db.DB.Exec(sqlquery.Rate, userID, code, value)
 	if err != nil {
-		return courseRating{}, err
+		return courseRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.Rate: %w", err), errorx.P("code", code), errorx.P("value", value)),
+			http.StatusInternalServerError,
+			texts[lang].errUnableToRateCourse,
+		)
 	}
 	if err = db.DB.Get(&rating, sqlquery.CourseOverallRating, userID, code); err != nil {
-		return courseRating{}, err
+		return courseRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.CourseOverallRating: %w", err), errorx.P("code", code)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetUpdatedRatings,
+		)
 	}
-	return intoCourseRating(rating), err
+	return intoCourseRating(rating), nil
 }
 
-func (db DBManager) deleteRating(userID string, code string) (courseRating, error) {
+func (db DBManager) deleteRating(userID string, code string, lang language.Language) (courseRating, error) {
 	var rating dbds.OverallRating
 	_, err := db.DB.Exec(sqlquery.DeleteRating, userID, code)
 	if err != nil {
-		return courseRating{}, err
+		return courseRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.DeleteRating: %w", err), errorx.P("code", code)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotDeleteRating,
+		)
 	}
 	if err = db.DB.Get(&rating, sqlquery.CourseOverallRating, userID, code); err != nil {
-		return courseRating{}, err
+		return courseRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.CourseOverallRating: %w", err), errorx.P("code", code)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetUpdatedRatings,
+		)
 	}
-	return intoCourseRating(rating), err
+	return intoCourseRating(rating), nil
 }
 
 func intoCourse(from *courseDetail) course {
@@ -93,6 +146,7 @@ func intoCourse(from *courseDetail) course {
 		seminarRangeWinter:     from.SeminarRangeWinter,
 		lectureRangeSummer:     from.LectureRangeSummer,
 		seminarRangeSummer:     from.SeminarRangeSummer,
+		rangeUnit:              from.RangeUnit,
 		examType:               from.ExamType,
 		credits:                from.Credits,
 		guarantors:             intoTeacherSlice(from.Guarantors),

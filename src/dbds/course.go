@@ -15,6 +15,7 @@ type Course struct {
 	SeminarRangeWinter     sql.NullInt64   `db:"seminar_range1"`
 	LectureRangeSummer     sql.NullInt64   `db:"lecture_range2"`
 	SeminarRangeSummer     sql.NullInt64   `db:"seminar_range2"`
+	RangeUnit              sql.NullString  `db:"range_unit"`
 	ExamType               string          `db:"exam_type"`
 	Credits                int             `db:"credits"`
 	Guarantors             TeacherSlice    `db:"guarantors"`

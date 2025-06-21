@@ -1,6 +1,6 @@
 package sqlquery
 
-const UserDegreePlan = `
+const UserDegreePlan = `--sql
 WITH user_start_year AS (
 	-- TODO: pick a user selected study plan or max
 	SELECT MIN(start_year) AS year FROM bla_studies WHERE user_id = $1
@@ -113,7 +113,8 @@ SELECT
 		WHEN dp.bloc_type = 'B' THEN FALSE
 	END AS is_compulsory
 FROM degree_plans dp
-LEFT JOIN courses c ON dp.course_code = c.code
+LEFT JOIN courses c
+	ON dp.course_code = c.code
 LEFT JOIN user_blueprint_semesters ubs
 	ON dp.course_code = ubs.course_code
 WHERE dp.plan_code = $2

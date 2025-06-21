@@ -8,6 +8,18 @@ import (
 )
 
 //================================================================================
+// Constants
+//================================================================================
+
+const (
+	searchDegreePlanName  = "search-dp-query"
+	searchDegreePlanYear  = "search-dp-year"
+	searchDegreePlanLimit = 5 // TODO: change to a bigger number
+
+	checkboxName = "selected-courses"
+)
+
+//================================================================================
 // Data Types and Methods
 //================================================================================
 

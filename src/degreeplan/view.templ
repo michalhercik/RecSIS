@@ -53,7 +53,7 @@ templ chooseDegreePlanModal(t text) {
                     <div class="input-group mb-3">
                         <input
                             type="text"
-                            name="q"
+                            name={ searchDegreePlanName }
                             class="form-control search-input"
                             placeholder={ t.degreePlanPlaceholder }
                             hx-get={ t.language.LocalizeURL("/degreeplan/search") }
@@ -61,7 +61,7 @@ templ chooseDegreePlanModal(t text) {
                             hx-target="#dp-results"
                             autocomplete="off">
                         <div class="form-floating dp-select-year-width">
-                            <select id="dp-year" class="form-select" name="dp-year">
+                            <select id="dp-year" class="form-select" name={ searchDegreePlanYear }>
                                 <option selected value={ fmt.Sprintf("%d", time.Now().Year()) }>{ fmt.Sprintf("%d", time.Now().Year()) }</option>
                                 for i := time.Now().Year() - 1; i >= 2015; i-- {
                                     <option value={ fmt.Sprintf("%d", i) }>{ fmt.Sprintf("%d", i) }</option>
@@ -94,12 +94,12 @@ templ QuickSearchResultsContent(results []quickDegreePlan, t text) {
                 for _, result := range results {
                     <tr>
                         <td><a
-                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
+                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/show/" + result.Code)) }
                             data-bs-dismiss="modal">
                             { result.Code }
                         </a></td>
                         <td class="text-wrap"><a
-                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
+                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/show/" + result.Code)) }
                             data-bs-dismiss="modal">
                             { result.Name }
                         </a> </td>
@@ -123,7 +123,7 @@ templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
                 @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur();">
             </button>
             // assign
-            @bpBtn("outerHTML", "#degreeplan-content", "input:checked[name=selected]", make([]bool, semCount))
+            @bpBtn("outerHTML", "#degreeplan-content", fmt.Sprintf("input:checked[name=%s]", checkboxName), make([]bool, semCount), "")
         </div>
     </div>
 }
@@ -260,9 +260,9 @@ templ checkbox(course *course) {
             type="checkbox"
             id={ fmt.Sprintf("dp-checkbox-%s", course.code) }
             class="form-check-input dp-checkbox"
-            name="selected"
-            value={ fmt.Sprintf("%s", course.code) }
-            @change={ fmt.Sprintf("checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; updateCheckedCoursesMenu(%d)", len(course.blueprintSemesters)) }
+            name={ checkboxName }
+            value={ course.code }
+            @change={ fmt.Sprintf("checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; ") }
             @uncheck-all.window="$el.checked = false;"
         />
         // circle overlay for easier clicking

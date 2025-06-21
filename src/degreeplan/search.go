@@ -2,8 +2,11 @@ package degreeplan
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
 
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/michalhercik/RecSIS/errorx"
 )
 
 type quickRequest struct {
@@ -31,7 +34,7 @@ type MeiliSearch struct {
 	DegreePlans meilisearch.IndexConfig
 }
 
-func (s MeiliSearch) QuickSearch(r quickRequest) (quickResponse, error) {
+func (s MeiliSearch) QuickSearch(r quickRequest, t text) (quickResponse, error) {
 	var result quickResponse
 	index := s.Client.Index(s.DegreePlans.Uid)
 	searchReq := &meilisearch.SearchRequest{
@@ -41,10 +44,18 @@ func (s MeiliSearch) QuickSearch(r quickRequest) (quickResponse, error) {
 	}
 	rawResponse, err := index.SearchRaw(r.query, searchReq)
 	if err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("quick search failed: %w", err), errorx.P("query", r.query), errorx.P("limit", r.limit)),
+			http.StatusInternalServerError,
+			t.errFailedDPSearch,
+		)
 	}
 	if err = json.Unmarshal(*rawResponse, &result); err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("failed to unmarshal quick search response: %w", err), errorx.P("query", r.query), errorx.P("limit", r.limit)),
+			http.StatusInternalServerError,
+			t.errFailedDPSearch,
+		)
 	}
 	return result, nil
 }

@@ -3,10 +3,12 @@ package filters
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -125,14 +127,14 @@ func (f Filters) Facets() []string {
 // 	}
 // }
 
-func (f Filters) ParseURLQuery(query url.Values) (expression, error) {
+func (f Filters) ParseURLQuery(query url.Values, lang language.Language) (expression, error) {
 	var result expression
 	conditions := make([]condition, 0, len(query))
 	for k, v := range query {
 		if strings.HasPrefix(k, f.prefix) {
-			cond, err := f.parseParams(k, v)
+			cond, err := f.parseParams(k, v, lang)
 			if err != nil {
-				return nil, err
+				return nil, errorx.AddContext(err)
 			}
 			conditions = append(conditions, cond)
 		}
@@ -141,21 +143,28 @@ func (f Filters) ParseURLQuery(query url.Values) (expression, error) {
 	return result, nil
 }
 
-func (f Filters) parseParams(k string, v []string) (condition, error) {
-	var (
-		result condition
-	)
+func (f Filters) parseParams(k string, v []string, lang language.Language) (condition, error) {
+	t := texts[lang]
+	var result condition
 	categoryID := k[len(f.prefix):]
 	category, ok := f.idToCategory[categoryID]
 	if !ok {
-		return result, fmt.Errorf("category %s not found", categoryID)
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("category %s not found", categoryID), errorx.P("k", k), errorx.P("v", strings.Join(v, ",")), errorx.P("categoryID", categoryID)),
+			http.StatusBadRequest,
+			t.errCategoryNotFound,
+		)
 	}
 	result.param = category.facetID
 	result.values = make([]string, len(v))
 	for i, value := range v {
 		valueObj, ok := f.idToValue[value]
 		if !ok {
-			return result, fmt.Errorf("value %s not found", value)
+			return result, errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("value %s not found in category %s", value, categoryID), errorx.P("k", k), errorx.P("v", strings.Join(v, ",")), errorx.P("categoryID", categoryID), errorx.P("value", value)),
+				http.StatusBadRequest,
+				t.errValueNotFound,
+			)
 		}
 		result.values[i] = valueObj.facetID
 	}

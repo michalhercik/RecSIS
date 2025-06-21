@@ -1,12 +1,15 @@
 package degreeplan
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/degreeplan/internal/sqlquery"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -28,7 +31,11 @@ type dbDegreePlanRecord struct {
 func (m DBManager) userDegreePlan(uid string, lang language.Language) (*degreePlanPage, error) {
 	var records []dbDegreePlanRecord
 	if err := m.DB.Select(&records, sqlquery.UserDegreePlan, uid, lang); err != nil {
-		return nil, fmt.Errorf("degreePlan: %v", err)
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.UserDegreePlan: %w", err), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetUserDP,
+		)
 	}
 	var dp degreePlanPage
 	for _, record := range records {
@@ -40,7 +47,18 @@ func (m DBManager) userDegreePlan(uid string, lang language.Language) (*degreePl
 func (m DBManager) degreePlan(uid, dpCode string, dpYear int, lang language.Language) (*degreePlanPage, error) {
 	var records []dbDegreePlanRecord
 	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, dpCode, dpYear, lang); err != nil {
-		return nil, fmt.Errorf("degreePlan: %v", err)
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.DegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("dpYear", dpYear), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetDP,
+		)
+	}
+	if len(records) == 0 {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(errors.New("no records found"), errorx.P("dpCode", dpCode), errorx.P("dpYear", dpYear), errorx.P("lang", lang)),
+			http.StatusNotFound,
+			texts[lang].errDPNotFound,
+		)
 	}
 	var dp degreePlanPage
 	for _, record := range records {

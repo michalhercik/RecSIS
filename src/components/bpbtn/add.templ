@@ -2,7 +2,6 @@ package bpbtn
 
 import (
     "fmt"
-    "strings"
 )
 
 templ AddBtn(model ViewModel, t text) {
@@ -48,7 +47,11 @@ templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, 
             { alpineClassesFalse... }
         }
         hx-post={ t.language.LocalizeURL(model.hxPostBase + "/blueprint") }
-        hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "courses": ["%s"]`, strings.Join(model.courses, `","`)) }
+        if model.course == "" {
+            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0`) }
+        } else {
+            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "course": "%s"`, model.course) }
+        }
         hx-swap={ model.hxSwap }
         hx-target={ model.hxTarget }
         hx-include={ model.hxInclude }
@@ -83,7 +86,11 @@ templ assignSemesterButton(semesterText string, year, semester int, disabled boo
         <button
             class="dropdown-item rounded text-center dropdown-item-blueprint"
             hx-post={ t.language.LocalizeURL(model.hxPostBase + "/blueprint") }
-            hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d, "courses": ["%s"]`, year, semester, strings.Join(model.courses, ",")) }
+            if model.course == "" {
+                hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }
+            } else {
+                hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d, "course": "%s"`, year, semester, model.course) }
+            }
             hx-include={ model.hxInclude }
             hx-swap={ model.hxSwap }
             hx-target={ model.hxTarget }

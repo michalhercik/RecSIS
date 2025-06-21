@@ -375,10 +375,10 @@ templ summarizeFooter(years assignedYears, totalCredits int, t text) {
             <th></th>
             <th><h5 class="d-none d-md-table-cell mb-0 text-nowrap">{ t.total }</h5></th>
             <th></th>
-            <th class="th-overflow credits-column d-none d-md-table-cell">
+            <th class="th-overflow credits-column d-none d-md-table-cell position-relative">
                 { fmt.Sprintf("%s: %d", t.credits, years.assignedCredits()) }
                 if years.assignedCredits() != totalCredits {
-                    <span class="small-dark-text">{ fmt.Sprintf("%d", totalCredits) }</span>
+                    <span class="small-dark-text position-absolute start-50 bottom-0 p-1">{ fmt.Sprintf("%d", totalCredits) }</span>
                 }
             </th>
             <th class="d-none d-md-table-cell"></th>

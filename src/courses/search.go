@@ -3,8 +3,11 @@ package courses
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"net/http"
 
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -167,25 +170,36 @@ func makeMultiSearchRequest(r request, index meilisearch.IndexConfig) *meilisear
 
 // TODO: write own meilisearch client
 func (s MeiliSearch) Search(r request) (response, error) {
+	t := texts[r.lang]
 	var result response
 	searchReq := makeMultiSearchRequest(r, s.Courses)
 	response, err := s.Client.MultiSearch(searchReq)
 	if err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err, errorx.P("index", r.indexUID), errorx.P("query", r.query)),
+			http.StatusInternalServerError,
+			t.errCannotSearchCourses,
+		)
 	}
 	rawResponse, err := response.MarshalJSON()
 	if err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err, errorx.P("index", r.indexUID), errorx.P("query", r.query)),
+			http.StatusInternalServerError,
+			t.errCannotSearchCourses,
+		)
 	}
 	multi := multiResponse{}
 	if err = json.Unmarshal(rawResponse, &multi); err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err, errorx.P("index", r.indexUID), errorx.P("query", r.query)),
+			http.StatusInternalServerError,
+			t.errCannotSearchCourses,
+		)
 	}
 	result = multi.Results[0]
 	for _, res := range multi.Results[1:] {
-		for param, distribution := range res.FacetDistribution {
-			result.FacetDistribution[param] = distribution
-		}
+		maps.Copy(result.FacetDistribution, res.FacetDistribution)
 	}
 	return result, nil
 }

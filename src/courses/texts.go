@@ -40,6 +40,13 @@ type text struct {
 	noCoursesFound    string
 	// language
 	language language.Language
+	// errors
+	errUnexpectedNumberOfCourses string
+	errCannotLoadCourses         string
+	errCannotSearchCourses       string
+	errInvalidPageNumber         string
+	errInvalidNumberOfCourses    string
+	errPageNotFound              string
 }
 
 func (t text) showMore(rest int) string {
@@ -78,7 +85,7 @@ var texts = map[language.Language]text{
 		noGuarantors:      "Žádní garanti",
 		readMore:          "Číst dále",
 		readLess:          "Sbalit",
-		inDegreePlan:      "V studijním plánu",
+		inDegreePlan:      "Studijní plán",
 		loadMore:          "Zobrazit další",
 		previousPage:      "Předchozí stránka",
 		nextPage:          "Další stránka",
@@ -87,6 +94,13 @@ var texts = map[language.Language]text{
 		noCoursesFound:    "Žádné předměty nebyly nalezeny.",
 		// language
 		language: language.CS,
+		// errors
+		errUnexpectedNumberOfCourses: "Neočekávaný počet předmětů pro přiřazení do Blueprintu",
+		errCannotLoadCourses:         "Nelze načíst předměty z databáze",
+		errCannotSearchCourses:       "Nelze vyhledat předměty",
+		errInvalidPageNumber:         "neplatné číslo stránky: musí být celé kladné číslo",
+		errInvalidNumberOfCourses:    "neplatný počet předmětů na stránku: musí být celé kladné číslo",
+		errPageNotFound:              "Stránka nenalezena",
 	},
 	language.EN: {
 		pageTitle:         "Search",
@@ -115,7 +129,7 @@ var texts = map[language.Language]text{
 		noGuarantors:      "No guarantors",
 		readMore:          "Read more",
 		readLess:          "Hide",
-		inDegreePlan:      "In degree plan",
+		inDegreePlan:      "Degree plan",
 		loadMore:          "Show more",
 		previousPage:      "Previous page",
 		nextPage:          "Next page",
@@ -124,5 +138,12 @@ var texts = map[language.Language]text{
 		noCoursesFound:    "No courses found.",
 		// language
 		language: language.EN,
+		// errors
+		errUnexpectedNumberOfCourses: "Unexpected number of courses for Blueprint assignment",
+		errCannotLoadCourses:         "Cannot load courses from the database",
+		errCannotSearchCourses:       "Cannot search for courses",
+		errInvalidPageNumber:         "Invalid page number: must be a whole positive number",
+		errInvalidNumberOfCourses:    "Invalid number of courses per page: must be a whole positive number",
+		errPageNotFound:              "Page not found",
 	},
 }

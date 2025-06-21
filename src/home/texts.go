@@ -17,6 +17,10 @@ type text struct {
 	noGuarantors       string
 	// language
 	language language.Language
+	// errors
+	errRecommenderUnavailable string
+	errCannotLoadCourses      string
+	errPageNotFound           string
 }
 
 var texts = map[language.Language]text{
@@ -33,6 +37,10 @@ var texts = map[language.Language]text{
 		noGuarantors:       "Žádní garanti",
 		// language
 		language: language.CS,
+		// errors
+		errRecommenderUnavailable: "Nelze se připojit k doporučovacímu systému",
+		errCannotLoadCourses:      "Nelze načíst kurzy na stránce",
+		errPageNotFound:           "Stránka nenalezena",
 	},
 	language.EN: {
 		pageTitle:          "Home",
@@ -47,5 +55,9 @@ var texts = map[language.Language]text{
 		noGuarantors:       "No guarantors",
 		// language
 		language: language.EN,
+		// errors
+		errRecommenderUnavailable: "Cannot connect to recommender system",
+		errCannotLoadCourses:      "Cannot load courses on the page",
+		errPageNotFound:           "Page not found",
 	},
 }

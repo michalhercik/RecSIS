@@ -57,6 +57,9 @@ templ badges(course *course, t text) {
             }
             @standartBadge(course.semesterStyleClass()) {
                 <span>{ fmt.Sprintf("%s %s", hoursString(course), course.examType) }</span>
+                if course.rangeUnit.Valid {
+                    <span class="text-muted small">({ course.rangeUnit.String })</span>
+                }
             }
         </div>
         <div class="col-12 col-md-6 d-flex flex-wrap justify-content-center gap-1">
@@ -715,7 +718,7 @@ templ ratingCategoryInput(c courseCategoryRating, code string, t text) {
                 class="form-range"
                 :class="valid || 'no-thumb'"
                 id={ c.title + "-range" }
-                min="0" max="10" step="1"
+                min={ fmt.Sprintf("%d", minRating) } max={ fmt.Sprintf("%d", maxRating) } step="1"
                 x-model="value"
                 @click="if (!valid) { valid = true; $dispatch('rateTrigger'); }"
                 hx-put={ t.language.LocalizeURL(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
@@ -729,11 +732,12 @@ templ ratingCategoryInput(c courseCategoryRating, code string, t text) {
 
 templ ticks() {
     <div class="tick-container m-auto">
-        for i := 0; i <= 10; i++ {
+        {{ ticksDistance := 100 / (maxRating - minRating) }}
+        for i := minRating; i <= maxRating; i++ {
             // dynamically generated styles for ticks - DO NOT TOUCH
             <span
                 class="tick"
-                { templ.Attributes{"style": fmt.Sprintf("left: %d%%;",  i * 10) }... }>
+                { templ.Attributes{"style": fmt.Sprintf("left: %d%%;",  i * ticksDistance) }... }>
                 { fmt.Sprintf("%d", i) }
             </span>
         }

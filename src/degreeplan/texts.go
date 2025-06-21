@@ -35,6 +35,13 @@ type text struct {
 	summerAssign          string
 	// language
 	language language.Language
+	// errors
+	errInvalidDPYear   string
+	errCannotGetUserDP string
+	errCannotGetDP     string
+	errDPNotFound      string
+	errFailedDPSearch  string
+	errPageNotFound    string
 }
 
 func (t text) yearStr(year int) string {
@@ -76,6 +83,13 @@ var texts = map[language.Language]text{
 		summerAssign:          "LS",
 		// language
 		language: language.CS,
+		// errors
+		errInvalidDPYear:   "Neplatný rok studijního plánu",
+		errCannotGetUserDP: "Nebylo možné získat studijní plán uživatele",
+		errCannotGetDP:     "Nebylo možné získat vybraný studijní plán",
+		errDPNotFound:      "Studijní plán nenalezen",
+		errFailedDPSearch:  "Nebylo možné vyhledat studijní plány",
+		errPageNotFound:    "Stránka nenalezena",
 	},
 	language.EN: {
 		pageTitle:             "Degree Plan",
@@ -106,5 +120,12 @@ var texts = map[language.Language]text{
 		summerAssign:          "Summer",
 		// language
 		language: language.EN,
+		// errors
+		errInvalidDPYear:   "Invalid degree plan year",
+		errCannotGetUserDP: "Unable to retrieve user degree plan",
+		errCannotGetDP:     "Unable to retrieve selected degree plan",
+		errDPNotFound:      "Degree plan not found",
+		errFailedDPSearch:  "Failed to search for degree plans",
+		errPageNotFound:    "Page not found",
 	},
 }

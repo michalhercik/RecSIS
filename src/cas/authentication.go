@@ -2,21 +2,41 @@ package cas
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
 const sessionCookieName = "recsis_session_key"
 
+var (
+	errUserIDNotInContext = errors.New("user ID not found in request context")
+	errUserIDWrongType    = errors.New("user ID in context cannot be represented as a string")
+)
+
 type UserIDFromContext struct{}
 
 func (UserIDFromContext) UserID(r *http.Request) (string, error) {
-	userID, ok := r.Context().Value(userIDKey{}).(string)
+	val := r.Context().Value(userIDKey{})
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+	if val == nil {
+		return "", errorx.NewHTTPErr(
+			errorx.AddContext(errUserIDNotInContext),
+			http.StatusUnauthorized,
+			t.errUnauthorized,
+		)
+	}
+	userID, ok := val.(string)
 	if !ok {
-		return "", sql.ErrNoRows
+		return "", errorx.NewHTTPErr(
+			errorx.AddContext(errUserIDWrongType),
+			http.StatusUnauthorized,
+			t.errUnauthorized,
+		)
 	}
 	return userID, nil
 }

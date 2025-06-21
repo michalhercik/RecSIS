@@ -11,6 +11,7 @@ templ SearchBar(model searchBarModel) {
         class="w-100"
         hx-get={ model.lang.LocalizeURL(model.searchEndpoint) }
         hx-target="body"
+        hx-swap="show:top"
         hx-push-url="true"
         if model.includeFilters {
             hx-include={ model.filtersSelector }

@@ -2,11 +2,14 @@ package courses
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/courses/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/dbds"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -23,7 +26,11 @@ type courses []struct {
 func (m DBManager) courses(userID string, courseCodes []string, lang language.Language) ([]course, error) {
 	var result courses
 	if err := m.DB.Select(&result, sqlquery.Courses, userID, pq.Array(courseCodes), lang); err != nil {
-		return nil, fmt.Errorf("failed to fetch courses: %w", err)
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.Courses: %w", err), errorx.P("courseCodes", strings.Join(courseCodes, ",")), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotLoadCourses,
+		)
 	}
 	courses := intoCourses(result)
 	return courses, nil
