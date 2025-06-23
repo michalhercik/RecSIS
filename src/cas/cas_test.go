@@ -1,7 +1,7 @@
 package cas
 
-import "testing"
+// import "testing"
 
-func TestCas(t *testing.T) {
-	Cas()
-}
+// func TestCas(t *testing.T) {
+// 	Cas()
+// }

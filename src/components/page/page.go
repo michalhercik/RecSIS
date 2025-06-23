@@ -76,13 +76,16 @@ func (p Page) quickSearch(w http.ResponseWriter, r *http.Request) {
 		p.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	view.Render(r.Context(), w)
+	err = view.Render(r.Context(), w)
+	if err != nil {
+		p.Error.CannotRenderComponent(w, r, err, lang)
+	}
 }
 
 type Error interface {
 	Log(err error)
 	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
-	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }
 
 type pageModel struct {

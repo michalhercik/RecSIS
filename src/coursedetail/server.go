@@ -56,6 +56,8 @@ type Error interface {
 	Log(err error)
 	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
 	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
+	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }
 
 type Page interface {
@@ -124,7 +126,10 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		course: course,
 	}
 	main := Content(&courseDetailPage, t, btn)
-	s.Page.View(main, lang, title, userID).Render(r.Context(), w)
+	err = s.Page.View(main, lang, title, userID).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, title, userID, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) survey(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +142,10 @@ func (s Server) survey(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	SurveyFiltersContent(model, texts[model.lang]).Render(r.Context(), w)
+	err = SurveyFiltersContent(model, texts[model.lang]).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), model.lang)
+	}
 }
 
 func (s Server) surveyNext(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +158,10 @@ func (s Server) surveyNext(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	SurveysContent(model, texts[model.lang]).Render(r.Context(), w)
+	err = SurveysContent(model, texts[model.lang]).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), model.lang)
+	}
 }
 
 func (s Server) surveyViewModel(r *http.Request) (surveyViewModel, error) {
@@ -241,7 +252,10 @@ func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// render category rating
-	CategoryRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
+	err = CategoryRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
@@ -267,7 +281,10 @@ func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// render category rating
-	CategoryRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
+	err = CategoryRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) rate(w http.ResponseWriter, r *http.Request) {
@@ -304,7 +321,10 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// render the overall rating
-	OverallRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
+	err = OverallRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
@@ -329,7 +349,10 @@ func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// render the overall rating
-	OverallRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
+	err = OverallRating(updatedRating, code, texts[lang]).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
@@ -373,7 +396,10 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	courseDetailPage := courseDetailPage{
 		course: course,
 	}
-	Content(&courseDetailPage, t, btn).Render(r.Context(), w)
+	err = Content(&courseDetailPage, t, btn).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.errPageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {

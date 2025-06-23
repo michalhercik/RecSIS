@@ -224,6 +224,7 @@ func main() {
 	//////////////////////////////////////////
 	authentication := cas.Authentication{
 		Data:           cas.DBManager{DB: db},
+		Error:          errorHandler,
 		CAS:            cas.CAS{Host: conf.CAS.Host},
 		AfterLoginPath: "/",
 	}

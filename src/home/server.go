@@ -35,6 +35,7 @@ type Error interface {
 	Log(err error)
 	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
 	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
 }
 
 type Page interface {
@@ -100,7 +101,11 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 
 	main := Content(&content, t)
-	s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
+	err = s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
+
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) fetchCourses(endpoint string, lang language.Language) ([]course, error) {

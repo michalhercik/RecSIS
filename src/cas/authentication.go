@@ -3,7 +3,6 @@ package cas
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/michalhercik/RecSIS/errorx"
@@ -44,10 +43,19 @@ func (UserIDFromContext) UserID(r *http.Request) (string, error) {
 type userIDKey struct{}
 
 type Authentication struct {
-	Data           DBManager
-	CAS            CAS
 	AfterLoginPath string
+	CAS            CAS
+	Data           DBManager
+	Error          Error
 	loginPath      string
+}
+
+type Error interface {
+	Log(err error)
+	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
+	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
+	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }
 
 func (a Authentication) AuthenticateHTTP(next http.Handler) http.Handler {
@@ -62,6 +70,7 @@ func (a Authentication) AuthenticateHTTP(next http.Handler) http.Handler {
 
 func (a Authentication) authenticate(next http.Handler) func(w http.ResponseWriter, r *http.Request) {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		lang := language.FromContext(r.Context())
 		login := func(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, a.CAS.loginURLToCAS(a.loginURL(r)), http.StatusFound)
 		}
@@ -70,7 +79,7 @@ func (a Authentication) authenticate(next http.Handler) func(w http.ResponseWrit
 			login(w, r)
 			return
 		}
-		userID, err := a.Data.Authenticate(sessionID.Value)
+		userID, err := a.Data.authenticate(sessionID.Value, lang)
 		if err != nil {
 			login(w, r)
 			return
@@ -81,48 +90,30 @@ func (a Authentication) authenticate(next http.Handler) func(w http.ResponseWrit
 }
 
 func (a Authentication) login(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
 	userID, ticket, err := a.CAS.validateTicket(r, a.loginURL(r))
 	if err != nil {
 		http.Redirect(w, r, a.CAS.loginURLToCAS(a.loginURL(r)), http.StatusFound)
-		log.Println(err)
+		a.Error.Log(errorx.AddContext(err))
 		return
 	}
-	sessionID, err := a.Data.Login(userID, ticket)
+	sessionID, err := a.Data.login(userID, ticket, lang)
 	if err != nil {
-		log.Println(err)
+		a.Error.Log(errorx.AddContext(err))
 		return
 	}
 	a.setSessionCookie(w, sessionID)
 	http.Redirect(w, r, a.AfterLoginPath, http.StatusFound)
 }
 
-func (a Authentication) logoutFromUser(w http.ResponseWriter, r *http.Request) {
-	lang := language.FromContext(r.Context())
-	t := texts[lang]
-	sessionID, err := r.Cookie(sessionCookieName)
-	if err != nil {
-		log.Println(err)
-		Logout(a.CAS.loginURLToCAS(a.loginURL(r)), t).Render(r.Context(), w)
-		return
-	}
-	userID, err := a.Data.Authenticate(sessionID.Value)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	err = a.Data.LogoutWithSession(userID, sessionID.Value)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	a.deleteSessionCookie(w)
-	Logout(a.CAS.loginURLToCAS(a.loginURL(r)), t).Render(r.Context(), w)
-}
-
 func (a Authentication) logoutFromCAS(w http.ResponseWriter, r *http.Request) {
-	userID, ticket, err := a.CAS.UserIDTicketFromCASLogoutRequest(r)
+	lang := language.FromContext(r.Context())
+	userID, ticket, err := a.CAS.userIDTicketFromCASLogoutRequest(r)
 	if err != nil {
-		log.Println(err)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		a.Error.Log(errorx.AddContext(err))
+		a.Error.Render(w, r, code, userMsg, lang)
+		return
 	}
 	_ = ticket
 	_ = userID
@@ -131,6 +122,39 @@ func (a Authentication) logoutFromCAS(w http.ResponseWriter, r *http.Request) {
 	// 	log.Println(err)
 	// 	return
 	// }
+}
+
+func (a Authentication) logoutFromUser(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+	sessionID, err := r.Cookie(sessionCookieName)
+	if err != nil {
+		a.Error.Log(errorx.AddContext(err))
+		err = Logout(a.CAS.loginURLToCAS(a.loginURL(r)), t).Render(r.Context(), w)
+		if err != nil {
+			a.Error.CannotRenderComponent(w, r, err, lang)
+		}
+		return
+	}
+	userID, err := a.Data.authenticate(sessionID.Value, lang)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		a.Error.Log(errorx.AddContext(err))
+		a.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	err = a.Data.logoutWithSession(userID, sessionID.Value, lang)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		a.Error.Log(errorx.AddContext(err))
+		a.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	a.deleteSessionCookie(w)
+	err = Logout(a.CAS.loginURLToCAS(a.loginURL(r)), t).Render(r.Context(), w)
+	if err != nil {
+		a.Error.CannotRenderComponent(w, r, err, lang)
+	}
 }
 
 func (a Authentication) setSessionCookie(w http.ResponseWriter, sessionID string) {

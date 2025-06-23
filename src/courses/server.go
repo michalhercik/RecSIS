@@ -55,6 +55,8 @@ type Error interface {
 	Log(err error)
 	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
 	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
+	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }
 
 type Page interface {
@@ -115,7 +117,10 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 	result.bpBtn = s.BpBtn.PartialComponent(lang)
 	main := Content(&result, t)
-	s.Page.View(main, lang, t.pageTitle, req.query, userID).Render(r.Context(), w)
+	err = s.Page.View(main, lang, t.pageTitle, req.query, userID).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) content(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +146,10 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("HX-Push-Url", s.parseUrl(r.URL.Query(), lang))
 
 	coursesPage.bpBtn = s.BpBtn.PartialComponent(lang)
-	Content(&coursesPage, t).Render(r.Context(), w)
+	err = Content(&coursesPage, t).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, "", errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) parseQueryRequest(r *http.Request) (request, error) {
@@ -269,7 +277,10 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	btn := s.BpBtn.PartialComponent(lang)
-	CourseCard(&course[0], t, btn).Render(r.Context(), w)
+	err = CourseCard(&course[0], t, btn).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {

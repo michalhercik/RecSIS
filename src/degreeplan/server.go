@@ -44,6 +44,8 @@ type Error interface {
 	Log(err error)
 	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
 	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
+	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }
 
 type Page interface {
@@ -118,7 +120,10 @@ func (s Server) show(w http.ResponseWriter, r *http.Request) {
 	partialBpBtn := s.BpBtn.PartialComponent(lang)
 	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
 	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
-	s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
+	err = s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) searchDegreePlan(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +140,10 @@ func (s Server) searchDegreePlan(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	QuickSearchResultsContent(results.DegreePlans, t).Render(r.Context(), w)
+	err = QuickSearchResultsContent(results.DegreePlans, t).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
@@ -179,7 +187,10 @@ func (s Server) renderPage(w http.ResponseWriter, r *http.Request, userID string
 	partialBpBtn := s.BpBtn.PartialComponent(lang)
 	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
 	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
-	s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
+	err = s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) renderContent(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
@@ -193,7 +204,10 @@ func (s Server) renderContent(w http.ResponseWriter, r *http.Request, userID str
 	}
 	partialBpBtn := s.BpBtn.PartialComponent(lang)
 	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(lang)
-	Content(dp, t, partialBpBtn, partialBpBtnChecked).Render(r.Context(), w)
+	err = Content(dp, t, partialBpBtn, partialBpBtnChecked).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {

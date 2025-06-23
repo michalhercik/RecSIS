@@ -28,12 +28,56 @@ func (eh ErrorHandler) Render(w http.ResponseWriter, r *http.Request, code int, 
 		w.Header().Set("HX-Retarget", "#error-content")
 		w.Header().Set("HX-Reswap", "innerHTML")
 	}
-	ErrorMessageTopOfPage(code, userMsg, texts[lang]).Render(r.Context(), w)
+	err := ErrorMessageTopOfPage(code, userMsg, texts[lang]).Render(r.Context(), w)
+
+	if err != nil {
+		// If rendering fails, log the error and return HTTP 500
+		eh.Log(err)
+		http.Error(w, texts[lang].errCannotRenderComponent, http.StatusInternalServerError)
+	}
 }
 
 func (eh ErrorHandler) RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language) {
 	main := ErrorMessageContent(code, userMsg, texts[lang])
-	eh.Page.View(main, lang, title, userID).Render(r.Context(), w)
+	err := eh.Page.View(main, lang, title, userID).Render(r.Context(), w)
+
+	if err != nil {
+		// If rendering fails, log the error and return HTTP 500
+		eh.Log(err)
+		http.Error(w, texts[lang].errCannotRenderPage, http.StatusInternalServerError)
+	}
+}
+
+func (eh ErrorHandler) CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language) {
+	// Log the error
+	eh.Log(err)
+
+	code := http.StatusInternalServerError
+	userMsg := texts[lang].errCannotRenderPage
+
+	if r.Header.Get("HX-Request") != "" {
+		w.Header().Set("HX-Retarget", "html")
+		w.Header().Set("HX-Reswap", "outerHTML")
+	}
+
+	// Render the error message
+	eh.RenderPage(w, r, code, userMsg, title, userID, lang)
+}
+
+func (eh ErrorHandler) CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language) {
+	// Log the error
+	eh.Log(err)
+
+	code := http.StatusInternalServerError
+	userMsg := texts[lang].errCannotRenderComponent
+
+	if r.Header.Get("HX-Request") != "" {
+		w.Header().Set("HX-Retarget", "#error-content")
+		w.Header().Set("HX-Reswap", "innerHTML")
+	}
+
+	// Render the error message
+	eh.Render(w, r, code, userMsg, lang)
 }
 
 type Page interface {

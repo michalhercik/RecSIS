@@ -13,6 +13,11 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
+const (
+	uniqueViolationCode       = "23505"
+	duplicateCoursesViolation = "blueprint_courses_blueprint_semester_id_course_code_key"
+)
+
 // public interface for the blueprint database manager
 type DBManager struct {
 	DB *sqlx.DB
@@ -168,7 +173,7 @@ func (m DBManager) moveCourses(userID string, lang language.Language, year int, 
 	_, err := m.DB.Exec(sqlquery.MoveCourses, userID, pq.Array(courses), year, int(semester), position)
 	if err != nil {
 		// Handle unique violation for blueprint_semester_id, course_code
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" && pqErr.Constraint == "blueprint_courses_blueprint_semester_id_course_code_key" {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
 			userErrMsg := texts[lang].errDuplicateCourseInBP
 			if len(courses) > 1 {
 				userErrMsg = texts[lang].errDuplicateCoursesInBP
@@ -192,7 +197,7 @@ func (m DBManager) appendCourses(userID string, lang language.Language, year int
 	_, err := m.DB.Exec(sqlquery.AppendCourses, userID, year, int(semester), pq.Array(courses))
 	if err != nil {
 		// Handle unique violation for blueprint_semester_id, course_code
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" && pqErr.Constraint == "blueprint_courses_blueprint_semester_id_course_code_key" {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
 			userErrMsg := texts[lang].errDuplicateCourseInBP
 			if len(courses) > 1 {
 				userErrMsg = texts[lang].errDuplicateCoursesInBP
@@ -216,7 +221,7 @@ func (m DBManager) unassignYear(userID string, lang language.Language, year int)
 	_, err := m.DB.Exec(sqlquery.UnassignYear, userID, year)
 	if err != nil {
 		// Handle unique violation for blueprint_semester_id, course_code
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" && pqErr.Constraint == "blueprint_courses_blueprint_semester_id_course_code_key" {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
 			return errorx.NewHTTPErr(
 				errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
 				http.StatusConflict,
@@ -236,7 +241,7 @@ func (m DBManager) unassignSemester(userID string, lang language.Language, year 
 	_, err := m.DB.Exec(sqlquery.UnassignSemester, userID, year, int(semester))
 	if err != nil {
 		// Handle unique violation for blueprint_semester_id, course_code
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" && pqErr.Constraint == "blueprint_courses_blueprint_semester_id_course_code_key" {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
 			return errorx.NewHTTPErr(
 				errorx.AddContext(fmt.Errorf("sqlquery.UnassignSemester: %w", err), errorx.P("year", year), errorx.P("semester", semester)),
 				http.StatusConflict,
@@ -339,7 +344,7 @@ func (m DBManager) removeYear(userID string, lang language.Language, year int, s
 		_, err := tx.Exec(sqlquery.UnassignYear, userID, year)
 		if err != nil {
 			// Handle unique violation for blueprint_semester_id, course_code
-			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" && pqErr.Constraint == "blueprint_courses_blueprint_semester_id_course_code_key" {
+			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
 				return errorx.NewHTTPErr(
 					errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
 					http.StatusConflict,

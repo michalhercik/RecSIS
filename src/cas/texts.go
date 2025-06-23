@@ -8,7 +8,12 @@ type text struct {
 	logoutSuccessMessage  string
 	loginButton           string
 	// errors
-	errUnauthorized string
+	errUnauthorized               string
+	errCannotGetUserIDFromSession string
+	errCannotCreateSession        string
+	errCannotLogout               string
+	errCannotCreateUser           string
+	errCannotGetTicket            string
 }
 
 var texts = map[language.Language]text{
@@ -18,7 +23,12 @@ var texts = map[language.Language]text{
 		logoutSuccessMessage:  "Byli jste úspěšně odhlášeni.",
 		loginButton:           "Přihlásit se",
 		// errors
-		errUnauthorized: "Neoprávněný přístup",
+		errUnauthorized:               "Neoprávněný přístup",
+		errCannotGetUserIDFromSession: "Nepodařilo se získat ID uživatele ze session.",
+		errCannotCreateSession:        "Nepodařilo se vytvořit session.",
+		errCannotLogout:               "Nepodařilo se odhlásit.",
+		errCannotCreateUser:           "Nepodařilo se vytvořit uživatele.",
+		errCannotGetTicket:            "Nepodařilo se získat ticket z požadavku.",
 	},
 	language.EN: {
 		title:                 "Logout - RecSIS",
@@ -26,6 +36,11 @@ var texts = map[language.Language]text{
 		logoutSuccessMessage:  "You have been logged out successfully.",
 		loginButton:           "Log In",
 		// errors
-		errUnauthorized: "Unauthorized Access",
+		errUnauthorized:               "Unauthorized Access",
+		errCannotGetUserIDFromSession: "Failed to retrieve user ID from session.",
+		errCannotCreateSession:        "Failed to create session.",
+		errCannotLogout:               "Failed to log out.",
+		errCannotCreateUser:           "Failed to create user.",
+		errCannotGetTicket:            "Failed to retrieve ticket from request.",
 	},
 }

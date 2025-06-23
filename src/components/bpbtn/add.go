@@ -157,6 +157,11 @@ func (b Add) SemesterFromRequest(r *http.Request, t text) (int, error) {
 	return semester, nil
 }
 
+const (
+	uniqueViolationCode       = "23505"
+	duplicateCoursesViolation = "blueprint_courses_blueprint_semester_id_course_code_key"
+)
+
 func (b Add) Action(userID string, year int, semester int, lang language.Language, courses ...string) ([]int, error) {
 	const insertCourse = `--sql
 		WITH target_position AS (
@@ -192,7 +197,7 @@ func (b Add) Action(userID string, year int, semester int, lang language.Languag
 	err := b.DB.Select(&courseIDs, insertCourse, userID, year, semester, pq.StringArray(courses))
 	if err != nil {
 		// Handle unique violation for blueprint_semester_id, course_code
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" && pqErr.Constraint == "blueprint_courses_blueprint_semester_id_course_code_key" {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
 			userErrMsg := texts[lang].errDuplicateCourseInBP
 			if len(courses) > 1 {
 				userErrMsg = texts[lang].errDuplicateCoursesInBP

@@ -40,6 +40,7 @@ type Error interface {
 	Log(err error)
 	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
 	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
 }
 
 type Page interface {
@@ -97,7 +98,10 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 	generateWarnings(data, t)
 	result = Content(data, t)
-	s.Page.View(result, lang, t.pageTitle, userID).Render(r.Context(), w)
+	err = s.Page.View(result, lang, t.pageTitle, userID).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) renderBlueprintContent(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
@@ -110,7 +114,10 @@ func (s Server) renderBlueprintContent(w http.ResponseWriter, r *http.Request, u
 		return
 	}
 	generateWarnings(data, t)
-	Content(data, t).Render(r.Context(), w)
+	err = Content(data, t).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
 //================================================================================
