@@ -7,6 +7,11 @@ function clearExpanded() {
     });
 }
 
+// Clear the 'cd-tab' session storage item
+function clearCDTab() {
+    sessionStorage.removeItem('cd-tab');
+}
+
 function hideMain() {
     document.getElementById('main-content').style.display = 'none'
 }
@@ -20,12 +25,10 @@ function changeLanguage(lang) {
     window.location.href = newUrl;
 }
 
-document.addEventListener('htmx:afterSwap', function (e) {
+document.addEventListener('htmx:afterSwap', () => {
     // Reinitialize Alpine when HTMX swaps in new content
-    if (e.detail.target === document.body) {
-        let initAlpine = new Event('alpine:init');
-        document.dispatchEvent(initAlpine);
-    }
+    let initAlpine = new Event('alpine:init');
+    document.dispatchEvent(initAlpine);
 });
 
 window.addEventListener('htmx:historyRestore', () => {

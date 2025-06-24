@@ -14,6 +14,7 @@ import (
 	"github.com/michalhercik/RecSIS/components/bpbtn"
 	"github.com/michalhercik/RecSIS/components/page"
 	"github.com/michalhercik/RecSIS/components/searchbar"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
 
@@ -76,12 +77,22 @@ func main() {
 	}
 
 	//////////////////////////////////////////
-	// Handlers
+	// Error handling
 	//////////////////////////////////////////
+
+	errorHandler := errorx.ErrorHandler{
+		// Initialize error handler with logging and rendering capabilities
+	}
+
+	//////////////////////////////////////////
+	// Page template setup
+	//////////////////////////////////////////
+
 	pageTempl := page.Page{
-		Home: "/home/",
+		Error: errorHandler,
+		Home:  "/home/",
 		NavItems: []page.NavItem{
-			{Title: language.MakeLangString("Domů", "Home"), Path: "/", Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
+			{Title: language.MakeLangString("Domů", "Home"), Path: "/home/", Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
 			{Title: language.MakeLangString("Hledání", "Search"), Path: "/courses/", Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
 			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: "/blueprint/", Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
 			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: "/degreeplan/", Skeleton: degreeplan.Skeleton, Indicator: "#degreeplan-skeleton"},
@@ -93,7 +104,7 @@ func main() {
 			Limit:             5,
 			Param:             "search",
 			FiltersSelector:   "#filter-form",
-			SearchEndpoint:    "/courses",
+			SearchEndpoint:    "/courses/",
 			QuickEndpoint:     "/page/quicksearch",
 			SearchBarView:     searchbar.SearchBar,
 			SearchResultsView: searchbar.QuickResults,
@@ -103,22 +114,31 @@ func main() {
 		},
 	}
 	pageTempl.Init()
+
+	errorHandler.Page = page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl}
+
+	//////////////////////////////////////////
+	// Handlers
+	//////////////////////////////////////////
+
 	home := home.Server{
-		Page:        page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		Auth:        cas.UserIDFromContext{},
+		Error:       errorHandler,
+		Page:        page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		Recommender: fmt.Sprintf("http://%s:%d", conf.Recommender.Host, conf.Recommender.Port),
 	}
 	home.Init()
+
 	blueprint := blueprint.Server{
-		Data: blueprint.DBManager{DB: db},
-		Auth: cas.UserIDFromContext{},
-		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Auth:  cas.UserIDFromContext{},
+		Data:  blueprint.DBManager{DB: db},
+		Error: errorHandler,
+		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
 	blueprint.Init()
+
 	coursedetail := coursedetail.Server{
-		Data: coursedetail.DBManager{DB: db},
 		Auth: cas.UserIDFromContext{},
-		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		BpBtn: bpbtn.Add{
 			DB:    db,
 			Templ: bpbtn.AddBtn,
@@ -126,21 +146,22 @@ func main() {
 				HxPostBase: "/course",
 			},
 		},
+		Data:  coursedetail.DBManager{DB: db},
+		Error: errorHandler,
 		Filters: filters.Filters{
 			DB:     db,
 			Filter: "course-survey",
 		},
+		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		Search: coursedetail.Search{
 			Client: meiliClient,
 			Survey: meilisearch.IndexConfig{Uid: "courses-comments"},
 		},
 	}
 	coursedetail.Init()
+
 	courses := courses.Server{
-		Data:   courses.DBManager{DB: db},
-		Search: courses.MeiliSearch{Client: meiliClient, Courses: meilisearch.IndexConfig{Uid: "courses"}},
-		Auth:   cas.UserIDFromContext{},
-		Page:   pageTempl,
+		Auth: cas.UserIDFromContext{},
 		BpBtn: bpbtn.Add{
 			DB:    db,
 			Templ: bpbtn.AddBtn,
@@ -148,14 +169,21 @@ func main() {
 				HxPostBase: "/courses",
 			},
 		},
+		Data:  courses.DBManager{DB: db},
+		Error: errorHandler,
 		Filters: filters.Filters{
 			DB:     db,
 			Filter: "courses",
 		},
+		Page: pageTempl,
+		Search: courses.MeiliSearch{
+			Client:  meiliClient,
+			Courses: meilisearch.IndexConfig{Uid: "courses"},
+		},
 	}
 	courses.Init()
+
 	degreePlan := degreeplan.Server{
-		Data: degreeplan.DBManager{DB: db},
 		Auth: cas.UserIDFromContext{},
 		BpBtn: bpbtn.DoubleAdd{
 			Add: bpbtn.Add{
@@ -167,11 +195,13 @@ func main() {
 			},
 			TemplSecond: bpbtn.PlusSignBtnChecked,
 		},
-		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Data: degreeplan.DBManager{DB: db},
 		DPSearch: degreeplan.MeiliSearch{
 			Client:      meiliClient,
 			DegreePlans: meilisearch.IndexConfig{Uid: "degree-plans"},
 		},
+		Error: errorHandler,
+		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
 	degreePlan.Init()
 
@@ -194,6 +224,7 @@ func main() {
 	//////////////////////////////////////////
 	authentication := cas.Authentication{
 		Data:           cas.DBManager{DB: db},
+		Error:          errorHandler,
 		CAS:            cas.CAS{Host: conf.CAS.Host},
 		AfterLoginPath: "/",
 	}

@@ -1,12 +1,15 @@
 package degreeplan
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/degreeplan/internal/sqlquery"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -14,82 +17,103 @@ type DBManager struct {
 	DB *sqlx.DB
 }
 
-type DBDegreePlanRecord struct {
-	dbds.DegreePlanRecord
+type dbDegreePlanRecord struct {
+	BlocCode         int    `db:"bloc_subject_code"`
+	BlocLimit        int    `db:"bloc_limit"`
+	BlocName         string `db:"bloc_name"`
+	BlocNote         string `db:"bloc_note"`
+	IsBlocCompulsory bool   `db:"is_compulsory"`
+	Note             string `db:"note"`
+	dbds.Course
 	BlueprintSemesters pq.BoolArray `db:"semesters"`
 }
 
-func (m DBManager) UserDegreePlan(uid string, lang language.Language) (*DegreePlan, error) {
-	var records []DBDegreePlanRecord
+func (m DBManager) userDegreePlan(uid string, lang language.Language) (*degreePlanPage, error) {
+	var records []dbDegreePlanRecord
 	if err := m.DB.Select(&records, sqlquery.UserDegreePlan, uid, lang); err != nil {
-		return nil, fmt.Errorf("degreePlan: %v", err)
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.UserDegreePlan: %w", err), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetUserDP,
+		)
 	}
-	var dp DegreePlan
+	var dp degreePlanPage
 	for _, record := range records {
 		add(&dp, record)
 	}
 	return &dp, nil
 }
 
-func (m DBManager) DegreePlan(uid, dpCode string, dpYear int, lang language.Language) (*DegreePlan, error) {
-	var records []DBDegreePlanRecord
+func (m DBManager) degreePlan(uid, dpCode string, dpYear int, lang language.Language) (*degreePlanPage, error) {
+	var records []dbDegreePlanRecord
 	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, dpCode, dpYear, lang); err != nil {
-		return nil, fmt.Errorf("degreePlan: %v", err)
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.DegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("dpYear", dpYear), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetDP,
+		)
 	}
-	var dp DegreePlan
+	if len(records) == 0 {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(errors.New("no records found"), errorx.P("dpCode", dpCode), errorx.P("dpYear", dpYear), errorx.P("lang", lang)),
+			http.StatusNotFound,
+			texts[lang].errDPNotFound,
+		)
+	}
+	var dp degreePlanPage
 	for _, record := range records {
 		add(&dp, record)
 	}
 	return &dp, nil
 }
 
-func add(dp *DegreePlan, record DBDegreePlanRecord) {
+func add(dp *degreePlanPage, record dbDegreePlanRecord) {
 	blocIndex := -1
 	for i, b := range dp.blocs {
-		if b.Code == record.BlocCode {
+		if b.code == record.BlocCode {
 			blocIndex = i
 			break
 		}
 	}
 	if blocIndex == -1 {
-		dp.blocs = append(dp.blocs, Bloc{
-			Name:         record.BlocName,
-			Code:         record.BlocCode,
-			Note:         record.BlocNote,
-			Limit:        record.BlocLimit,
-			IsCompulsory: record.IsBlocCompulsory,
+		dp.blocs = append(dp.blocs, bloc{
+			name:         record.BlocName,
+			code:         record.BlocCode,
+			note:         record.BlocNote,
+			limit:        record.BlocLimit,
+			isCompulsory: record.IsBlocCompulsory,
 		})
 		blocIndex = len(dp.blocs) - 1
 	}
-	dp.blocs[blocIndex].Courses = append(dp.blocs[blocIndex].Courses, intoCourse(record))
+	dp.blocs[blocIndex].courses = append(dp.blocs[blocIndex].courses, intoCourse(record))
 }
 
-func intoCourse(from DBDegreePlanRecord) Course {
-	return Course{
-		Code:               from.Code,
-		Title:              from.Title,
-		Credits:            from.Credits,
-		Start:              TeachingSemester(from.Start),
-		LectureRange1:      int(from.LectureRangeWinter.Int64),
-		LectureRange2:      int(from.LectureRangeSummer.Int64),
-		SeminarRange1:      int(from.SeminarRangeWinter.Int64),
-		SeminarRange2:      int(from.SeminarRangeSummer.Int64),
-		ExamType:           from.ExamType,
-		Guarantors:         intoTeacherSlice(from.Guarantors),
-		Note:               from.Note,
-		BlueprintSemesters: from.BlueprintSemesters,
+func intoCourse(from dbDegreePlanRecord) course {
+	return course{
+		code:               from.Code,
+		title:              from.Title,
+		credits:            from.Credits,
+		semester:           teachingSemester(from.Start),
+		lectureRangeWinter: from.LectureRangeWinter,
+		seminarRangeWinter: from.SeminarRangeWinter,
+		lectureRangeSummer: from.LectureRangeSummer,
+		seminarRangeSummer: from.SeminarRangeSummer,
+		examType:           from.ExamType,
+		guarantors:         intoTeacherSlice(from.Guarantors),
+		note:               from.Note,
+		blueprintSemesters: from.BlueprintSemesters,
 	}
 }
 
-func intoTeacherSlice(from []dbds.Teacher) []Teacher {
-	teachers := make([]Teacher, len(from))
+func intoTeacherSlice(from []dbds.Teacher) []teacher {
+	teachers := make([]teacher, len(from))
 	for i, t := range from {
-		teachers[i] = Teacher{
-			SISID:       t.SISID,
-			LastName:    t.LastName,
-			FirstName:   t.FirstName,
-			TitleBefore: t.TitleBefore,
-			TitleAfter:  t.TitleAfter,
+		teachers[i] = teacher{
+			sisID:       t.SisID,
+			lastName:    t.LastName,
+			firstName:   t.FirstName,
+			titleBefore: t.TitleBefore,
+			titleAfter:  t.TitleAfter,
 		}
 	}
 	return teachers

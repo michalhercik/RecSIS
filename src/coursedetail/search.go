@@ -2,8 +2,10 @@ package coursedetail
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -13,20 +15,33 @@ type Search struct {
 }
 
 // TODO: write own meilisearch client
-func (s Search) Comments(r Request) (Response, error) {
-	var result Response
+func (s Search) comments(r request) (response, error) {
+	t := texts[r.lang]
+	var result response
 	searchReq := makeMultiSearchRequest(r, s.Survey)
 	response, err := s.Client.MultiSearch(searchReq)
 	if err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err),
+			http.StatusInternalServerError,
+			t.errCannotSearchForSurvey,
+		)
 	}
 	rawResponse, err := response.MarshalJSON()
 	if err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err),
+			http.StatusInternalServerError,
+			t.errCannotSearchForSurvey,
+		)
 	}
-	multi := MultiResponse{}
+	multi := multiResponse{}
 	if err = json.Unmarshal(rawResponse, &multi); err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err),
+			http.StatusInternalServerError,
+			t.errCannotSearchForSurvey,
+		)
 	}
 	result = multi.Results[0]
 	for _, res := range multi.Results[1:] {
@@ -37,51 +52,36 @@ func (s Search) Comments(r Request) (Response, error) {
 	return result, nil
 }
 
-type Expression interface {
+type expression interface {
 	String() string
 	Except() func(func(string, string) bool)
 	ConditionsCount() int
 	Append(param string, values ...string)
 }
 
-type Request struct {
+type request struct {
 	userID   string
 	query    string
 	indexUID string
 	offset   int
 	limit    int
 	lang     language.Language
-	filter   Expression
+	filter   expression
 	facets   []string
 	sort     string
 }
 
-type Response struct {
-	EstimatedTotalHits int
-	Survey             []Comment
-	FacetDistribution  map[string]map[string]int
+type response struct {
+	EstimatedTotalHits int                       `json:"estimatedTotalHits"`
+	Survey             []survey                  `json:"Hits"`
+	FacetDistribution  map[string]map[string]int `json:"FacetDistribution"`
 }
 
-type MultiResponse struct {
-	Results []Response `json:"results"`
+type multiResponse struct {
+	Results []response `json:"results"`
 }
 
-func (r *Response) UnmarshalJSON(data []byte) error {
-	var hit struct {
-		EstimatedTotalHits int                       `json:"estimatedTotalHits"`
-		Hits               []Comment                 `json:"Hits"`
-		FacetDistribution  map[string]map[string]int `json:"FacetDistribution"`
-	}
-	if err := json.Unmarshal(data, &hit); err != nil {
-		return err
-	}
-	r.EstimatedTotalHits = int(hit.EstimatedTotalHits)
-	r.Survey = hit.Hits
-	r.FacetDistribution = hit.FacetDistribution
-	return nil
-}
-
-func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
+func makeMultiSearchRequest(r request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
 	numOfReq := 1 + r.filter.ConditionsCount()
 	result := &meilisearch.MultiSearchRequest{
 		Queries: make([]*meilisearch.SearchRequest, 0, numOfReq),

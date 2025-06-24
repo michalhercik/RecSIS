@@ -3,9 +3,11 @@ package searchbar
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/a-h/templ"
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -49,21 +51,30 @@ func (m MeiliSearch) View(searchInput string, lang language.Language, includeFil
 	return m.SearchBarView(model)
 }
 
+// TODO: handle errors using errorx package
 func (m MeiliSearch) QuickSearchResult(query string, lang language.Language) (templ.Component, error) {
 	var result QuickResponse
+	t := texts[lang]
 	index := m.Client.Index(m.Index)
 	searchReq, err := m.buildQuickSearchRequest(lang)
 	if err != nil {
-		return nil, err
+		return nil, errorx.AddContext(err)
 	}
 	rawResponse, err := index.SearchRaw(query, searchReq)
 	if err != nil {
-		return nil, err
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(err, errorx.P("query", query), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			t.errQuickSearchFailed,
+		)
 	}
 	if err = json.Unmarshal(*rawResponse, &result); err != nil {
-		return nil, err
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(err, errorx.P("query", query), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			t.errQuickSearchFailed,
+		)
 	}
-	t := texts[lang]
 	model := quickResultsModel{
 		t:                    t,
 		lang:                 lang,
@@ -83,7 +94,11 @@ func (m MeiliSearch) buildQuickSearchRequest(lang language.Language) (*meilisear
 	case language.EN:
 		result.AttributesToRetrieve = []string{"code", "en.NAME"}
 	default:
-		return result, fmt.Errorf("SearchRequest: unsupported language: %v", lang)
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("unsupported language: %s", lang)),
+			http.StatusBadRequest,
+			texts[language.EN].errUnsupportedLanguage,
+		)
 	}
 	return result, nil
 }
@@ -123,7 +138,7 @@ func (r *QuickResponse) UnmarshalJSON(data []byte) error {
 }
 
 type searchBarModel struct {
-	t                   Text
+	t                   text
 	lang                language.Language
 	searchInput         string
 	searchParam         string
@@ -134,7 +149,7 @@ type searchBarModel struct {
 }
 
 type quickResultsModel struct {
-	t                    Text
+	t                    text
 	lang                 language.Language
 	courses              []QuickCourse
 	resultDetailEndpoint func(code string) string

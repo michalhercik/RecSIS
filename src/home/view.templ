@@ -6,7 +6,7 @@ import (
 	"github.com/michalhercik/RecSIS/utils"
 )
 
-templ Content(hp *HomePage, t text) {
+templ Content(hp *homePage, t text) {
     <div
         id="home-page"
         class="container pt-3"
@@ -15,24 +15,24 @@ templ Content(hp *HomePage, t text) {
         @load.window="setCardsWidth(); visibleCards = calculateVisibleCards();"
         @resize.window="setCardsWidth(); visibleCards = calculateVisibleCards();"
     >
-        <h4>{ t.Welcome }</h4>
-        <p>{ t.RecSISIntro }</p>
+        <h4>{ t.welcome }</h4>
+        <p>{ t.recsisIntro }</p>
 
         <div class="pb-4">
-            <h4>{ t.RecommendedCourses }</h4>
-            @courseCardsRow("rec", hp.RecommendedCourses, t)
+            <h4>{ t.recommendedCourses }</h4>
+            @courseCardsRow("rec", hp.recommendedCourses, t)
         </div>
 
         <div class="pb-4">
-            <h4>{ t.NewCourses }</h4>
-            @courseCardsRow("new", hp.NewCourses, t)
+            <h4>{ t.newCourses }</h4>
+            @courseCardsRow("new", hp.newCourses, t)
         </div>
 
         @scripts()
     </div>
 }
 
-templ courseCardsRow(ID string, courses []Course, t text) {
+templ courseCardsRow(ID string, courses []course, t text) {
     <div class="d-flex justify-content-between align-items-center pt-2">
         @chevronLeftBtn(ID)
         <div id={ fmt.Sprintf("course-cards-row-%s", ID) } class="d-flex flex-row flex-no-wrap overflow-hidden w-100 gap-1 px-1">
@@ -41,16 +41,16 @@ templ courseCardsRow(ID string, courses []Course, t text) {
                     <div class="card-header lh-1 py-1">
                         <div class="d-flex justify-content-between w-100">
                             <h6 class="mb-0">{ c.Code }</h6> // code
-                            <small>{ fmt.Sprintf("%s: %d", t.Credits, c.Credits) }</small> // credits
+                            <small>{ fmt.Sprintf("%s: %d", t.credits, c.Credits) }</small> // credits
                         </div>
                         <div class="text-center w-100">
-                            <small>{ fmt.Sprintf("%s %s, %s", c.Semester.String(t.Utils.Language), hoursString(&c, t), c.ExamType) }</small> // semester, hours, exams
+                            <small>{ fmt.Sprintf("%s %s, %s", c.Semester.string(t), hoursString(&c, t), c.ExamType) }</small> // semester, hours, exams
                         </div>
                     </div>
                     <div class="card-body justify-content-between d-flex flex-column h-100">
                         // title
                         <h6 class="card-title pb-1">
-                            @utils.TitleCourseLink(c.Code, c.Title, false, t.Utils)
+                            @utils.TitleCourseLink(c.Code, c.Title, false, t.language)
                         </h6>
                         // guarantors
                         <h6 class="card-subtitle text-muted">{ c.Guarantors.string(t) }</h6>
@@ -78,20 +78,4 @@ templ chevronRightBtn(ID string, maxOffset int) {
         @click={ fmt.Sprintf("%sVisibleOffset += visibleCards", ID) }>
         <i class="bi bi-chevron-compact-right fs-4"></i>
     </button>
-}
-
-func hoursString(course *Course, t text) string {
-    result := ""
-    winter := course.LectureRangeWinter.Valid && course.SeminarRangeWinter.Valid
-    summer := course.LectureRangeSummer.Valid && course.SeminarRangeSummer.Valid
-    if winter {
-        result += fmt.Sprintf("%d/%d", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64)
-    }
-    if winter && summer {
-        result += ", "
-    }
-    if summer {
-        result += fmt.Sprintf("%d/%d", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64)
-    }
-    return result
 }

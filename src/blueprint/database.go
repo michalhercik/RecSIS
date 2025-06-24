@@ -2,130 +2,388 @@ package blueprint
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/blueprint/internal/sqlquery"
+	"github.com/michalhercik/RecSIS/dbds"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
+const (
+	uniqueViolationCode       = "23505"
+	duplicateCoursesViolation = "blueprint_courses_blueprint_semester_id_course_code_key"
+)
+
+// public interface for the blueprint database manager
 type DBManager struct {
 	DB *sqlx.DB
 }
 
-func (m DBManager) Blueprint(userID string, lang language.Language) (*Blueprint, error) {
-	var records []BlueprintRecord
-	if err := m.DB.Select(&records, sqlquery.SelectCourses, userID, lang); err != nil {
-		return nil, err
+type dbBlueprintRecord struct {
+	dbds.Course
+	blueprintRecordPosition
+}
+
+type blueprintRecordPosition struct {
+	AcademicYear int                `db:"academic_year"`
+	Semester     semesterAssignment `db:"semester"`
+	Folded       bool               `db:"folded"`
+}
+
+func (m DBManager) blueprint(userID string, lang language.Language) (*blueprintPage, error) {
+	t := texts[lang]
+	var records []dbBlueprintRecord
+	var semestersInfo []blueprintRecordPosition
+
+	tx, err := m.DB.Beginx()
+	if err != nil {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("DB.Beginx: %w", err)),
+			http.StatusInternalServerError,
+			t.errCannotGetBlueprint,
+		)
 	}
-	var bp Blueprint
+	defer tx.Rollback()
+	if err := tx.Select(&records, sqlquery.SelectCourses, userID, lang); err != nil {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.SelectCourses: %w", err)),
+			http.StatusInternalServerError,
+			t.errCannotGetBlueprint,
+		)
+	}
+	if err := tx.Select(&semestersInfo, sqlquery.SelectSemestersInfo, userID); err != nil {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.SelectSemestersInfo: %w", err)),
+			http.StatusInternalServerError,
+			t.errCannotGetBlueprint,
+		)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("tx.Commit: %w", err)),
+			http.StatusInternalServerError,
+			t.errCannotGetBlueprint,
+		)
+	}
+
+	var bp blueprintPage
+	if err := makeBlueprintPage(&bp, semestersInfo, lang); err != nil {
+		return nil, errorx.AddContext(err)
+	}
 	for _, record := range records {
-		if err := bp.assign(record.BlueprintRecordPosition, record.NullCourse.Course()); err != nil {
-			return nil, err
+		if err := add(&bp, record, lang); err != nil {
+			return nil, errorx.AddContext(err)
 		}
 	}
 	return &bp, nil
 }
 
-func (m DBManager) NewCourse(userID string, course string, year int, semester SemesterAssignment) (int, error) {
-	row := m.DB.QueryRow(sqlquery.InsertCourse, userID, year, int(semester), course)
-	var courseID int
-	err := row.Scan(&courseID)
-	return courseID, err
+func makeBlueprintPage(bp *blueprintPage, semestersInfo []blueprintRecordPosition, lang language.Language) error {
+	if len(semestersInfo) == 0 {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("no semesters found in the database for user")),
+			http.StatusInternalServerError,
+			texts[lang].errNoSemestersFound,
+		)
+	}
+	// make unassigned semester
+	bp.unassigned = semester{
+		folded: semestersInfo[0].Folded,
+	}
+	// make years and semesters
+	for i := 1; i < len(semestersInfo); i += 2 {
+		bp.years = append(bp.years, academicYear{
+			position: semestersInfo[i].AcademicYear,
+			winter: semester{
+				folded: semestersInfo[i].Folded,
+			},
+			summer: semester{
+				folded: semestersInfo[i+1].Folded,
+			},
+		})
+	}
+
+	return nil
 }
 
-func (m DBManager) InsertCourses(userID string, year int, semester SemesterAssignment, position int, courses ...int) error {
-	res, err := m.DB.Exec(sqlquery.MoveCourses, userID, pq.Array(courses), year, semester, position)
-	if err != nil {
-		return err
+func add(bp *blueprintPage, record dbBlueprintRecord, lang language.Language) error {
+	if record.AcademicYear < 0 {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("invalid academic year %d", record.AcademicYear)),
+			http.StatusInternalServerError,
+			texts[lang].errInvalidYearInDB,
+		)
 	}
-	count, err := res.RowsAffected()
-	if err != nil {
-		return err
+
+	var semester *semester
+	switch record.Semester {
+	case assignmentWinter:
+		semester = &bp.years[record.AcademicYear-1].winter
+	case assignmentSummer:
+		semester = &bp.years[record.AcademicYear-1].summer
+	case assignmentNone:
+		semester = &bp.unassigned
+	default:
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("unknown semester assignment %d", record.Semester)),
+			http.StatusInternalServerError,
+			texts[lang].errInvalidSemesterInDB,
+		)
 	}
-	if count != 1 {
-		return fmt.Errorf("expected 1 row to be affected, got %d", count)
+
+	semester.courses = append(semester.courses, intoCourse(&record))
+	return nil
+}
+
+func intoCourse(from *dbBlueprintRecord) course {
+	return course{
+		id:                 from.ID,
+		code:               from.Code,
+		title:              from.Title,
+		semester:           teachingSemester(from.Start),
+		lectureRangeWinter: from.LectureRangeWinter,
+		seminarRangeWinter: from.SeminarRangeWinter,
+		lectureRangeSummer: from.LectureRangeSummer,
+		seminarRangeSummer: from.SeminarRangeSummer,
+		examType:           from.ExamType,
+		credits:            from.Credits,
+		guarantors:         intoTeacherSlice(from.Guarantors),
+	}
+}
+
+func intoTeacherSlice(from []dbds.Teacher) []teacher {
+	teachers := make([]teacher, len(from))
+	for i, t := range from {
+		teachers[i] = teacher{
+			sisID:       t.SisID,
+			lastName:    t.LastName,
+			firstName:   t.FirstName,
+			titleBefore: t.TitleBefore,
+			titleAfter:  t.TitleAfter,
+		}
+	}
+	return teachers
+}
+
+func (m DBManager) moveCourses(userID string, lang language.Language, year int, semester semesterAssignment, position int, courses ...int) error {
+	_, err := m.DB.Exec(sqlquery.MoveCourses, userID, pq.Array(courses), year, int(semester), position)
+	if err != nil {
+		// Handle unique violation for blueprint_semester_id, course_code
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
+			userErrMsg := texts[lang].errDuplicateCourseInBP
+			if len(courses) > 1 {
+				userErrMsg = texts[lang].errDuplicateCoursesInBP
+			}
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("position", position), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+				http.StatusConflict,
+				userErrMsg,
+			)
+		}
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("position", position), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			http.StatusInternalServerError,
+			texts[lang].errCannotMoveCourses,
+		)
 	}
 	return nil
 }
 
-func (m DBManager) AppendCourses(userID string, year int, semester SemesterAssignment, courses ...int) error {
+func (m DBManager) appendCourses(userID string, lang language.Language, year int, semester semesterAssignment, courses ...int) error {
 	_, err := m.DB.Exec(sqlquery.AppendCourses, userID, year, int(semester), pq.Array(courses))
 	if err != nil {
-		return err
+		// Handle unique violation for blueprint_semester_id, course_code
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
+			userErrMsg := texts[lang].errDuplicateCourseInBP
+			if len(courses) > 1 {
+				userErrMsg = texts[lang].errDuplicateCoursesInBP
+			}
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.AppendCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+				http.StatusConflict,
+				userErrMsg,
+			)
+		}
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.AppendCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			http.StatusInternalServerError,
+			texts[lang].errCannotAppendCourses,
+		)
 	}
 	return nil
 }
 
-func (m DBManager) UnassignYear(userID string, year int) error {
+func (m DBManager) unassignYear(userID string, lang language.Language, year int) error {
 	_, err := m.DB.Exec(sqlquery.UnassignYear, userID, year)
-	return err
-}
-
-func (m DBManager) UnassignSemester(userID string, year int, semester SemesterAssignment) error {
-	_, err := m.DB.Exec(sqlquery.UnassignSemester, userID, year, int(semester))
-	return err
-}
-
-func (m DBManager) RemoveCourses(userID string, courses ...int) error {
-	_, err := m.DB.Exec(sqlquery.DeleteCoursesByID, userID, pq.Array(courses))
 	if err != nil {
-		return err
+		// Handle unique violation for blueprint_semester_id, course_code
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
+				http.StatusConflict,
+				texts[lang].errDuplicateCoursesInBPUnassigned,
+			)
+		}
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotUnassignYear,
+		)
 	}
 	return nil
 }
 
-func (m DBManager) RemoveCoursesBySemester(userID string, year int, semester SemesterAssignment) error {
-	_, err := m.DB.Exec(sqlquery.DeleteCoursesBySemester, userID, year, int(semester))
-	return err
-}
-
-func (m DBManager) RemoveCoursesByYear(userID string, year int) error {
-	_, err := m.DB.Exec(sqlquery.DeleteCoursesByYear, userID, year)
-	return err
-}
-
-func (m DBManager) AddYear(userID string) error {
-	fail := func(err error) error {
-		return fmt.Errorf("AddYear: %v", err)
+func (m DBManager) unassignSemester(userID string, lang language.Language, year int, semester semesterAssignment) error {
+	_, err := m.DB.Exec(sqlquery.UnassignSemester, userID, year, int(semester))
+	if err != nil {
+		// Handle unique violation for blueprint_semester_id, course_code
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.UnassignSemester: %w", err), errorx.P("year", year), errorx.P("semester", semester)),
+				http.StatusConflict,
+				texts[lang].errDuplicateCoursesInBPUnassigned,
+			)
+		}
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.UnassignSemester: %w", err), errorx.P("year", year), errorx.P("semester", semester)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotUnassignSemester,
+		)
 	}
+	return nil
+}
+
+func (m DBManager) removeCourses(userID string, lang language.Language, courses ...int) error {
+	_, err := m.DB.Exec(sqlquery.RemoveCoursesByID, userID, pq.Array(courses))
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesByID: %w", err), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			http.StatusInternalServerError,
+			texts[lang].errCannotRemoveCourses,
+		)
+	}
+	return nil
+}
+
+func (m DBManager) removeCoursesBySemester(userID string, lang language.Language, year int, semester semesterAssignment) error {
+	_, err := m.DB.Exec(sqlquery.RemoveCoursesBySemester, userID, year, int(semester))
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesBySemester: %w", err), errorx.P("year", year), errorx.P("semester", semester)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotRemoveCourses,
+		)
+	}
+	return nil
+}
+
+func (m DBManager) removeCoursesByYear(userID string, lang language.Language, year int) error {
+	_, err := m.DB.Exec(sqlquery.RemoveCoursesByYear, userID, year)
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesByYear: %w", err), errorx.P("year", year)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotRemoveCourses,
+		)
+	}
+	return nil
+}
+
+func (m DBManager) addYear(userID string, lang language.Language) error {
 	tx, err := m.DB.Beginx()
 	if err != nil {
-		return fail(err)
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("DB.Beginx: %w", err)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotAddYear,
+		)
 	}
 	defer tx.Rollback()
 	var newYearID int
 	err = tx.Get(&newYearID, sqlquery.InsertYear, userID)
 	if err != nil {
-		return fail(err)
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.InsertYear: %w", err)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotAddYear,
+		)
 	}
 	_, err = tx.Exec(sqlquery.InsertSemestersByYear, userID, newYearID)
 	if err != nil {
-		return fail(err)
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.InsertSemestersByYear: %w", err), errorx.P("year", newYearID)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotAddYear,
+		)
 	}
 	if err = tx.Commit(); err != nil {
-		return fail(err)
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("tx.Commit: %w", err)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotAddYear,
+		)
 	}
 	return nil
 }
 
-// TODO: this must remove all courses from the year but add them to unassigned
-func (m DBManager) RemoveYear(userID string) error {
-	fail := func(err error) error {
-		return fmt.Errorf("RemoveYear: %v", err)
-	}
-	_, err := m.DB.Exec(sqlquery.DeleteYear, userID)
+func (m DBManager) removeYear(userID string, lang language.Language, year int, shouldUnassign bool) error {
+	tx, err := m.DB.Beginx()
 	if err != nil {
-		return fail(err)
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("DB.Beginx: %w", err)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotRemoveYear,
+		)
 	}
-
+	defer tx.Rollback()
+	if shouldUnassign {
+		_, err := tx.Exec(sqlquery.UnassignYear, userID, year)
+		if err != nil {
+			// Handle unique violation for blueprint_semester_id, course_code
+			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
+				return errorx.NewHTTPErr(
+					errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
+					http.StatusConflict,
+					texts[lang].errDuplicateCoursesInBPUnassigned,
+				)
+			}
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
+				http.StatusInternalServerError,
+				texts[lang].errCannotUnassignYear,
+			)
+		}
+	}
+	_, err = tx.Exec(sqlquery.DeleteYear, userID)
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.DeleteYear: %w", err), errorx.P("year", year)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotRemoveYear,
+		)
+	}
+	if err = tx.Commit(); err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("tx.Commit: %w", err)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotRemoveYear,
+		)
+	}
 	return nil
 }
 
-func (m DBManager) FoldSemester(userID string, year int, semester SemesterAssignment, folded bool) error {
+func (m DBManager) foldSemester(userID string, lang language.Language, year int, semester semesterAssignment, folded bool) error {
 	_, err := m.DB.Exec(sqlquery.FoldSemester, userID, year, int(semester), folded)
 	if err != nil {
-		return err
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.FoldSemester: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("folded", folded)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotUnFoldSemester,
+		)
 	}
 	return nil
 }
