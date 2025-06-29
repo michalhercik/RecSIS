@@ -5,7 +5,6 @@
 chmod 600 /root/.ssh/id_rsa
 
 autossh -f -M 0 -gNC -o "ExitOnForwardFailure=yes" -o "ServerAliveInterval=10" -o "ServerAliveCountMax=3" -L 10502:mffout.karlov.mff.cuni.cz:10502 hercik@acheron.ms.mff.cuni.cz -p 42049 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
-AUTOSSH_PID=$!
 timeout=30
 while ! nc -z localhost 10502; do
     sleep 1
@@ -18,4 +17,4 @@ done
 
 /etl
 
-kill $AUTOSSH_PID
+pkill autossh
