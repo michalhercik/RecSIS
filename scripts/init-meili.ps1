@@ -15,12 +15,12 @@ echo "$($response.StatusCode) $($response.Content)"
 #     -Body (@{"maxTotalHits" = 1000} | ConvertTo-Json)
 # echo "$($response.StatusCode) $($response.Content)"
 
-$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents?primaryKey=id" `
-    -Method Post `
-    -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
-    -ContentType "application/x-ndjson" `
-    -InFile "$PSScriptRoot/../init_search/courses.json"
-echo "$($response.StatusCode) $($response.Content)"
+# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents?primaryKey=id" `
+#     -Method Post `
+#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
+#     -ContentType "application/x-ndjson" `
+#     -InFile "$PSScriptRoot/../init_search/courses.json"
+# echo "$($response.StatusCode) $($response.Content)"
 
 $filterable = @(
     "start_semester",
@@ -82,12 +82,12 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settin
     -Body ($dict | ConvertTo-Json)
 echo "$($response.StatusCode) $($response.Content)"
 
-$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/documents?primaryKey=id" `
-    -Method Post `
-    -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
-    -ContentType "application/x-ndjson" `
-    -InFile "$PSScriptRoot/../init_search/comments.json"
-echo "$($response.StatusCode) $($response.Content)"
+# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/documents?primaryKey=id" `
+#     -Method Post `
+#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
+#     -ContentType "application/x-ndjson" `
+#     -InFile "$PSScriptRoot/../init_search/comments.json"
+# echo "$($response.StatusCode) $($response.Content)"
 
 $filterable = @(
     "teacher_facet",
