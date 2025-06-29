@@ -12,11 +12,11 @@ type Course struct {
 	Code               string        `db:"code" json:"code"`
 	Title              string        `db:"title" json:"title"`
 	Semester           int           `db:"start_semester" json:"semester"`
-	LectureRangeWinter sql.NullInt64 `db:"lecture_range1" json:"lecture_range_winter"`
-	SeminarRangeWinter sql.NullInt64 `db:"seminar_range1" json:"seminar_range_winter"`
-	LectureRangeSummer sql.NullInt64 `db:"lecture_range2" json:"lecture_range_summer"`
-	SeminarRangeSummer sql.NullInt64 `db:"seminar_range2" json:"seminar_range_summer"`
-	ExamType           string        `db:"exam_type" json:"exam_type"`
+	LectureRangeWinter sql.NullInt64 `db:"lecture_range_winter" json:"lecture_range_winter"`
+	SeminarRangeWinter sql.NullInt64 `db:"seminar_range_winter" json:"seminar_range_winter"`
+	LectureRangeSummer sql.NullInt64 `db:"lecture_range_summer" json:"lecture_range_summer"`
+	SeminarRangeSummer sql.NullInt64 `db:"seminar_range_summer" json:"seminar_range_summer"`
+	ExamType           string        `db:"exam" json:"exam"`
 	Credits            int           `db:"credits" json:"credits"`
 	Guarantors         TeacherSlice  `db:"guarantors" json:"guarantors"`
 }
@@ -37,11 +37,11 @@ func (ts *TeacherSlice) Scan(val interface{}) error {
 }
 
 type Teacher struct {
-	SISID       string `json:"KOD"`
-	LastName    string `json:"PRIJMENI"`
-	FirstName   string `json:"JMENO"`
-	TitleBefore string `json:"TITULPRED"`
-	TitleAfter  string `json:"TITULZA"`
+	SISID       string `json:"id"`
+	LastName    string `json:"last_name"`
+	FirstName   string `json:"first_name"`
+	TitleBefore string `json:"title_before"`
+	TitleAfter  string `json:"title_after"`
 }
 
 func getCourses(w http.ResponseWriter, r *http.Request, query string) {
@@ -56,20 +56,21 @@ func getCourses(w http.ResponseWriter, r *http.Request, query string) {
 		http.Error(w, "DB error", http.StatusInternalServerError)
 		return
 	}
+	fmt.Println(courses[0])
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(courses)
 }
 
 const sql_recommended = `
-SELECT 
+SELECT
     c.code,
     c.title,
     c.start_semester,
-    c.lecture_range1,
-    c.seminar_range1,
-    c.lecture_range2,
-    c.seminar_range2,
-    c.exam_type,
+    c.lecture_range_winter,
+    c.seminar_range_winter,
+    c.lecture_range_summer,
+    c.seminar_range_summer,
+    c.exam,
     c.credits,
     c.guarantors
 FROM courses c
@@ -79,15 +80,15 @@ LIMIT 20
 `
 
 const sql_newest = `
-SELECT 
+SELECT
     c.code,
     c.title,
     c.start_semester,
-    c.lecture_range1,
-    c.seminar_range1,
-    c.lecture_range2,
-    c.seminar_range2,
-    c.exam_type,
+    c.lecture_range_winter,
+    c.seminar_range_winter,
+    c.lecture_range_summer,
+    c.seminar_range_summer,
+    c.exam,
     c.credits,
     c.guarantors
 FROM courses c

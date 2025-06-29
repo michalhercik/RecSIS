@@ -30,7 +30,7 @@ type Course struct {
 	SeminarRangeWinter sql.NullInt64    `json:"seminar_range_winter"`
 	LectureRangeSummer sql.NullInt64    `json:"lecture_range_summer"`
 	SeminarRangeSummer sql.NullInt64    `json:"seminar_range_summer"`
-	ExamType           string           `json:"exam_type"`
+	ExamType           string           `json:"exam"`
 	Credits            int              `json:"credits"`
 	Guarantors         TeacherSlice     `json:"guarantors"`
 	//BlueprintAssignments AssignmentSlice
@@ -64,11 +64,11 @@ func (ts *TeachingSemester) String(lang language.Language) string {
 
 // teacher types and methods
 type Teacher struct {
-	SisID       int    `json:"KOD"`
-	FirstName   string `json:"JMENO"`
-	LastName    string `json:"PRIJMENI"`
-	TitleBefore string `json:"TITULPRED"`
-	TitleAfter  string `json:"TITULZA"`
+	SisID       int    `json:"id"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	TitleBefore string `json:"title_before"`
+	TitleAfter  string `json:"title_after"`
 }
 
 func (t Teacher) String() string {
