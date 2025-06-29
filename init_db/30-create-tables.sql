@@ -1,11 +1,14 @@
-CREATE TABLE faculties(
-    id SERIAL PRIMARY KEY,
-    sis_id INT UNIQUE NOT NULL,
-    sis_poid INT,
-    name_cs VARCHAR(150) NOT NULL,
-    name_en VARCHAR(150) NOT NULL,
-    abbr VARCHAR(10) NOT NULL
-);
+\c recsis
+SET search_path TO webapp;
+
+-- CREATE TABLE faculties(
+--     id SERIAL PRIMARY KEY,
+--     sis_id INT UNIQUE NOT NULL,
+--     sis_poid INT,
+--     name_cs VARCHAR(150) NOT NULL,
+--     name_en VARCHAR(150) NOT NULL,
+--     abbr VARCHAR(10) NOT NULL
+-- );
 
 -- CREATE TABLE departments (
 --     id SERIAL PRIMARY KEY,
@@ -50,11 +53,11 @@ CREATE TABLE faculties(
 --     capacity INT
 -- );
 
-CREATE TABLE start_semester_to_desc(
-    id INT,
-    lang CHAR(2),
-    semester_description VARCHAR(7)
-);
+-- CREATE TABLE start_semester_to_desc(
+--     id INT,
+--     lang CHAR(2),
+--     semester_description VARCHAR(7)
+-- );
 
 CREATE TABLE courses(
     -- id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -63,38 +66,80 @@ CREATE TABLE courses(
     title VARCHAR(250),
     valid_from INT NOT NULL,
     valid_to INT NOT NULL,
-    faculty VARCHAR(150), -- INT REFERENCES faculties(id),
-    guarantor VARCHAR(10), -- INT REFERENCES departments(id),
-    taught VARCHAR(10) NOT NULL,
-    start_semester INT, -- NOT NULL,
-    semester_count INT, -- NOT NULL,
-    taught_lang VARCHAR(50),
-    lecture_range1 INT, -- NOT NULL,
-    seminar_range1 INT, -- NOT NULL,
-    lecture_range2 INT,
-    seminar_range2 INT,
-    range_unit CHAR(2),
-    exam_type VARCHAR(4), -- NOT NULL,
+    course_url VARCHAR(250),
+    faculty JSONB, -- INT REFERENCES faculties(id),
+    department JSONB, -- INT REFERENCES departments(id),
+    taught_state CHAR(1),
+    taught_state_title VARCHAR(120),
+    start_semester VARCHAR(5), -- NOT NULL,
+    start_semester_title VARCHAR(120), -- NOT NULL,
+    taught_lang VARCHAR(250),
+    lecture_range_winter INT, -- NOT NULL,
+    seminar_range_winter INT, -- NOT NULL,
+    lecture_range_summer INT,
+    seminar_range_summer INT,
+    range_unit JSONB,
+    exam VARCHAR(30), -- NOT NULL,
     credits INT, -- NOT NULL,
     guarantors JSONB,
     teachers JSONB,
-    min_number INT,
-    capacity VARCHAR(9),
+    min_occupancy VARCHAR(10),
+    capacity VARCHAR(10),
     annotation JSONB,
     syllabus JSONB,
     terms_of_passing JSONB,
     literature JSONB,
-    requirements_for_assesment JSONB,
+    requirements_of_assesment JSONB,
     entry_requirements JSONB,
     aim JSONB,
-    comments JSONB,
-    preqrequisities JSONB,
+    prerequisities JSONB,
     corequisities JSONB,
     incompatibilities JSONB,
-    interchangebilities JSONB,
+    interchangeabilities JSONB,
     classes JSONB,
     classifications JSONB
 );
+
+
+-- CREATE TABLE courses(
+--     -- id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     code VARCHAR(10) NOT NULL,
+--     lang CHAR(2) NOT NULL,
+--     title VARCHAR(250),
+--     valid_from INT NOT NULL,
+--     valid_to INT NOT NULL,
+--     faculty VARCHAR(150), -- INT REFERENCES faculties(id),
+--     guarantor VARCHAR(10), -- INT REFERENCES departments(id),
+--     taught VARCHAR(10) NOT NULL,
+--     start_semester INT, -- NOT NULL,
+--     semester_count INT, -- NOT NULL,
+--     taught_lang VARCHAR(50),
+--     lecture_range1 INT, -- NOT NULL,
+--     seminar_range1 INT, -- NOT NULL,
+--     lecture_range2 INT,
+--     seminar_range2 INT,
+--     range_unit CHAR(2),
+--     exam_type VARCHAR(4), -- NOT NULL,
+--     credits INT, -- NOT NULL,
+--     guarantors JSONB,
+--     teachers JSONB,
+--     min_number INT,
+--     capacity VARCHAR(9),
+--     annotation JSONB,
+--     syllabus JSONB,
+--     terms_of_passing JSONB,
+--     literature JSONB,
+--     requirements_for_assesment JSONB,
+--     entry_requirements JSONB,
+--     aim JSONB,
+--     comments JSONB,
+--     preqrequisities JSONB,
+--     corequisities JSONB,
+--     incompatibilities JSONB,
+--     interchangebilities JSONB,
+--     classes JSONB,
+--     classifications JSONB
+-- );
 
 -- CREATE TABLE classifications(
 --     course VARCHAR(10),
@@ -145,34 +190,34 @@ CREATE TABLE degree_plans(
     seq VARCHAR(50)
 );
 
-CREATE TABLE degree_programmes(
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    code CHAR(12) NOT NULL,
-    name_cs VARCHAR(350) NOT NULL,
-    name_en VARCHAR(350) NOT NULL,
-    faculty INT REFERENCES faculties(sis_id) NOT NULL,
-    program_type CHAR(1) NOT NULL,
-    program_form CHAR(1) NOT NULL,
-    graduate_profile_cs TEXT, --NOT NULL,
-    graduate_profile_en TEXT, --NOT NULL,
-    lang CHAR(2) NOT NULL
-);
+-- CREATE TABLE degree_programmes(
+--     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     code CHAR(12) NOT NULL,
+--     name_cs VARCHAR(350) NOT NULL,
+--     name_en VARCHAR(350) NOT NULL,
+--     faculty INT REFERENCES faculties(sis_id) NOT NULL,
+--     program_type CHAR(1) NOT NULL,
+--     program_form CHAR(1) NOT NULL,
+--     graduate_profile_cs TEXT, --NOT NULL,
+--     graduate_profile_en TEXT, --NOT NULL,
+--     lang CHAR(2) NOT NULL
+-- );
 
-CREATE TABLE studies(
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    sis_id INT NOT NULL,
-    student INT NOT NULL,
-    faculty1 INT REFERENCES faculties(sis_id) NOT NULL,
-    faculty2 INT REFERENCES faculties(sis_id),
-    study_type CHAR(1) NOT NULL,
-    study_form CHAR(1) NOT NULL,
-    study_specialization VARCHAR(12) NOT NULL,
-    enrollment DATE NOT NULL,
-    study_state CHAR(1) NOT NULL,
-    study_state_date DATE NOT NULL,
-    study_year INT NOT NULL,
-    degree_plan VARCHAR(15) --INT REFERENCES degree_plans(id) NOT NULL
-);
+-- CREATE TABLE studies(
+--     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     sis_id INT NOT NULL,
+--     student INT NOT NULL,
+--     faculty1 INT REFERENCES faculties(sis_id) NOT NULL,
+--     faculty2 INT REFERENCES faculties(sis_id),
+--     study_type CHAR(1) NOT NULL,
+--     study_form CHAR(1) NOT NULL,
+--     study_specialization VARCHAR(12) NOT NULL,
+--     enrollment DATE NOT NULL,
+--     study_state CHAR(1) NOT NULL,
+--     study_state_date DATE NOT NULL,
+--     study_year INT NOT NULL,
+--     degree_plan VARCHAR(15) --INT REFERENCES degree_plans(id) NOT NULL
+-- );
 
 CREATE TABLE users (
     id VARCHAR(8) PRIMARY KEY
@@ -245,14 +290,13 @@ FOR EACH ROW
 WHEN (pg_trigger_depth() = 0)
 EXECUTE FUNCTION blueprint_course_reordering();
 
-CREATE TABLE bla_blueprints (
-    user_id VARCHAR(8) REFERENCES users(id),
-    lang CHAR(2) NOT NULL,
-    blueprint JSONB NOT NULL
-);
+-- CREATE TABLE bla_blueprints (
+--     user_id VARCHAR(8) REFERENCES users(id),
+--     lang CHAR(2) NOT NULL,
+--     blueprint JSONB NOT NULL
+-- );
 
--- TODO: rename
-CREATE TABLE bla_studies (
+CREATE TABLE studies (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id VARCHAR(8) REFERENCES users(id) NOT NULL,
     degree_plan_code VARCHAR(15) NOT NULL,
@@ -355,9 +399,90 @@ CREATE TABLE filter_values (
     id INT PRIMARY KEY,
     category_id INT NOT NULL REFERENCES filter_categories(id),
     facet_id VARCHAR(50) NOT NULL,
-    title_cs VARCHAR(50) NOT NULL,
-    title_en VARCHAR(50) NOT NULL,
+    title_cs VARCHAR(250) NOT NULL,
+    title_en VARCHAR(250) NOT NULL,
     description_cs VARCHAR(200),
     description_en VARCHAR(200),
     position INT NOT NULL
 );
+
+
+-- insert into webapp.courses (
+--     code,
+--     lang,
+--     title,
+--     valid_from,
+--     valid_to,
+--     capacity,
+--     min_occupancy,
+--     credits,
+--     course_url,
+--     lecture_range_winter,
+--     lecture_range_summer,
+--     seminar_range_winter,
+--     seminar_range_summer,
+--     guarantors,
+--     teachers,
+--     annotation,
+--     syllabus,
+--     terms_of_passing,
+--     literature,
+--     requirements_of_assesment,
+--     entry_requirements,
+--     aim,
+--     department,
+--     faculty,
+--     taught_state_title,
+--     taught_state,
+--     start_semester,
+--     start_semester_title,
+--     taught_lang,
+--     range_unit,
+--     exam,
+--     survey,
+--     corequisites,
+--     prerequisites,
+--     incompatibilities,
+--     interchangeabilities,
+--     classifications,
+--     classes
+-- )
+-- select * from povinn2courses
+
+    -- code,
+    -- lang,
+    -- title,
+    -- valid_from,
+    -- valid_to,
+    -- course_url,
+    -- faculty, -- INT REFERENCES faculties(id),
+    -- department, -- INT REFERENCES departments(id),
+    -- taught_state,
+    -- taught_state_title,
+    -- start_semester, -- NOT NULL,
+    -- start_semester_title, -- NOT NULL,
+    -- taught_lang,
+    -- lecture_range_winter, -- NOT NULL,
+    -- seminar_range_winter, -- NOT NULL,
+    -- lecture_range_summer,
+    -- seminar_range_summer,
+    -- range_unit,
+    -- exam, -- NOT NULL,
+    -- credits, -- NOT NULL,
+    -- guarantors,
+    -- teachers,
+    -- min_occupancy,
+    -- capacity,
+    -- annotation,
+    -- syllabus,
+    -- terms_of_passing,
+    -- literature,
+    -- requirements_of_assesment,
+    -- entry_requirements,
+    -- aim,
+    -- prerequisities,
+    -- corequisities,
+    -- incompatibilities,
+    -- interchangeabilities,
+    -- classes,
+    -- classifications
