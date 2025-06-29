@@ -41,8 +41,8 @@ services:
     container_name: recsis-postgres
     image: postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-recsis}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-recsis}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       PGDATA: /data/postgres
     volumes:
       #  - postgres:/data/postgres
@@ -51,12 +51,12 @@ services:
       - "5432:5432"
     networks:
       - recsis-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 1s
-      timeout: 5s
-      retries: 10
+    # restart: unless-stopped
+    # healthcheck:
+    #   test: ["CMD-SHELL", "pg_isready", "-U", "${POSTGRES_USER:-postgres}"]
+    #   interval: 1s
+    #   timeout: 5s
+    #   retries: 10
   adminer:
     container_name: recsis-adminer
     image: adminer
@@ -85,9 +85,6 @@ services:
       target: dev-stage
     ports:
       - 8002:8002
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - recsis-network
 
