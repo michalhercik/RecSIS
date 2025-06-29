@@ -5,21 +5,6 @@ import (
     "unicode/utf8"
 )
 
-templ watermark() {
-    <div class="watermark" style="
-        position:fixed;
-        bottom:50%;
-        left:15%;
-        opacity:0.1;
-        z-index:99;
-        color: black;
-        pointer-events:none;
-    ">
-        <span style="font-size:60px">For demonstration purposes only!</span><br/>
-        <span style="font-size:30px">The state is global</span>
-    </div>
-}
-
 templ CourseLink(code string, t Text) {
     <a
         class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
