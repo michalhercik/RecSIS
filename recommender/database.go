@@ -56,7 +56,6 @@ func getCourses(w http.ResponseWriter, r *http.Request, query string) {
 		http.Error(w, "DB error", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(courses[0])
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(courses)
 }
