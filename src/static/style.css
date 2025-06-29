@@ -459,7 +459,6 @@ tr:target td {
 #bp-checked-courses-menu-skeleton {
     position: sticky;
     height: 36px;
-    top: 52px;
     background-color: white;
     z-index: 100;
 }
@@ -710,7 +709,6 @@ tr:target td {
 #dp-checked-courses-menu-skeleton {
     position: sticky;
     height: 37px;
-    top: 52px;
     background-color: white;
     z-index: 100;
 }
@@ -916,5 +914,15 @@ tr:target td {
     display: flex;
 }
 
-
 /* ====================================== */
+
+/* Error styles */
+#error-top-alert {
+    z-index: 2000 !important;
+    width: max-content;
+    max-width: calc(100vw - 2rem) !important;
+}
+
+#error-page-text {
+    margin-top: 20vh;
+}

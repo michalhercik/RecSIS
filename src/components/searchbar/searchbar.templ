@@ -9,8 +9,9 @@ templ SearchBar(model searchBarModel) {
     <form
         id="search-form"
         class="w-100"
-        hx-get={ model.lang.Path(model.searchEndpoint) }
+        hx-get={ model.lang.LocalizeURL(model.searchEndpoint) }
         hx-target="body"
+        hx-swap="show:top"
         hx-push-url="true"
         if model.includeFilters {
             hx-include={ model.filtersSelector }
@@ -28,14 +29,14 @@ templ SearchBar(model searchBarModel) {
                         id="search"
                         class="form-control"
                         name={ model.searchParam }
-                        placeholder={ model.t.SearchPlaceholder }
+                        placeholder={ model.t.searchPlaceholder }
                         autocomplete="off"
                         x-model="searchInput"
                         x-ref="searchInput"
                         @keyup.slash.outside="$el.focus(); $el.selectionStart = $el.selectionEnd = $el.value.length;"
                         @keyup.escape="$el.blur(); quickResOpen = false"
                         @focus="quickResOpen = true"
-                        hx-get={ model.lang.Path(model.quickSearchEndpoint) }
+                        hx-get={ model.lang.LocalizeURL(model.quickSearchEndpoint) }
                         hx-trigger="input changed delay:200ms, focus once"
                         hx-target="#quick-search-results"
                         hx-swap="outerHTML"
@@ -54,7 +55,7 @@ templ SearchBar(model searchBarModel) {
                         type="submit"
                         class="btn btn-submit-input-green d-none d-sm-inline"
                         @click="quickResOpen = false">
-                        <span class="d-none d-xl-inline">{ model.t.SearchButton }</span>
+                        <span class="d-none d-xl-inline">{ model.t.searchButton }</span>
                         <i class="bi bi-search d-inline d-xl-none"></i>
                     </button>
                 </div>
@@ -72,11 +73,11 @@ templ QuickResults(model quickResultsModel) {
             class="dropdown-menu w-100 shadow-sm show"
         >
             if len(model.courses) == 0 {
-                <div class="dropdown-item text-muted responsive-font">{ model.t.NoCoursesFound }</div>
+                <div class="dropdown-item text-muted responsive-font">{ model.t.noCoursesFound }</div>
             } else {
                 for _, course := range model.courses {
                     <a
-                        href={ templ.URL(model.lang.Path(model.resultDetailEndpoint(course.code))) }
+                        href={ templ.URL(model.lang.LocalizeURL(model.resultDetailEndpoint(course.code))) }
                         class="dropdown-item text-truncate responsive-font"
                         hx-boost="false"
                         tabindex="0"

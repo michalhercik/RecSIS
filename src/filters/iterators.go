@@ -8,12 +8,11 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
-// TODO: change "par" for variable value
 func (f Filters) IterFiltersWithFacets(facets Facets, query url.Values, lang language.Language) iter.Seq[FacetIterator] {
 	return func(yield func(FacetIterator) bool) {
 		for _, c := range f.categories {
 			f := facets[c.facetID]
-			checked := query["par"+c.id]
+			checked := query[Prefix+c.id]
 			result := FacetIterator{
 				title:   c.Title(lang),
 				desc:    c.Desc(lang),
@@ -67,6 +66,7 @@ func (ci FacetIterator) IterWithFacets() iter.Seq2[int, FacetValue] {
 				Desc:    v.Desc(ci.lang),
 				Count:   count,
 				Checked: checked,
+				Prefix:  Prefix,
 			}
 			if !yield(i, result) {
 				return
@@ -86,7 +86,7 @@ type FacetIterator struct {
 	title   string
 	desc    string
 	count   int
-	filter  FilterCategory
+	filter  filterCategory
 	facets  FacetCategory
 	lang    language.Language
 	checked []string
@@ -99,12 +99,15 @@ func (fi FacetIterator) Count() int {
 func (fi FacetIterator) ID() string {
 	return fi.filter.id
 }
+
 func (fi FacetIterator) Title() string {
 	return fi.title
 }
+
 func (fi FacetIterator) Desc() string {
 	return fi.desc
 }
+
 func (fi FacetIterator) DisplayedValueLimit() int {
 	return fi.filter.displayedValueLimit
 }
@@ -126,4 +129,5 @@ type FacetValue struct {
 	Desc    string
 	Count   int
 	Checked bool
+	Prefix  string
 }

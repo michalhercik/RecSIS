@@ -3,40 +3,43 @@ package courses
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"net/http"
 
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
-type Expression interface {
+type expression interface {
 	String() string
 	Except() func(func(string, string) bool)
 	ConditionsCount() int
 }
 
-type Request struct {
+type request struct {
 	userID      string
 	query       string
 	indexUID    string
 	page        int
 	hitsPerPage int
 	lang        language.Language
-	filter      Expression
+	filter      expression
 	facets      []string
 }
 
-type Response struct {
+type response struct {
 	TotalHits         int
 	TotalPages        int
 	Courses           []string
 	FacetDistribution map[string]map[string]int
 }
 
-type MultiResponse struct {
-	Results []Response `json:"results"`
+type multiResponse struct {
+	Results []response `json:"results"`
 }
 
-func (r *Response) UnmarshalJSON(data []byte) error {
+func (r *response) UnmarshalJSON(data []byte) error {
 	var hit struct {
 		TotalHits  int64 `json:"totalHits"`
 		TotalPages int64 `json:"totalPages"`
@@ -58,7 +61,7 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type QuickRequest struct {
+type quickRequest struct {
 	query    string
 	indexUID string
 	limit    int64
@@ -66,17 +69,17 @@ type QuickRequest struct {
 	lang     language.Language
 }
 
-type QuickCourse struct {
+type quickCourse struct {
 	code string
 	name string
 }
 
-type QuickResponse struct {
+type quickResponse struct {
 	approxHits int
-	courses    []QuickCourse
+	courses    []quickCourse
 }
 
-func (r *QuickResponse) UnmarshalJSON(data []byte) error {
+func (r *quickResponse) UnmarshalJSON(data []byte) error {
 	var hit struct {
 		ApproxHits int64 `json:"approxHits"`
 		Hits       []struct {
@@ -93,7 +96,7 @@ func (r *QuickResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.approxHits = int(hit.ApproxHits)
-	r.courses = make([]QuickCourse, len(hit.Hits))
+	r.courses = make([]quickCourse, len(hit.Hits))
 	for i, hit := range hit.Hits {
 		r.courses[i].code = hit.Code
 		if hit.Cs.Name != "" {
@@ -105,9 +108,9 @@ func (r *QuickResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type SearchEngine interface {
-	Search(r Request) (Response, error)
-	QuickSearch(r QuickRequest) (QuickResponse, error)
+type searchEngine interface {
+	Search(r request) (response, error)
+	QuickSearch(r quickRequest) (quickResponse, error)
 	FacetDistribution() (map[string]map[int]int, error)
 }
 
@@ -136,7 +139,7 @@ func (s MeiliSearch) FacetDistribution() (map[string]map[int]int, error) {
 	return result, nil
 }
 
-func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
+func makeMultiSearchRequest(r request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
 	numOfReq := 1 + r.filter.ConditionsCount()
 	result := &meilisearch.MultiSearchRequest{
 		Queries: make([]*meilisearch.SearchRequest, 0, numOfReq),
@@ -166,32 +169,43 @@ func makeMultiSearchRequest(r Request, index meilisearch.IndexConfig) *meilisear
 }
 
 // TODO: write own meilisearch client
-func (s MeiliSearch) Search(r Request) (Response, error) {
-	var result Response
+func (s MeiliSearch) Search(r request) (response, error) {
+	t := texts[r.lang]
+	var result response
 	searchReq := makeMultiSearchRequest(r, s.Courses)
 	response, err := s.Client.MultiSearch(searchReq)
 	if err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err, errorx.P("index", r.indexUID), errorx.P("query", r.query)),
+			http.StatusInternalServerError,
+			t.errCannotSearchCourses,
+		)
 	}
 	rawResponse, err := response.MarshalJSON()
 	if err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err, errorx.P("index", r.indexUID), errorx.P("query", r.query)),
+			http.StatusInternalServerError,
+			t.errCannotSearchCourses,
+		)
 	}
-	multi := MultiResponse{}
+	multi := multiResponse{}
 	if err = json.Unmarshal(rawResponse, &multi); err != nil {
-		return result, err
+		return result, errorx.NewHTTPErr(
+			errorx.AddContext(err, errorx.P("index", r.indexUID), errorx.P("query", r.query)),
+			http.StatusInternalServerError,
+			t.errCannotSearchCourses,
+		)
 	}
 	result = multi.Results[0]
 	for _, res := range multi.Results[1:] {
-		for param, distribution := range res.FacetDistribution {
-			result.FacetDistribution[param] = distribution
-		}
+		maps.Copy(result.FacetDistribution, res.FacetDistribution)
 	}
 	return result, nil
 }
 
-func (s MeiliSearch) QuickSearch(r QuickRequest) (QuickResponse, error) {
-	var result QuickResponse
+func (s MeiliSearch) QuickSearch(r quickRequest) (quickResponse, error) {
+	var result quickResponse
 	index := s.Client.Index(r.indexUID)
 	searchReq, err := buildQuickSearchRequest(r)
 	if err != nil {
@@ -207,7 +221,7 @@ func (s MeiliSearch) QuickSearch(r QuickRequest) (QuickResponse, error) {
 	return result, nil
 }
 
-func buildQuickSearchRequest(r QuickRequest) (*meilisearch.SearchRequest, error) {
+func buildQuickSearchRequest(r quickRequest) (*meilisearch.SearchRequest, error) {
 	result := &meilisearch.SearchRequest{
 		Limit:  r.limit,
 		Offset: r.offset,

@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/michalhercik/RecSIS/errorx"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 type CAS struct {
@@ -26,12 +29,12 @@ func (c CAS) validateTicket(r *http.Request, service string) (string, string, er
 	validateReq, ticket := c.validateTicketURLToCAS(r, service)
 	res, err := http.Get(validateReq)
 	if err != nil {
-		return "", "", err
+		return "", "", errorx.AddContext(err)
 	}
 	var valRes validationResponse
 	err = json.NewDecoder(res.Body).Decode(&valRes)
 	if err != nil {
-		return "", "", err
+		return "", "", errorx.AddContext(err)
 	}
 	return valRes.ServiceResponse.AuthenticationSuccess.User, ticket, nil
 }
@@ -51,12 +54,16 @@ func (c CAS) validateTicketURLToCAS(r *http.Request, service string) (string, st
 	return validateReq.String(), ticket
 }
 
-func (c CAS) UserIDTicketFromCASLogoutRequest(r *http.Request) (string, string, error) {
+func (c CAS) userIDTicketFromCASLogoutRequest(r *http.Request) (string, string, error) {
 	rawPayload := r.FormValue("logoutRequest")
 	var payload logoutRequest
 	err := xml.Unmarshal([]byte(rawPayload), &payload)
 	if err != nil {
-		return "", "", fmt.Errorf("UserIDTicketFromCASLogoutRequest: %w", err)
+		return "", "", errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("UserIDTicketFromCASLogoutRequest: %w", err)),
+			http.StatusBadRequest,
+			texts[language.FromContext(r.Context())].errCannotGetTicket,
+		)
 	}
 	return payload.UserID, payload.Ticket, nil
 }

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -18,16 +19,17 @@ type PageWithNoFiltersAndForgetsSearchQueryOnRefresh struct {
 	Page
 }
 
-func (p PageWithNoFiltersAndForgetsSearchQueryOnRefresh) View(main templ.Component, lang language.Language, title string) templ.Component {
-	return p.view(main, lang, title, "", false)
+func (p PageWithNoFiltersAndForgetsSearchQueryOnRefresh) View(main templ.Component, lang language.Language, title string, userID string) templ.Component {
+	return p.view(main, lang, title, "", false, userID)
 }
 
 type Page struct {
+	Error           Error
 	Home            string
 	NavItems        []NavItem
 	QuickSearchPath string
-	SearchBar       SearchBar
 	router          *http.ServeMux
+	SearchBar       SearchBar
 }
 
 func (p Page) SearchParam() string {
@@ -45,11 +47,11 @@ func (p Page) Router() *http.ServeMux {
 
 }
 
-func (p Page) View(main templ.Component, lang language.Language, title string, searchQuery string) templ.Component {
-	return p.view(main, lang, title, searchQuery, true)
+func (p Page) View(main templ.Component, lang language.Language, title string, searchQuery string, userID string) templ.Component {
+	return p.view(main, lang, title, searchQuery, true, userID)
 }
 
-func (p Page) view(main templ.Component, lang language.Language, title string, searchQuery string, includeFilters bool) templ.Component {
+func (p Page) view(main templ.Component, lang language.Language, title string, searchQuery string, includeFilters bool, userID string) templ.Component {
 	searchBarView := p.SearchBar.View(searchQuery, lang, includeFilters)
 	model := pageModel{
 		title:    title,
@@ -59,6 +61,7 @@ func (p Page) view(main templ.Component, lang language.Language, title string, s
 		search:   searchBarView,
 		home:     p.Home,
 		navItems: p.NavItems,
+		userID:   userID,
 	}
 	return PageView(model)
 }
@@ -68,20 +71,32 @@ func (p Page) quickSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.FormValue(p.SearchBar.SearchParam())
 	view, err := p.SearchBar.QuickSearchResult(query, lang)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		p.Error.Log(errorx.AddContext(err))
+		p.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	view.Render(r.Context(), w)
+	err = view.Render(r.Context(), w)
+	if err != nil {
+		p.Error.CannotRenderComponent(w, r, err, lang)
+	}
+}
+
+type Error interface {
+	Log(err error)
+	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
+	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }
 
 type pageModel struct {
 	title    string
 	main     templ.Component
 	lang     language.Language
-	text     Text
+	text     text
 	search   templ.Component
 	home     string
 	navItems []NavItem
+	userID   string
 }
 
 type NavItem struct {

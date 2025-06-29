@@ -7,28 +7,26 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/michalhercik/RecSIS/dbds"
+	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
 )
 
-const courseIndex = "courses"
-const pageParam = "page"
-const hitsPerPageParam = "hitsPerPage"
+//================================================================================
+// Server Type
+//================================================================================
 
 type Server struct {
-	router  *http.ServeMux
-	Data    DBManager
-	Search  SearchEngine
 	Auth    Authentication
-	Filters filters.Filters
 	BpBtn   BlueprintAddButton
+	Data    DBManager
+	Error   Error
+	Filters filters.Filters
 	Page    Page
+	router  http.Handler
+	Search  searchEngine
 }
-
-//================================================================================
-// Interface
-//================================================================================
 
 func (s *Server) Init() {
 	if err := s.Filters.Init(); err != nil {
@@ -41,16 +39,51 @@ func (s Server) Router() http.Handler {
 	return s.router
 }
 
+type Authentication interface {
+	UserID(r *http.Request) (string, error)
+}
+
+type BlueprintAddButton interface {
+	PartialComponent(lang language.Language) PartialBlueprintAdd
+	ParseRequest(r *http.Request, additionalCourses []string) ([]string, int, int, error)
+	Action(userID string, year int, semester int, lang language.Language, course ...string) ([]int, error)
+}
+
+type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, years []bool, course string) templ.Component
+
+type Error interface {
+	Log(err error)
+	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
+	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
+	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
+}
+
+type Page interface {
+	View(main templ.Component, lang language.Language, title string, searchParam string, userID string) templ.Component
+	SearchParam() string
+}
+
 //================================================================================
-// Init
+// Routing
 //================================================================================
 
 func (s *Server) initRouter() {
 	router := http.NewServeMux()
-	router.HandleFunc("GET /", s.page)
+	router.HandleFunc("GET /{$}", s.page)
 	router.HandleFunc("GET /search", s.content)
 	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
-	s.router = router
+
+	// Wrap mux to catch unmatched routes
+	s.router = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check if mux has a handler for the URL
+		_, pattern := router.Handler(r)
+		if pattern == "" {
+			s.pageNotFound(w, r)
+			return
+		}
+		router.ServeHTTP(w, r)
+	})
 }
 
 //================================================================================
@@ -60,71 +93,103 @@ func (s *Server) initRouter() {
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	req, err := s.parseQueryRequest(w, r)
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		// TODO: handle error
-		log.Printf("search: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
+		return
+	}
+	req, err := s.parseQueryRequest(r)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		userMsg = fmt.Sprintf("%s: %s", t.errCannotSearchCourses, userMsg)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
 		return
 	}
 	result, err := s.search(req, r)
 	if err != nil {
-		log.Printf("search: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
 		return
 	}
-	result.templ = s.BpBtn.PartialComponent(lang)
+	result.bpBtn = s.BpBtn.PartialComponent(lang)
 	main := Content(&result, t)
-	s.Page.View(main, lang, t.PageTitle, req.query).Render(r.Context(), w)
+	err = s.Page.View(main, lang, t.pageTitle, req.query, userID).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) content(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	req, err := s.parseQueryRequest(w, r)
+	req, err := s.parseQueryRequest(r)
 	if err != nil {
-		// TODO: handle error
-		log.Printf("search: %v", err)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		userMsg = fmt.Sprintf("%s: %s", t.errCannotSearchCourses, userMsg)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
 	coursesPage, err := s.search(req, r)
 	if err != nil {
-		log.Printf("search: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
 
 	// Set the HX-Push-Url header to update the browser URL without a full reload
-	w.Header().Set("HX-Push-Url", s.parseUrl(r.URL.Query(), t))
+	w.Header().Set("HX-Push-Url", s.parseUrl(r.URL.Query(), lang))
 
-	coursesPage.templ = s.BpBtn.PartialComponent(lang)
-	Content(&coursesPage, t).Render(r.Context(), w)
+	coursesPage.bpBtn = s.BpBtn.PartialComponent(lang)
+	err = Content(&coursesPage, t).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, "", errorx.AddContext(err), lang)
+	}
 }
 
-func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Request, error) {
-	var req Request
+func (s Server) parseQueryRequest(r *http.Request) (request, error) {
+	var req request
 	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return req, err
+		return req, errorx.AddContext(err)
 	}
 	lang := language.FromContext(r.Context())
 	query := r.FormValue(s.Page.SearchParam())
-	page, err := strconv.Atoi(r.FormValue(pageParam))
-	if err != nil {
-		page = 1
+	pageString := r.FormValue(pageParam)
+	page := 1 // default to page 1 if not specified
+	if pageString != "" {
+		page, err = strconv.Atoi(pageString)
+		if err != nil || page < 1 {
+			return req, errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("invalid page number: '%s'", pageString)),
+				http.StatusBadRequest,
+				texts[lang].errInvalidPageNumber,
+			)
+		}
 	}
-	hitsPerPage, err := strconv.Atoi(r.FormValue(hitsPerPageParam))
-	if err != nil {
-		hitsPerPage = coursesPerPage
+	hitsPerPageString := r.FormValue(hitsPerPageParam)
+	hitsPerPage := coursesPerPage // default to coursesPerPage if not specified
+	if hitsPerPageString != "" {
+		hitsPerPage, err = strconv.Atoi(hitsPerPageString)
+		if err != nil || hitsPerPage < 1 {
+			return req, errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("invalid number of courses per page: %d", hitsPerPage)),
+				http.StatusBadRequest,
+				texts[lang].errInvalidNumberOfCourses,
+			)
+		}
 	}
-	filter, err := s.Filters.ParseURLQuery(r.URL.Query())
+	filter, err := s.Filters.ParseURLQuery(r.URL.Query(), lang)
 	if err != nil {
-		// TODO: handle error
-		log.Printf("search error: %v", err)
+		return req, errorx.AddContext(err)
 	}
 
-	req = Request{
+	req = request{
 		userID:      userID,
 		query:       query,
 		indexUID:    courseIndex,
@@ -137,16 +202,16 @@ func (s Server) parseQueryRequest(w http.ResponseWriter, r *http.Request) (Reque
 	return req, nil
 }
 
-func (s Server) search(req Request, httpReq *http.Request) (coursesPage, error) {
+func (s Server) search(req request, httpReq *http.Request) (coursesPage, error) {
 	// search for courses
 	var result coursesPage
 	searchResponse, err := s.Search.Search(req)
 	if err != nil {
-		return result, err
+		return result, errorx.AddContext(err)
 	}
-	coursesData, err := s.Data.Courses(req.userID, searchResponse.Courses, req.lang)
+	coursesData, err := s.Data.courses(req.userID, searchResponse.Courses, req.lang)
 	if err != nil {
-		return result, err
+		return result, errorx.AddContext(err)
 	}
 	result = coursesPage{
 		courses:     coursesData,
@@ -160,7 +225,7 @@ func (s Server) search(req Request, httpReq *http.Request) (coursesPage, error) 
 	return result, nil
 }
 
-func (s Server) parseUrl(queryValues url.Values, t text) string {
+func (s Server) parseUrl(queryValues url.Values, lang language.Language) string {
 	// exclude default values from the URL
 	if queryValues.Get(s.Page.SearchParam()) == "" {
 		queryValues.Del(s.Page.SearchParam())
@@ -170,68 +235,63 @@ func (s Server) parseUrl(queryValues url.Values, t text) string {
 	}
 	// TODO: possibly add more defaults to exclude
 
-	return fmt.Sprintf("%s?%s", t.Utils.Language.Path("/courses"), queryValues.Encode())
+	return fmt.Sprintf("%s?%s", lang.LocalizeURL("/courses/"), queryValues.Encode())
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
 	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		log.Printf("addCourseToBlueprint: %v", err)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	lang := language.FromContext(r.Context())
-	courseCodes, year, semester, err := s.BpBtn.ParseRequest(r)
+	courseCodes, year, semester, err := s.BpBtn.ParseRequest(r, nil)
 	if err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		log.Printf("addCourseToBlueprint: %v", err)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	_, err = s.BpBtn.Action(userID, year, semester, courseCodes[0])
+	if len(courseCodes) != 1 {
+		s.Error.Log(errorx.AddContext(fmt.Errorf("expected exactly one course code, got %d", len(courseCodes)), errorx.P("courseCodes", courseCodes)))
+		s.Error.Render(w, r, http.StatusBadRequest, t.errUnexpectedNumberOfCourses, lang)
+		return
+	}
+	courseCode := courseCodes[0]
+	_, err = s.BpBtn.Action(userID, year, semester, lang, courseCode)
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		log.Printf("failed to create button: %v", err)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
 
-	t := texts[lang]
-	courses, err := s.Data.Courses(userID, courseCodes, lang)
+	course, err := s.Data.courses(userID, []string{courseCode}, lang)
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		log.Printf("failed to create button: %v", err)
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
 	btn := s.BpBtn.PartialComponent(lang)
-	CourseCard(&courses[0], t, btn).Render(r.Context(), w)
-
-	// btn.Render(r.Context(), w)
+	err = CourseCard(&course[0], t, btn).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
 }
 
-func parseYearSemester(r *http.Request) (int, dbds.SemesterAssignment, error) {
-	year, err := parseYear(r)
+func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+	userID, err := s.Auth.UserID(r)
 	if err != nil {
-		return 0, 0, err
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
+		return
 	}
-	semester, err := parseSemester(r)
-	if err != nil {
-		return year, 0, err
-	}
-	return year, semester, nil
-}
-
-func parseYear(r *http.Request) (int, error) {
-	year, err := strconv.Atoi(r.FormValue("year"))
-	if err != nil {
-		return year, err
-	}
-	return year, nil
-}
-
-func parseSemester(r *http.Request) (dbds.SemesterAssignment, error) {
-	semesterInt, err := strconv.Atoi(r.FormValue("semester"))
-	if err != nil {
-		return 0, err
-	}
-	semester := dbds.SemesterAssignment(semesterInt)
-	return semester, nil
+	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.pageTitle, userID, lang)
 }

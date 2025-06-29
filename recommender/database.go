@@ -75,7 +75,7 @@ SELECT
 FROM courses c
 WHERE c.lang = $1
 AND c.start_semester IS NOT NULL
-LIMIT 20
+LIMIT 20;
 `
 
 const sql_newest = `
@@ -95,5 +95,5 @@ WHERE c.lang = $1
 AND c.valid_from IS NOT NULL
 AND c.start_semester IS NOT NULL
 ORDER BY c.valid_from DESC
-LIMIT 20
+LIMIT 20;
 `

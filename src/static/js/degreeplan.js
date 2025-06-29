@@ -5,7 +5,7 @@ initializeTooltips();
 // shift click for multiple checkboxes
 function setupCheckboxShiftClick() {
     let lastChecked = null;
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][name="selected"]');
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][name="selected-courses"]');
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('click', function (e) {
             if (lastChecked && lastChecked !== this && e.shiftKey) {
@@ -46,7 +46,7 @@ function handleCircleClick(event) {
 
 // pass through click event to checkbox on small screens
 function handleTdClick(event) {
-    const checkbox = event.target.querySelector('input[type="checkbox"][name="selected"]');
+    const checkbox = event.target.querySelector('input[type="checkbox"][name="selected-courses"]');
     if (checkbox) {
         // Create a new MouseEvent, preserving shift key and other properties
         const clickEvent = new MouseEvent('click', {
@@ -78,7 +78,7 @@ function initializeTooltips() {
 
 // Add checked courses to BP btn can add only to the union of not yet assigned semesters of all checked courses 
 function updateCheckedCoursesMenu(semesterCount) {
-    const checkedCourses = Array.from(document.querySelectorAll('input[type="checkbox"][name="selected"]:checked'));
+    const checkedCourses = Array.from(document.querySelectorAll('input[type="checkbox"][name="selected-courses"]:checked'));
     const disabledSemesters = Array(semesterCount).fill(false);
 
     checkedCourses.forEach(checkbox => {
@@ -101,7 +101,7 @@ function updateCheckedCoursesMenu(semesterCount) {
         dropdownItems.forEach((item, idx) => {
             if (item.disabled) {
                 // Mark this semester as disabled
-                disabledSemesters[idx] = true;
+                disabledSemesters[idx + 1] = true;
             }
         });
     });
@@ -122,7 +122,7 @@ function updateCheckedCoursesMenu(semesterCount) {
     const dropdownItems = innerDiv.querySelectorAll('.dropdown-menu .dropdown-item');
     dropdownItems.forEach((item, idx) => {
         if (idx < disabledSemesters.length) {
-            item.disabled = disabledSemesters[idx];
+            item.disabled = disabledSemesters[idx + 1];
         }
     });
 }

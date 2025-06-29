@@ -30,12 +30,13 @@ templ PageView(model pageModel) {
             <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
             // Google Fonts
             <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;700&display=swap" rel="stylesheet">
-            <script src="/js/utils.js"></script>
+            <script src="/js/page.js"></script>
         </head>
         <body hx-boost="true" class="position-relative">
             // @watermark()
             @Header(model)
             <main>
+                <div id="error-content"></div>
                 <div id="main-content">
                     @model.main
                 </div>
@@ -90,7 +91,7 @@ templ Header(model pageModel) {
 templ navBrand(model pageModel) {
     <a
         class="navbar-brand d-flex align-items-center fs-3 mff-font"
-        href={ templ.URL(model.lang.Path(model.home)) }
+        href={ templ.URL(model.lang.LocalizeURL(model.home)) }
         @click={ fmt.Sprintf("if (!event.ctrlKey) { clearExpanded(); title = '%s'; hideMain(); }", model.navItems[0].Title.String(model.lang)) }
         data-bs-toggle="collapse"
         data-bs-target=".navbar-collapse.show"
@@ -105,7 +106,7 @@ templ navItemView(nav NavItem, model pageModel) {
     <a
         class="nav-item nav-link nav-item-font pb-0 pb-lg-2"
         :class={ fmt.Sprintf("{ 'active': title == '%s' }", nav.Title.String(model.lang)) }
-        href={ templ.URL(model.lang.Path(nav.Path)) }
+        href={ templ.URL(model.lang.LocalizeURL(nav.Path)) }
         @click={ fmt.Sprintf("if (!event.ctrlKey) { clearExpanded(); title = '%s'; hideMain(); }", nav.Title.String(model.lang)) }
         data-bs-toggle="collapse"
         data-bs-target=".navbar-collapse.show"
@@ -132,7 +133,7 @@ templ langBtn(l language.Language) {
 }
 
 // TODO: put real data here
-templ profileBtn(model pageModel, t Text) {
+templ profileBtn(model pageModel, t text) {
     // Mobile version
     <div class="d-lg-none">
         <div class="d-flex justify-content-end">
@@ -140,12 +141,12 @@ templ profileBtn(model pageModel, t Text) {
         </div>
         <div class="collapse" id="userCollapse">
             <ul class="list-unstyled ps-3">
-                <li><span class="dropdown-item disabled text-center text-decoration-line-through">Jan Novák</span></li>
+                <li><span class="dropdown-item disabled text-center">{ model.userID }</span></li>
                 <hr>
                 <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
                 <li>
-                    <form hx-boost="false" method="POST" action={ templ.URL(model.lang.Path("/logout")) }>
-                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.Logout }</button>
+                    <form hx-boost="false" method="POST" action={ templ.URL(model.lang.LocalizeURL("/logout")) }>
+                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
                     </form>
                 </li>
             </ul>
@@ -156,12 +157,12 @@ templ profileBtn(model pageModel, t Text) {
     <li class="dropdown d-none d-lg-block">
         <button class="btn btn-outline-secondary bi bi-person-circle border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
         <ul class="dropdown-menu dropdown-menu-end">
-            <li><span class="dropdown-item disabled text-center text-decoration-line-through">Jan Novák</span></li>
+            <li><span class="dropdown-item disabled text-center">{ model.userID }</span></li>
             <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
             <li>
-                <form hx-boost="false" method="POST" action={ templ.URL(model.lang.Path("/logout")) }>
-                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.Logout }</button>
+                <form hx-boost="false" method="POST" action={ templ.URL(model.lang.LocalizeURL("/logout")) }>
+                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
                 </form>
             </li>
         </ul>
@@ -171,7 +172,7 @@ templ profileBtn(model pageModel, t Text) {
 templ Footer(model pageModel) {
     <footer class="text-center text-body-secondary pb-3 position-absolute bottom-0 w-100">
         <hr/>
-        { model.text.Contact }
+        { model.text.contact }
         <a href="mailto:TODO@TODO.com">TODO@TODO.com</a>
     </footer>
 }

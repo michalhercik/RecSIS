@@ -5,13 +5,6 @@ import (
 	"strings"
 )
 
-// type Expression interface {
-// 	String() string
-// 	Except() func(func(string, string) bool)
-// 	Append(param string, values ...string)
-// 	ConditionsCount() int
-// }
-
 type expression []condition
 
 func (e *expression) Append(param string, values ...string) {

@@ -15,7 +15,7 @@ const (
 	EN      Language = "en"
 )
 
-func (l Language) Path(path string) string {
+func (l Language) LocalizeURL(path string) string {
 	path, err := url.JoinPath("/", string(l), path)
 	if err != nil {
 		panic(err)
