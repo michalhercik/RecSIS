@@ -17,11 +17,11 @@ FROM alpine AS ssh-stage
 WORKDIR /app
 COPY --from=go-stage /etl /etl
 COPY ./docker-cmd.sh ./docker-cmd.sh
-RUN apk add --update --no-cache openssh
-RUN apk add --update --no-cache autossh
+# RUN apk add --update --no-cache openssh
+# RUN apk add --update --no-cache autossh
+RUN apk add openssh
+RUN apk add autossh
 CMD ./docker-cmd.sh
-# CMD sshpass -p "$SSH_PASS" ssh -T -L 10502:mffout.karlov.mff.cuni.cz:10502 hercik@acheron.ms.mff.cuni.cz -p 42049 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null && /etl
-# CMD /bin/sh
 
 #############################################################################################
 # Deploy stage
