@@ -129,7 +129,16 @@ func (m DBManager) createUser(userID string, lang language.Language) error {
 			texts[lang].errCannotCreateUser,
 		)
 	}
-	// TODO: here must commit the transaction before inserting study plan (because of foreign key constraint)
+	// TODO: remove this after SIS integration
+	createStudy := "INSERT INTO bla_studies (user_id, degree_plan_code, start_year) VALUES ($1, 'NIPVS19B', 2020)"
+	_, err = tx.Exec(createStudy, userID)
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(err),
+			http.StatusInternalServerError,
+			texts[lang].errCannotCreateUser,
+		)
+	}
 	err = tx.Commit()
 	if err != nil {
 		return errorx.NewHTTPErr(
@@ -138,15 +147,6 @@ func (m DBManager) createUser(userID string, lang language.Language) error {
 			texts[lang].errCannotCreateUser,
 		)
 	}
-	// TODO: remove this after SIS integration
-	createStudy := "INSERT INTO bla_studies (user_id, degree_plan_code, start_year) VALUES ($1, 'NIPVS19B', 2020)"
-	_, err = m.DB.Exec(createStudy, userID)
-	if err != nil {
-		return errorx.NewHTTPErr(
-			errorx.AddContext(err),
-			http.StatusInternalServerError,
-			texts[lang].errCannotCreateUser,
-		)
-	}
+
 	return nil
 }
