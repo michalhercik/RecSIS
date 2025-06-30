@@ -130,8 +130,8 @@ func (m DBManager) createUser(userID string, lang language.Language) error {
 		)
 	}
 	// TODO: remove this after SIS integration
-	createStudy := "INSERT INTO studies (user_id, degree_plan_code, start_year) VALUES ($1, 'NIPVS19B', 2020)"
-	_, err = m.DB.Exec(createStudy, userID)
+	createStudy := "INSERT INTO bla_studies (user_id, degree_plan_code, start_year) VALUES ($1, 'NIPVS19B', 2020)"
+	_, err = tx.Exec(createStudy, userID)
 	if err != nil {
 		return errorx.NewHTTPErr(
 			errorx.AddContext(err),
@@ -147,5 +147,6 @@ func (m DBManager) createUser(userID string, lang language.Language) error {
 			texts[lang].errCannotCreateUser,
 		)
 	}
+
 	return nil
 }

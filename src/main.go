@@ -222,6 +222,7 @@ func main() {
 	//////////////////////////////////////////
 	// Server setup
 	//////////////////////////////////////////
+
 	authentication := cas.Authentication{
 		Data:           cas.DBManager{DB: db},
 		Error:          errorHandler,
