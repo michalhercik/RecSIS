@@ -801,8 +801,7 @@ var povinn2searchable = transformation{
 			range_unit VARCHAR(2),
 			faculty VARCHAR(5),
 			department VARCHAR(10),
-			capacity INT,
-			min_occupancy INT,
+			section VARCHAR(10),
 			taught_lang JSONB,
 			lecture_range JSONB,
 			seminar_range JSONB,
@@ -865,8 +864,7 @@ var povinn2searchable = transformation{
 			pc.range_unit->>'abbr' range_unit,
 			pvn.pfakulta,
 			pvn.pgarant department,
-			pvn.ppocmax capacity,
-			pvn.ppocmin min_occupancy,
+			u.sekce section,
 			pja.taught_lang_id,
 			jsonb_build_array(pc.lecture_range_summer, pc.lecture_range_winter) lecture_range,
 			jsonb_build_array(pc.seminar_range_summer, pc.seminar_range_winter) seminar_range,
@@ -888,6 +886,7 @@ var povinn2searchable = transformation{
 		LEFT JOIN teachers t on pc.code = t.code
 		LEFT JOIN povinn pvn on pvn.povinn = pc.code
 		LEFT JOIN descriptions d on pc.code = d.code
+		LEFT JOIN ustav u ON pvn.pgarant = u.kod
 		WHERE pc.lang='cs'
 		AND credits > 0
 		AND (taught_state = 'V' OR taught_state = 'N')
@@ -963,7 +962,7 @@ var initFilterTables = transformation{
 		VALUES ` +
 		categoriesToSQL("courses", []category{
 			makeCategory("faculty", "Fakulta", "Faculty", 3),
-			makeCategory("taught", "Stav předmětu", "Course status", 3),
+			makeCategory("taught_state", "Stav předmětu", "Course status", 3),
 			makeCategory("start_semester", "Semestr", "Semester", 3),
 			makeCategory("credits", "Kredity", "Credits", 6),
 			makeCategory("semester_count", "Počet semestrů", "Number of semesters", 3),
@@ -975,8 +974,8 @@ var initFilterTables = transformation{
 				"Rozsah cvičení pro letní nebo zimní semestr.",
 				"Seminar range for summer or winter semester.",
 			),
-			makeCategory("language", "Jazyk výuky", "Language", 3),
-			makeCategory("exam_type", "Typ examinace", "Exam type", 3),
+			makeCategory("taught_lang", "Jazyk výuky", "Language", 3),
+			makeCategory("exam", "Typ examinace", "Exam type", 3),
 			makeCategory("range_unit", "Jednotka rozsahu", "Range unit", 3).withDescription(
 				"Jednotka rozsahu přednášky a cvičení.",
 				"Unit of lecture and seminar range.",
@@ -1109,7 +1108,7 @@ var createFilterValuesForLangs = transformation{
 			SELECT fc.id FROM filters f
 			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
 			WHERE f.id='courses'
-			AND fc.facet_id='language'
+			AND fc.facet_id='taught_lang'
 		)
 		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
 		SELECT
@@ -1166,7 +1165,7 @@ var createFilterValuesForTaughtStates = transformation{
 			SELECT fc.id FROM filters f
 			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
 			WHERE f.id='courses'
-			AND fc.facet_id='taught'
+			AND fc.facet_id='taught_state'
 		), distinct_states AS (
 			SELECT DISTINCT taught_state
 			FROM povinn2searchable
@@ -1319,7 +1318,7 @@ var createFilterValuesForExams = transformation{
 			FROM filters f
 			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
 			WHERE f.id='courses'
-			AND fc.facet_id='exam_type'
+			AND fc.facet_id='exam'
 		), ORDER_LIST(exam, position) AS (
 			VALUES
 				('*', 1),

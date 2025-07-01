@@ -27,10 +27,10 @@ filterable='[
   "section",
   "credits",
   "department",
-  "exam_type",
+  "exam",
   "range_unit",
-  "taught",
-  "language",
+  "taught_state",
+  "taught_lang",
   "faculty",
   "capacity",
   "min_occupancy"
