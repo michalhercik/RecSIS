@@ -62,6 +62,7 @@ templ chooseDegreePlanModal(t text) {
                             hx-get={ t.language.LocalizeURL("/degreeplan/search") }
                             hx-trigger="keyup changed delay:200ms"
                             hx-target="#dp-results"
+                            hx-indicator="#explicit-no-loader"
                             autocomplete="off">
                         <div class="form-floating dp-select-year-width">
                             <select id="dp-year" class="form-select" name={ searchDegreePlanYear }>
