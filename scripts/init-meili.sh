@@ -45,22 +45,15 @@ echo "PUT filterable attributes: $response"
 # Set searchable attributes
 searchable='[
   "code",
-  "cs.name",
-  "en.name",
+  "title",
   "guarantors",
   "teachers",
-  "cs.A",
-  "en.A",
-  "cs.S",
-  "en.S",
-  "cs.C",
-  "en.C",
-  "cs.E",
-  "en.E",
-  "cs.P",
-  "en.P",
-  "cs.L",
-  "en.L"
+  "annotation",
+  "sylabus",
+  "aim",
+  "terms_of_passing",
+  "requirements_of_assesment",
+  "literature"
 ]'
 response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -H "Authorization: Bearer $API_KEY" \

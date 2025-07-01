@@ -47,22 +47,15 @@ echo "$($response.StatusCode) $($response.Content)"
 
 $serchable = @(
     "code",
-    "cs.name",
-    "en.name",
+    "title",
     "guarantors",
     "teachers",
-    "cs.A",
-    "en.A",
-    "cs.S",
-    "en.S",
-    "cs.C",
-    "en.C",
-    "cs.E",
-    "en.E",
-    "cs.P",
-    "en.P",
-    "cs.L",
-    "en.L"
+    "annotation",
+    "sylabus",
+    "aim",
+    "terms_of_passing",
+    "requirements_of_assesment",
+    "literature"
 )
 $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settings/searchable-attributes" `
     -Method Put `
