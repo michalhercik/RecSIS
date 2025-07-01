@@ -24,6 +24,7 @@ filterable='[
   "semester_count",
   "lecture_range",
   "seminar_range",
+  "section",
   "credits",
   "department",
   "exam_type",

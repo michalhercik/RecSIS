@@ -20,11 +20,11 @@ SELECT
 	c.code,
 	c.title,
 	c.start_semester,
-	c.lecture_range1,
-	c.lecture_range2,
-	c.seminar_range1,
-	c.seminar_range2,
-	c.exam_type,
+	c.lecture_range_winter,
+	c.lecture_range_summer,
+	c.seminar_range_winter,
+	c.seminar_range_summer,
+	c.exam,
 	c.credits,
 	c.guarantors
 FROM blueprint_years y

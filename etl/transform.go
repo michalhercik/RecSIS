@@ -891,6 +891,7 @@ var povinn2searchable = transformation{
 		WHERE pc.lang='cs'
 		AND credits > 0
 		AND (taught_state = 'V' OR taught_state = 'N')
+		AND pvn.pgarant NOT LIKE '%STUD'
 	`,
 }
 
@@ -1697,8 +1698,8 @@ var ankecy2searchable = transformation{
 		CREATE TABLE ankecy2searchable (
 			id INT,
 			course_code VARCHAR(10) NOT NULL,
-			study_year VARCHAR(2),
-			academic_year VARCHAR(4),
+			study_year INT,
+			academic_year INT,
 			study_field JSONB,
 			study_type JSONB,
 			teacher JSONB,

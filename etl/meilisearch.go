@@ -71,6 +71,7 @@ func selectSearchable(db *sqlx.DB, table string) ([]map[string]any, error) {
 
 func uploadToMeilisearch(client meilisearch.ServiceManager, indexName string, data []map[string]any) error {
 	index := client.Index(indexName)
+	index.DeleteAllDocuments()
 	task, err := index.AddDocuments(data)
 	if err != nil {
 		return err

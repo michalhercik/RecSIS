@@ -35,12 +35,12 @@ func main() {
 	var start time.Time
 	var elapsed time.Duration
 	// Extract
-	start = time.Now()
-	err = extract(sis, recsis)
-	elapsed = time.Since(start)
-	report = makeReport(err, elapsed)
-	log.Println("--------------------------------------------------")
-	log.Println(report)
+	// start = time.Now()
+	// err = extract(sis, recsis)
+	// elapsed = time.Since(start)
+	// report = makeReport(err, elapsed)
+	// log.Println("--------------------------------------------------")
+	// log.Println(report)
 	// Transform
 	start = time.Now()
 	err = transform(recsis)
@@ -117,6 +117,9 @@ func migrate(db *sqlx.DB) error {
 		return err
 	}
 	_, err = tx.Exec(`--sql
+		DELETE FROM webapp.filter_values WHERE TRUE;
+		DELETE FROM webapp.filter_categories WHERE TRUE;
+		DELETE FROM webapp.filters WHERE TRUE;
 		INSERT INTO webapp.filters
 		SELECT * from filters;
 		INSERT INTO webapp.filter_categories

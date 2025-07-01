@@ -2,6 +2,7 @@ package coursedetail
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"iter"
 	"sort"
@@ -37,8 +38,8 @@ type courseDetailPage struct {
 type course struct {
 	code                   string
 	title                  string
-	faculty                string
-	guarantorDepartment    string
+	faculty                faculty
+	guarantorDepartment    department
 	state                  string
 	semester               teachingSemester
 	language               string
@@ -46,7 +47,7 @@ type course struct {
 	seminarRangeWinter     sql.NullInt64
 	lectureRangeSummer     sql.NullInt64
 	seminarRangeSummer     sql.NullInt64
-	rangeUnit              sql.NullString
+	rangeUnit              nullRangeUnit
 	examType               string
 	credits                int
 	guarantors             teacherSlice
@@ -59,18 +60,43 @@ type course struct {
 	assessmentRequirements nullDescription
 	entryRequirements      nullDescription
 	aim                    nullDescription
-	prerequisites          []string
-	corequisites           []string
-	incompatible           []string
-	interchange            []string
-	classes                []class
-	classifications        []class
+	prerequisites          []requisite
+	corequisites           []requisite
+	incompatible           []requisite
+	interchange            []requisite
+	classes                []string
+	classifications        []string
 	link                   string // link to course webpage (not SIS)
 	blueprintAssignments   assignmentSlice
 	blueprintSemesters     []bool
 	inDegreePlan           bool
 	categoryRatings        []courseCategoryRating
 	overallRating          courseRating
+}
+
+type rangeUnit struct {
+	abbr string
+	name string
+}
+
+type nullRangeUnit struct {
+	rangeUnit
+	valid bool
+}
+
+type faculty struct {
+	abbr string
+	name string
+}
+
+type department struct {
+	id   string
+	name string
+}
+
+type requisite struct {
+	courseCode string
+	state      string
 }
 
 func (c course) semesterStyleClass() string {
@@ -218,21 +244,66 @@ type surveyViewModel struct {
 type survey struct {
 	student
 	surveyTarget
-	AcademicYear int `json:"academic_year"`
-	// Semester string `json:"semester"`
-	Content string `json:"content"`
+	AcademicYear int    `json:"academic_year"`
+	Content      string `json:"content"`
 }
 
 type student struct {
-	StudyYear  int       `json:"study_year"`
-	StudyField string    `json:"study_field"`
-	Study      studyType `json:"study_type"`
+	Year  int        `json:"study_year"`
+	Field StudyField `json:"study_field"`
+	Study studyType  `json:"study_type"`
+}
+
+type StudyField struct {
+	ID   string
+	Name string
+}
+
+func (s *StudyField) UnmarshalJSON(data []byte) error {
+	var temp struct {
+		ID   string `json:"id"`
+		Name struct {
+			CS string `json:"cs"`
+			EN string `json:"en"`
+		} `json:"name"`
+	}
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+	s.ID = temp.ID
+	s.Name = temp.Name.CS
+	if s.Name == "" {
+		s.Name = temp.Name.EN
+	}
+	return nil
 }
 
 type studyType struct {
-	// Code string `json:"code"`
-	// Abbr string `json:"abbr"`
-	Name string `json:"name"`
+	Abbr string
+	Name string
+}
+
+func (s *studyType) UnmarshalJSON(data []byte) error {
+	var temp struct {
+		Abbr struct {
+			CS string `json:"cs"`
+			EN string `json:"en"`
+		} `json:"abbr"`
+		Name struct {
+			CS string `json:"cs"`
+			EN string `json:"en"`
+		} `json:"name"`
+	}
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+	s.Abbr = temp.Abbr.CS
+	s.Name = temp.Name.CS
+	if s.Abbr == "" && s.Name == "" {
+		s.Abbr = temp.Abbr.EN
+		s.Name = temp.Name.EN
+	}
+	return nil
 }
 
 type surveyTarget struct {
