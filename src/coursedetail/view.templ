@@ -137,6 +137,9 @@ templ basicInfo(course *course, t text) {
                 </table>
             }
         }
+        @infoRow(t.additionalInfo) {
+            <span><a href={ templ.SafeURL(course.url.String) }>{ urlHostPath(course.url.String) }</a></span>
+        }
     </table>
 }
 

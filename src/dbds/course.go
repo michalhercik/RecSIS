@@ -11,6 +11,7 @@ type Course struct {
 	Code                   string               `db:"code"`
 	Title                  string               `db:"title"`
 	Start                  int                  `db:"start_semester"`
+	URL                    sql.NullString       `db:"course_url"`
 	LectureRangeWinter     sql.NullInt64        `db:"lecture_range_winter"`
 	SeminarRangeWinter     sql.NullInt64        `db:"seminar_range_winter"`
 	LectureRangeSummer     sql.NullInt64        `db:"lecture_range_summer"`

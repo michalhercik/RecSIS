@@ -58,6 +58,7 @@ SELECT
 	c.teachers,
 	c.min_occupancy,
 	c.capacity,
+	c.course_url,
 	c.annotation,
 	c.aim,
 	c.requirements_of_assesment,

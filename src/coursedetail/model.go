@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"iter"
+	"net/url"
 	"sort"
 
 	"github.com/michalhercik/RecSIS/filters"
@@ -34,6 +35,14 @@ type courseDetailPage struct {
 	course *course
 }
 
+func urlHostPath(urlStr string) string {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return urlStr
+	}
+	return u.Host + u.Path
+}
+
 // course representation
 type course struct {
 	code                   string
@@ -53,6 +62,7 @@ type course struct {
 	guarantors             teacherSlice
 	teachers               teacherSlice
 	capacity               string
+	url                    sql.NullString
 	annotation             nullDescription
 	syllabus               nullDescription
 	passingTerms           nullDescription

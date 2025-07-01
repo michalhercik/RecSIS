@@ -152,6 +152,7 @@ func intoCourse(from *courseDetail) course {
 		guarantors:             intoTeacherSlice(from.Guarantors),
 		teachers:               intoTeacherSlice(from.Teachers),
 		capacity:               from.MaxOccupancy.String,
+		url:                    from.URL,
 		annotation:             intoNullDesc(from.Annotation),
 		syllabus:               intoNullDesc(from.Syllabus),
 		passingTerms:           intoNullDesc(from.PassingTerms),
