@@ -36,7 +36,7 @@ templ filterSection(cp *coursesPage, t text) {
         >
             <div class="bg-filters rounded-5">
                 <div x-cloak x-show="showFilters || expandedFilters">
-                    <div class="px-4 px-sm-0 pb-4 pb-sm-0">
+                    <div class="px-4 px-sm-0 pb-4 pb-sm-0 pt-2 pt-sm-0">
                         @filtersInternal(cp, t)
                     </div>
                 </div>
@@ -61,12 +61,18 @@ templ filtersInternal(cp *coursesPage, t text) {
     for category := range cp.facets {
         <div x-data={ fmt.Sprintf("{ expanded: JSON.parse(sessionStorage.getItem('expanded-%s')) || false }", category.ID()) }>
             // category title (with help icon)
-            <div class="d-flex justify-content-start align-items-end">
-                <p class="form-label fw-semibold mb-0 mt-2">{ category.Title() }</p>
-                if category.Desc() != "" {
-                    @helpIcon(category.Desc())
-                }
-            </div>
+            <p class="form-label fw-semibold mb-0 mt-2" >
+                {{
+                    rest, last := splitByLastSpace(category.Title())
+                }}
+                { rest }
+                <span style="white-space:nowrap">
+                    { last }
+                    if category.Desc() != "" {
+                        @helpIcon(category.Desc())
+                    }
+                </span>
+            </p>
             // checkboxes with values
             for i, value := range category.IterWithFacets() {
                 <div x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
@@ -93,10 +99,10 @@ templ checkboxInput(name, value, label, desc string, count int, checked bool) {
             type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
         <label role="button" class="form-check-label" for={ name + "-" + value }>
             <span>{ label }</span>
+            <span class="text-muted small">{ fmt.Sprintf("(%d)", count) }</span>
             if desc != "" {
                 @helpIcon(desc)
             }
-            <span class="text-muted small">{ fmt.Sprintf("(%d)", count) }</span>
         </label>
     </div>
 }
@@ -113,7 +119,8 @@ templ moveToTopLink(t text) {
 templ helpIcon(content string) {
     <i
         x-data="{ hoverHelp: false }"
-        class="mx-1 cursor-help bi"
+        style="font-size: 0.9rem;"
+        class="ms-1 cursor-help align-bottom bi"
         :class="hoverHelp ? 'bi-question-circle-fill' : 'bi-question-circle'"
         @mouseover="hoverHelp = true"
         @mouseleave="hoverHelp = false"

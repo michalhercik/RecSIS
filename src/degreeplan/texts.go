@@ -10,6 +10,7 @@ type text struct {
 	pageTitle             string
 	showDegreePlan        string
 	chooseDegreePlan      string
+	chooseDegreePlanHelp  string
 	degreePlanPlaceholder string
 	enrollmentYear        string
 	noDegreePlanResults   string
@@ -58,6 +59,7 @@ var texts = map[language.Language]text{
 		pageTitle:             "Studijní plán",
 		showDegreePlan:        "Zobrazte si studijní plán",
 		chooseDegreePlan:      "Vyberte si studijní plán",
+		chooseDegreePlanHelp:  "Do vyhledávacího pole vlevo zadejte kód Vašeho studijního plánu a vpravo vyberte Váš rok zápisu do daného studia. Kód studijního plánu naleznete v SIS v záložce 'Osobní údaje a nastavení' v položce 'Studijní plán' za názvem v závorce. Rok zápisu naleznete taktéž v SIS v záložce 'Osobní údaje a nastavení' v položce 'Datum zápisu'.",
 		degreePlanPlaceholder: "např. NISD23N",
 		enrollmentYear:        "Rok zápisu",
 		noDegreePlanResults:   "Žádný studijní plán nenalezen.",
@@ -95,6 +97,7 @@ var texts = map[language.Language]text{
 		pageTitle:             "Degree Plan",
 		showDegreePlan:        "Show your degree plan",
 		chooseDegreePlan:      "Choose a degree plan",
+		chooseDegreePlanHelp:  "Enter your degree plan code in the search field on the left and select your enrollment year on the right. You can find the degree plan code in SIS under 'Personal data and settings' tab in the 'Curriculum' item, next to the name, in parentheses. The enrollment year can also be found in SIS under 'Personal data and settings' tab in the 'Enrollment date' item.",
 		degreePlanPlaceholder: "e.g. NISD23N",
 		enrollmentYear:        "Enrollment year",
 		noDegreePlanResults:   "No degree plan found.",

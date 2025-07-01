@@ -132,40 +132,60 @@ templ langBtn(l language.Language) {
     </button>
 }
 
-// TODO: put real data here
 templ profileBtn(model pageModel, t text) {
     // Mobile version
     <div class="d-lg-none">
         <div class="d-flex justify-content-end">
-            <button class="btn btn-outline-secondary bi bi-person-circle border-0" type="button" data-bs-toggle="collapse" data-bs-target="#userCollapse" aria-expanded="false"></button>
+            <button
+                type="button"
+                class="btn btn-outline-secondary bi bi-person-circle border-0" 
+                data-bs-toggle="collapse" data-bs-target="#userCollapse" aria-expanded="false">
+            </button>
         </div>
         <div class="collapse" id="userCollapse">
             <ul class="list-unstyled ps-3">
-                <li><span class="dropdown-item disabled text-center">{ model.userID }</span></li>
+                @userID(model.userID)
                 <hr>
-                <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
-                <li>
-                    <form hx-boost="false" method="POST" action={ templ.URL(model.lang.LocalizeURL("/logout")) }>
-                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
-                    </form>
-                </li>
+                @reloadFromSIS(model.text)
+                @logout(model.text, model.lang)
             </ul>
         </div>
     </div>
 
     // Desktop version
     <li class="dropdown d-none d-lg-block">
-        <button class="btn btn-outline-secondary bi bi-person-circle border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
+        <button
+            type="button"
+            class="btn btn-outline-secondary bi bi-person-circle border-0"
+            data-bs-toggle="dropdown" aria-expanded="false">
+        </button>
         <ul class="dropdown-menu dropdown-menu-end">
-            <li><span class="dropdown-item disabled text-center">{ model.userID }</span></li>
+            @userID(model.userID)
             <li><hr class="dropdown-divider"></li>
-            <li><button class="dropdown-item text-decoration-line-through" href="#">Reload from SIS</button></li>
-            <li>
-                <form hx-boost="false" method="POST" action={ templ.URL(model.lang.LocalizeURL("/logout")) }>
-                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
-                </form>
-            </li>
+            @reloadFromSIS(model.text)
+            @logout(model.text, model.lang)
         </ul>
+    </li>
+}
+
+templ userID(userID string) {
+    <li>
+        <span class="dropdown-item disabled text-center">{ userID }</span>
+    </li>
+}
+
+templ reloadFromSIS(t text) {
+    // TODO: after SIS integration, implement this button
+    // <li>
+    //     <button class="dropdown-item" href="#">Reload from SIS</button>
+    // </li>
+}
+
+templ logout(t text, lang language.Language) {
+    <li>
+        <form hx-boost="false" method="POST" action={ templ.URL(lang.LocalizeURL("/logout")) }>
+            <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
+        </form>
     </li>
 }
 

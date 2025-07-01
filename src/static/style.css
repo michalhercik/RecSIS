@@ -197,8 +197,8 @@ tr:target td {
 /* S -> cards grid styles */
 #filter-section,
 #filter-section-skeleton {
-    max-width: 185px;
-    width: 185px;
+    max-width: 197px;
+    width: 197px;
 }
 
 @media (max-width: 575.5px) {
