@@ -11,9 +11,6 @@ services:
       - RECSIS_USER=${RECSIS_USER}
       - RECSIS_PASS=${RECSIS_PASS}
       - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - recsis-network
     volumes:
@@ -27,9 +24,6 @@ services:
     ports:
       - 443:8000
       - 80:80
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - recsis-network
     volumes:

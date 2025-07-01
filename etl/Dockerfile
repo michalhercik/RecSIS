@@ -3,7 +3,7 @@
 #############################################################################################
 # Build stage
 #############################################################################################
-FROM golang:1.23 AS go-stage
+FROM golang:1.23 AS build-stage
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -31,4 +31,4 @@ WORKDIR /app
 COPY --from=build-stage /etl /etl
 COPY ./config.prod.toml ./config.prod.toml
 USER nonroot:nonroot
-ENTRYPOINT ["/etl --config /app/config.prod.toml"]
+ENTRYPOINT ["/etl", "--config", "/app/config.prod.toml"]
