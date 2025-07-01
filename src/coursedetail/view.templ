@@ -153,14 +153,16 @@ templ buttons(course *course, t text, bpBtn PartialBlueprintAdd) {
             { t.sisLink }
         </a>
         // TODO: zapsat button
-        <a class="btn btn-outline-secondary text-decoration-line-through" href="#" role="button">
-            zapsat
-        </a>
+        // TODO: after SIS integration, implement this button
+        // <a class="btn btn-outline-secondary" href="#" role="button">
+        //     zapsat
+        // </a>
         // TODO: rozvrh buttons
-        // for NDMI002 https://is.cuni.cz/studium/rozvrhng/roz_predmet_macro.php?fak=11320&skr=2024&sem=1&predmet=NDMI002
-        <a class="btn btn-outline-secondary text-decoration-line-through" href="#" role="button">
-            rozvrh
-        </a>
+        // for NDMI002 -> https://is.cuni.cz/studium/rozvrhng/roz_predmet_macro.php?fak=11320&skr=2024&sem=1&predmet=NDMI002
+        // TODO: after SIS integration, implement this button
+        // <a class="btn btn-outline-secondary" href="#" role="button">
+        //     rozvrh
+        // </a>
         // button to assign course to blueprint
         @bpBtn("outerHTML", "#course-detail-page", "", course.blueprintSemesters, course.code)
     </div>

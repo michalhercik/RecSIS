@@ -46,7 +46,10 @@ templ chooseDegreePlanModal(t text) {
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="chooseDegreePlanModalLabel">{ t.chooseDegreePlan }</h1>
+                    <h1 class="modal-title fs-5" id="chooseDegreePlanModalLabel">
+                        { t.chooseDegreePlan }
+                        @chooseDegreePlanHelp(t)
+                    </h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div id="choose-degree-plan-modal-body" class="modal-body">
@@ -75,6 +78,19 @@ templ chooseDegreePlanModal(t text) {
             </div>
         </div>
     </div>
+}
+
+templ chooseDegreePlanHelp(t text) {
+    <span
+        class="bi ps-1 cursor-help"
+        x-data="{ hover: false }"
+        @mouseenter="hover = true"
+        @mouseleave="hover = false"
+        :class="hover ? 'bi-info-circle-fill' : 'bi-info-circle'"
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-title={ t.chooseDegreePlanHelp }>
+    </span>
 }
 
 templ quickSearchResults() {
@@ -130,12 +146,13 @@ templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
 
 templ completionStatusBadges(bloc *bloc, t text) {
     <h5 class="d-flex gap-2 status-badges mb-0">
-        <div class="d-flex justify-content-start">
-            <span class="badge bg-success rounded-end-0 py-2 text-decoration-line-through">{ t.completed }</span>
-            <span class="badge bg-success-dark rounded-start-0 py-2 text-decoration-line-through">
-                { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.limit) }
-            </span>
-        </div>
+        // TODO: after SIS integration, uncomment this badge -> should be already working
+        // <div class="d-flex justify-content-start">
+        //     <span class="badge bg-success rounded-end-0 py-2">{ t.completed }</span>
+        //     <span class="badge bg-success-dark rounded-start-0 py-2">
+        //         { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.limit) }
+        //     </span>
+        // </div>
         <div class="d-flex justify-content-start">
             <span class="badge bg-blueprint rounded-end-0 py-2">{ t.blueprint }</span>
             <span class="badge bg-blueprint-dark rounded-start-0 py-2">

@@ -3,6 +3,7 @@ package errorx
 import (
     "fmt"
     "net/http"
+    "time"
 )
 
 templ ErrorMessageContent(code int, userMsg string, t text) {
@@ -13,6 +14,7 @@ templ ErrorMessageContent(code int, userMsg string, t text) {
         <div id="error-page-text">
             <p class="display-2 fw-bold mb-0">{ fmt.Sprintf("%s %d: %s", t.errorText, code, http.StatusText(code)) }</p>
             <p class="display-4">{ userMsg }</p>
+            <p class="text-muted mt-3">{ time.Now().Format("2006-01-02 15:04:05 MST") }</p>
         </div>
     </div>
 }
@@ -26,7 +28,20 @@ templ ErrorMessageTopOfPage(code int, userMsg string, t text) {
         <div class="d-flex flex-column">
             <strong class="fs-5 mb-0 alert-heading">{ fmt.Sprintf("%s %d: %s", t.errorText, code, http.StatusText(code)) }</strong>
             <span class="fs-5">{ userMsg }</span>
+            <p class="small my-0">{ time.Now().Format("2006-01-02 15:04:05 MST") }</p>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+
+    // TODO: might adjust the timeout duration
+    <script>
+        setTimeout(() => {
+            const alertEl = document.getElementById('error-top-alert');
+            alertEl.classList.remove('show');
+            setTimeout(() => {
+                const alert = bootstrap.Alert.getOrCreateInstance(alertEl);
+                alert.close();
+            }, 150);
+        }, 5000);
+    </script>
 }
