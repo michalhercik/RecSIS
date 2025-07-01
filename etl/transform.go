@@ -842,7 +842,10 @@ var povinn2searchable = transformation{
 		), descriptions as (
 			SELECT
 				code,
-				jsonb_agg(title) title,
+				jsonb_build_object(
+					'cs', MAX(title) FILTER (WHERE lang = 'cs'),
+					'en', MAX(title) FILTER (WHERE lang = 'en')
+				) title,
 				jsonb_agg(annotation->'content') annotation,
 				jsonb_agg(syllabus->'content') syllabus,
 				jsonb_agg(terms_of_passing->'content') terms_of_passing,
