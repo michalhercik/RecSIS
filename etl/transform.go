@@ -1227,6 +1227,7 @@ var createFilterValuesForSemesterCounts = transformation{
 			SELECT DISTINCT semester_count
 			FROM povinn2searchable
 		)
+		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
 		SELECT
 			cid.id category_id,
 			semester_count facet_id,
