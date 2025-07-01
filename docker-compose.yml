@@ -4,8 +4,13 @@ services:
     build:
       dockerfile: Dockerfile
       context: ./etl/
-      target: ssh-stage
-    env_file: "./etl/etl.env"
+      target: deploy-stage
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - RECSIS_USER=${RECSIS_USER}
+      - RECSIS_PASS=${RECSIS_PASS}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
     depends_on:
       postgres:
         condition: service_healthy

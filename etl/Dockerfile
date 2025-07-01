@@ -28,8 +28,7 @@ CMD ./docker-cmd.sh
 #############################################################################################
 FROM gcr.io/distroless/base-debian11 AS deploy-stage
 WORKDIR /app
-COPY --from=build-stage /recsis /recsis
-COPY ./static ./static
-EXPOSE 8000
+COPY --from=build-stage /etl /etl
+COPY ./config.prod.toml ./config.prod.toml
 USER nonroot:nonroot
-ENTRYPOINT ["/recsis"]
+ENTRYPOINT ["/etl --config /app/config.prod.toml"]
