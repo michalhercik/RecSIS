@@ -1533,6 +1533,7 @@ var createFilterValuesForSurveyAcademicYears = transformation{
 				a.sskr
 			FROM povinn2searchable ps
 			LEFT JOIN ankecy a ON ps.code = a.povinn
+			WHERE a.sskr IS NOT NULL
 		)
 		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
 		SELECT

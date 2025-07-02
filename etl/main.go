@@ -185,6 +185,7 @@ func transform(recsis *sqlx.DB) error {
 			createFilterValuesForSurveyStudyTypes,
 			createFilterValuesForSurveyStudyYears,
 			createFilterValuesForSurveyTargetTypes,
+			createFilterValuesForSurveyAcademicYears,
 		},
 	}
 
