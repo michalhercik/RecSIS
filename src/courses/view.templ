@@ -120,7 +120,7 @@ templ helpIcon(content string) {
     <i
         x-data="{ hoverHelp: false }"
         style="font-size: 0.9rem;"
-        class="ms-1 cursor-help align-bottom bi"
+        class="ms-0 cursor-help align-bottom bi"
         :class="hoverHelp ? 'bi-question-circle-fill' : 'bi-question-circle'"
         @mouseover="hoverHelp = true"
         @mouseleave="hoverHelp = false"
