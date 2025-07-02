@@ -5,4 +5,3 @@ meili_data
 src/recsis
 *.env
 src/config.prod.toml
-etl/config.prod.toml
