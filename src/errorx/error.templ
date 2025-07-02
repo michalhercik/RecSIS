@@ -32,16 +32,4 @@ templ ErrorMessageTopOfPage(code int, userMsg string, t text) {
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-
-    // TODO: might adjust the timeout duration
-    <script>
-        setTimeout(() => {
-            const alertEl = document.getElementById('error-top-alert');
-            alertEl.classList.remove('show');
-            setTimeout(() => {
-                const alert = bootstrap.Alert.getOrCreateInstance(alertEl);
-                alert.close();
-            }, 150);
-        }, 5000);
-    </script>
 }

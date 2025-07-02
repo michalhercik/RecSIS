@@ -24,6 +24,7 @@ templ Content(data *blueprintPage, t text) {
         }
         @summarizeFooter(data.years, data.totalCredits(), t)
         <script defer src="/js/blueprint.js"></script>
+        @scriptOnMoveCustom()
     </div>
 }
 
@@ -228,6 +229,7 @@ templ coursesBody(tableID string, courses []course, canUnassign bool, xSortMetho
     <tbody
         x-sort={ xSortMethod }
         x-sort:group="courses"
+        x-sort:config="{ onMove: onMoveCustom }"
     >
         for _, course := range courses {
         <tr
@@ -556,4 +558,26 @@ templ adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, 
         hx-target="#blueprint-page"
         hx-swap="outerHTML">
     </button>
+}
+
+templ scriptOnMoveCustom() {
+    // do not allow drop a course to a semester where it is already assigned
+    <script>
+        function onMoveCustom(event, originalEvent) {
+            originatorID = event.dragged.id;
+            originatorCode = getCourseCodeFromId(originatorID);
+            targetCodes = Array.from(originalEvent.target.parentElement.parentElement.querySelectorAll("tr"))
+                .filter(tr => tr.id !== originatorID)
+                .map(tr => getCourseCodeFromId(tr.id));
+            //console.log("originator:", originatorCode, "target table:", targetCodes);
+            
+            duplicate = targetCodes.includes(originatorCode);
+            return !duplicate
+        }
+
+        function getCourseCodeFromId(id) {
+            const parts = id.split("-");
+            return parts[parts.length - 1];
+        }
+    </script>
 }
