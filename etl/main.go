@@ -35,12 +35,12 @@ func main() {
 	var start time.Time
 	var elapsed time.Duration
 	// Extract
-	// start = time.Now()
-	// err = extract(sis, recsis)
-	// elapsed = time.Since(start)
-	// report = makeReport(err, elapsed)
-	// log.Println("--------------------------------------------------")
-	// log.Println(report)
+	start = time.Now()
+	err = extract(sis, recsis)
+	elapsed = time.Since(start)
+	report = makeReport(err, elapsed)
+	log.Println("--------------------------------------------------")
+	log.Println(report)
 	// Transform
 	start = time.Now()
 	err = transform(recsis)
@@ -185,6 +185,7 @@ func transform(recsis *sqlx.DB) error {
 			createFilterValuesForSurveyStudyTypes,
 			createFilterValuesForSurveyStudyYears,
 			createFilterValuesForSurveyTargetTypes,
+			createFilterValuesForSurveyAcademicYears,
 		},
 	}
 

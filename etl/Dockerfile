@@ -3,7 +3,7 @@
 #############################################################################################
 # Build stage
 #############################################################################################
-FROM golang:1.23 AS go-stage
+FROM golang:1.23 AS build-stage
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -13,23 +13,23 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /etl
 #############################################################################################
 # Dev stage
 #############################################################################################
-FROM alpine AS ssh-stage
+FROM alpine AS dev-stage
 WORKDIR /app
-COPY --from=go-stage /etl /etl
+COPY --from=build-stage /etl /etl
 COPY ./docker-cmd.sh ./docker-cmd.sh
+COPY ./config.docker.toml ./config.docker.toml
 # RUN apk add --update --no-cache openssh
 # RUN apk add --update --no-cache autossh
 RUN apk add openssh
 RUN apk add autossh
-CMD ./docker-cmd.sh
+ENTRYPOINT ["./docker-cmd.sh"]
 
 #############################################################################################
 # Deploy stage
 #############################################################################################
 FROM gcr.io/distroless/base-debian11 AS deploy-stage
 WORKDIR /app
-COPY --from=build-stage /recsis /recsis
-COPY ./static ./static
-EXPOSE 8000
+COPY --from=build-stage /etl /etl
+COPY ./config.prod.toml ./config.prod.toml
 USER nonroot:nonroot
-ENTRYPOINT ["/recsis"]
+ENTRYPOINT ["/etl", "--config", "/app/config.prod.toml"]
