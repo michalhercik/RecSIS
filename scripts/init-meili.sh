@@ -84,21 +84,19 @@ echo "PUT dictionary: $response"
 # echo "POST documents: $response"
 
 filterable='[
-    "teacher_facet",
-    "study_field",
+    "teacher.id",
+    "study_field.id",
     "academic_year",
     "study_year",
     "course_code",
-    "study_type.code",
-    "study_type.name_cs",
-    "study_type.name_en",
+    "study_type.id",
     "target_type"
 ]'
 response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
   -d "$filterable" \
-  "$BASE_URL/indexes/courses-comments/settings/filterable-attributes")
+  "$BASE_URL/indexes/survey/settings/filterable-attributes")
 echo "PUT filterable attributes: $response"
 
 sortable='[
@@ -109,7 +107,7 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
   -d "$sortable" \
-  "$BASE_URL/indexes/courses-comments/settings/sortable-attributes")
+  "$BASE_URL/indexes/survey/settings/sortable-attributes")
 echo "PUT filterable attributes: $response"
 
 response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
