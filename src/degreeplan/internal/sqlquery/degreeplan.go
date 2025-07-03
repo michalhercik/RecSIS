@@ -3,13 +3,13 @@ package sqlquery
 const UserDegreePlan = `--sql
 WITH user_start_year AS (
 	-- TODO: pick a user selected study plan or max
-	SELECT MIN(start_year) AS year FROM bla_studies WHERE user_id = $1
+	SELECT MIN(start_year) AS year FROM studies WHERE user_id = $1
 ),
 user_blueprint_semesters AS (
 	SELECT
 		dp.course_code,
 		array_agg(bc.course_code IS NOT NULL ORDER BY by.academic_year, bs.semester) AS semesters
-	FROM bla_studies s
+	FROM studies s
 	INNER JOIN user_start_year my
 		ON s.start_year = my.year
 	LEFT JOIN degree_plans dp
@@ -36,18 +36,18 @@ SELECT
 	c.title,
 	c.credits,
 	c.start_semester,
-	c.lecture_range1,
-	c.lecture_range2,
-	c.seminar_range1,
-	c.seminar_range2,
-	c.exam_type,
+	c.lecture_range_winter,
+	c.lecture_range_summer,
+	c.seminar_range_winter,
+	c.seminar_range_summer,
+	c.exam,
 	c.guarantors,
 	ubs.semesters,
 	CASE
 		WHEN dp.bloc_type = 'A' THEN TRUE
 		WHEN dp.bloc_type = 'B' THEN FALSE
 	END AS is_compulsory
-FROM bla_studies s
+FROM studies s
 INNER JOIN user_start_year my
 	ON s.start_year = my.year
 LEFT JOIN degree_plans dp
@@ -68,13 +68,13 @@ ORDER BY dp.bloc_type, dp.seq;
 const DegreePlan = `
 WITH user_start_year AS (
 	-- TODO: pick a user selected study plan or max
-	SELECT MIN(start_year) AS year FROM bla_studies WHERE user_id = $1
+	SELECT MIN(start_year) AS year FROM studies WHERE user_id = $1
 ),
 user_blueprint_semesters AS (
 	SELECT
 		dp.course_code,
 		array_agg(bc.course_code IS NOT NULL ORDER BY by.academic_year, bs.semester) AS semesters
-	FROM bla_studies s
+	FROM studies s
 	INNER JOIN user_start_year my
 		ON s.start_year = my.year
 	LEFT JOIN degree_plans dp
@@ -101,11 +101,11 @@ SELECT
 	c.title,
 	c.credits,
 	c.start_semester,
-	c.lecture_range1,
-	c.lecture_range2,
-	c.seminar_range1,
-	c.seminar_range2,
-	c.exam_type,
+	c.lecture_range_winter,
+	c.lecture_range_summer,
+	c.seminar_range_winter,
+	c.seminar_range_summer,
+	c.exam,
 	c.guarantors,
 	ubs.semesters,
 	CASE

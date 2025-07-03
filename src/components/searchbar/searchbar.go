@@ -90,9 +90,9 @@ func (m MeiliSearch) buildQuickSearchRequest(lang language.Language) (*meilisear
 	}
 	switch lang {
 	case language.CS:
-		result.AttributesToRetrieve = []string{"code", "cs.NAME"}
+		result.AttributesToRetrieve = []string{"code", "title.cs"}
 	case language.EN:
-		result.AttributesToRetrieve = []string{"code", "en.NAME"}
+		result.AttributesToRetrieve = []string{"code", "title.en"}
 	default:
 		return result, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("unsupported language: %s", lang)),
@@ -113,12 +113,10 @@ func (r *QuickResponse) UnmarshalJSON(data []byte) error {
 		ApproxHits int64 `json:"approxHits"`
 		Hits       []struct {
 			Code string `json:"code"`
-			Cs   struct {
-				Name string `json:"NAME"`
-			} `json:"cs"`
-			En struct {
-				Name string `json:"NAME"`
-			} `json:"en"`
+			Name struct {
+				CS string `json:"cs"`
+				EN string `json:"en"`
+			} `json:"title"`
 		} `json:"Hits"`
 	}
 	if err := json.Unmarshal(data, &hit); err != nil {
@@ -128,10 +126,9 @@ func (r *QuickResponse) UnmarshalJSON(data []byte) error {
 	r.courses = make([]QuickCourse, len(hit.Hits))
 	for i, hit := range hit.Hits {
 		r.courses[i].code = hit.Code
-		if hit.Cs.Name != "" {
-			r.courses[i].name = hit.Cs.Name
-		} else {
-			r.courses[i].name = hit.En.Name
+		r.courses[i].name = hit.Name.CS
+		if r.courses[i].name == "" {
+			r.courses[i].name = hit.Name.EN
 		}
 	}
 	return nil

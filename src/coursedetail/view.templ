@@ -57,8 +57,8 @@ templ badges(course *course, t text) {
             }
             @standartBadge(course.semesterStyleClass()) {
                 <span>{ fmt.Sprintf("%s %s", hoursString(course), course.examType) }</span>
-                if course.rangeUnit.Valid {
-                    <span class="text-muted small">({ course.rangeUnit.String })</span>
+                if course.rangeUnit.valid {
+                    <span class="text-muted small">{ course.rangeUnit.abbr }</span>
                 }
             }
         </div>
@@ -109,10 +109,10 @@ templ clickableBadge(target, fragment, bgColor string, t text) {
 templ basicInfo(course *course, t text) {
     <table class="info-table-borders m-auto">
         @infoRow(t.faculty){
-            <span>{ course.faculty }</span>
+            <span>{ course.faculty.abbr }</span>
         }
         @infoRow(t.department) {
-            <span>{ course.guarantorDepartment }</span>
+            <span>{ course.guarantorDepartment.id }</span>
         }
         if course.language != "" {
             @infoRow(t.languageOfCourse) {
@@ -135,6 +135,11 @@ templ basicInfo(course *course, t text) {
                         @teacherStyledRow(g)
                     }
                 </table>
+            }
+        }
+        if (course.url.Valid) {
+            @infoRow(t.additionalInfo) {
+                <span><a href={ templ.SafeURL(course.url.String) }>{ urlHostPath(course.url.String) }</a></span>
             }
         }
     </table>
@@ -442,11 +447,11 @@ templ SurveysContent(model surveyViewModel, t text) {
             <div class="card-header">
                 <div class="d-flex justify-content-between lh-1">
                     <span class="text-muted small font08">{ fmt.Sprintf("%d %s", s.AcademicYear, s.Type) }</span>
-                    <span class="small">{ s.Study.Name }</span>
+                    <span class="small">{ s.Study.Abbr }</span>
                 </div>
                 <div class="d-flex justify-content-between">
                     @teacherStyled(s.TargetTeacher, t)
-                    <span class="small text-end mt-auto mb-0">{ fmt.Sprintf("%s, %s", t.yearStr(s.StudyYear), s.StudyField) }</span>
+                    <span class="small text-end mt-auto mb-0">{ fmt.Sprintf("%s, %s", t.yearStr(s.Year), s.Field.ID) }</span>
                 </div>
             </div>
             <div class="card-body text-justify py-2">
@@ -508,14 +513,14 @@ templ detailInfo(course *course, t text) {
                     if len(course.classes) > 0 {
                         @infoRow(t.classes) {
                             for _, c := range course.classes {
-                                <p class="mb-0">{ c.name }</p>
+                                <p class="mb-0">{ c }</p>
                             }
                         }
                     }
                     if len(course.classifications) > 0 {
                         @infoRow(t.classification) {
                             for _, c := range course.classifications {
-                                <p class="mb-0">{ c.name }</p>
+                                <p class="mb-0">{ c }</p>
                             }
                         }
                     }
@@ -542,14 +547,14 @@ templ detailInfo(course *course, t text) {
     }
 }
 
-templ requisitesLinksRow(req []string, title string, t text) {
+templ requisitesLinksRow(req []requisite, title string, t text) {
     if len(req) != 0 {
         @infoRow(title) {
             for i, c := range req {
                 if i != len(req) - 1 {
-                    @utils.CourseLink(c, t.language)<span>, </span>
+                    @utils.CourseLink(c.courseCode, t.language)<span>, </span>
                 } else {
-                    @utils.CourseLink(c, t.language)
+                    @utils.CourseLink(c.courseCode, t.language)
                 }
             }
         }

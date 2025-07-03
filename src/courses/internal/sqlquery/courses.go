@@ -18,12 +18,12 @@ WITH user_blueprint_semesters AS (
 degree_plan AS (
 	SELECT
 		dp.course_code
-	FROM bla_studies bs
+	FROM studies bs
 	LEFT JOIN degree_plans dp
 		ON dp.plan_code = bs.degree_plan_code
 		AND dp.plan_year = bs.start_year
 	WHERE bs.user_id = $1
-		AND bs.start_year = (SELECT MIN(start_year) FROM bla_studies WHERE user_id = $1)
+		AND bs.start_year = (SELECT MIN(start_year) FROM studies WHERE user_id = $1)
 		AND dp.interchangeability IS NULL
 		AND dp.lang = $3
 )
@@ -31,12 +31,12 @@ SELECT
 	c.code,
 	c.title,
 	c.annotation,
-	COALESCE(c.start_semester, -1) start_semester,
-	c.lecture_range1,
-	c.seminar_range1,
-	c.lecture_range2,
-	c.seminar_range2,
-	COALESCE(c.exam_type, '') exam_type,
+	COALESCE(c.start_semester, '') start_semester,
+	c.lecture_range_winter,
+	c.seminar_range_winter,
+	c.lecture_range_summer,
+	c.seminar_range_summer,
+	COALESCE(c.exam, '') exam,
 	COALESCE(c.credits, -1) credits,
 	c.guarantors,
 	ubs.semesters,

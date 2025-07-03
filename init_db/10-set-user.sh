@@ -1,2 +1,2 @@
 #!/bin/bash
-export PGUSER=recsis
+# export PGUSER=postgres

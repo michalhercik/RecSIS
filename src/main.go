@@ -155,7 +155,7 @@ func main() {
 		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		Search: coursedetail.Search{
 			Client: meiliClient,
-			Survey: meilisearch.IndexConfig{Uid: "courses-comments"},
+			Survey: meilisearch.IndexConfig{Uid: "survey"},
 		},
 	}
 	coursedetail.Init()

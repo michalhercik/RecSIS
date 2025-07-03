@@ -1,12 +1,12 @@
-$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents" `
-    -Method Delete `
-    -Headers @{ "Authorization" = "Bearer MASTER_KEY" }
-echo "$($response.StatusCode) $($response.Content)"
+# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents" `
+#     -Method Delete `
+#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" }
+# echo "$($response.StatusCode) $($response.Content)"
 
-$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/documents" `
-    -Method Delete `
-    -Headers @{ "Authorization" = "Bearer MASTER_KEY" }
-echo "$($response.StatusCode) $($response.Content)"
+# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/documents" `
+#     -Method Delete `
+#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" }
+# echo "$($response.StatusCode) $($response.Content)"
 
 # $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settings/pagination" `
 #     -Method Patch `
@@ -15,28 +15,25 @@ echo "$($response.StatusCode) $($response.Content)"
 #     -Body (@{"maxTotalHits" = 1000} | ConvertTo-Json)
 # echo "$($response.StatusCode) $($response.Content)"
 
-$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents?primaryKey=id" `
-    -Method Post `
-    -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
-    -ContentType "application/x-ndjson" `
-    -InFile "$PSScriptRoot/../init_search/courses.json"
-echo "$($response.StatusCode) $($response.Content)"
+# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents?primaryKey=id" `
+#     -Method Post `
+#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
+#     -ContentType "application/x-ndjson" `
+#     -InFile "$PSScriptRoot/../init_search/courses.json"
+# echo "$($response.StatusCode) $($response.Content)"
 
 $filterable = @(
     "start_semester",
     "semester_count",
     "lecture_range",
     "seminar_range",
-    # "lecture_range_winter",
-    # "seminar_range_winter",
-    # "lecture_range_summer",
-    # "seminar_range_summer",
+    "section",
     "credits",
     "department",
-    "exam_type",
+    "exam",
     "range_unit",
-    "taught",
-    "language",
+    "taught_state",
+    "taught_lang",
     "faculty",
     "capacity",
     "min_occupancy"
@@ -50,22 +47,15 @@ echo "$($response.StatusCode) $($response.Content)"
 
 $serchable = @(
     "code",
-    "cs.name",
-    "en.name",
+    "title",
     "guarantors",
     "teachers",
-    "cs.A",
-    "en.A",
-    "cs.S",
-    "en.S",
-    "cs.C",
-    "en.C",
-    "cs.E",
-    "en.E",
-    "cs.P",
-    "en.P",
-    "cs.L",
-    "en.L"
+    "annotation",
+    "sylabus",
+    "aim",
+    "terms_of_passing",
+    "requirements_of_assesment",
+    "literature"
 )
 $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settings/searchable-attributes" `
     -Method Put `
@@ -82,25 +72,25 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settin
     -Body ($dict | ConvertTo-Json)
 echo "$($response.StatusCode) $($response.Content)"
 
-$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/documents?primaryKey=id" `
-    -Method Post `
-    -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
-    -ContentType "application/x-ndjson" `
-    -InFile "$PSScriptRoot/../init_search/comments.json"
-echo "$($response.StatusCode) $($response.Content)"
+# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/documents?primaryKey=id" `
+#     -Method Post `
+#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
+#     -ContentType "application/x-ndjson" `
+#     -InFile "$PSScriptRoot/../init_search/comments.json"
+# echo "$($response.StatusCode) $($response.Content)"
 
 $filterable = @(
-    "teacher_facet",
-    "study_field",
+    "teacher.id",
+    "study_field.id",
     "academic_year",
     "study_year",
     "course_code",
-    "study_type.code",
-    "study_type.name_cs",
-    "study_type.name_en",
+    "study_type.id",
+    # "study_type.name_cs",
+    # "study_type.name_en",
     "target_type"
 )
-$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/settings/filterable-attributes" `
+$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/settings/filterable-attributes" `
     -Method Put `
     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
     -ContentType "application/json" `
@@ -111,7 +101,7 @@ $sortable = @(
     "academic_year",
     ""
 )
-$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses-comments/settings/sortable-attributes" `
+$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/settings/sortable-attributes" `
     -Method Put `
     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
     -ContentType "application/json" `
