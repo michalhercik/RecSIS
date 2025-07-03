@@ -13,15 +13,16 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /etl
 #############################################################################################
 # Dev stage
 #############################################################################################
-FROM alpine AS ssh-stage
+FROM alpine AS dev-stage
 WORKDIR /app
-COPY --from=go-stage /etl /etl
+COPY --from=build-stage /etl /etl
 COPY ./docker-cmd.sh ./docker-cmd.sh
+COPY ./config.docker.toml ./config.docker.toml
 # RUN apk add --update --no-cache openssh
 # RUN apk add --update --no-cache autossh
 RUN apk add openssh
 RUN apk add autossh
-CMD ./docker-cmd.sh
+ENTRYPOINT ["./docker-cmd.sh"]
 
 #############################################################################################
 # Deploy stage

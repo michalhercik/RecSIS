@@ -4,8 +4,9 @@ services:
     build:
       dockerfile: Dockerfile
       context: ./etl/
-      target: deploy-stage
+      target: dev-stage
     environment:
+      - ACHERON_USER=${ACHERON_USER}
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - RECSIS_USER=${RECSIS_USER}
