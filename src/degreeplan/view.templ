@@ -11,14 +11,15 @@ templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChe
         id="degreeplan-content"
         class="container position-relative"
         x-data="{ checkedNumber: 0, smallScreen: window.innerWidth < 768, searchOpened: false }"
+        x-init="$nextTick(() => requestAnimationFrame(() => { setupCheckboxShiftClick(); updateStickyOffset(); initializeTooltips(); }))"
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"
     >
-        // degree plan code
-        // TODO: add title
-        <h1 class="position-absolute start-50 translate-middle-x dp-code">{ fmt.Sprintf("%s - %d", dp.degreePlanCode, dp.degreePlanYear) }</h1>
         @chooseDegreePlanModal(dp.canSave, dp.degreePlanCode, dp.degreePlanYear, t)
         @checkedCoursesMenu(dp.bpNumberOfSemesters(), bpBtnChecked, t)
+        // degree plan code
+        // TODO: add title
+        <h1 class="text-center pt-0 pt-md-3">{ fmt.Sprintf("%s - %d", dp.degreePlanCode, dp.degreePlanYear) }</h1>
         for _, bloc := range dp.blocs {
             // bloc title, icon, credits and limit
             @completionStatusBadges(&bloc, t)
@@ -33,7 +34,7 @@ templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChe
                 </tbody>
             </table>
         }
-        <script defer src="/js/degreeplan.js"></script>
+        @scripts()
     </div>
 }
 
@@ -48,14 +49,16 @@ templ chooseDegreePlanModal(canSave bool, code string, year int, t text) {
                 hx-target="#degreeplan-content"
                 hx-swap="outerHTML"
                 hx-push-url={ templ.URL(t.language.LocalizeURL("/degreeplan/")) }>
-                { t.saveDegreePlan }
+                <span class="d-none d-sm-inline">{ t.saveDegreePlan }</span>
+                <span class="d-sm-none">{ t.saveDegreePlanShort }</span>
             </button>
         }
         <button
             type="button"
             class="btn bg-degreeplan"
             data-bs-toggle="modal" data-bs-target="#chooseDegreePlanModal">
-            { t.showDegreePlan }
+            <span class="d-none d-sm-inline">{ t.showDegreePlan }</span>
+            <span class="d-sm-none">{ t.showDegreePlanShort }</span>
         </button>
     </div>
 
