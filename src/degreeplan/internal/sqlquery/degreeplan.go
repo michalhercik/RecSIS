@@ -27,6 +27,8 @@ user_blueprint_semesters AS (
 	GROUP BY dp.course_code, dp.bloc_subject_code
 )
 SELECT
+	s.degree_plan_code,
+	s.start_year,
 	dp.bloc_subject_code,
 	COALESCE(dp.bloc_limit, -1) bloc_limit,
 	COALESCE(dp.bloc_name, '') bloc_name,
@@ -92,6 +94,7 @@ user_blueprint_semesters AS (
 	GROUP BY dp.course_code, dp.bloc_subject_code
 )
 SELECT
+	dp.plan_code AS degree_plan_code,
 	dp.bloc_subject_code,
 	COALESCE(dp.bloc_limit, -1) bloc_limit,
 	COALESCE(dp.bloc_name, '') bloc_name,
@@ -124,4 +127,12 @@ WHERE dp.plan_code = $2
 	AND interchangeability IS NULL
 -- TODO: pick a user selected study or max
 ORDER BY dp.bloc_type, dp.seq;
+`
+
+const SaveDegreePlan = `--sql
+UPDATE studies
+SET degree_plan_code = $2, start_year = $3
+WHERE user_id = $1
+-- TODO: pick a user selected study plan or max
+AND start_year = (SELECT MIN(start_year) FROM studies WHERE user_id = $1)
 `

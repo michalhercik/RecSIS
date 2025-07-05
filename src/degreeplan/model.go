@@ -14,6 +14,7 @@ import (
 const (
 	searchDegreePlanName  = "search-dp-query"
 	searchDegreePlanYear  = "search-dp-year"
+	saveDegreePlanYear    = "save-dp-year"
 	searchDegreePlanLimit = 5 // TODO: change to a bigger number
 
 	checkboxName = "selected-courses"
@@ -25,7 +26,10 @@ const (
 
 // all data needed for the degree plan page
 type degreePlanPage struct {
-	blocs []bloc
+	degreePlanCode string
+	degreePlanYear int  // year when user started studying
+	canSave        bool // if the user can save the degree plan
+	blocs          []bloc
 }
 
 func (dp *degreePlanPage) bpNumberOfSemesters() int {

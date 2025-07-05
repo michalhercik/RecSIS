@@ -14,7 +14,10 @@ templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChe
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"
     >
-        @chooseDegreePlanModal(t)
+        // degree plan code
+        // TODO: add title
+        <h1 class="position-absolute start-50 translate-middle-x dp-code">{ fmt.Sprintf("%s - %d", dp.degreePlanCode, dp.degreePlanYear) }</h1>
+        @chooseDegreePlanModal(dp.canSave, dp.degreePlanCode, dp.degreePlanYear, t)
         @checkedCoursesMenu(dp.bpNumberOfSemesters(), bpBtnChecked, t)
         for _, bloc := range dp.blocs {
             // bloc title, icon, credits and limit
@@ -34,13 +37,27 @@ templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChe
     </div>
 }
 
-templ chooseDegreePlanModal(t text) {
-    <button
-        type="button"
-        class="btn bg-degreeplan position-absolute choose-degree-plan-btn"
-        data-bs-toggle="modal" data-bs-target="#chooseDegreePlanModal">
-        { t.showDegreePlan }
-    </button>
+templ chooseDegreePlanModal(canSave bool, code string, year int, t text) {
+    <div class="position-absolute choose-degree-plan-btn">
+        if canSave {
+            <button
+                type="button"
+                class="btn bg-degreeplan"
+                hx-get={ templ.URL(t.language.LocalizeURL("/degreeplan/save/" + code)) }
+                hx-vals={ fmt.Sprintf(`"%s": "%d"`, saveDegreePlanYear, year) }
+                hx-target="#degreeplan-content"
+                hx-swap="outerHTML"
+                hx-push-url={ templ.URL(t.language.LocalizeURL("/degreeplan/")) }>
+                { t.saveDegreePlan }
+            </button>
+        }
+        <button
+            type="button"
+            class="btn bg-degreeplan"
+            data-bs-toggle="modal" data-bs-target="#chooseDegreePlanModal">
+            { t.showDegreePlan }
+        </button>
+    </div>
 
     <div class="modal fade" id="chooseDegreePlanModal" tabindex="-1" aria-labelledby="chooseDegreePlanModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

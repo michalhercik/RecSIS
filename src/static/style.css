@@ -720,6 +720,12 @@ tr:target td {
     }
 }
 
+/* DP -> degree plan code styles */
+.dp-code {
+    z-index: 1000 !important;
+    top: 12px;
+}
+
 /* DP -> choose degree plan button styles */
 .choose-degree-plan-btn {
     z-index: 1000 !important;
