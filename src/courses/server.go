@@ -40,7 +40,7 @@ func (s Server) Router() http.Handler {
 }
 
 type Authentication interface {
-	UserID(r *http.Request) (string, error)
+	UserID(r *http.Request) string
 }
 
 type BlueprintAddButton interface {
@@ -93,13 +93,7 @@ func (s *Server) initRouter() {
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	req, err := s.parseQueryRequest(r)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
@@ -154,10 +148,8 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) parseQueryRequest(r *http.Request) (request, error) {
 	var req request
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		return req, errorx.AddContext(err)
-	}
+	var err error
+	userID := s.Auth.UserID(r)
 	lang := language.FromContext(r.Context())
 	query := r.FormValue(s.Page.SearchParam())
 	pageString := r.FormValue(pageParam)
@@ -241,13 +233,7 @@ func (s Server) parseUrl(queryValues url.Values, lang language.Language) string 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.Render(w, r, code, userMsg, lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	courseCodes, year, semester, err := s.BpBtn.ParseRequest(r, nil)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
@@ -286,12 +272,6 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.pageTitle, userID, lang)
 }

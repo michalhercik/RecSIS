@@ -41,7 +41,7 @@ func (s Server) Router() http.Handler {
 }
 
 type Authentication interface {
-	UserID(r *http.Request) (string, error)
+	UserID(r *http.Request) string
 }
 
 type BlueprintAddButton interface {
@@ -105,13 +105,7 @@ func (s *Server) initRouter() {
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.errPageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	code := r.PathValue("code")
 	course, err := s.Data.course(userID, code, lang)
 	if err != nil {
@@ -188,10 +182,7 @@ func (s Server) surveyViewModel(r *http.Request) (surveyViewModel, error) {
 
 func (s Server) parseQueryRequest(r *http.Request) (request, error) {
 	var req request
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		return req, errorx.AddContext(err)
-	}
+	userID := s.Auth.UserID(r)
 	lang := language.FromContext(r.Context())
 	query := r.FormValue(searchQuery)
 	offset, err := strconv.Atoi(r.FormValue(surveyOffset))
@@ -221,13 +212,7 @@ func (s Server) rateCategory(w http.ResponseWriter, r *http.Request) {
 	// get language from context
 	lang := language.FromContext(r.Context())
 	// get user
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, texts[lang].errPageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	// get data
 	code := r.PathValue("code")
 	category := r.PathValue("category")
@@ -262,13 +247,7 @@ func (s Server) deleteCategoryRating(w http.ResponseWriter, r *http.Request) {
 	// get language from context
 	lang := language.FromContext(r.Context())
 	// get user
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, texts[lang].errPageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	// get data
 	code := r.PathValue("code")
 	category := r.PathValue("category")
@@ -291,13 +270,7 @@ func (s Server) rate(w http.ResponseWriter, r *http.Request) {
 	// get language
 	lang := language.FromContext(r.Context())
 	// get user
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, texts[lang].errPageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	// get data
 	code := r.PathValue("code")
 	ratingString := r.FormValue("rating")
@@ -331,13 +304,7 @@ func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 	// get language
 	lang := language.FromContext(r.Context())
 	// get user
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, texts[lang].errPageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	// get code
 	code := r.PathValue("code")
 	// delete rating
@@ -358,13 +325,7 @@ func (s Server) deleteRating(w http.ResponseWriter, r *http.Request) {
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.errPageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	courseCodes, year, semester, err := s.BpBtn.ParseRequest(r, nil)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
@@ -405,12 +366,6 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.errPageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.errPageTitle, userID, lang)
 }

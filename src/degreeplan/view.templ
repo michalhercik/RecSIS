@@ -17,14 +17,11 @@ templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChe
     >
         @chooseDegreePlanModal(dp.canSave, dp.degreePlanCode, dp.degreePlanYear, t)
         @checkedCoursesMenu(dp.bpNumberOfSemesters(), bpBtnChecked, t)
-        // degree plan code
         // TODO: add title
         <h1 class="text-center pt-0 pt-md-3">{ fmt.Sprintf("%s - %d", dp.degreePlanCode, dp.degreePlanYear) }</h1>
         for _, bloc := range dp.blocs {
-            // bloc title, icon, credits and limit
             @completionStatusBadges(&bloc, t)
             @blocName(&bloc, "d-md-none", "px-1 my-1", t)
-            // table with courses
             <table class="table table-sm degree-plan-table mb-4" :class="{ 'table-hover': !smallScreen }">
                 @tableHeader(&bloc, t)
                 <tbody>
@@ -44,9 +41,9 @@ templ chooseDegreePlanModal(canSave bool, code string, year int, t text) {
             <button
                 type="button"
                 class="btn bg-degreeplan"
-                hx-get={ templ.URL(t.language.LocalizeURL("/degreeplan/save/" + code)) }
+                hx-patch={ templ.URL(t.language.LocalizeURL("/degreeplan/" + code)) }
                 hx-vals={ fmt.Sprintf(`"%s": "%d"`, saveDegreePlanYear, year) }
-                hx-target="#degreeplan-content"
+                hx-target="this"
                 hx-swap="outerHTML"
                 hx-push-url={ templ.URL(t.language.LocalizeURL("/degreeplan/")) }>
                 <span class="d-none d-sm-inline">{ t.saveDegreePlan }</span>
@@ -131,12 +128,12 @@ templ QuickSearchResultsContent(results []quickDegreePlan, t text) {
                 for _, result := range results {
                     <tr>
                         <td><a
-                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/show/" + result.Code)) }
+                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
                             data-bs-dismiss="modal">
                             { result.Code }
                         </a></td>
                         <td class="text-wrap"><a
-                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/show/" + result.Code)) }
+                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
                             data-bs-dismiss="modal">
                             { result.Name }
                         </a> </td>
@@ -151,7 +148,6 @@ templ QuickSearchResultsContent(results []quickDegreePlan, t text) {
 }
 
 templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
-    // take care of checked courses
     <div id="dp-checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
         <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
             // uncheck all checkboxes
@@ -159,7 +155,6 @@ templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
                 class="btn big-mobile-btn btn-outline-secondary border-0 bi bi-dash-square"
                 @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur();">
             </button>
-            // assign
             @bpBtn("outerHTML", "#degreeplan-content", fmt.Sprintf("input:checked[name=%s]", checkboxName), make([]bool, semCount), "")
         </div>
     </div>
@@ -231,13 +226,10 @@ templ blocName(bloc *bloc, show, classes string, t text) {
 
 templ statusIcon(bloc *bloc, t text) {
     if bloc.isCompleted() {
-        // most important is completion status
         <i class="bi bi-check-lg text-success"></i>
     } else if bloc.isAssigned() {
-        // if not completed, check if assigned
         <i class="bi bi-basket2 blueprint-color"></i>
     } else if bloc.hasLimit() {
-        // if not even assigned and has limit, then it is not completed
         <i class="bi bi-x-lg text-danger"></i>
     }
 }
@@ -269,7 +261,7 @@ templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
                     @utils.TitleCourseLink(course.code, course.title, true, t.language)
                 </span>
                 <span class="d-none d-md-inline d-lg-none dp-lg-semester">
-                    { fmt.Sprintf("%s %s, %s", course.semester.string(t), hoursString(course, t), course.examType) }
+                    { fmt.Sprintf("%s %s, %s", course.semester.string(t), hoursString(course), course.examType) }
                 </span>
             </div>
             @mobileInfoTd(course, isCompulsory, t)
@@ -293,7 +285,6 @@ templ checkbox(course *course) {
     <div class="checkbox-container position-relative">
         // circle under the checkbox - course status
         <div class={ "circle-underlay", course.statusBackgroundColor() }></div>
-        // checkbox
         <input
             type="checkbox"
             id={ fmt.Sprintf("dp-checkbox-%s", course.code) }
@@ -332,7 +323,7 @@ templ mobileInfoTd(course *course, isCompulsory bool, t text) {
                 { course.code }
             </span>
             <span class="text-muted dp-mobile-semester">
-                { fmt.Sprintf("%s %s, %s", course.semester.string(t), hoursString(course, t), course.examType) }
+                { fmt.Sprintf("%s %s, %s", course.semester.string(t), hoursString(course), course.examType) }
             </span>
             <span class="text-muted dp-mobile-credits">
                 { fmt.Sprintf("%s: %d", t.creditsShort, course.credits) }

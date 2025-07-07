@@ -33,7 +33,7 @@ func (s Server) Router() http.Handler {
 }
 
 type Authentication interface {
-	UserID(r *http.Request) (string, error)
+	UserID(r *http.Request) string
 }
 
 type Error interface {
@@ -82,13 +82,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	var result templ.Component
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	data, err := s.Data.blueprint(userID, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
@@ -127,13 +121,7 @@ func (s Server) renderBlueprintContent(w http.ResponseWriter, r *http.Request, u
 func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	courseID := r.PathValue("id")
 	if courseID == "" {
 		s.Error.Log(errorx.AddContext(fmt.Errorf("course ID is missing in the request path")))
@@ -171,15 +159,10 @@ func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) coursesMovement(w http.ResponseWriter, r *http.Request) {
+	var err error
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	switch r.FormValue(typeParam) {
 	case yearUnassign:
 		err = s.unassignYear(r, userID)
@@ -258,13 +241,7 @@ func (s Server) moveCourses(r *http.Request, userID string) error {
 func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	courseID := r.PathValue("id")
 	if courseID == "" {
 		s.Error.Log(errorx.AddContext(fmt.Errorf("course ID is missing in the request path")))
@@ -291,13 +268,8 @@ func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
+	var err error
 	switch r.FormValue(typeParam) {
 	case yearRemove:
 		err = s.removeCoursesByYear(r, userID)
@@ -365,14 +337,7 @@ func (s Server) removeCourses(r *http.Request, userID string) error {
 
 func (s Server) yearAddition(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
-	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	if err := s.Data.addYear(userID, lang); err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -386,13 +351,7 @@ func (s Server) yearAddition(w http.ResponseWriter, r *http.Request) {
 func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	unassign := r.FormValue(unassignParam)
 	if unassign == "" {
 		s.Error.Log(errorx.AddContext(fmt.Errorf("unassign parameter is missing in the request form")))
@@ -429,13 +388,7 @@ func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
 func (s Server) foldSemester(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	year, semester, err := parseYearSemester(r)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
@@ -699,12 +652,6 @@ func generateDuplicateWarnings(courses []course, bp *blueprintPage, t text) {
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.pageTitle, userID, lang)
 }

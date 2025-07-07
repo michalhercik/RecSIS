@@ -25,10 +25,6 @@ type quickResponse struct {
 	DegreePlans []quickDegreePlan `json:"Hits"`
 }
 
-// type searchEngine interface {
-// 	QuickSearch(r quickRequest) (quickResponse, error)
-// }
-
 type MeiliSearch struct {
 	Client      meilisearch.ServiceManager
 	DegreePlans meilisearch.IndexConfig
