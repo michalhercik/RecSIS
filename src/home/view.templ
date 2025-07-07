@@ -2,8 +2,6 @@ package home
 
 import (
     "fmt"
-
-	"github.com/michalhercik/RecSIS/utils"
 )
 
 templ Content(hp *homePage, t text) {
@@ -50,7 +48,7 @@ templ courseCardsRow(ID string, courses []course, t text) {
                     <div class="card-body justify-content-between d-flex flex-column h-100">
                         // title
                         <h6 class="card-title pb-1">
-                            @utils.TitleCourseLink(c.Code, c.Title, false, t.language)
+                            @titleCourseLink(c.Code, c.Title, t)
                         </h6>
                         // guarantors
                         <h6 class="card-subtitle text-muted">{ c.Guarantors.string(t) }</h6>
@@ -60,6 +58,14 @@ templ courseCardsRow(ID string, courses []course, t text) {
         </div>
         @chevronRightBtn(ID, len(courses) - 1)
     </div>
+}
+
+templ titleCourseLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover"
+        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        { title }
+    </a>
 }
 
 templ chevronLeftBtn(ID string) {

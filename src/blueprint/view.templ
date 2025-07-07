@@ -1,7 +1,6 @@
 package blueprint
 
 import (
-    "github.com/michalhercik/RecSIS/utils"
     "strings"
     "fmt"
 )
@@ -250,12 +249,12 @@ templ coursesBody(tableID string, courses []course, canUnassign bool, xSortMetho
                 </div>
             </td>
             <td class="d-none d-md-table-cell position-relative">
-                @utils.CourseLink(course.code, t.language)
+                @courseLink(course.code, t)
                 @warningIcon(&course, t)
             </td>
             <td>
                 <span class="d-none d-md-inline">
-                    @utils.TitleCourseLink(course.code, course.title, true, t.language)
+                    @titleCourseLink(course.code, course.title, t)
                 </span>
                 @mobileInfoTd(&course, false, t)
             </td>
@@ -286,6 +285,14 @@ templ coursesBody(tableID string, courses []course, canUnassign bool, xSortMetho
         // dummy row for sorting error (Cannot read properties of null (reading 'nextSibling')) fix
         <tr class="dummy-row d-none" x-sort:item></tr>
     </tbody>
+}
+
+templ courseLink(code string, t text) {
+    <a
+        class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        { code }
+    </a>
 }
 
 templ checkbox(id int) {
@@ -349,9 +356,17 @@ templ mobileInfoTd(course *course, isCompulsory bool, t text) {
             </span>
         </div>
         <span class={ "fw-semibold text-truncate", templ.KV("fw-bold", isCompulsory) }>
-            @utils.TitleCourseLink(course.code, course.title, true, t.language)
+            @titleCourseLink(course.code, course.title, t)
         </span>
     </div>
+}
+
+templ titleCourseLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
+        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        { title }
+    </a>
 }
 
 templ noCoursesTableContent(text, xSort string) {

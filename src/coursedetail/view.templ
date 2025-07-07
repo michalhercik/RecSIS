@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/michalhercik/RecSIS/utils"
 	"github.com/michalhercik/RecSIS/stringsx"
 	"github.com/michalhercik/RecSIS/filters"
 )
@@ -588,13 +587,21 @@ templ requisitesLinksRow(req []requisite, title string, t text) {
 		@infoRow(title) {
 			for i, c := range req {
 				if i != len(req) - 1 {
-					@utils.CourseLink(c.courseCode, t.language)<span>, </span>
+					@courseLink(c.courseCode, t)<span>, </span>
 				} else {
-					@utils.CourseLink(c.courseCode, t.language)
+					@courseLink(c.courseCode, t)
 				}
 			}
 		}
 	}
+}
+
+templ courseLink(code string, t text) {
+    <a
+        class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        { code }
+    </a>
 }
 
 templ infoRow(title string) {

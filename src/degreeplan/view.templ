@@ -1,10 +1,10 @@
 package degreeplan
 
 import (
-    "github.com/michalhercik/RecSIS/utils"
-    "github.com/michalhercik/RecSIS/stringsx"
     "fmt"
     "time"
+    
+    "github.com/michalhercik/RecSIS/stringsx"
 )
 
 templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChecked PartialBlueprintAdd) {
@@ -252,14 +252,14 @@ templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         </td>
         // code
         <td class="d-none d-md-table-cell position-relative">
-            @utils.CourseLink(course.code, t.language)
+            @courseLink(course.code, t)
             @warningIcon(course, t)
         </td>
         // title
         <td>
             <div class="d-flex justify-content-between">
                 <span class={ "d-none d-md-inline", templ.KV("fw-bold", isCompulsory) }>
-                    @utils.TitleCourseLink(course.code, course.title, true, t.language)
+                    @titleCourseLink(course.code, course.title, t)
                 </span>
                 <span class="d-none d-md-inline d-lg-none dp-lg-semester">
                     { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
@@ -280,6 +280,14 @@ templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
             @bpBtn("outerHTML", "#degreeplan-content", "", course.blueprintSemesters, course.code)
         </td>
     </tr>
+}
+
+templ courseLink(code string, t text) {
+    <a
+        class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        { code }
+    </a>
 }
 
 templ checkbox(course *course) {
@@ -331,7 +339,15 @@ templ mobileInfoTd(course *course, isCompulsory bool, t text) {
             </span>
         </div>
         <span class={ "fw-semibold text-truncate", templ.KV("fw-bold", isCompulsory) }>
-            @utils.TitleCourseLink(course.code, course.title, true, t.language)
+            @titleCourseLink(course.code, course.title, t)
         </span>
     </div>
+}
+
+templ titleCourseLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
+        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        { title }
+    </a>
 }

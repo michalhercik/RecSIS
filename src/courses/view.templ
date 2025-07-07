@@ -3,8 +3,6 @@ package courses
 import (
     "fmt"
     "net/url"
-
-	"github.com/michalhercik/RecSIS/utils"
 )
 
 templ Content(coursesPage *coursesPage, t text) {
@@ -215,7 +213,7 @@ templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
             >
                 // course title (link to detail page)
                 <h5 class="card-title">
-                    @utils.TitleCourseLink(course.code, course.title, false, t.language)
+                    @titleCourseLink(course.code, course.title, t)
                 </h5>
                 // guarantors
                 <h6 class="card-subtitle mb-2 text-muted">{ course.guarantors.string(t) }</h6>
@@ -247,6 +245,14 @@ templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
             </div>
         </div>
     </div>
+}
+
+templ titleCourseLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover"
+        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        { title }
+    </a>
 }
 
 templ badge(course *course, ba assignment, t text) {
