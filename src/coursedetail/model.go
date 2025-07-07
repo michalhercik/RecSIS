@@ -24,6 +24,7 @@ const (
 	numberOfComments = 20
 	searchQuery      = "survey-search"
 	surveyOffset     = "survey-offset"
+	ttDelay          = 200 // milliseconds
 )
 
 //================================================================================
@@ -84,31 +85,6 @@ type course struct {
 	overallRating          courseRating
 }
 
-type rangeUnit struct {
-	abbr string
-	name string
-}
-
-type nullRangeUnit struct {
-	rangeUnit
-	valid bool
-}
-
-type faculty struct {
-	abbr string
-	name string
-}
-
-type department struct {
-	id   string
-	name string
-}
-
-type requisite struct {
-	courseCode string
-	state      string
-}
-
 func (c course) semesterStyleClass() string {
 	switch c.semester {
 	case teachingBoth:
@@ -120,6 +96,16 @@ func (c course) semesterStyleClass() string {
 	default:
 		return ""
 	}
+}
+
+type faculty struct {
+	abbr string
+	name string
+}
+
+type department struct {
+	id   string
+	name string
 }
 
 // semester type - winter, summer, or both
@@ -144,6 +130,17 @@ func (ts teachingSemester) string(t text) string {
 	}
 }
 
+// range unit type
+type nullRangeUnit struct {
+	rangeUnit
+	valid bool
+}
+
+type rangeUnit struct {
+	abbr string
+	name string
+}
+
 // wrapper for teacher slice
 type teacherSlice []teacher
 
@@ -157,6 +154,12 @@ type nullDescription struct {
 type description struct {
 	title   string
 	content string
+}
+
+// requisite type
+type requisite struct {
+	courseCode string
+	state      string
 }
 
 // categorization of course

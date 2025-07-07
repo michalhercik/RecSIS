@@ -628,82 +628,68 @@ func generateWarnings(bp *blueprintPage, t text) {
 	}
 	// check if the course is assigned more than once
 	// TODO: ignore the course if it can be completed more than once
+	unassigned := bp.unassigned.courses
+	generateDuplicateWarnings(unassigned, bp, t)
+
 	for _, year1 := range bp.years {
 		winter1 := year1.winter.courses
-		for ci1 := range winter1 {
-			duplicates := make([]struct {
-				year     int
-				semester string
-			}, 0)
-			for y2, year2 := range bp.years {
-				winter2 := year2.winter.courses
-				for ci2 := range winter2 {
-					if winter1[ci1].code == winter2[ci2].code {
-						duplicates = append(duplicates, struct {
-							year     int
-							semester string
-						}{year: y2, semester: t.winter})
-					}
-				}
-				summer2 := year2.summer.courses
-				for ci2 := range summer2 {
-					if winter1[ci1].code == summer2[ci2].code {
-						duplicates = append(duplicates, struct {
-							year     int
-							semester string
-						}{year: y2, semester: t.summer})
-					}
-				}
-			}
-			if len(duplicates) > 1 {
-				warning := t.wAssignedMoreThanOnce + "("
-				duplicatesStr := make([]string, len(duplicates))
-				for i, dup := range duplicates {
-					duplicatesStr[i] = fmt.Sprintf("%s %s", t.yearStr(dup.year), dup.semester)
-				}
-				warning += strings.Join(duplicatesStr, ", ") + ")."
-				winter1[ci1].warnings = append(winter1[ci1].warnings, warning)
-			}
-		}
+		generateDuplicateWarnings(winter1, bp, t)
 
 		summer1 := year1.summer.courses
-		for ci1 := range summer1 {
-			duplicates := make([]struct {
-				year     int
-				semester string
-			}, 0)
-			for y2, year2 := range bp.years {
-				winter2 := year2.winter.courses
-				for ci2 := range winter2 {
-					if summer1[ci1].code == winter2[ci2].code {
-						duplicates = append(duplicates, struct {
-							year     int
-							semester string
-						}{year: y2, semester: t.winter})
-					}
-				}
-				summer2 := year2.summer.courses
-				for ci2 := range summer2 {
-					if summer1[ci1].code == summer2[ci2].code {
-						duplicates = append(duplicates, struct {
-							year     int
-							semester string
-						}{year: y2, semester: t.summer})
-					}
-				}
-			}
-			if len(duplicates) > 1 {
-				warning := t.wAssignedMoreThanOnce + "("
-				duplicatesStr := make([]string, len(duplicates))
-				for i, dup := range duplicates {
-					duplicatesStr[i] = fmt.Sprintf("%s %s", t.yearStr(dup.year), dup.semester)
-				}
-				warning += strings.Join(duplicatesStr, ", ") + ")."
-				summer1[ci1].warnings = append(summer1[ci1].warnings, warning)
+		generateDuplicateWarnings(summer1, bp, t)
+	}
+
+	// TODO: add a warning if the course is not taught
+}
+
+func generateDuplicateWarnings(courses []course, bp *blueprintPage, t text) {
+	for ci1 := range courses {
+		duplicates := make([]struct {
+			year     int
+			semester string
+		}, 0)
+		for ci2 := range bp.unassigned.courses {
+			if courses[ci1].code == bp.unassigned.courses[ci2].code {
+				duplicates = append(duplicates, struct {
+					year     int
+					semester string
+				}{year: -1, semester: ""})
 			}
 		}
+		for y2, year2 := range bp.years {
+			winter2 := year2.winter.courses
+			for ci2 := range winter2 {
+				if courses[ci1].code == winter2[ci2].code {
+					duplicates = append(duplicates, struct {
+						year     int
+						semester string
+					}{year: y2, semester: t.winter})
+				}
+			}
+			summer2 := year2.summer.courses
+			for ci2 := range summer2 {
+				if courses[ci1].code == summer2[ci2].code {
+					duplicates = append(duplicates, struct {
+						year     int
+						semester string
+					}{year: y2, semester: t.summer})
+				}
+			}
+		}
+		if len(duplicates) > 1 {
+			warning := t.wAssignedMoreThanOnce + "("
+			duplicatesStr := make([]string, len(duplicates))
+			for i, dup := range duplicates {
+				if dup.year == -1 {
+					duplicatesStr[i] = t.unassigned
+				} else {
+					duplicatesStr[i] = fmt.Sprintf("%s %s", t.yearStr(dup.year+1), dup.semester)
+				}
+			}
+			warning += strings.Join(duplicatesStr, ", ") + ")."
+			courses[ci1].warnings = append(courses[ci1].warnings, warning)
+		}
 	}
-	// TODO: add a warning if the course is not taught
 }
 
 //================================================================================
