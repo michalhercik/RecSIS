@@ -261,7 +261,7 @@ templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
                     @utils.TitleCourseLink(course.code, course.title, true, t.language)
                 </span>
                 <span class="d-none d-md-inline d-lg-none dp-lg-semester">
-                    { fmt.Sprintf("%s %s, %s", course.semester.string(t), hoursString(course), course.examType) }
+                    { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
                 </span>
             </div>
             @mobileInfoTd(course, isCompulsory, t)
@@ -269,9 +269,9 @@ templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         // credits
         <td class="d-none d-md-table-cell text-end credits-column">{ fmt.Sprintf("%d", course.credits) }</td>
         // winter
-        <td class="d-none d-lg-table-cell">{ winterString(course) }</td>
+        <td class="d-none d-lg-table-cell">{ course.winterString() }</td>
         // summer
-        <td class="d-none d-lg-table-cell">{ summerString(course) }</td>
+        <td class="d-none d-lg-table-cell">{ course.summerString() }</td>
         // guarantors
         <td class="d-none d-xl-table-cell">{ course.guarantors.string() }</td>
         // blueprint button
@@ -323,7 +323,7 @@ templ mobileInfoTd(course *course, isCompulsory bool, t text) {
                 { course.code }
             </span>
             <span class="text-muted dp-mobile-semester">
-                { fmt.Sprintf("%s %s, %s", course.semester.string(t), hoursString(course), course.examType) }
+                { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
             </span>
             <span class="text-muted dp-mobile-credits">
                 { fmt.Sprintf("%s: %d", t.creditsShort, course.credits) }
