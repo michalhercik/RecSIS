@@ -385,17 +385,19 @@ tr:target td {
     transform: translateY(-50%);
 }
 
+/* CD -> filter styles */
+.cd-filter {
+    max-width: 90vw;
+}
+
+.cd-filter-label {
+    max-width: 100%;
+}
+
 /* CD -> filters dropdown scrollable */
 .filters-dropdown-menu-scroll {
     max-height: 300px;
     overflow-y: auto;
-}
-
-/* BP -> small screen title */
-.small-screen-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 /* BP -> fold semester button */

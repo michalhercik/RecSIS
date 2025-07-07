@@ -139,7 +139,12 @@ templ basicInfo(course *course, t text) {
         }
         if (course.url.Valid) {
             @infoRow(t.additionalInfo) {
-                <span><a href={ templ.SafeURL(course.url.String) }>{ urlHostPath(course.url.String) }</a></span>
+                <a
+                    style="word-break: break-all;"
+	                class="d-inline-block text-break"
+                    href={ templ.SafeURL(course.url.String) }>
+                    { urlHostPath(course.url.String) }
+                </a>
             }
         }
     </table>
@@ -389,15 +394,24 @@ templ surveyFilters(model surveyViewModel, t text) {
 }
 
 templ dropdownFilter(name, value, label, desc string, count int, checked bool) {
-    <li><label class="dropdown-item rounded user-select-none" for={ name + "-" + value }>
-        <input
-            type="checkbox"
-            id={ name + "-" + value }
-            class="form-check-input me-2"
-            name={ name } value={ value } checked?={ checked } disabled?={ count == 0 }>
-        { label }
-        <span class="text-muted small"> ({ count })</span>
-    </label></li>
+    <li class="w-100">
+        <label
+            role="button"
+            class="dropdown-item rounded user-select-none d-flex w-100 cd-filter"
+            for={  name + "-" + value }>
+            <input
+                type="checkbox"
+                id={ name + "-" + value }
+                class="form-check-input me-2 flex-shrink-0"
+                name={ name } value={ value } checked?={ checked } disabled?={ count == 0 }>
+            <div class="d-flex align-items-center flex-nowrap overflow-hidden">
+                <span class="text-truncate cd-filter-label">{ label }</span>
+                <span class="text-muted small ms-1 flex-shrink-0">
+                    { fmt.Sprintf("(%d)", count) }
+                </span>
+            </div>
+        </label>
+    </li>
 }
 
 templ surveyActiveFilters(model surveyViewModel, t text) {
