@@ -708,6 +708,7 @@ tr:target td {
 #dp-checked-courses-menu,
 #dp-checked-courses-menu-skeleton {
     position: sticky;
+    top: 55px;
     height: 37px;
     background-color: white;
     z-index: 100;

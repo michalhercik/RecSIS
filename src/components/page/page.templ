@@ -184,7 +184,7 @@ templ reloadFromSIS(t text) {
 templ logout(t text, lang language.Language) {
     <li>
         <form hx-boost="false" method="POST" action={ templ.URL(lang.LocalizeURL("/logout")) }>
-            <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
+            <button type="submit" class="dropdown-item text-center"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
         </form>
     </li>
 }

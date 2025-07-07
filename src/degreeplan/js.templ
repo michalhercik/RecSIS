@@ -68,8 +68,10 @@ templ scripts() {
 			const header = document.querySelector('header');
 			const menu = document.getElementById('dp-checked-courses-menu');
 			if (header && menu) {
-				const height = header.offsetHeight;
-				menu.style.top = height + 'px';
+				setTimeout(() => {
+					const height = header.offsetHeight;
+					menu.style.top = height + 'px';
+				}, 0);
 			}
 		}
 
@@ -109,6 +111,8 @@ templ scripts() {
 					}
 				});
 			});
+
+			console.log('Disabled semesters:', disabledSemesters);
 
 			// Now update the checked-courses-menu buttons
 			const menu = document.getElementById('dp-checked-courses-menu');

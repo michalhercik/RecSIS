@@ -75,6 +75,7 @@ SELECT
 FROM courses c
 WHERE c.lang = $1
 AND c.start_semester IS NOT NULL
+AND taught_state = 'V'
 LIMIT 20;
 `
 

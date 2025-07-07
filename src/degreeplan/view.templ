@@ -11,7 +11,7 @@ templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChe
         id="degreeplan-content"
         class="container position-relative"
         x-data="{ checkedNumber: 0, smallScreen: window.innerWidth < 768, searchOpened: false }"
-        x-init="$nextTick(() => requestAnimationFrame(() => { setupCheckboxShiftClick(); updateStickyOffset(); initializeTooltips(); }))"
+        x-init="$nextTick(() => requestAnimationFrame(() => { updateStickyOffset(); }))"
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"
     >
@@ -300,7 +300,7 @@ templ checkbox(course *course) {
             class="form-check-input dp-checkbox"
             name={ checkboxName }
             value={ course.code }
-            @change={ fmt.Sprintf("checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; ") }
+            @change={ fmt.Sprintf("checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; updateCheckedCoursesMenu(%d)", len(course.blueprintSemesters)) }
             @uncheck-all.window="$el.checked = false;"
         />
         // circle overlay for easier clicking
