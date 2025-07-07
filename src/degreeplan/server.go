@@ -95,10 +95,10 @@ func (s Server) degreePlanByCodePage(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	userID := s.Auth.UserID(r)
-	dpYearString := r.FormValue(searchDegreePlanYear)
-	dpYear, err := strconv.Atoi(dpYearString)
+	unparsedDPYear := r.FormValue(searchDegreePlanYear)
+	dpYear, err := strconv.Atoi(unparsedDPYear)
 	if err != nil {
-		s.Error.Log(errorx.AddContext(err, errorx.P(searchDegreePlanYear, dpYearString)))
+		s.Error.Log(errorx.AddContext(err, errorx.P(searchDegreePlanYear, unparsedDPYear)))
 		s.Error.RenderPage(w, r, http.StatusBadRequest, t.errInvalidDPYear, t.pageTitle, userID, lang)
 		return
 	}

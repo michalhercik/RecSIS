@@ -2,6 +2,7 @@ package degreeplan
 
 import (
     "github.com/michalhercik/RecSIS/utils"
+    "github.com/michalhercik/RecSIS/stringsx"
     "fmt"
     "time"
 )
@@ -218,7 +219,7 @@ templ tableHeader(bloc *bloc, t text) {
 templ blocName(bloc *bloc, show, classes string, t text) {
     if bloc.name != "" {
         <h5 class={ "mb-0", classes, show }>
-            { utils.CapitalizeFirstLetter(bloc.name) }
+            { stringsx.Capitalize(bloc.name) }
             @statusIcon(bloc, t)
         </h5>
     }

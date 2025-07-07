@@ -35,10 +35,6 @@ func (s *Server) Init() {
 	s.initRouter()
 }
 
-func (s Server) Router() http.Handler {
-	return s.router
-}
-
 type Authentication interface {
 	UserID(r *http.Request) string
 }
@@ -68,22 +64,17 @@ type Page interface {
 // Routing
 //================================================================================
 
+func (s Server) Router() http.Handler {
+	return s.router
+}
+
 func (s *Server) initRouter() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.page)
 	router.HandleFunc("GET /search", s.content)
 	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
-
-	// Wrap mux to catch unmatched routes
-	s.router = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if mux has a handler for the URL
-		_, pattern := router.Handler(r)
-		if pattern == "" {
-			s.pageNotFound(w, r)
-			return
-		}
-		router.ServeHTTP(w, r)
-	})
+	router.HandleFunc("/", s.pageNotFound)
+	s.router = router
 }
 
 //================================================================================
@@ -111,7 +102,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 	result.bpBtn = s.BpBtn.PartialComponent(lang)
 	main := Content(&result, t)
-	err = s.Page.View(main, lang, t.pageTitle, req.query, userID).Render(r.Context(), w)
+	view := s.Page.View(main, lang, t.pageTitle, req.query, userID)
+	err = view.Render(r.Context(), w)
 	if err != nil {
 		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
 	}
@@ -136,7 +128,6 @@ func (s Server) content(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set the HX-Push-Url header to update the browser URL without a full reload
 	w.Header().Set("HX-Push-Url", s.parseUrl(r.URL.Query(), lang))
 
 	coursesPage.bpBtn = s.BpBtn.PartialComponent(lang)
@@ -152,22 +143,22 @@ func (s Server) parseQueryRequest(r *http.Request) (request, error) {
 	userID := s.Auth.UserID(r)
 	lang := language.FromContext(r.Context())
 	query := r.FormValue(s.Page.SearchParam())
-	pageString := r.FormValue(pageParam)
-	page := 1 // default to page 1 if not specified
-	if pageString != "" {
-		page, err = strconv.Atoi(pageString)
-		if err != nil || page < 1 {
+	page := firstPage
+	unparsedPageNumber := r.FormValue(pageParam)
+	if unparsedPageNumber != "" {
+		page, err = strconv.Atoi(unparsedPageNumber)
+		if err != nil || page < firstPage {
 			return req, errorx.NewHTTPErr(
-				errorx.AddContext(fmt.Errorf("invalid page number: '%s'", pageString)),
+				errorx.AddContext(fmt.Errorf("invalid page number: '%s'", unparsedPageNumber)),
 				http.StatusBadRequest,
 				texts[lang].errInvalidPageNumber,
 			)
 		}
 	}
-	hitsPerPageString := r.FormValue(hitsPerPageParam)
-	hitsPerPage := coursesPerPage // default to coursesPerPage if not specified
-	if hitsPerPageString != "" {
-		hitsPerPage, err = strconv.Atoi(hitsPerPageString)
+	hitsPerPage := defaultCoursesPerPage
+	unparsedHitsPerPage := r.FormValue(hitsPerPageParam)
+	if unparsedHitsPerPage != "" {
+		hitsPerPage, err = strconv.Atoi(unparsedHitsPerPage)
 		if err != nil || hitsPerPage < 1 {
 			return req, errorx.NewHTTPErr(
 				errorx.AddContext(fmt.Errorf("invalid number of courses per page: %d", hitsPerPage)),
@@ -195,7 +186,6 @@ func (s Server) parseQueryRequest(r *http.Request) (request, error) {
 }
 
 func (s Server) search(req request, httpReq *http.Request) (coursesPage, error) {
-	// search for courses
 	var result coursesPage
 	searchResponse, err := s.Search.Search(req)
 	if err != nil {
@@ -222,11 +212,9 @@ func (s Server) parseUrl(queryValues url.Values, lang language.Language) string 
 	if queryValues.Get(s.Page.SearchParam()) == "" {
 		queryValues.Del(s.Page.SearchParam())
 	}
-	if queryValues.Get(pageParam) == "1" {
+	if queryValues.Get(pageParam) == fmt.Sprintf("%d", firstPage) {
 		queryValues.Del(pageParam)
 	}
-	// TODO: possibly add more defaults to exclude
-
 	return fmt.Sprintf("%s?%s", lang.LocalizeURL("/courses/"), queryValues.Encode())
 }
 

@@ -2,7 +2,6 @@ package courses
 
 import (
 	"encoding/json"
-	"fmt"
 	"maps"
 	"net/http"
 
@@ -111,7 +110,6 @@ func (r *quickResponse) UnmarshalJSON(data []byte) error {
 type searchEngine interface {
 	Search(r request) (response, error)
 	QuickSearch(r quickRequest) (quickResponse, error)
-	FacetDistribution() (map[string]map[int]int, error)
 }
 
 type MeiliSearch struct {
@@ -119,27 +117,7 @@ type MeiliSearch struct {
 	Courses meilisearch.IndexConfig
 }
 
-func (s MeiliSearch) FacetDistribution() (map[string]map[int]int, error) {
-	searchReq := &meilisearch.SearchRequest{
-		Limit:  0,          // TODO: not working, probably bug in meilisearch-go -> write own client...
-		Facets: []string{}, //filter.SliceOfParamStr(),
-	}
-	response, err := s.Client.Index(s.Courses.Uid).Search("", searchReq)
-	if err != nil {
-		return nil, err
-	}
-	var result map[string]map[int]int
-	marshalRes, err := json.Marshal(response.FacetDistribution)
-	if err != nil {
-		return nil, err
-	}
-	if err = json.Unmarshal(marshalRes, &result); err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func makeMultiSearchRequest(r request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
+func newRequestWithDisjunctiveFaceting(r request, index meilisearch.IndexConfig) *meilisearch.MultiSearchRequest {
 	numOfReq := 1 + r.filter.ConditionsCount()
 	result := &meilisearch.MultiSearchRequest{
 		Queries: make([]*meilisearch.SearchRequest, 0, numOfReq),
@@ -154,13 +132,11 @@ func makeMultiSearchRequest(r request, index meilisearch.IndexConfig) *meilisear
 		Facets:               r.facets,
 	})
 	for param, filter := range r.filter.Except() {
-		_ = param
-		_ = filter
 		result.Queries = append(result.Queries, &meilisearch.SearchRequest{
 			IndexUID:             index.Uid,
 			Query:                r.query,
-			Limit:                0,          // TODO: not working, probably bug in meilisearch-go -> write own client...
-			AttributesToRetrieve: []string{}, // TODO: not working, probably bug in meilisearch-go -> write own client...
+			Limit:                0,          // not working returns more than zero, probably bug in meilisearch-go -> write own client...
+			AttributesToRetrieve: []string{}, // not working returns more than zero, probably bug in meilisearch-go -> write own client...
 			Filter:               filter,
 			Facets:               []string{param},
 		})
@@ -172,7 +148,7 @@ func makeMultiSearchRequest(r request, index meilisearch.IndexConfig) *meilisear
 func (s MeiliSearch) Search(r request) (response, error) {
 	t := texts[r.lang]
 	var result response
-	searchReq := makeMultiSearchRequest(r, s.Courses)
+	searchReq := newRequestWithDisjunctiveFaceting(r, s.Courses)
 	response, err := s.Client.MultiSearch(searchReq)
 	if err != nil {
 		return result, errorx.NewHTTPErr(
@@ -207,10 +183,7 @@ func (s MeiliSearch) Search(r request) (response, error) {
 func (s MeiliSearch) QuickSearch(r quickRequest) (quickResponse, error) {
 	var result quickResponse
 	index := s.Client.Index(r.indexUID)
-	searchReq, err := buildQuickSearchRequest(r)
-	if err != nil {
-		return result, err
-	}
+	searchReq := buildQuickSearchRequest(r)
 	rawResponse, err := index.SearchRaw(r.query, searchReq)
 	if err != nil {
 		return result, err
@@ -221,18 +194,18 @@ func (s MeiliSearch) QuickSearch(r quickRequest) (quickResponse, error) {
 	return result, nil
 }
 
-func buildQuickSearchRequest(r quickRequest) (*meilisearch.SearchRequest, error) {
+func buildQuickSearchRequest(r quickRequest) *meilisearch.SearchRequest {
 	result := &meilisearch.SearchRequest{
 		Limit:  r.limit,
 		Offset: r.offset,
 	}
 	switch r.lang {
 	case language.CS:
-		result.AttributesToRetrieve = []string{"code", "cs.NAME"}
+		result.AttributesToRetrieve = []string{"code", "title.cs"}
 	case language.EN:
-		result.AttributesToRetrieve = []string{"code", "en.NAME"}
+		result.AttributesToRetrieve = []string{"code", "title.en"}
 	default:
-		return result, fmt.Errorf("SearchRequest: unsupported language: %v", r.lang)
+		result.AttributesToRetrieve = []string{"code", "title.cs"}
 	}
-	return result, nil
+	return result
 }

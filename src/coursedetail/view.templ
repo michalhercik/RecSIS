@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/michalhercik/RecSIS/utils"
+	"github.com/michalhercik/RecSIS/stringsx"
 	"github.com/michalhercik/RecSIS/filters"
 )
 
@@ -273,7 +274,7 @@ templ descriptions(course *course, t text) {
 templ descriptionItem(desc nullDescription, id string) {
 	if desc.valid {
 	<div>
-		<h2>{ utils.CapitalizeFirstLetter(desc.title) }</h2>
+		<h2>{ stringsx.Capitalize(desc.title) }</h2>
 		<div
 			id={ "content-" + id }
 			class="border-bottom mb-3"

@@ -17,17 +17,19 @@ import (
 //================================================================================
 
 const (
-	coursesPerPage   = 24
-	courseIndex      = "courses"
 	pageParam        = "page"
 	hitsPerPageParam = "hitsPerPage"
 )
+const (
+	defaultCoursesPerPage = 24
+	firstPage             = 1
+)
+const courseIndex = "courses"
 
 //================================================================================
 // Data Types and Methods
 //================================================================================
 
-// all data needed for the courses page
 type coursesPage struct {
 	courses     []course
 	page        int
@@ -39,7 +41,6 @@ type coursesPage struct {
 	bpBtn       PartialBlueprintAdd
 }
 
-// course representation
 type course struct {
 	code                 string
 	title                string
@@ -57,7 +58,22 @@ type course struct {
 	inDegreePlan         bool
 }
 
-// wrapper for description that allows it to be nullable
+func (c *course) hoursString() string {
+	result := ""
+	winter := c.lectureRangeWinter.Valid && c.seminarRangeWinter.Valid
+	summer := c.lectureRangeSummer.Valid && c.seminarRangeSummer.Valid
+	if winter {
+		result += fmt.Sprintf("%d/%d", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64)
+	}
+	if winter && summer {
+		result += ", "
+	}
+	if summer {
+		result += fmt.Sprintf("%d/%d", c.lectureRangeSummer.Int64, c.seminarRangeSummer.Int64)
+	}
+	return result
+}
+
 type nullDescription struct {
 	description
 	valid bool
@@ -70,13 +86,11 @@ func (d nullDescription) string() string {
 	return ""
 }
 
-// description type - title and content
 type description struct {
 	title   string
 	content string
 }
 
-// semester type - winter, summer, or both
 type teachingSemester int
 
 const (
@@ -98,7 +112,6 @@ func (ts teachingSemester) string(t text) string {
 	}
 }
 
-// wrapper for teacher slice
 type teacherSlice []teacher
 
 func (ts teacherSlice) string(t text) string {
@@ -112,7 +125,6 @@ func (ts teacherSlice) string(t text) string {
 	return strings.Join(names, ", ")
 }
 
-// teacher type
 type teacher struct {
 	sisID       string
 	firstName   string
@@ -126,7 +138,6 @@ func (t teacher) string() string {
 	return fmt.Sprintf("%c. %s", firstRune, t.lastName)
 }
 
-// assignment slice for blueprint assignments
 type assignmentSlice []assignment
 
 func (a assignmentSlice) Sort() assignmentSlice {
@@ -139,7 +150,6 @@ func (a assignmentSlice) Sort() assignmentSlice {
 	return a
 }
 
-// assignment type - year and semester
 type assignment struct {
 	year     int
 	semester semesterAssignment
@@ -166,7 +176,6 @@ func (a assignment) string(lang language.Language) string {
 	return result
 }
 
-// semester assignment type - winter or summer (none = unassigned)
 type semesterAssignment int
 
 const (
@@ -191,22 +200,6 @@ func (sa semesterAssignment) stringID() string {
 // ================================================================================
 // Helper Functions
 // ================================================================================
-
-func (c *course) hoursString() string {
-	result := ""
-	winter := c.lectureRangeWinter.Valid && c.seminarRangeWinter.Valid
-	summer := c.lectureRangeSummer.Valid && c.seminarRangeSummer.Valid
-	if winter {
-		result += fmt.Sprintf("%d/%d", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64)
-	}
-	if winter && summer {
-		result += ", "
-	}
-	if summer {
-		result += fmt.Sprintf("%d/%d", c.lectureRangeSummer.Int64, c.seminarRangeSummer.Int64)
-	}
-	return result
-}
 
 func max(a, b int) int {
 	if a > b {

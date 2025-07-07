@@ -91,7 +91,7 @@ templ skeletonFilterCategory(name1, name2 int, values []int, hide bool) {
 
 templ skeletonGrid(rnd *rand.Rand) {
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 row-cols-xxl-4 g-0">
-        for i := 0; i < coursesPerPage; i++ {
+        for i := 0; i < defaultCoursesPerPage; i++ {
             @skeletonCard(rnd)
         }
     </div>
@@ -140,7 +140,7 @@ templ skeletonCard(rnd *rand.Rand) {
                     }
                 </p>
             </div>
-            // show rest/less of annotation button 
+            // show rest/less of annotation button
             <div class="d-flex justify-content-center" style="height: 38px;">
                 <span class="placeholder bg-secondary col-3 my-auto" style="height: 50%;"></span>
             </div>
