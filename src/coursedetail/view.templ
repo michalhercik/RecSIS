@@ -56,7 +56,7 @@ templ badges(course *course, t text) {
 				<span>{ course.semester.string(t) }</span>
 			}
 			@standartBadge(course.semesterStyleClass()) {
-				<span>{ fmt.Sprintf("%s %s", hoursString(course), course.examType) }</span>
+				<span>{ fmt.Sprintf("%s %s", course.hoursString(), course.examType) }</span>
 				if course.rangeUnit.valid {
 					<span
 						class="text-muted small cursor-help"
@@ -140,11 +140,9 @@ templ basicInfo(course *course, t text) {
 				<span>{ course.language }</span>
 			}
 		}
-		// TODO: if not default (default=taught) show NOT TAUGHT, else do not show anything
 		@infoRow(t.stateOfCourse) {
 			<span>{ course.state }</span>
 		}
-		// TODO: if unlimited capacity do not show anything, else show capacity
 		@infoRow(t.capacity) {
 			<span>{ course.capacity }</span>
 		}
@@ -173,28 +171,9 @@ templ basicInfo(course *course, t text) {
 
 templ buttons(course *course, t text, bpBtn PartialBlueprintAdd) {
 	<div class="d-flex flex-wrap justify-content-center gap-1">
-		// link to additional information
-		if course.link != "" {
-			<a class="btn btn-outline-secondary" href={ templ.SafeURL(course.link) } role="button">
-				{ t.additionalInfo }
-			</a>
-		}
-		// SIS link
 		<a class="btn btn-outline-secondary" href={ templ.SafeURL(courseSISLink(course.code, t)) } target="_blank" role="button">
 			{ t.sisLink }
 		</a>
-		// TODO: zapsat button
-		// TODO: after SIS integration, implement this button
-		// <a class="btn btn-outline-secondary" href="#" role="button">
-		//     zapsat
-		// </a>
-		// TODO: rozvrh buttons
-		// for NDMI002 -> https://is.cuni.cz/studium/rozvrhng/roz_predmet_macro.php?fak=11320&skr=2024&sem=1&predmet=NDMI002
-		// TODO: after SIS integration, implement this button
-		// <a class="btn btn-outline-secondary" href="#" role="button">
-		//     rozvrh
-		// </a>
-		// button to assign course to blueprint
 		@bpBtn("outerHTML", "#course-detail-page", "", course.blueprintSemesters, course.code)
 	</div>
 }
@@ -502,7 +481,7 @@ templ SurveysContent(model surveyViewModel, t text) {
 			hx-include="#survey-search-form, #survey-filters-form"
 			hx-target="#surveys-content"
 			hx-swap="beforeend"
-			hx-vals={ fmt.Sprintf(`"%s": %d`, surveyOffset, model.offset + numberOfComments) }
+			hx-vals={ fmt.Sprintf(`"%s": %d`, surveyOffset, model.offset + resultsPerPage) }
 			hx-indicator="#lazy-loader">
 		</div>
 	}
@@ -655,7 +634,6 @@ templ ratings(overall courseRating, categories []courseCategoryRating, code stri
 		</div>
 		@CategoryRating(categories, code, t)
 	</div>
-	// Modal with rating categories
 	@rateModal(categories, code, t)
 }
 
@@ -694,7 +672,7 @@ templ rateButton(rating sql.NullInt64, icon, code string, rate int64, t text, cl
 			hx-delete={ t.language.LocalizeURL("/course/rating/" + code) }
 		} else {
 			hx-put={ t.language.LocalizeURL("/course/rating/" + code) }
-			hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
+			hx-vals={ fmt.Sprintf(`"%s": "%d"`, ratingParam, rate) }
 		}
 		hx-target="#simple-rating"
 		hx-swap="outerHTML">
@@ -764,7 +742,7 @@ templ ratingCategoryInput(c courseCategoryRating, code string, t text) {
 			</label>
 			<input
 				type="range"
-				name="rating"
+				name={ ratingParam }
 				class="form-range"
 				:class="valid || 'no-thumb'"
 				id={ c.title + "-range" }

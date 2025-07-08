@@ -60,15 +60,14 @@ type expression interface {
 }
 
 type request struct {
-	userID   string
-	query    string
-	indexUID string
-	offset   int
-	limit    int
-	lang     language.Language
-	filter   expression
-	facets   []string
-	sort     string
+	userID string
+	query  string
+	offset int
+	limit  int
+	lang   language.Language
+	filter expression
+	facets []string
+	sort   string
 }
 
 type response struct {

@@ -17,21 +17,35 @@ import (
 //================================================================================
 
 const (
-	minRating        = 0
-	maxRating        = 10
-	negativeRating   = 0
-	positiveRating   = 1
-	numberOfComments = 20
-	searchQuery      = "survey-search"
-	surveyOffset     = "survey-offset"
-	ttDelay          = 200 // milliseconds
+	defaultSurveyOffset = 0
+	minRating           = 0
+	maxRating           = 10
+	negativeRating      = 0
+	positiveRating      = 1
+	resultsPerPage      = 20
+	ttDelay             = 200 // tooltip delay in ms
+)
+
+const (
+	searchQuery  = "survey-search"
+	surveyOffset = "survey-offset"
+	ratingParam  = "rating"
+)
+
+const (
+	courseCode     = "code"
+	ratingCategory = "category"
+)
+
+const (
+	meiliCourseCode = "course_code"
+	meiliSort       = "academic_year:desc"
 )
 
 //================================================================================
 // Data Types and Methods
 //================================================================================
 
-// all data needed for the course detail page
 type courseDetailPage struct {
 	course *course
 }
@@ -44,7 +58,6 @@ func urlHostPath(urlStr string) string {
 	return u.Host + u.Path
 }
 
-// course representation
 type course struct {
 	code                   string
 	title                  string
@@ -77,7 +90,6 @@ type course struct {
 	interchange            []requisite
 	classes                []string
 	classifications        []string
-	link                   string // link to course webpage (not SIS)
 	blueprintAssignments   assignmentSlice
 	blueprintSemesters     []bool
 	inDegreePlan           bool
@@ -108,7 +120,6 @@ type department struct {
 	name string
 }
 
-// semester type - winter, summer, or both
 type teachingSemester int
 
 const (
@@ -130,7 +141,6 @@ func (ts teachingSemester) string(t text) string {
 	}
 }
 
-// range unit type
 type nullRangeUnit struct {
 	rangeUnit
 	valid bool
@@ -141,34 +151,28 @@ type rangeUnit struct {
 	name string
 }
 
-// wrapper for teacher slice
 type teacherSlice []teacher
 
-// wrapper for Description that allows it to be nullable
 type nullDescription struct {
 	description
 	valid bool
 }
 
-// description type - title and content
 type description struct {
 	title   string
 	content string
 }
 
-// requisite type
 type requisite struct {
 	courseCode string
 	state      string
 }
 
-// categorization of course
 type class struct {
 	code string
 	name string
 }
 
-// assignment slice for blueprint assignments
 type assignmentSlice []assignment
 
 func (a assignmentSlice) sort() assignmentSlice {
@@ -181,7 +185,6 @@ func (a assignmentSlice) sort() assignmentSlice {
 	return a
 }
 
-// assignment type - year and semester
 type assignment struct {
 	year     int
 	semester semesterAssignment
@@ -208,7 +211,6 @@ func (a assignment) string(lang language.Language) string {
 	return result
 }
 
-// semester assignment type - winter or summer (none = unassigned)
 type semesterAssignment int
 
 const (
@@ -230,7 +232,6 @@ func (sa semesterAssignment) stringID() string {
 	}
 }
 
-// rating structures
 type courseCategoryRating struct {
 	code  int
 	title string
@@ -243,7 +244,6 @@ type courseRating struct {
 	ratingCount sql.NullInt64
 }
 
-// surveys structs and methods
 type surveyViewModel struct {
 	lang   language.Language
 	code   string
@@ -251,7 +251,7 @@ type surveyViewModel struct {
 	survey []survey
 	offset int
 	isEnd  bool
-	facets iter.Seq[filters.FacetIterator] // TODO
+	facets iter.Seq[filters.FacetIterator]
 }
 
 type survey struct {
@@ -320,7 +320,7 @@ func (s *studyType) UnmarshalJSON(data []byte) error {
 }
 
 type surveyTarget struct {
-	Type          string  `json:"target_type"` // Lecture or Seminar
+	Type          string  `json:"target_type"`
 	CourseCode    string  `json:"course_code"`
 	TargetTeacher teacher `json:"teacher"`
 }
@@ -356,28 +356,29 @@ func (c course) hasDetailInfo() bool {
 		len(c.teachers) > 0
 }
 
-func hoursString(course *course) string {
+func (c *course) hoursString() string {
 	result := ""
-	winter := course.lectureRangeWinter.Valid && course.seminarRangeWinter.Valid
-	summer := course.lectureRangeSummer.Valid && course.seminarRangeSummer.Valid
+	winter := c.lectureRangeWinter.Valid && c.seminarRangeWinter.Valid
+	summer := c.lectureRangeSummer.Valid && c.seminarRangeSummer.Valid
 	if winter {
-		result += fmt.Sprintf("%d/%d", course.lectureRangeWinter.Int64, course.seminarRangeWinter.Int64)
+		result += fmt.Sprintf("%d/%d", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64)
 	}
 	if winter && summer {
 		result += ", "
 	}
 	if summer {
-		result += fmt.Sprintf("%d/%d", course.lectureRangeSummer.Int64, course.seminarRangeSummer.Int64)
+		result += fmt.Sprintf("%d/%d", c.lectureRangeSummer.Int64, c.seminarRangeSummer.Int64)
 	}
 	return result
 }
 
 func courseSISLink(code string, t text) string {
-	if t.language == language.CS {
-		return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
-	} else if t.language == language.EN {
-		return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
+	var (
+		csLink = "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
+		enLink = "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
+	)
+	if t.language == language.EN {
+		return enLink
 	}
-	// default to Czech if language is not recognized
-	return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
+	return csLink
 }

@@ -28,10 +28,6 @@ type Server struct {
 	router http.Handler
 }
 
-func (s Server) Router() http.Handler {
-	return s.router
-}
-
 type Authentication interface {
 	UserID(r *http.Request) string
 }
@@ -51,27 +47,22 @@ type Page interface {
 // Routing
 //================================================================================
 
+func (s Server) Router() http.Handler {
+	return s.router
+}
+
 func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.page)
-	router.HandleFunc("PATCH /course/{id}", s.courseMovement)
+	router.HandleFunc(fmt.Sprintf("PATCH /course/{%s}", recordID), s.courseMovement)
 	router.HandleFunc("PATCH /courses", s.coursesMovement)
-	router.HandleFunc("DELETE /course/{id}", s.courseRemoval)
+	router.HandleFunc(fmt.Sprintf("DELETE /course/{%s}", recordID), s.courseRemoval)
 	router.HandleFunc("DELETE /courses", s.coursesRemoval)
 	router.HandleFunc("POST /year", s.yearAddition)
 	router.HandleFunc("DELETE /year", s.yearRemoval)
 	router.HandleFunc("PATCH /fold", s.foldSemester)
-
-	// Wrap mux to catch unmatched routes
-	s.router = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if mux has a handler for the URL
-		_, pattern := router.Handler(r)
-		if pattern == "" {
-			s.pageNotFound(w, r)
-			return
-		}
-		router.ServeHTTP(w, r)
-	})
+	router.HandleFunc("/", s.pageNotFound)
+	s.router = router
 }
 
 //================================================================================
@@ -79,7 +70,6 @@ func (s *Server) Init() {
 //================================================================================
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
-	var result templ.Component
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	userID := s.Auth.UserID(r)
@@ -91,27 +81,19 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	generateWarnings(data, t)
-	result = Content(data, t)
-	err = s.Page.View(result, lang, t.pageTitle, userID).Render(r.Context(), w)
+	main := Content(data, t)
+	page := s.Page.View(main, lang, t.pageTitle, userID)
+	err = page.Render(r.Context(), w)
 	if err != nil {
 		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
 	}
 }
 
-func (s Server) renderBlueprintContent(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
+func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	data, err := s.Data.blueprint(userID, lang)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.Render(w, r, code, userMsg, lang)
-		return
-	}
-	generateWarnings(data, t)
-	err = Content(data, t).Render(r.Context(), w)
-	if err != nil {
-		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
-	}
+	userID := s.Auth.UserID(r)
+	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.pageTitle, userID, lang)
 }
 
 //================================================================================
@@ -122,7 +104,7 @@ func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	userID := s.Auth.UserID(r)
-	courseID := r.PathValue("id")
+	courseID := r.PathValue(recordID)
 	if courseID == "" {
 		s.Error.Log(errorx.AddContext(fmt.Errorf("course ID is missing in the request path")))
 		s.Error.Render(w, r, http.StatusBadRequest, t.errMissingCourseID, lang)
@@ -154,7 +136,6 @@ func (s Server) courseMovement(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	// TODO: Render just the necessary for performance
 	s.renderBlueprintContent(w, r, userID, lang)
 }
 
@@ -242,7 +223,7 @@ func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	userID := s.Auth.UserID(r)
-	courseID := r.PathValue("id")
+	courseID := r.PathValue(recordID)
 	if courseID == "" {
 		s.Error.Log(errorx.AddContext(fmt.Errorf("course ID is missing in the request path")))
 		s.Error.Render(w, r, http.StatusBadRequest, t.errMissingCourseID, lang)
@@ -261,7 +242,6 @@ func (s Server) courseRemoval(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	// TODO: Render just credits stats with own sql query for performance
 	s.renderBlueprintContent(w, r, userID, lang)
 }
 
@@ -344,7 +324,6 @@ func (s Server) yearAddition(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	// TODO: Render just credits stats with own sql query for performance
 	s.renderBlueprintContent(w, r, userID, lang)
 }
 
@@ -377,7 +356,6 @@ func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	// TODO: Render just credits stats with own sql query for performance
 	s.renderBlueprintContent(w, r, userID, lang)
 }
 
@@ -415,12 +393,11 @@ func (s Server) foldSemester(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	// TODO: Render just targeted table for performance
 	s.renderBlueprintContent(w, r, userID, lang)
 }
 
 //================================================================================
-// Utils
+// Parse parameters
 //================================================================================
 
 func parseYear(r *http.Request) (int, error) {
@@ -557,8 +534,16 @@ func atoiSliceCourses(s []string, lang language.Language) ([]int, error) {
 	return result, nil
 }
 
+//================================================================================
+// Generate Warnings
+//================================================================================
+
 func generateWarnings(bp *blueprintPage, t text) {
-	// check if the course is assigned in a correct semester
+	forCorrectAssignment(bp, t)
+	forDuplicateAssignments(bp, t)
+}
+
+func forCorrectAssignment(bp *blueprintPage, t text) {
 	for _, year := range bp.years {
 		winter := year.winter
 		if !winter.folded {
@@ -579,20 +564,19 @@ func generateWarnings(bp *blueprintPage, t text) {
 			}
 		}
 	}
-	// check if the course is assigned more than once
-	// TODO: ignore the course if it can be completed more than once
+}
+
+func forDuplicateAssignments(bp *blueprintPage, t text) {
 	unassigned := bp.unassigned.courses
 	generateDuplicateWarnings(unassigned, bp, t)
 
-	for _, year1 := range bp.years {
-		winter1 := year1.winter.courses
-		generateDuplicateWarnings(winter1, bp, t)
+	for _, year := range bp.years {
+		winter := year.winter.courses
+		generateDuplicateWarnings(winter, bp, t)
 
-		summer1 := year1.summer.courses
-		generateDuplicateWarnings(summer1, bp, t)
+		summer := year.summer.courses
+		generateDuplicateWarnings(summer, bp, t)
 	}
-
-	// TODO: add a warning if the course is not taught
 }
 
 func generateDuplicateWarnings(courses []course, bp *blueprintPage, t text) {
@@ -609,23 +593,23 @@ func generateDuplicateWarnings(courses []course, bp *blueprintPage, t text) {
 				}{year: -1, semester: ""})
 			}
 		}
-		for y2, year2 := range bp.years {
-			winter2 := year2.winter.courses
-			for ci2 := range winter2 {
-				if courses[ci1].code == winter2[ci2].code {
+		for y, year := range bp.years {
+			winter := year.winter.courses
+			for ci2 := range winter {
+				if courses[ci1].code == winter[ci2].code {
 					duplicates = append(duplicates, struct {
 						year     int
 						semester string
-					}{year: y2, semester: t.winter})
+					}{year: y, semester: t.winter})
 				}
 			}
-			summer2 := year2.summer.courses
-			for ci2 := range summer2 {
-				if courses[ci1].code == summer2[ci2].code {
+			summer := year.summer.courses
+			for ci2 := range summer {
+				if courses[ci1].code == summer[ci2].code {
 					duplicates = append(duplicates, struct {
 						year     int
 						semester string
-					}{year: y2, semester: t.summer})
+					}{year: y, semester: t.summer})
 				}
 			}
 		}
@@ -646,12 +630,22 @@ func generateDuplicateWarnings(courses []course, bp *blueprintPage, t text) {
 }
 
 //================================================================================
-// Page Not Found
+// Render Content
 //================================================================================
 
-func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
-	lang := language.FromContext(r.Context())
+func (s Server) renderBlueprintContent(w http.ResponseWriter, r *http.Request, userID string, lang language.Language) {
 	t := texts[lang]
-	userID := s.Auth.UserID(r)
-	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.pageTitle, userID, lang)
+	data, err := s.Data.blueprint(userID, lang)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	generateWarnings(data, t)
+	view := Content(data, t)
+	err = view.Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }

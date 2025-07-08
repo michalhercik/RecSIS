@@ -164,8 +164,8 @@ func intoCourse(from *courseDetail) course {
 		corequisites:           intoRequisiteSlice(from.Coreq),
 		incompatible:           intoRequisiteSlice(from.Incompa),
 		interchange:            intoRequisiteSlice(from.Interchange),
-		classes:                intoClassSlice(from.Classes),
-		classifications:        intoClassSlice(from.Classifications),
+		classes:                []string(from.Classes),
+		classifications:        []string(from.Classifications),
 		overallRating:          intoCourseRating(from.OverallRating),
 		categoryRatings:        intoCategoryRatingSlice(from.CategoryRatings),
 		blueprintAssignments:   intoBlueprintAssignmentSlice(from.BlueprintSemesters),
@@ -250,14 +250,6 @@ func intoCategoryRatingSlice(from []dbds.CourseCategoryRating) []courseCategoryR
 				ratingCount: c.RatingCount,
 			},
 		}
-	}
-	return result
-}
-
-func intoClassSlice(from dbds.JSONArray[string]) []string {
-	result := make([]string, len(from))
-	for i, c := range from {
-		result[i] = c
 	}
 	return result
 }

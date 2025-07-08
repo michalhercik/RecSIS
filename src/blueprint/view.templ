@@ -25,7 +25,6 @@ templ Content(data *blueprintPage, t text) {
 }
 
 templ checkedCoursesMenu(yearCount int, t text) {
-    // take care of checked courses
     <div id="bp-checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
         <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
             // uncheck all checkboxes
@@ -38,11 +37,8 @@ templ checkedCoursesMenu(yearCount int, t text) {
                 data-bs-delay={ ttDelay }
                 data-bs-title={ t.ttUncheckAll }>
             </button>
-            // unassign
             @unassignCoursesButton(t.ttUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(0), vPos()), "input[type=checkbox]:checked", true, t)
-            // assign
             @assignCoursesButton(yearCount, t)
-            // remove
             @removeCoursesButton(t.ttRemoveChecked, mergeVals(vType(selectedRemove)), "input[type=checkbox]:checked", true, t)
         </div>
     </div>
@@ -52,10 +48,8 @@ templ yearsTables(years assignedYears, t text) {
     {{ runningCredits := 0 }}
     for _, year := range years {
         <div id={ fmt.Sprintf("blueprint-year-%d", year.position) }>
-            // render winter
             {{ runningCredits += year.winter.credits() }}
             @winterTable(year.winter.courses, year.winter.folded, year.position, len(years), runningCredits, year.credits(), year.winter.credits(), t)
-            // render summer
             {{ runningCredits += year.summer.credits() }}
             @summerTable(year.summer.courses, year.summer.folded,  year.position, len(years), runningCredits, year.credits(), year.summer.credits(), t)
         </div>
@@ -65,13 +59,11 @@ templ yearsTables(years assignedYears, t text) {
 templ unassignedTable(unassigned []course, folded bool, yearCount int, t text) {
     <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
         if len(unassigned) > 0 {
-            // if there are unassigned courses
             @unassignHeadline(folded, t)
             if (!folded) {
                 @coursesBody("unassigned", unassigned, false, sortHxPatch(0, 0, t), t.ttReassign, yearCount, t)
             }
         } else {
-            // if there are no unassigned courses
             @noCoursesTableContent(t.noUnassignedText, sortHxPatch(0, 0, t))
         }
     </table>
@@ -96,7 +88,6 @@ templ unassignHeadline(folded bool, t text) {
             <th class="d-none d-xl-table-cell">{ t.guarantors }</th>
         }
         <th class="d-none d-md-table-cell text-end align-middle py-0 lh-1">
-            // remove all unassigned courses button
             @removeCoursesButton(t.ttRemoveUnassigned, mergeVals(vType(yearRemove), vYear(0)), "", false, t)
         </th>
     </tr></thead>
@@ -105,13 +96,11 @@ templ unassignHeadline(folded bool, t text) {
 templ winterTable(courses []course, folded bool, year, yearCount, runningCredits, yearCredits, winterCredits int, t text) {
     <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
         if len(courses) > 0 {
-            // if there are some courses
             @winterHeadline(year, runningCredits, yearCredits, winterCredits, folded, t)
             if (!folded) {
                 @coursesBody(fmt.Sprintf("%d-winter", year), courses, true, sortHxPatch(year, int(assignmentWinter), t), t.ttReassign, yearCount, t)
             }
         } else {
-            // if there are no courses
             {{
                 text := t.yearStr(year) + " " + t.winter + " - " + t.emptySemester
             }}
@@ -142,9 +131,7 @@ templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, folde
             <th class="d-none d-xl-table-cell">{ t.guarantors }</th>
         }
         <th class="d-none d-md-table-cell th-overflow text-end align-middle py-0 lh-1">
-            // remove all courses button
             @removeCoursesButton(t.ttRemoveWinter, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentWinter))), "", false, t)
-            // unassign all courses button
             @unassignCoursesButton(t.ttUnassignWinter, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentWinter))), "", false, t)
         </th>
     </tr></thead>
@@ -153,13 +140,11 @@ templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, folde
 templ summerTable(courses []course, folded bool, year, yearCount, runningCredits, yearCredits, summerCredits int, t text) {
     <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
         if len(courses) > 0 {
-            // if there are some courses
             @summerHeadline(year, runningCredits, yearCredits, summerCredits, folded, t)
             if (!folded) {
                 @coursesBody(fmt.Sprintf("%d-summer", year), courses, true, sortHxPatch(year, int(assignmentSummer), t), t.ttReassign, yearCount, t)
             }
         } else {
-            // if there are no courses
             {{
                 text := t.yearStr(year) + " " + t.summer + " - " + t.emptySemester
             }}
@@ -190,9 +175,7 @@ templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, folde
             <th class="d-none d-xl-table-cell">{ t.guarantors }</th>
         }
         <th class="d-none d-md-table-cell th-overflow text-end align-middle py-0 lh-1">
-            // remove all courses button
             @removeCoursesButton(t.ttRemoveSummer, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentSummer))), "", false, t)
-            // unassign all courses button
             @unassignCoursesButton(t.ttUnassignSummer, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentSummer))), "", false, t)
         </th>
     </tr></thead>
@@ -256,26 +239,16 @@ templ coursesBody(tableID string, courses []course, canUnassign bool, xSortMetho
                 @mobileInfoTd(&course, false, t)
             </td>
             <td class="credits-column text-end d-none d-md-table-cell">{ fmt.Sprintf("%d", course.credits) }</td>
-            <td class="d-none d-md-table-cell">{ winterString(&course) }</td>
-            <td class="d-none d-md-table-cell">{ summerString(&course) }</td>
+            <td class="d-none d-md-table-cell">{ course.winterString() }</td>
+            <td class="d-none d-md-table-cell">{ course.summerString() }</td>
             <td class="d-none d-xl-table-cell">{ course.guarantors.string() }</td>
             <td class="d-none d-md-table-cell text-end align-middle py-0">
-                <div class="d-none d-md-inline">
-                    if canUnassign {
-                        // unassign button
-                        @unassignCourseButton(course.id, t)
-                    }
-                    // (re)assign button
-                    @assignCourseButton(assignTT, yearCount, course.id, t)
-                    // remove course button
-                    @removeCourseButton(course.id, t)
-                    // drag button
-                    @dragCourseButton(false, t)
-                </div>
-                <div class="d-md-none">
-                    // drag button always visible
-                    @dragCourseButton(true, t)
-                </div>
+                if canUnassign {
+                    @unassignCourseButton(course.id, t)
+                }
+                @assignCourseButton(assignTT, yearCount, course.id, t)
+                @removeCourseButton(course.id, t)
+                @dragCourseButton(false, t)
             </td>
         </tr>
         }
@@ -346,7 +319,7 @@ templ mobileInfoTd(course *course, isCompulsory bool, t text) {
                 { course.code }
             </span>
             <span class="text-muted dp-mobile-semester">
-                { fmt.Sprintf("%s %s, %s", course.semester.string(t), hoursString(course, t), course.examType) }
+                { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
             </span>
             <span class="text-muted dp-mobile-credits">
                 { fmt.Sprintf("%s: %d", t.creditsShort, course.credits) }
@@ -417,7 +390,6 @@ templ summarizeFooter(years assignedYears, totalCredits int, t text) {
                         disabled?={ len(years) <= 0 }>
                     </button>
                 } else {
-                    // if the last year is empty, show delete button
                     <button
                         class="btn btn-outline-secondary btn-sm bi bi-dash"
                         hx-delete={ t.language.LocalizeURL("/blueprint/year") }
@@ -581,8 +553,7 @@ templ scriptOnMoveCustom() {
             targetCodes = Array.from(originalEvent.target.parentElement.parentElement.querySelectorAll("tr"))
                 .filter(tr => tr.id !== originatorID)
                 .map(tr => getCourseCodeFromId(tr.id));
-            //console.log("originator:", originatorCode, "target table:", targetCodes);
-            
+
             duplicate = targetCodes.includes(originatorCode);
             return !duplicate
         }

@@ -9,32 +9,26 @@ import (
 
 func (d *description) sanitizeContent(squash bool) string {
 	content := d.content
-	// parse content to html
 	htmlContent := parseToHTML(content, squash)
-	// clean html elements
 	cleanedContent := cleanHTML(htmlContent)
-	// sanitize html
 	sanitizedContent := sanitizeHTML(cleanedContent)
 
 	return sanitizedContent
 }
 
-// creating own parser for SIS content
-// ==================================
-// *** KNOWN RULES ***
-//
-// content		translation
-// ----------------------------------
-// '* line'		<b> line </b>
-// '-line'		<ul><li> line </li></ul>
-// 'line'		<p> line </p>
-//
-// extra
-// ----------------------------------
-// '<link>'		<a href="link"> link </a>
-//
-// ==================================
-// annotation seems to be just squashed text
+/*
+Replace SIS formatting rules with HTML tags.
+
+Known rules:
+  - '* [line]' ->  <b> [line] </b>
+  - '-[line]'  ->  <ul><li> [line] </li></ul>
+  - '[line]'   ->  <p> [line] </p>
+
+Is used in text but sis formatter does not support it:
+  - '<[link]>' -> <a href="[link]"> [link] </a>
+
+annotation seems to be just squashed text
+*/
 func parseToHTML(content string, squash bool) string {
 	var builder strings.Builder
 
@@ -83,18 +77,15 @@ func parseToHTML(content string, squash bool) string {
 	return builder.String()
 }
 
-// for correct rendering, it is necessary to replace invalid tags with <p>
-// ==================================
-// *** KNOWN INVALID TAGS ***
-//
-// <h7>
-// <tema>
-//
-// ==================================
+/*
+For correct rendering, it is necessary to replace invalid tags with <p>
+
+Known invalid tags:
+  - <h7>
+  - <tema>
+*/
 func cleanHTML(content string) string {
-	// regex to match <h7> and <tema> tags case-insensitively
 	re := regexp.MustCompile(`(?i)</?(h7|tema)>`)
-	// replace with <p> for opening tags and </p> for closing tags
 	output := re.ReplaceAllStringFunc(content, func(match string) string {
 		if strings.HasPrefix(match, "</") {
 			return "</p>"
@@ -104,25 +95,18 @@ func cleanHTML(content string) string {
 	return output
 }
 
-// sanitizing HTML using bluemonday
 func sanitizeHTML(content string) string {
 	p := bluemonday.NewPolicy()
-	// allow only the most basic HTML elements
 	p.AllowElements("a", "b", "i", "strong", "em", "p", "small", "br", "br/", "h1", "h2", "h3", "h4", "h5", "h6", "span", "var", "sub", "sup")
-	// allow links
 	p.AllowAttrs("href").OnElements("a")
 	p.AllowStandardURLs()
-	// allow font for backward compatibility
-	p.AllowElements("font")
-	p.AllowAttrs("face").OnElements("font")
-	// allow the most basic attributes
+	p.AllowElements("font")                 // for backward compatibility
+	p.AllowAttrs("face").OnElements("font") // for backward compatibility
 	p.AllowStandardAttributes()
 	p.AllowAttrs("hidden").Globally()
-	// allow images, lists, and tables
 	p.AllowImages()
 	p.AllowLists()
 	p.AllowTables()
 	p.AllowAttrs("border").OnElements("table")
-	// sanitize the content
 	return p.Sanitize(content)
 }
