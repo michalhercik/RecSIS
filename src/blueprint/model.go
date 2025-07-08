@@ -12,6 +12,11 @@ import (
 //================================================================================
 
 const (
+	lastPosition = -1
+	ttDelay      = "600"
+)
+
+const (
 	yearUnassign     string = "year-unassign"
 	semesterUnassign string = "semester-unassign"
 	selectedMove     string = "selected-move"

@@ -27,10 +27,8 @@ func (eh ErrorHandler) Render(w http.ResponseWriter, r *http.Request, code int, 
 	if r.Header.Get("HX-Request") != "" {
 		w.Header().Set("HX-Retarget", "#error-content")
 		w.Header().Set("HX-Reswap", "innerHTML")
-		w.Header().Set("HX-Error-Code", fmt.Sprintf("%d", code))
-	} else {
-		w.WriteHeader(code)
 	}
+	w.WriteHeader(code)
 	err := ErrorMessageTopOfPage(code, userMsg, texts[lang]).Render(r.Context(), w)
 
 	if err != nil {
@@ -42,7 +40,7 @@ func (eh ErrorHandler) Render(w http.ResponseWriter, r *http.Request, code int, 
 
 func (eh ErrorHandler) RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language) {
 	main := ErrorMessageContent(code, userMsg, texts[lang])
-	w.Header().Set("HX-Error-Code", fmt.Sprintf("%d", code))
+	w.WriteHeader(code)
 	err := eh.Page.View(main, lang, title, userID).Render(r.Context(), w)
 
 	if err != nil {

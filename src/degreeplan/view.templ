@@ -219,7 +219,7 @@ templ tableHeader(bloc *bloc, t text) {
 templ blocName(bloc *bloc, show, classes string, t text) {
     if bloc.name != "" {
         <h5 class={ "mb-0", classes, show }>
-            { stringsx.Capitalize(bloc.name) }
+            { stringsx.Capitalize(bloc.name) }&nbsp;
             @statusIcon(bloc, t)
         </h5>
     }

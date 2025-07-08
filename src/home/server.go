@@ -20,10 +20,10 @@ type Server struct {
 	Error       Error
 	Page        Page
 	Recommender string
-	router      http.Handler
+	router      *http.ServeMux
 }
 
-func (s Server) Router() http.Handler {
+func (s Server) Router() *http.ServeMux {
 	return s.router
 }
 
@@ -49,18 +49,9 @@ type Page interface {
 func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.page)
-	router.HandleFunc("GET /home/", s.page)
-
-	// Wrap mux to catch unmatched routes
-	s.router = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if mux has a handler for the URL
-		_, pattern := router.Handler(r)
-		if pattern == "" {
-			s.pageNotFound(w, r)
-			return
-		}
-		router.ServeHTTP(w, r)
-	})
+	router.HandleFunc("GET /home/{$}", s.page)
+	router.HandleFunc("/", s.pageNotFound)
+	s.router = router
 }
 
 //================================================================================

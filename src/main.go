@@ -33,14 +33,53 @@ import (
 )
 
 func main() {
+	configPath := getConfigPath()
+	conf := getConfig(configPath)
+	handler := setupHandler(conf)
+
+	//////////////////////////////////////////
+	// Server setup
+	//////////////////////////////////////////
+
+	var err error
+	// Redirect http to https
+	go func() {
+		httpServer := http.Server{
+			Addr:    fmt.Sprintf(":%d", conf.Server.HTTP.Port),
+			Handler: http.HandlerFunc(redirectToTLS(conf.Server.HTTPS.Port)),
+		}
+		if err = httpServer.ListenAndServe(); err != nil {
+			log.Fatalf("HTTP server failed: %v", err)
+		}
+	}()
+
+	log.Println("Server starting ...")
+	if conf.Environment == developmentEnvironment {
+		log.Printf("https://localhost:%d/", conf.Server.HTTPS.Port)
+	}
+	server := http.Server{
+		Addr:    fmt.Sprintf(":%d", conf.Server.HTTPS.Port),
+		Handler: handler,
+	}
+	err = server.ListenAndServeTLS(conf.SSL.Certificate, conf.SSL.Key)
+	if err != nil {
+		log.Fatalf("Server failed: %v", err)
+	}
+}
+
+func getConfigPath() string {
 	configPath := flag.String("config", "", "Path to the config file")
 	flag.Parse()
-	if len(*configPath) == 0 {
+	return *configPath
+}
+
+func getConfig(configPath string) config {
+	if len(configPath) == 0 {
 		log.Fatal("Config file path is required")
 	}
 
 	var conf config
-	_, err := toml.DecodeFile(*configPath, &conf)
+	_, err := toml.DecodeFile(configPath, &conf)
 	if err != nil {
 		log.Fatalf("Failed to load config file: %v", err)
 	}
@@ -57,10 +96,35 @@ func main() {
 		log.Fatalf("Invalid environment: %s", conf.Environment)
 	}
 
-	//////////////////////////////////////////
-	// Database setup
-	//////////////////////////////////////////
+	return conf
+}
 
+func setupHandler(conf config) http.Handler {
+	db := setupDB(conf)
+	meiliClient := setupMeiliSearch(conf)
+
+	errorHandler := setupErrorHandler()
+
+	pageTempl := setupPage(conf, errorHandler, meiliClient)
+
+	errorHandler.Page = page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl}
+
+	homeServer := setupHomeServer(conf, errorHandler, pageTempl)
+	blueprintServer := setupBlueprintServer(db, errorHandler, pageTempl)
+	coursedetailServer := setupCourseDetailServer(db, errorHandler, pageTempl, meiliClient)
+	coursesServer := setupCoursesServer(db, errorHandler, pageTempl, meiliClient)
+	degreePlanServer := setupDegreePlanServer(db, errorHandler, pageTempl, meiliClient)
+
+	exePath, _ := os.Executable()
+	static := http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "static")))
+
+	protectedHandler := setupProtectedHandler(homeServer, pageTempl, blueprintServer, coursedetailServer, coursesServer, degreePlanServer, static, db, errorHandler, conf)
+	unprotectedHandler := setupUnprotectedHandler(protectedHandler, static)
+
+	return unprotectedHandler
+}
+
+func setupDB(conf config) *sqlx.DB {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		conf.Postgres.Host, conf.Postgres.Port, conf.Postgres.User, conf.Postgres.Password, conf.Postgres.DBName)
 	db, err := sqlx.Open("postgres", psqlInfo)
@@ -70,24 +134,25 @@ func main() {
 	if err = db.Ping(); err != nil {
 		log.Fatalf("Database ping failed: %v", err)
 	}
+	return db
+}
 
-	meiliClient := meilisearch.New(conf.MeiliSearch.Host, meilisearch.WithAPIKey(conf.MeiliSearch.Key))
-	if !meiliClient.IsHealthy() {
+func setupMeiliSearch(conf config) meilisearch.ServiceManager {
+	ms := meilisearch.New(conf.MeiliSearch.Host, meilisearch.WithAPIKey(conf.MeiliSearch.Key))
+	if !ms.IsHealthy() {
 		log.Fatalf("MeiliSearch connection failed")
 	}
+	return ms
+}
 
-	//////////////////////////////////////////
-	// Error handling
-	//////////////////////////////////////////
-
+func setupErrorHandler() errorx.ErrorHandler {
 	errorHandler := errorx.ErrorHandler{
 		// Initialize error handler with logging and rendering capabilities
 	}
+	return errorHandler
+}
 
-	//////////////////////////////////////////
-	// Page template setup
-	//////////////////////////////////////////
-
+func setupPage(conf config, errorHandler page.Error, meiliClient meilisearch.ServiceManager) page.Page {
 	pageTempl := page.Page{
 		Error: errorHandler,
 		Home:  "/home/",
@@ -115,12 +180,10 @@ func main() {
 	}
 	pageTempl.Init()
 
-	errorHandler.Page = page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl}
+	return pageTempl
+}
 
-	//////////////////////////////////////////
-	// Handlers
-	//////////////////////////////////////////
-
+func setupHomeServer(conf config, errorHandler home.Error, pageTempl page.Page) http.Handler {
 	home := home.Server{
 		Auth:        cas.UserIDFromContext{},
 		Error:       errorHandler,
@@ -128,7 +191,10 @@ func main() {
 		Recommender: fmt.Sprintf("http://%s:%d", conf.Recommender.Host, conf.Recommender.Port),
 	}
 	home.Init()
+	return home.Router()
+}
 
+func setupBlueprintServer(db *sqlx.DB, errorHandler blueprint.Error, pageTempl page.Page) http.Handler {
 	blueprint := blueprint.Server{
 		Auth:  cas.UserIDFromContext{},
 		Data:  blueprint.DBManager{DB: db},
@@ -136,7 +202,10 @@ func main() {
 		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
 	blueprint.Init()
+	return blueprint.Router()
+}
 
+func setupCourseDetailServer(db *sqlx.DB, errorHandler coursedetail.Error, pageTempl page.Page, meiliClient meilisearch.ServiceManager) http.Handler {
 	coursedetail := coursedetail.Server{
 		Auth: cas.UserIDFromContext{},
 		BpBtn: bpbtn.Add{
@@ -159,7 +228,10 @@ func main() {
 		},
 	}
 	coursedetail.Init()
+	return coursedetail.Router()
+}
 
+func setupCoursesServer(db *sqlx.DB, errorHandler courses.Error, pageTempl page.Page, meiliClient meilisearch.ServiceManager) http.Handler {
 	courses := courses.Server{
 		Auth: cas.UserIDFromContext{},
 		BpBtn: bpbtn.Add{
@@ -182,7 +254,10 @@ func main() {
 		},
 	}
 	courses.Init()
+	return courses.Router()
+}
 
+func setupDegreePlanServer(db *sqlx.DB, errorHandler degreeplan.Error, pageTempl page.Page, meiliClient meilisearch.ServiceManager) http.Handler {
 	degreePlan := degreeplan.Server{
 		Auth: cas.UserIDFromContext{},
 		BpBtn: bpbtn.DoubleAdd{
@@ -204,24 +279,20 @@ func main() {
 		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
 	degreePlan.Init()
+	return degreePlan.Router()
+}
 
-	exePath, err := os.Executable()
-	static := http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "static")))
-
+func setupProtectedHandler(homeServer http.Handler, pageTempl page.Page, blueprintServer, coursedetailServer, coursesServer, degreePlanServer, static http.Handler, db *sqlx.DB, errorHandler cas.Error, conf config) http.Handler {
 	protectedRouter := http.NewServeMux()
-	protectedRouter.Handle("/", home.Router())
+	protectedRouter.Handle("/", homeServer)
 	handle(protectedRouter, "/page/", pageTempl.Router())
-	handle(protectedRouter, "/blueprint/", blueprint.Router())
-	handle(protectedRouter, "/course/", coursedetail.Router())
-	handle(protectedRouter, "/courses/", courses.Router())
-	handle(protectedRouter, "/degreeplan/", degreePlan.Router())
+	handle(protectedRouter, "/blueprint/", blueprintServer)
+	handle(protectedRouter, "/course/", coursedetailServer)
+	handle(protectedRouter, "/courses/", coursesServer)
+	handle(protectedRouter, "/degreeplan/", degreePlanServer)
 	protectedRouter.Handle("GET /logo.svg", static)
 	protectedRouter.Handle("GET /style.css", static)
 	protectedRouter.Handle("GET /js/", static)
-
-	//////////////////////////////////////////
-	// Server setup
-	//////////////////////////////////////////
 
 	authentication := cas.Authentication{
 		Data:           cas.DBManager{DB: db},
@@ -229,44 +300,27 @@ func main() {
 		CAS:            cas.CAS{Host: conf.CAS.Host},
 		AfterLoginPath: "/",
 	}
-	var handler, unprotectedHandler, protectedHandler http.Handler
+	var protectedHandler http.Handler
 	protectedHandler = protectedRouter
 	protectedHandler = authentication.AuthenticateHTTP(protectedHandler)
 
+	return protectedHandler
+}
+
+func setupUnprotectedHandler(protectedHandler http.Handler, static http.Handler) http.Handler {
 	unprotectedRouter := http.NewServeMux()
 	unprotectedRouter.Handle("/", protectedHandler)
 	unprotectedRouter.Handle("GET /favicon.ico", static)
 	unprotectedRouter.Handle("GET /logo.svg", static)
 
+	var unprotectedHandler http.Handler
 	unprotectedHandler = unprotectedRouter
 	unprotectedHandler = language.SetAndStripLanguage(unprotectedHandler)
 	unprotectedHandler = logging(unprotectedHandler)
-	handler = unprotectedHandler
-
-	// Redirect http to https
-	go func() {
-		httpServer := http.Server{
-			Addr:    fmt.Sprintf(":%d", conf.Server.HTTP.Port),
-			Handler: http.HandlerFunc(redirectToTLS(conf.Server.HTTPS.Port)),
-		}
-		if err = httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("HTTP server failed: %v", err)
-		}
-	}()
-
-	log.Println("Server starting ...")
-	if conf.Environment == developmentEnvironment {
-		log.Printf("https://localhost:%d/", conf.Server.HTTPS.Port)
-	}
-	server := http.Server{
-		Addr:    fmt.Sprintf(":%d", conf.Server.HTTPS.Port),
-		Handler: handler,
-	}
-	err = server.ListenAndServeTLS(conf.SSL.Certificate, conf.SSL.Key)
-	if err != nil {
-		log.Fatalf("Server failed: %v", err)
-	}
+	return unprotectedHandler
 }
+
+// ===========================
 
 func redirectToTLS(port int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
