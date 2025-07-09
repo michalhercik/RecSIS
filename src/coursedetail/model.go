@@ -326,11 +326,11 @@ type surveyTarget struct {
 }
 
 type teacher struct {
-	SisID       string `json:"KOD"`
-	LastName    string `json:"PRIJMENI"`
-	FirstName   string `json:"JMENO"`
-	TitleBefore string `json:"TITULPRED"`
-	TitleAfter  string `json:"TITULZA"`
+	SisID       string `json:"id"`
+	LastName    string `json:"last_name"`
+	FirstName   string `json:"first_name"`
+	TitleBefore string `json:"title_before"`
+	TitleAfter  string `json:"title_after"`
 }
 
 // ================================================================================
