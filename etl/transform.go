@@ -263,74 +263,95 @@ Prerequisites:
 var pamela2JSON = transformation{
 	name: "pamela2json",
 	query: `--sql
-	DROP TABLE IF EXISTS pamela2json;
-	CREATE TABLE pamela2json (
-		course_code VARCHAR(10),
-		lang VARCHAR(2),
-		annotation jsonb,
-		syllabus jsonb,
-		terms_of_passing jsonb,
-		literature jsonb,
-		requirements_of_assesment jsonb,
-		entry_requirements jsonb,
-		aim jsonb
-	);
-	INSERT INTO pamela2json
-	SELECT
-		course_code,
-		lang,
-		jsonb_object(ARRAY['title', 'content'],ARRAY[annotation_title, annotation]) annotation,
-		jsonb_object(ARRAY['title', 'content'],ARRAY[syllabus_title, syllabus]) syllabus,
-		jsonb_object(ARRAY['title', 'content'],ARRAY[terms_of_passing_title, terms_of_passing]) terms_of_passing,
-		jsonb_object(ARRAY['title', 'content'],ARRAY[literature_title, literature]) literature,
-		jsonb_object(ARRAY['title', 'content'],ARRAY[requirements_of_assesment_title, requirements_of_assesment]) requirements_of_assesment,
-		jsonb_object(ARRAY['title', 'content'],ARRAY[entry_requirements_title, entry_requirements]) entry_requirements,
-		jsonb_object(ARRAY['title', 'content'],ARRAY[aim_title, aim]) aim
-	FROM (
+		DROP TABLE IF EXISTS pamela2json;
+		CREATE TABLE pamela2json (
+			course_code VARCHAR(10),
+			lang VARCHAR(2),
+			annotation jsonb,
+			syllabus jsonb,
+			terms_of_passing jsonb,
+			literature jsonb,
+			requirements_of_assesment jsonb,
+			entry_requirements jsonb,
+			aim jsonb
+		);
+		INSERT INTO pamela2json
 		SELECT
-			povinn course_code,
-			'cs' lang,
-			max(nazev) filter(where typ='A') annotation_title,
-			max(memo) filter(where typ='A') annotation,
-			max(nazev) filter(where typ='S') syllabus_title,
-			max(memo) filter(where typ='S') syllabus,
-			max(nazev) filter(where typ='E') terms_of_passing_title,
-			max(memo) filter(where typ='E') terms_of_passing,
-			max(nazev) filter(where typ='L') literature_title,
-			max(memo) filter(where typ='L') literature,
-			max(nazev) filter(where typ='P') requirements_of_assesment_title,
-			max(memo) filter(where typ='P') requirements_of_assesment,
-			max(nazev) filter(where typ='V') entry_requirements_title,
-			max(memo) filter(where typ='V') entry_requirements,
-			max(nazev) filter(where typ='C') aim_title,
-			max(memo) filter(where typ='C') aim
-		FROM pamela
-		LEFT join typmem ON pamela.typ = typmem.kod
-		WHERE jazyk='CZE'
-		GROUP BY povinn
-		UNION
-		SELECT
-			povinn course_code,
-			'en' lang,
-			max(anazev) filter(where typ='A') annotation_title,
-			max(memo) filter(where typ='A') annotation,
-			max(anazev) filter(where typ='S') syllabus_title,
-			max(memo) filter(where typ='S') syllabus,
-			max(anazev) filter(where typ='E') terms_of_passing_title,
-			max(memo) filter(where typ='E') terms_of_passing,
-			max(anazev) filter(where typ='L') literature_title,
-			max(memo) filter(where typ='L') literature,
-			max(anazev) filter(where typ='P') requirements_of_assesment_title,
-			max(memo) filter(where typ='P') requirements_of_assesment,
-			max(anazev) filter(where typ='V') entry_requirements_title,
-			max(memo) filter(where typ='V') entry_requirements,
-			max(anazev) filter(where typ='C') aim_title,
-			max(memo) filter(where typ='C') aim
-		FROM pamela
-		LEFT JOIN typmem ON pamela.typ = typmem.kod
-		WHERE jazyk='ENG'
-		GROUP BY povinn
-	)
+			course_code,
+			lang,
+			CASE
+				WHEN annotation IS NULL THEN NULL
+				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[annotation_title, annotation])
+			END annotation,
+			CASE
+				WHEN syllabus IS NULL THEN NULL
+				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[syllabus_title, syllabus])
+			END syllabus,
+			CASE
+				WHEN terms_of_passing IS NULL THEN NULL
+				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[terms_of_passing_title, terms_of_passing])
+			END terms_of_passing,
+			CASE
+				WHEN literature IS NULL THEN NULL
+				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[literature_title, literature])
+			END literature,
+			CASE
+				WHEN requirements_of_assesment IS NULL THEN NULL
+				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[requirements_of_assesment_title, requirements_of_assesment])
+			END requirements_of_assesment,
+			CASE
+				WHEN entry_requirements IS NULL THEN NULL
+				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[entry_requirements_title, entry_requirements])
+			END entry_requirements,
+			CASE
+				WHEN aim IS NULL THEN NULL
+				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[aim_title, aim])
+			END aim
+		FROM (
+			SELECT
+				povinn course_code,
+				'cs' lang,
+				max(nazev) FILTER (WHERE typ='A') annotation_title,
+				max(memo) FILTER (WHERE typ='A') annotation,
+				max(nazev) FILTER (WHERE typ='S') syllabus_title,
+				max(memo) FILTER (WHERE typ='S') syllabus,
+				max(nazev) FILTER (WHERE typ='E') terms_of_passing_title,
+				max(memo) FILTER (WHERE typ='E') terms_of_passing,
+				max(nazev) FILTER (WHERE typ='L') literature_title,
+				max(memo) FILTER (WHERE typ='L') literature,
+				max(nazev) FILTER (WHERE typ='P') requirements_of_assesment_title,
+				max(memo) FILTER (WHERE typ='P') requirements_of_assesment,
+				max(nazev) FILTER (WHERE typ='V') entry_requirements_title,
+				max(memo) FILTER (WHERE typ='V') entry_requirements,
+				max(nazev) FILTER (WHERE typ='C') aim_title,
+				max(memo) FILTER (WHERE typ='C') aim
+			FROM pamela
+			LEFT JOIN typmem ON pamela.typ = typmem.kod
+			WHERE jazyk='CZE'
+			GROUP BY povinn
+			UNION
+			SELECT
+				povinn course_code,
+				'en' lang,
+				max(anazev) FILTER (WHERE typ='A') annotation_title,
+				max(memo) FILTER (WHERE typ='A') annotation,
+				max(anazev) FILTER (WHERE typ='S') syllabus_title,
+				max(memo) FILTER (WHERE typ='S') syllabus,
+				max(anazev) FILTER (WHERE typ='E') terms_of_passing_title,
+				max(memo) FILTER (WHERE typ='E') terms_of_passing,
+				max(anazev) FILTER (WHERE typ='L') literature_title,
+				max(memo) FILTER (WHERE typ='L') literature,
+				max(anazev) FILTER (WHERE typ='P') requirements_of_assesment_title,
+				max(memo) FILTER (WHERE typ='P') requirements_of_assesment,
+				max(anazev) FILTER (WHERE typ='V') entry_requirements_title,
+				max(memo) FILTER (WHERE typ='V') entry_requirements,
+				max(anazev) FILTER (WHERE typ='C') aim_title,
+				max(memo) FILTER (WHERE typ='C') aim
+			FROM pamela
+			LEFT JOIN typmem ON pamela.typ = typmem.kod
+			WHERE jazyk='ENG'
+			GROUP BY povinn
+		)
 	`,
 }
 
