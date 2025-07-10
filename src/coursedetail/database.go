@@ -137,8 +137,8 @@ func intoCourse(from *courseDetail) course {
 	return course{
 		code:                   from.Code,
 		title:                  from.Title,
-		faculty:                from.Faculty,
-		guarantorDepartment:    from.Department,
+		faculty:                intoFaculty(from.Faculty),
+		guarantorDepartment:    intoDepartment(from.Department),
 		state:                  from.State,
 		semester:               teachingSemester(from.Start),
 		language:               from.Language.String,
@@ -146,12 +146,13 @@ func intoCourse(from *courseDetail) course {
 		seminarRangeWinter:     from.SeminarRangeWinter,
 		lectureRangeSummer:     from.LectureRangeSummer,
 		seminarRangeSummer:     from.SeminarRangeSummer,
-		rangeUnit:              from.RangeUnit,
+		rangeUnit:              intoRangeUnit(from.RangeUnit),
 		examType:               from.ExamType,
 		credits:                from.Credits,
 		guarantors:             intoTeacherSlice(from.Guarantors),
 		teachers:               intoTeacherSlice(from.Teachers),
 		capacity:               from.MaxOccupancy.String,
+		url:                    from.URL,
 		annotation:             intoNullDesc(from.Annotation),
 		syllabus:               intoNullDesc(from.Syllabus),
 		passingTerms:           intoNullDesc(from.PassingTerms),
@@ -159,18 +160,56 @@ func intoCourse(from *courseDetail) course {
 		assessmentRequirements: intoNullDesc(from.AssessmentRequirements),
 		entryRequirements:      intoNullDesc(from.EntryRequirements),
 		aim:                    intoNullDesc(from.Aim),
-		prerequisites:          []string(from.Prereq),
-		corequisites:           []string(from.Coreq),
-		incompatible:           []string(from.Incompa),
-		interchange:            []string(from.Interchange),
-		classes:                intoClassSlice(from.Classes),
-		classifications:        intoClassSlice(from.Classifications),
+		prerequisites:          intoRequisiteSlice(from.Prereq),
+		corequisites:           intoRequisiteSlice(from.Coreq),
+		incompatible:           intoRequisiteSlice(from.Incompa),
+		interchange:            intoRequisiteSlice(from.Interchange),
+		classes:                []string(from.Classes),
+		classifications:        []string(from.Classifications),
 		overallRating:          intoCourseRating(from.OverallRating),
 		categoryRatings:        intoCategoryRatingSlice(from.CategoryRatings),
 		blueprintAssignments:   intoBlueprintAssignmentSlice(from.BlueprintSemesters),
 		blueprintSemesters:     from.BlueprintSemesters,
 		inDegreePlan:           from.InDegreePlan,
 	}
+}
+
+func intoRangeUnit(from dbds.NullRangeUnit) nullRangeUnit {
+	return nullRangeUnit{
+		rangeUnit: rangeUnit{
+			abbr: from.Abbr,
+			name: from.Name,
+		},
+		valid: from.Valid,
+	}
+}
+
+func intoFaculty(from dbds.Faculty) faculty {
+	return faculty{
+		abbr: from.Abbr,
+		name: from.Name,
+	}
+}
+
+func intoDepartment(from dbds.Department) department {
+	return department{
+		id:   from.ID,
+		name: from.Name,
+	}
+}
+
+func intoRequisiteSlice(from dbds.JSONArray[dbds.Requisite]) []requisite {
+	if from == nil {
+		return []requisite{}
+	}
+	result := make([]requisite, len(from))
+	for i, r := range from {
+		result[i] = requisite{
+			courseCode: r.CourseCode,
+			state:      r.State,
+		}
+	}
+	return result
 }
 
 func intoBlueprintAssignmentSlice(from pq.BoolArray) []assignment {
@@ -210,17 +249,6 @@ func intoCategoryRatingSlice(from []dbds.CourseCategoryRating) []courseCategoryR
 				avgRating:   c.AvgRating,
 				ratingCount: c.RatingCount,
 			},
-		}
-	}
-	return result
-}
-
-func intoClassSlice(from dbds.ClassSlice) []class {
-	result := make([]class, len(from))
-	for i, c := range from {
-		result[i] = class{
-			code: c.Code,
-			name: c.Name,
 		}
 	}
 	return result

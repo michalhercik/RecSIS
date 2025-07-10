@@ -46,11 +46,11 @@ templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, 
         } else {
             { alpineClassesFalse... }
         }
-        hx-post={ t.language.LocalizeURL(model.hxPostBase + "/blueprint") }
+        hx-post={ t.language.LocalizeURL(model.hxPostBase + endpointPath) }
         if model.course == "" {
-            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0`) }
+            hx-vals={ fmt.Sprintf(`"%s": 0, "%s": 0`, yearParam, semesterParam) }
         } else {
-            hx-vals={ fmt.Sprintf(`"year": 0, "semester": 0, "course": "%s"`, model.course) }
+            hx-vals={ fmt.Sprintf(`"%s": 0, "%s": 0, "%s": "%s"`, yearParam, semesterParam, courseParam, model.course) }
         }
         hx-swap={ model.hxSwap }
         hx-target={ model.hxTarget }
@@ -85,11 +85,11 @@ templ assignSemesterButton(semesterText string, year, semester int, disabled boo
     <li class="mx-3">
         <button
             class="dropdown-item rounded text-center dropdown-item-blueprint"
-            hx-post={ t.language.LocalizeURL(model.hxPostBase + "/blueprint") }
+            hx-post={ t.language.LocalizeURL(model.hxPostBase + endpointPath) }
             if model.course == "" {
-                hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d`, year, semester) }
+                hx-vals={ fmt.Sprintf(`"%s": %d, "%s": %d`,yearParam, year, semesterParam, semester) }
             } else {
-                hx-vals={ fmt.Sprintf(`"year": %d, "semester": %d, "course": "%s"`, year, semester, model.course) }
+                hx-vals={ fmt.Sprintf(`"%s": %d, "%s": %d, "%s": "%s"`, yearParam, year, semesterParam, semester, courseParam, model.course) }
             }
             hx-include={ model.hxInclude }
             hx-swap={ model.hxSwap }

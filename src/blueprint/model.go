@@ -12,6 +12,11 @@ import (
 //================================================================================
 
 const (
+	lastPosition = -1
+	ttDelay      = "600"
+)
+
+const (
 	yearUnassign     string = "year-unassign"
 	semesterUnassign string = "semester-unassign"
 	selectedMove     string = "selected-move"
@@ -36,11 +41,12 @@ const (
 	checkboxName string = "selected"
 )
 
+const recordID string = "id"
+
 //================================================================================
 // Data Types and Methods
 //================================================================================
 
-// all data needed for the blueprint page
 type blueprintPage struct {
 	unassigned semester
 	years      assignedYears
@@ -54,7 +60,6 @@ func (bp *blueprintPage) totalCredits() int {
 	return total
 }
 
-// wrapper for a slice of academic years
 type assignedYears []academicYear
 
 func (ays *assignedYears) assignedCredits() int {
@@ -65,7 +70,6 @@ func (ays *assignedYears) assignedCredits() int {
 	return total
 }
 
-// single academic year with its semesters
 type academicYear struct {
 	position int
 	winter   semester
@@ -76,7 +80,6 @@ func (ay academicYear) credits() int {
 	return ay.winter.credits() + ay.summer.credits()
 }
 
-// semester has courses and a flag indicating whether it is folded
 type semester struct {
 	courses []course
 	folded  bool
@@ -90,7 +93,6 @@ func (s semester) credits() int {
 	return sum
 }
 
-// course representation
 type course struct {
 	id                 int
 	code               string
@@ -106,7 +108,44 @@ type course struct {
 	warnings           []string
 }
 
-// semester type - winter, summer, or both
+func (c *course) winterString() string {
+	winterText := ""
+	if c.semester == teachingWinterOnly || c.semester == teachingBoth {
+		winterText = fmt.Sprintf("%d/%d, %s", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64, c.examType)
+	} else {
+		winterText = "---"
+	}
+	return winterText
+}
+
+func (c *course) summerString() string {
+	summerText := ""
+	if c.semester == teachingSummerOnly {
+		summerText = fmt.Sprintf("%d/%d, %s", c.lectureRangeSummer.Int64, c.seminarRangeSummer.Int64, c.examType)
+	} else if c.semester == teachingBoth {
+		summerText = fmt.Sprintf("%d/%d, %s", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64, c.examType)
+	} else {
+		summerText = "---"
+	}
+	return summerText
+}
+
+func (c *course) hoursString() string {
+	result := ""
+	winter := c.lectureRangeWinter.Valid && c.seminarRangeWinter.Valid
+	summer := c.lectureRangeSummer.Valid && c.seminarRangeSummer.Valid
+	if winter {
+		result += fmt.Sprintf("%d/%d", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64)
+	}
+	if winter && summer {
+		result += ", "
+	}
+	if summer {
+		result += fmt.Sprintf("%d/%d", c.lectureRangeSummer.Int64, c.seminarRangeSummer.Int64)
+	}
+	return result
+}
+
 type teachingSemester int
 
 const (
@@ -128,7 +167,6 @@ func (ts teachingSemester) string(t text) string {
 	}
 }
 
-// wrapper for teacher slice
 type teacherSlice []teacher
 
 func (t teacherSlice) string() string {
@@ -142,7 +180,6 @@ func (t teacherSlice) string() string {
 	return strings.Join(names, ", ")
 }
 
-// teacher type
 type teacher struct {
 	sisID       string
 	firstName   string
@@ -156,7 +193,6 @@ func (t teacher) string() string {
 	return fmt.Sprintf("%c. %s", firstRune, t.lastName)
 }
 
-// semester representation
 type semesterAssignment int
 
 const (
@@ -168,44 +204,6 @@ const (
 //================================================================================
 // Helper Functions
 //================================================================================
-
-func winterString(course *course) string {
-	winterText := ""
-	if course.semester == teachingWinterOnly || course.semester == teachingBoth {
-		winterText = fmt.Sprintf("%d/%d, %s", course.lectureRangeWinter.Int64, course.seminarRangeWinter.Int64, course.examType)
-	} else {
-		winterText = "---"
-	}
-	return winterText
-}
-
-func summerString(course *course) string {
-	summerText := ""
-	if course.semester == teachingSummerOnly {
-		summerText = fmt.Sprintf("%d/%d, %s", course.lectureRangeSummer.Int64, course.seminarRangeSummer.Int64, course.examType)
-	} else if course.semester == teachingBoth {
-		summerText = fmt.Sprintf("%d/%d, %s", course.lectureRangeWinter.Int64, course.seminarRangeWinter.Int64, course.examType)
-	} else {
-		summerText = "---"
-	}
-	return summerText
-}
-
-func hoursString(course *course, t text) string {
-	result := ""
-	winter := course.lectureRangeWinter.Valid && course.seminarRangeWinter.Valid
-	summer := course.lectureRangeSummer.Valid && course.seminarRangeSummer.Valid
-	if winter {
-		result += fmt.Sprintf("%d/%d", course.lectureRangeWinter.Int64, course.seminarRangeWinter.Int64)
-	}
-	if winter && summer {
-		result += ", "
-	}
-	if summer {
-		result += fmt.Sprintf("%d/%d", course.lectureRangeSummer.Int64, course.seminarRangeSummer.Int64)
-	}
-	return result
-}
 
 func sortHxPatch(year, semester int, t text) string {
 	return fmt.Sprintf(`sortHxPatch($item, %d, %d, $position, "%s")`, year, semester, t.language)

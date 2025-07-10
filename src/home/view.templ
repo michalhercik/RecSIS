@@ -2,8 +2,6 @@ package home
 
 import (
     "fmt"
-
-	"github.com/michalhercik/RecSIS/utils"
 )
 
 templ Content(hp *homePage, t text) {
@@ -40,19 +38,17 @@ templ courseCardsRow(ID string, courses []course, t text) {
                 <div class="card small-card" x-cloak x-show={ fmt.Sprintf("(%sVisibleOffset <= %d && %d < %sVisibleOffset + visibleCards)", ID, i, i, ID) }>
                     <div class="card-header lh-1 py-1">
                         <div class="d-flex justify-content-between w-100">
-                            <h6 class="mb-0">{ c.Code }</h6> // code
-                            <small>{ fmt.Sprintf("%s: %d", t.credits, c.Credits) }</small> // credits
+                            <h6 class="mb-0">{ c.Code }</h6>
+                            <small>{ fmt.Sprintf("%s: %d", t.credits, c.Credits) }</small>
                         </div>
                         <div class="text-center w-100">
-                            <small>{ fmt.Sprintf("%s %s, %s", c.Semester.string(t), hoursString(&c, t), c.ExamType) }</small> // semester, hours, exams
+                            <small>{ fmt.Sprintf("%s %s, %s", c.Semester.string(t), c.hoursString(), c.ExamType) }</small>
                         </div>
                     </div>
                     <div class="card-body justify-content-between d-flex flex-column h-100">
-                        // title
                         <h6 class="card-title pb-1">
-                            @utils.TitleCourseLink(c.Code, c.Title, false, t.language)
+                            @titleCourseLink(c.Code, c.Title, t)
                         </h6>
-                        // guarantors
                         <h6 class="card-subtitle text-muted">{ c.Guarantors.string(t) }</h6>
                     </div>
                 </div>
@@ -60,6 +56,14 @@ templ courseCardsRow(ID string, courses []course, t text) {
         </div>
         @chevronRightBtn(ID, len(courses) - 1)
     </div>
+}
+
+templ titleCourseLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover"
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+        { title }
+    </a>
 }
 
 templ chevronLeftBtn(ID string) {

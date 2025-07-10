@@ -1,0 +1,13 @@
+[sis]
+host="localhost"
+port=10502
+service="studuk.prod"
+
+[recsis]
+host="postgres"
+port=5432
+dbname="recsis"
+
+[meilisearch]
+host="meilisearch"
+port=7700

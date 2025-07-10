@@ -1,3 +1,23 @@
+initializeTooltips();
+
+// bootstrap tooltip initialization
+function initializeTooltips() {
+    // Dispose of existing tooltips
+    removeAllTooltips();
+
+    // Initialize new tooltips
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+};
+
+// Dispose of existing tooltips
+function removeAllTooltips() {
+    var tooltipElements = document.querySelectorAll('.tooltip');
+    tooltipElements.forEach(function (tooltipEl) {
+        tooltipEl.remove();
+    });
+};
+
 // uncheck checkbox by id
 function uncheck(id) {
     const checkbox = document.getElementById(id);

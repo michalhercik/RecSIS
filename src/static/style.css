@@ -197,8 +197,8 @@ tr:target td {
 /* S -> cards grid styles */
 #filter-section,
 #filter-section-skeleton {
-    max-width: 185px;
-    width: 185px;
+    max-width: 197px;
+    width: 197px;
 }
 
 @media (max-width: 575.5px) {
@@ -385,17 +385,19 @@ tr:target td {
     transform: translateY(-50%);
 }
 
+/* CD -> filter styles */
+.cd-filter {
+    max-width: 90vw;
+}
+
+.cd-filter-label {
+    max-width: 100%;
+}
+
 /* CD -> filters dropdown scrollable */
 .filters-dropdown-menu-scroll {
     max-height: 300px;
     overflow-y: auto;
-}
-
-/* BP -> small screen title */
-.small-screen-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 /* BP -> fold semester button */
@@ -708,6 +710,7 @@ tr:target td {
 #dp-checked-courses-menu,
 #dp-checked-courses-menu-skeleton {
     position: sticky;
+    top: 55px;
     height: 37px;
     background-color: white;
     z-index: 100;
@@ -718,6 +721,12 @@ tr:target td {
     #dp-checked-courses-menu-skeleton {
         height: 60px;
     }
+}
+
+/* DP -> degree plan code styles */
+.dp-code {
+    z-index: 1000 !important;
+    top: 12px;
 }
 
 /* DP -> choose degree plan button styles */

@@ -7,13 +7,11 @@ import (
 )
 
 type text struct {
-	assign       string
-	year         string
-	winterAssign string
-	summerAssign string
-	// language
-	language language.Language
-	// errors
+	assign                  string
+	year                    string
+	winterAssign            string
+	summerAssign            string
+	language                language.Language
 	errNoCoursesProvided    string
 	errNoYearProvided       string
 	errInvalidYear          string
@@ -35,13 +33,11 @@ func (t text) yearStr(year int) string {
 
 var texts = map[language.Language]text{
 	language.CS: {
-		assign:       "Přiřadit",
-		year:         "ročník",
-		winterAssign: "ZS",
-		summerAssign: "LS",
-		// language
-		language: language.CS,
-		// errors
+		assign:                  "Přiřadit",
+		year:                    "ročník",
+		winterAssign:            "ZS",
+		summerAssign:            "LS",
+		language:                language.CS,
 		errNoCoursesProvided:    "Nebyl poskytnut žádný kurz pro přiřazení do Blueprintu",
 		errNoYearProvided:       "Nebyl poskytnut ročník pro přiřazení do Blueprintu",
 		errInvalidYear:          "Poskytnutý ročník není platný pro přiřazení do Blueprintu",
@@ -52,13 +48,11 @@ var texts = map[language.Language]text{
 		errAddCourseToBPFailed:  "Přidání kurzu/ů do Blueprintu selhalo",
 	},
 	language.EN: {
-		assign:       "Assign",
-		year:         "Year",
-		winterAssign: "Winter",
-		summerAssign: "Summer",
-		// language
-		language: language.EN,
-		// errors
+		assign:                  "Assign",
+		year:                    "Year",
+		winterAssign:            "Winter",
+		summerAssign:            "Summer",
+		language:                language.EN,
 		errNoCoursesProvided:    "No courses provided for Blueprint assignment",
 		errNoYearProvided:       "No year provided for Blueprint assignment",
 		errInvalidYear:          "Provided year is not valid for Blueprint assignment",

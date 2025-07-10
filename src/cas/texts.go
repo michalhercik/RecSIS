@@ -3,11 +3,10 @@ package cas
 import "github.com/michalhercik/RecSIS/language"
 
 type text struct {
-	title                 string
-	logoutSuccessHeadline string
-	logoutSuccessMessage  string
-	loginButton           string
-	// errors
+	title                         string
+	logoutSuccessHeadline         string
+	logoutSuccessMessage          string
+	loginButton                   string
 	errUnauthorized               string
 	errCannotGetUserIDFromSession string
 	errCannotCreateSession        string
@@ -18,11 +17,10 @@ type text struct {
 
 var texts = map[language.Language]text{
 	language.CS: {
-		title:                 "Odhlášení - RecSIS",
-		logoutSuccessHeadline: "Úspěšné odhlášení",
-		logoutSuccessMessage:  "Byli jste úspěšně odhlášeni.",
-		loginButton:           "Přihlásit se",
-		// errors
+		title:                         "Odhlášení - RecSIS",
+		logoutSuccessHeadline:         "Úspěšné odhlášení",
+		logoutSuccessMessage:          "Byli jste úspěšně odhlášeni.",
+		loginButton:                   "Přihlásit se",
 		errUnauthorized:               "Neoprávněný přístup",
 		errCannotGetUserIDFromSession: "Nepodařilo se získat ID uživatele ze session.",
 		errCannotCreateSession:        "Nepodařilo se vytvořit session.",
@@ -31,11 +29,10 @@ var texts = map[language.Language]text{
 		errCannotGetTicket:            "Nepodařilo se získat ticket z požadavku.",
 	},
 	language.EN: {
-		title:                 "Logout - RecSIS",
-		logoutSuccessHeadline: "Logout Successful",
-		logoutSuccessMessage:  "You have been logged out successfully.",
-		loginButton:           "Log In",
-		// errors
+		title:                         "Logout - RecSIS",
+		logoutSuccessHeadline:         "Logout Successful",
+		logoutSuccessMessage:          "You have been logged out successfully.",
+		loginButton:                   "Log In",
 		errUnauthorized:               "Unauthorized Access",
 		errCannotGetUserIDFromSession: "Failed to retrieve user ID from session.",
 		errCannotCreateSession:        "Failed to create session.",

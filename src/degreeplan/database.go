@@ -18,6 +18,8 @@ type DBManager struct {
 }
 
 type dbDegreePlanRecord struct {
+	DegreePlanCode   string `db:"degree_plan_code"`
+	DegreePlanYear   int    `db:"start_year"`
 	BlocCode         int    `db:"bloc_subject_code"`
 	BlocLimit        int    `db:"bloc_limit"`
 	BlocName         string `db:"bloc_name"`
@@ -38,6 +40,9 @@ func (m DBManager) userDegreePlan(uid string, lang language.Language) (*degreePl
 		)
 	}
 	var dp degreePlanPage
+	dp.degreePlanCode = records[0].DegreePlanCode
+	dp.degreePlanYear = records[0].DegreePlanYear
+	dp.canSave = false
 	for _, record := range records {
 		add(&dp, record)
 	}
@@ -61,10 +66,25 @@ func (m DBManager) degreePlan(uid, dpCode string, dpYear int, lang language.Lang
 		)
 	}
 	var dp degreePlanPage
+	dp.degreePlanCode = records[0].DegreePlanCode
+	dp.degreePlanYear = dpYear
+	dp.canSave = true
 	for _, record := range records {
 		add(&dp, record)
 	}
 	return &dp, nil
+}
+
+func (m DBManager) saveDegreePlan(uid, dpCode string, dpYear int, lang language.Language) error {
+	_, err := m.DB.Exec(sqlquery.SaveDegreePlan, uid, dpCode, dpYear)
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.SaveDegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("dpYear", dpYear), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotSaveDP,
+		)
+	}
+	return nil
 }
 
 func add(dp *degreePlanPage, record dbDegreePlanRecord) {

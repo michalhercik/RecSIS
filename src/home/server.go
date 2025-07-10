@@ -23,12 +23,8 @@ type Server struct {
 	router      http.Handler
 }
 
-func (s Server) Router() http.Handler {
-	return s.router
-}
-
 type Authentication interface {
-	UserID(r *http.Request) (string, error)
+	UserID(r *http.Request) string
 }
 
 type Error interface {
@@ -46,21 +42,16 @@ type Page interface {
 // Routing
 //================================================================================
 
+func (s Server) Router() http.Handler {
+	return s.router
+}
+
 func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.page)
-	router.HandleFunc("GET /home/", s.page)
-
-	// Wrap mux to catch unmatched routes
-	s.router = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if mux has a handler for the URL
-		_, pattern := router.Handler(r)
-		if pattern == "" {
-			s.pageNotFound(w, r)
-			return
-		}
-		router.ServeHTTP(w, r)
-	})
+	router.HandleFunc("GET /home/{$}", s.page)
+	router.HandleFunc("/", s.pageNotFound)
+	s.router = router
 }
 
 //================================================================================
@@ -71,13 +62,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 
 	recommended, err := s.fetchCourses("recommended", lang)
 	if err != nil {
@@ -101,7 +86,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 
 	main := Content(&content, t)
-	err = s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
+	page := s.Page.View(main, lang, t.pageTitle, userID)
+	err = page.Render(r.Context(), w)
 
 	if err != nil {
 		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
@@ -147,20 +133,14 @@ func (s Server) fetchCourses(endpoint string, lang language.Language) ([]course,
 		)
 	}
 
-	return courses, err
+	return courses, nil
 }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 
-	userID, err := s.Auth.UserID(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, "", lang)
-		return
-	}
+	userID := s.Auth.UserID(r)
 
 	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.pageTitle, userID, lang)
 }

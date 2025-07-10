@@ -8,13 +8,11 @@ import (
 	"unicode/utf8"
 )
 
-// page content
 type homePage struct {
 	recommendedCourses []course
 	newCourses         []course
 }
 
-// course data structure
 type course struct {
 	Code               string           `json:"code"`
 	Title              string           `json:"title"`
@@ -23,14 +21,27 @@ type course struct {
 	SeminarRangeWinter sql.NullInt64    `json:"seminar_range_winter"`
 	LectureRangeSummer sql.NullInt64    `json:"lecture_range_summer"`
 	SeminarRangeSummer sql.NullInt64    `json:"seminar_range_summer"`
-	ExamType           string           `json:"exam_type"`
+	ExamType           string           `json:"exam"`
 	Credits            int              `json:"credits"`
 	Guarantors         teacherSlice     `json:"guarantors"`
-	//BlueprintAssignments AssignmentSlice
-	//Annotation           NullDescription
 }
 
-// semester types and methods
+func (c *course) hoursString() string {
+	result := ""
+	winter := c.LectureRangeWinter.Valid && c.SeminarRangeWinter.Valid
+	summer := c.LectureRangeSummer.Valid && c.SeminarRangeSummer.Valid
+	if winter {
+		result += fmt.Sprintf("%d/%d", c.LectureRangeWinter.Int64, c.SeminarRangeWinter.Int64)
+	}
+	if winter && summer {
+		result += ", "
+	}
+	if summer {
+		result += fmt.Sprintf("%d/%d", c.LectureRangeSummer.Int64, c.SeminarRangeSummer.Int64)
+	}
+	return result
+}
+
 type teachingSemester int
 
 const (
@@ -48,17 +59,16 @@ func (ts *teachingSemester) string(t text) string {
 	case teachingBoth:
 		return t.both
 	default:
-		return "unsupported"
+		return ""
 	}
 }
 
-// teacher types and methods
 type teacher struct {
-	SisID       string `json:"KOD"`
-	FirstName   string `json:"JMENO"`
-	LastName    string `json:"PRIJMENI"`
-	TitleBefore string `json:"TITULPRED"`
-	TitleAfter  string `json:"TITULZA"`
+	SisID       string `json:"id"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	TitleBefore string `json:"title_before"`
+	TitleAfter  string `json:"title_after"`
 }
 
 func (t teacher) string() string {
@@ -90,24 +100,4 @@ func (ts *teacherSlice) Scan(val interface{}) error {
 	default:
 		return fmt.Errorf("unsupported type: %T", v)
 	}
-}
-
-// ================================================================================
-// Helper Functions
-// ================================================================================
-
-func hoursString(course *course, t text) string {
-	result := ""
-	winter := course.LectureRangeWinter.Valid && course.SeminarRangeWinter.Valid
-	summer := course.LectureRangeSummer.Valid && course.SeminarRangeSummer.Valid
-	if winter {
-		result += fmt.Sprintf("%d/%d", course.LectureRangeWinter.Int64, course.SeminarRangeWinter.Int64)
-	}
-	if winter && summer {
-		result += ", "
-	}
-	if summer {
-		result += fmt.Sprintf("%d/%d", course.LectureRangeSummer.Int64, course.SeminarRangeSummer.Int64)
-	}
-	return result
 }

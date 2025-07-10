@@ -1,745 +1,773 @@
 package coursedetail
 
 import (
-    "database/sql"
-    "fmt"
-    "net/url"
+	"database/sql"
+	"fmt"
+	"net/url"
 
-    "github.com/michalhercik/RecSIS/utils"
+	"github.com/michalhercik/RecSIS/stringsx"
 	"github.com/michalhercik/RecSIS/filters"
 )
 
 templ Content(courseDetailPage *courseDetailPage, t text, bpBtn PartialBlueprintAdd) {
-    <div id="course-detail-page" class="container" hx-indicator="#loader">
-        @contentInternal(courseDetailPage.course, t, bpBtn)
-        <script defer src="/js/coursedetail.js"></script>
-    </div>
+	<div id="course-detail-page" class="container" hx-indicator="#loader">
+		@contentInternal(courseDetailPage.course, t, bpBtn)
+		<script defer src="/js/coursedetail.js"></script>
+	</div>
 }
 
 templ contentInternal(course *course, t text, bpBtn PartialBlueprintAdd) {
-    // code and title
-    <h1 class="text-center pt-3">
-        { course.code + " - " + course.title }
-    </h1>
-    // badges with information
-    <div class="text-center pb-4">
-        @badges(course, t)
-    </div>
-    // two columns
-    <div class="row justify-items-center pb-4">
-        // left column most important information
-        <div class="col-12 col-md-6 pb-3 pb-md-0">
-            @basicInfo(course, t)
-        </div>
-        // right column ratings
-        <div class="col-12 col-md-6">
-            @ratings(course.overallRating, course.categoryRatings, course.code, t)
-        </div>
-    </div>
-    // buttons
-    <div class="pb-2">
-        @buttons(course, t, bpBtn)
-    </div>
-    // switch between description, survey and detailed information
-    <div class="pt-3 pt-md-0">
-        @details(course, t)
-    </div>
+	// code and title
+	<h1 class="text-center pt-3">
+		{ course.code + " - " + course.title }
+	</h1>
+	// badges with information
+	<div class="text-center pb-4">
+		@badges(course, t)
+	</div>
+	// two columns
+	<div class="row justify-items-center pb-4">
+		// left column most important information
+		<div class="col-12 col-md-6 pb-3 pb-md-0">
+			@basicInfo(course, t)
+		</div>
+		// right column ratings
+		<div class="col-12 col-md-6">
+			@ratings(course.overallRating, course.categoryRatings, course.code, t)
+		</div>
+	</div>
+	// buttons
+	<div class="pb-2">
+		@buttons(course, t, bpBtn)
+	</div>
+	// switch between description, survey and detailed information
+	<div class="pt-3 pt-md-0">
+		@details(course, t)
+	</div>
 }
 
 templ badges(course *course, t text) {
-    <div class="row">
-        <div class="col-12 col-md-6 d-flex justify-content-center gap-1">
-            @standartBadge(course.semesterStyleClass()) {
-                <span>{ fmt.Sprintf("%s: %d", t.eCredits, course.credits) }</span>
-            }
-            @standartBadge(course.semesterStyleClass()) {
-                <span>{ course.semester.string(t) }</span>
-            }
-            @standartBadge(course.semesterStyleClass()) {
-                <span>{ fmt.Sprintf("%s %s", hoursString(course), course.examType) }</span>
-                if course.rangeUnit.Valid {
-                    <span class="text-muted small">({ course.rangeUnit.String })</span>
-                }
-            }
-        </div>
-        <div class="col-12 col-md-6 d-flex flex-wrap justify-content-center gap-1">
-            // TODO: if course.Completed {
-            if false {
-                @standartBadge("text-bg-success") {
-                    <i class="bi bi-check-lg"></i> { t.completed }
-                }
-            } else {
-                for _, ba := range course.blueprintAssignments.sort() {
-                    if ba.year == 0 {
-                        @clickableBadge("blueprint", fmt.Sprintf("bp-unassigned-row-%s", course.code), "bg-unassigned", t) {
-                            <i class="bi bi-inbox"></i> { ba.string(t.language) }
-                        }
-                    } else {
-                        @clickableBadge("blueprint", fmt.Sprintf("bp-%d-%s-row-%s", ba.year, ba.semester.stringID(), course.code), "bg-blueprint", t) {
-                            <i class="bi bi-basket2"></i> { ba.string(t.language) }
-                        }
-                    }
-                }
-            }
-            if course.inDegreePlan {
-                @clickableBadge("degreeplan", fmt.Sprintf("dp-row-%s", course.code), "bg-degreeplan", t) {
-                    <i class="bi bi-stickies"></i> { t.inDegreePlan }
-                }
-            }
-        </div>
-    </div>
+	<div class="row">
+		<div class="col-12 col-md-6 d-flex justify-content-center gap-1">
+			@standartBadge(course.semesterStyleClass()) {
+				<span>{ fmt.Sprintf("%s: %d", t.eCredits, course.credits) }</span>
+			}
+			@standartBadge(course.semesterStyleClass()) {
+				<span>{ course.semester.string(t) }</span>
+			}
+			@standartBadge(course.semesterStyleClass()) {
+				<span>{ fmt.Sprintf("%s %s", course.hoursString(), course.examType) }</span>
+				if course.rangeUnit.valid {
+					<span
+						class="text-muted small cursor-help"
+						data-bs-toggle="tooltip"
+						data-bs-placement="right"
+						data-bs-delay={ ttDelay }
+						data-bs-title={ course.rangeUnit.name }>
+						{ course.rangeUnit.abbr }
+					</span>
+				}
+			}
+		</div>
+		<div class="col-12 col-md-6 d-flex flex-wrap justify-content-center gap-1">
+			// TODO: if course.Completed {
+			if false {
+				@standartBadge("text-bg-success") {
+					<i class="bi bi-check-lg"></i> { t.completed }
+				}
+			} else {
+				for _, ba := range course.blueprintAssignments.sort() {
+					if ba.year == 0 {
+						@clickableBadge("blueprint", fmt.Sprintf("bp-unassigned-row-%s", course.code), "bg-unassigned", t) {
+							<i class="bi bi-inbox"></i> { ba.string(t.language) }
+						}
+					} else {
+						@clickableBadge("blueprint", fmt.Sprintf("bp-%d-%s-row-%s", ba.year, ba.semester.stringID(), course.code), "bg-blueprint", t) {
+							<i class="bi bi-basket2"></i> { ba.string(t.language) }
+						}
+					}
+				}
+			}
+			if course.inDegreePlan {
+				@clickableBadge("degreeplan", fmt.Sprintf("dp-row-%s", course.code), "bg-degreeplan", t) {
+					<i class="bi bi-stickies"></i> { t.inDegreePlan }
+				}
+			}
+		</div>
+	</div>
 }
 
 templ standartBadge(bgColor string) {
-    <span class={ "badge rounded-pill align-self-start fs-6 mb-1", bgColor }>
-        { children... }
-    </span>
+	<span class={ "badge rounded-pill align-self-start fs-6 mb-1", bgColor }>
+		{ children... }
+	</span>
 }
 
 templ clickableBadge(target, fragment, bgColor string, t text) {
-    <a
-        role="button"
-        hx-boost="false"
-        class={ "badge rounded-pill align-self-start fs-6 mb-1", bgColor }
-        href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.language.LocalizeURL(target), url.PathEscape(fragment))) }>
-        { children... }
-    </a>
+	<a
+		role="button"
+		hx-boost="false"
+		class={ "badge rounded-pill align-self-start fs-6 mb-1", bgColor }
+		href={ templ.SafeURL(fmt.Sprintf("%s/#%s", t.language.LocalizeURL(target), url.PathEscape(fragment))) }>
+		{ children... }
+	</a>
 }
 
 templ basicInfo(course *course, t text) {
-    <table class="info-table-borders m-auto">
-        @infoRow(t.faculty){
-            <span>{ course.faculty }</span>
-        }
-        @infoRow(t.department) {
-            <span>{ course.guarantorDepartment }</span>
-        }
-        if course.language != "" {
-            @infoRow(t.languageOfCourse) {
-                <span>{ course.language }</span>
-            }
-        }
-        // TODO: if not default (default=taught) show NOT TAUGHT, else do not show anything
-        @infoRow(t.stateOfCourse) {
-            <span>{ course.state }</span>
-        }
-        // TODO: if unlimited capacity do not show anything, else show capacity
-        @infoRow(t.capacity) {
-            <span>{ course.capacity }</span>
-        }
-        @requisitesLinksRow(course.prerequisites, t.prerequisites, t)
-        if len(course.guarantors) > 0 {
-            @infoRow(t.guarantors) {
-                <table id="guarantors-table" class="mb-0">
-                    for _, g := range course.guarantors {
-                        @teacherStyledRow(g)
-                    }
-                </table>
-            }
-        }
-    </table>
+	<table class="info-table-borders m-auto">
+		@infoRow(t.faculty){
+			<span
+				class="cursor-help"
+				data-bs-toggle="tooltip"
+				data-bs-placement="right"
+				data-bs-delay={ ttDelay }
+				data-bs-title={ course.faculty.name }>
+				{ course.faculty.abbr }
+			</span>
+		}
+		@infoRow(t.department) {
+			<span
+				class="cursor-help"
+				data-bs-toggle="tooltip"
+				data-bs-placement="right"
+				data-bs-delay={ ttDelay }
+				data-bs-title={ course.guarantorDepartment.name }>
+				{ course.guarantorDepartment.id }
+			</span>
+		}
+		if course.language != "" {
+			@infoRow(t.languageOfCourse) {
+				<span>{ course.language }</span>
+			}
+		}
+		@infoRow(t.stateOfCourse) {
+			<span>{ course.state }</span>
+		}
+		@infoRow(t.capacity) {
+			<span>{ course.capacity }</span>
+		}
+		@requisitesLinksRow(course.prerequisites, t.prerequisites, t)
+		if len(course.guarantors) > 0 {
+			@infoRow(t.guarantors) {
+				<table id="guarantors-table" class="mb-0">
+					for _, g := range course.guarantors {
+						@teacherStyledRow(g)
+					}
+				</table>
+			}
+		}
+		if (course.url.Valid) {
+			@infoRow(t.additionalInfo) {
+				<a
+					style="word-break: break-all;"
+					class="d-inline-block text-break"
+					href={ templ.SafeURL(course.url.String) }>
+					{ urlHostPath(course.url.String) }
+				</a>
+			}
+		}
+	</table>
 }
 
 templ buttons(course *course, t text, bpBtn PartialBlueprintAdd) {
-    <div class="d-flex flex-wrap justify-content-center gap-1">
-        // link to additional information
-        if course.link != "" {
-            <a class="btn btn-outline-secondary" href={ templ.SafeURL(course.link) } role="button">
-                { t.additionalInfo }
-            </a>
-        }
-        // SIS link
-        <a class="btn btn-outline-secondary" href={ templ.SafeURL(courseSISLink(course.code, t)) } target="_blank" role="button">
-            { t.sisLink }
-        </a>
-        // TODO: zapsat button
-        <a class="btn btn-outline-secondary text-decoration-line-through" href="#" role="button">
-            zapsat
-        </a>
-        // TODO: rozvrh buttons
-        // for NDMI002 https://is.cuni.cz/studium/rozvrhng/roz_predmet_macro.php?fak=11320&skr=2024&sem=1&predmet=NDMI002
-        <a class="btn btn-outline-secondary text-decoration-line-through" href="#" role="button">
-            rozvrh
-        </a>
-        // button to assign course to blueprint
-        @bpBtn("outerHTML", "#course-detail-page", "", course.blueprintSemesters, course.code)
-    </div>
+	<div class="d-flex flex-wrap justify-content-center gap-1">
+		<a class="btn btn-outline-secondary" href={ templ.SafeURL(courseSISLink(course.code, t)) } target="_blank" role="button">
+			{ t.sisLink }
+		</a>
+		@bpBtn("outerHTML", "#course-detail-page", "", course.blueprintSemesters, course.code)
+	</div>
 }
 
 templ details(course *course, t text) {
-    <ul
-        role="tablist"
-        id="details-nav-tabs"
-        class="nav nav-tabs justify-content-center justify-content-md-start">
-        @tabButton("desc-tab-pane", t.description, true)
-        @tabButton("survey-tab-pane", t.survey, false)
-        @tabButton("detail-tab-pane", t.detail, false)
-    </ul>
-    <div
-        class="tab-content"
-        x-init="$el.style.minHeight = window.innerHeight - 73 + 'px';"
-        @resize.window="$el.style.minHeight = window.innerHeight - 73 + 'px'">
-        @tabPane("desc-tab-pane", true) {
-            @descriptions(course, t)
-        }
-        @tabPane("survey-tab-pane", false) {
-            @surveys(course.code, t)
-        }
-        @tabPane("detail-tab-pane", false) {
-            @detailInfo(course, t)
-        }
-    </div>
+	<ul
+		role="tablist"
+		id="details-nav-tabs"
+		class="nav nav-tabs justify-content-center justify-content-md-start">
+		@tabButton("desc-tab-pane", t.description, true)
+		@tabButton("survey-tab-pane", t.survey, false)
+		@tabButton("detail-tab-pane", t.detail, false)
+	</ul>
+	<div
+		class="tab-content"
+		x-init="$el.style.minHeight = window.innerHeight - 73 + 'px';"
+		@resize.window="$el.style.minHeight = window.innerHeight - 73 + 'px'">
+		@tabPane("desc-tab-pane", true) {
+			@descriptions(course, t)
+		}
+		@tabPane("survey-tab-pane", false) {
+			@surveys(course.code, t)
+		}
+		@tabPane("detail-tab-pane", false) {
+			@detailInfo(course, t)
+		}
+	</div>
 }
 
 templ tabButton(target, text string, active bool) {
-    <li class="nav-item" role="presentation">
-        <button
-            id={ fmt.Sprintf("%s-btn", target) }
-            class={ "nav-link", templ.KV("active", active) }
-            hx-preserve="true"
-            data-bs-toggle="tab"
-            data-bs-target={ fmt.Sprintf("#%s", target) }
-            type="button"
-            role="tab"
-            aria-controls={ fmt.Sprintf("%s", target) }
-            aria-selected={ fmt.Sprintf("%t", active) }>
-            { text }
-        </button>
-    </li>
+	<li class="nav-item" role="presentation">
+		<button
+			id={ fmt.Sprintf("%s-btn", target) }
+			class={ "nav-link", templ.KV("active", active) }
+			hx-preserve="true"
+			data-bs-toggle="tab"
+			data-bs-target={ fmt.Sprintf("#%s", target) }
+			type="button"
+			role="tab"
+			aria-controls={ fmt.Sprintf("%s", target) }
+			aria-selected={ fmt.Sprintf("%t", active) }>
+			{ text }
+		</button>
+	</li>
 }
 
 templ tabPane(target string, active bool) {
-    <div
-        id={ target }
-        class={ "tab-pane pt-2", templ.KV("active", active), templ.KV("show", active) }
-        hx-preserve="true"
-        role="tabpanel"
-        tabindex="0">
-        { children... }
-    </div>
+	<div
+		id={ target }
+		class={ "tab-pane pt-2", templ.KV("active", active), templ.KV("show", active) }
+		hx-preserve="true"
+		role="tabpanel"
+		tabindex="0">
+		{ children... }
+	</div>
 }
 
 templ descriptions(course *course, t text) {
-    if !course.hasDescriptions() {
-        <div class="alert alert-primary" role="alert">
-            { t.noDescription }
-        </div>
-    } else {
-        <div>
-            @descriptionItem(course.annotation, "annotation")
-            @descriptionItem(course.syllabus, "syllabus")
-            @descriptionItem(course.passingTerms, "passing-terms")
-            @descriptionItem(course.literature, "literature")
-            @descriptionItem(course.assessmentRequirements, "assessment-requirements")
-            @descriptionItem(course.entryRequirements, "entry-requirements")
-            @descriptionItem(course.aim, "aim")
-        </div>
-    }
+	if !course.hasDescriptions() {
+		<div class="alert alert-primary" role="alert">
+			{ t.noDescription }
+		</div>
+	} else {
+		<div>
+			@descriptionItem(course.annotation, "annotation")
+			@descriptionItem(course.syllabus, "syllabus")
+			@descriptionItem(course.passingTerms, "passing-terms")
+			@descriptionItem(course.literature, "literature")
+			@descriptionItem(course.assessmentRequirements, "assessment-requirements")
+			@descriptionItem(course.entryRequirements, "entry-requirements")
+			@descriptionItem(course.aim, "aim")
+		</div>
+	}
 }
 
 templ descriptionItem(desc nullDescription, id string) {
-    if desc.valid {
-    <div>
-        <h2>{ utils.CapitalizeFirstLetter(desc.title) }</h2>
-        <div
-            id={ "content-" + id }
-            class="border-bottom mb-3"
-            x-init={ fmt.Sprintf("insertContent('%s', `%s`)", id, desc.sanitizeContent(id == "annotation")) }>
-        </div>
-        // inserting content as shadow DOM
-        <script>
-            function insertContent(id, content) {
-                const shadowRoot = document.getElementById("content-" + id).attachShadow({ mode: 'open' });
+	if desc.valid {
+	<div>
+		<h2>{ stringsx.Capitalize(desc.title) }</h2>
+		<div
+			id={ "content-" + id }
+			class="border-bottom mb-3"
+			x-init={ fmt.Sprintf("insertContent('%s', `%s`)", id, desc.sanitizeContent(id == "annotation")) }>
+		</div>
+		// inserting content as shadow DOM
+		<script>
+			function insertContent(id, content) {
+				const shadowRoot = document.getElementById("content-" + id).attachShadow({ mode: 'open' });
 
-                // Create a wrapper to safely manipulate the DOM before injecting
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = content;
+				// Create a wrapper to safely manipulate the DOM before injecting
+				const wrapper = document.createElement('div');
+				wrapper.innerHTML = content;
 
-                // make all links open in new tab and add rel attribute for security
-                wrapper.querySelectorAll('a').forEach(a => {
-                    a.setAttribute('target', '_blank');
-                    a.setAttribute('rel', 'noopener noreferrer nofollow');
-                });
+				// make all links open in new tab and add rel attribute for security
+				wrapper.querySelectorAll('a').forEach(a => {
+					a.setAttribute('target', '_blank');
+					a.setAttribute('rel', 'noopener noreferrer nofollow');
+				});
 
-                shadowRoot.innerHTML = `
-                    <style>
-                        ul {
-                            margin: 0;
-                            padding-left: 30px;
-                        }
-                        p:first-of-type {
-                            margin-top: 0.5rem;
-                        }
-                    </style>
-                    ${wrapper.innerHTML}
-                `;
-            }
-        </script>
-    </div>
-    }
+				shadowRoot.innerHTML = `
+					<style>
+						ul {
+							margin: 0;
+							padding-left: 30px;
+						}
+						p:first-of-type {
+							margin-top: 0.5rem;
+						}
+					</style>
+					${wrapper.innerHTML}
+				`;
+			}
+		</script>
+	</div>
+	}
 }
 
 templ surveys(code string, t text) {
-    <div class="mb-1">
-        @surveySearch(code, t)
-    </div>
-    <div
-        id="survey-filters-content"
-        hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", code)) }
-        hx-trigger="intersect once"
-        hx-target="this"
-        hx-swap="innerHTML"
-        hx-vals={ fmt.Sprintf(`"%s": 0`, surveyOffset) }>
-    </div>
+	<div class="mb-1">
+		@surveySearch(code, t)
+	</div>
+	<div
+		id="survey-filters-content"
+		hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", code)) }
+		hx-trigger="intersect once"
+		hx-target="this"
+		hx-swap="innerHTML"
+		hx-vals={ fmt.Sprintf(`"%s": 0`, surveyOffset) }>
+	</div>
 }
 
 templ surveySearch(code string, t text) {
-    <form
-        id="survey-search-form"
-        class="position-relative"
-        hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", code)) }
-        hx-target="#survey-filters-content"
-        hx-swap="innerHTML"
-        hx-include="#survey-filters-form"
-        hx-trigger="input, clear-survey-search"
-        x-data="{ surveySearchInput: '' }"
-        hx-indicator="#explicit-no-loader"
-        @keydown.enter.prevent=""
-    >
-        <input
-            type="text"
-            class="form-control"
-            placeholder={ t.surveySearchPlaceholder }
-            name={ searchQuery }
-            autocomplete="off"
-            x-model="surveySearchInput"
-            x-ref="surveySearchInput">
-        <button
-            type="reset"
-            x-cloak x-show="surveySearchInput.length > 0"
-            class="btn bg-white border-0 position-absolute clear-search-btn"
-            @click="$refs.surveySearchInput.focus(); $nextTick(() => $dispatch('clear-survey-search'))">
-            <i class="bi bi-x-lg"></i>
-        </button>
-    </form>
+	<form
+		id="survey-search-form"
+		class="position-relative"
+		hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", code)) }
+		hx-target="#survey-filters-content"
+		hx-swap="innerHTML"
+		hx-include="#survey-filters-form"
+		hx-trigger="input, clear-survey-search"
+		x-data="{ surveySearchInput: '' }"
+		hx-indicator="#explicit-no-loader"
+		@keydown.enter.prevent=""
+	>
+		<input
+			type="text"
+			class="form-control"
+			placeholder={ t.surveySearchPlaceholder }
+			name={ searchQuery }
+			autocomplete="off"
+			x-model="surveySearchInput"
+			x-ref="surveySearchInput">
+		<button
+			type="reset"
+			x-cloak x-show="surveySearchInput.length > 0"
+			class="btn bg-white border-0 position-absolute clear-search-btn"
+			@click="$refs.surveySearchInput.focus(); $nextTick(() => $dispatch('clear-survey-search'))">
+			<i class="bi bi-x-lg"></i>
+		</button>
+	</form>
 }
 
 templ SurveyFiltersContent(model surveyViewModel, t text) {
-    <div>
-        <div class="mb-1">
-            @surveyFilters(model, t)
-        </div>
-        @surveyActiveFilters(model, t)
-        if len(model.survey) == 0 {
-            <div role="alert" class="alert alert-primary">
-                { t.noSurvey }
-            </div>
-        } else {
-            <div id="surveys-content" class="mb-3">
-                @SurveysContent(model, t)
-            </div>
-            @lazyLoader()
-            @scrollToSearchBtn(t)
-        }
-    </div>
+	<div>
+		<div class="mb-1">
+			@surveyFilters(model, t)
+		</div>
+		@surveyActiveFilters(model, t)
+		if len(model.survey) == 0 {
+			<div role="alert" class="alert alert-primary">
+				{ t.noSurvey }
+			</div>
+		} else {
+			<div id="surveys-content" class="mb-3">
+				@SurveysContent(model, t)
+			</div>
+			@lazyLoader()
+			@scrollToSearchBtn(t)
+		}
+	</div>
 }
 
 templ surveyFilters(model surveyViewModel, t text) {
-    <form
-        id="survey-filters-form"
-        class="d-flex flex-row flex-wrap justify-content-end gap-1 w-100 bg-light p-2 rounded"
-        hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", model.code)) }
-        hx-target="#survey-filters-content"
-        hx-swap="innerHTML"
-        hx-include="#survey-search-form"
-        hx-trigger="filters-changed"
-        x-data="{ changed: false }"
-        @change="changed = true;"
-        @hide-bs-dropdown.dot="if (changed) { changed = false; $dispatch('filters-changed'); }"
-    >
-        for category := range model.facets {
-            <button
-                type="button"
-                class="btn btn-light dropdown-toggle position-relative"
-                data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
-            >
-                // placeholder for width of the button
-                <span class="invisible">
-                    { fmt.Sprintf("%s (00) ", category.Title()) }
-                </span>
-                // actual button content
-                <span class="position-absolute category-title">
-                    { fmt.Sprintf("%s (%d) ", category.Title(), category.Count()) }
-                </span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end filters-dropdown-menu-scroll">
-                for _, value := range filters.SkipEmptyFacet(category.IterWithFacets()) {
-                    @dropdownFilter(value.Prefix + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
-                }
-            </ul>
-        }
-    </form>
+	<form
+		id="survey-filters-form"
+		class="d-flex flex-row flex-wrap justify-content-end gap-1 w-100 bg-light p-2 rounded"
+		hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", model.code)) }
+		hx-target="#survey-filters-content"
+		hx-swap="innerHTML"
+		hx-include="#survey-search-form"
+		hx-trigger="filters-changed"
+		x-data="{ changed: false }"
+		@change="changed = true;"
+		@hide-bs-dropdown.dot="if (changed) { changed = false; $dispatch('filters-changed'); }"
+	>
+		for category := range model.facets {
+			<button
+				type="button"
+				class="btn btn-light dropdown-toggle position-relative"
+				data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+			>
+				// placeholder for width of the button
+				<span class="invisible">
+					{ fmt.Sprintf("%s (00) ", category.Title()) }
+				</span>
+				// actual button content
+				<span class="position-absolute category-title">
+					{ fmt.Sprintf("%s (%d) ", category.Title(), category.Count()) }
+				</span>
+			</button>
+			<ul class="dropdown-menu dropdown-menu-end filters-dropdown-menu-scroll">
+				for _, value := range filters.SkipEmptyFacet(category.IterWithFacets()) {
+					@dropdownFilter(value.Prefix + category.ID(), value.ID, value.Title, value.Desc, value.Count, value.Checked)
+				}
+			</ul>
+		}
+	</form>
 }
 
 templ dropdownFilter(name, value, label, desc string, count int, checked bool) {
-    <li><label class="dropdown-item rounded user-select-none" for={ name + "-" + value }>
-        <input
-            type="checkbox"
-            id={ name + "-" + value }
-            class="form-check-input me-2"
-            name={ name } value={ value } checked?={ checked } disabled?={ count == 0 }>
-        { label }
-        <span class="text-muted small"> ({ count })</span>
-    </label></li>
+	<li class="w-100">
+		<label
+			role="button"
+			class="dropdown-item rounded user-select-none d-flex w-100 cd-filter"
+			for={  name + "-" + value }>
+			<input
+				type="checkbox"
+				id={ name + "-" + value }
+				class="form-check-input me-2 flex-shrink-0"
+				name={ name } value={ value } checked?={ checked } disabled?={ count == 0 }>
+			<div class="d-flex align-items-center flex-nowrap overflow-hidden">
+				<span class="text-truncate cd-filter-label">{ label }</span>
+				<span class="text-muted small ms-1 flex-shrink-0">
+					{ fmt.Sprintf("(%d)", count) }
+				</span>
+			</div>
+		</label>
+	</li>
 }
 
 templ surveyActiveFilters(model surveyViewModel, t text) {
-    <div id="active-filters" class="pt-1">
-        {{ anyActive := false }}
-        for category := range model.facets {
-            if category.Active() {
-                {{ anyActive = true }}
-                <div class="d-flex flex-row mb-1 w-auto">
-                    <span class="px-2 bg-body border rounded-start align-self-start">{ category.Title() }</span>
-                    <div class="d-flex flex-row flex-wrap rounded-row-end">
-                    for _, value := range category.IterWithFacets() {
-                        if value.Checked && value.Count > 0 {
-                            // x-data is necessary for x-on:click to work
-                            <div class="border bg-light px-2" x-data>
-                                <span class="fw-semibold">{ value.Title }</span>
-                                <i
-                                    role="button"
-                                    class="bi bi-x-lg"
-                                    @click={ fmt.Sprintf("uncheck('%s%s-%s')", value.Prefix, category.ID(), value.ID) }>
-                                </i>
-                            </div>
-                        }
-                    }
-                    </div>
-                </div>
-            }
-        }
-        if anyActive {
-            <button
-                class="btn btn-link text-secondary p-0 pb-2"
-                hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", model.code)) }
-                hx-target="#survey-filters-content"
-                hx-swap="innerHTML"
-                hx-include="#survey-search-form"
-                x-data="{ surveySearchInput: '' }"
-                hx-indicator="#explicit-no-loader">
-                { t.cancelFilters }
-            </button>
-        }
-    </div>
+	<div id="active-filters" class="pt-1">
+		{{ anyActive := false }}
+		for category := range model.facets {
+			if category.Active() {
+				{{ anyActive = true }}
+				<div class="d-flex flex-row mb-1 w-auto">
+					<span class="px-2 bg-body border rounded-start align-self-start">{ category.Title() }</span>
+					<div class="d-flex flex-row flex-wrap rounded-row-end">
+					for _, value := range category.IterWithFacets() {
+						if value.Checked && value.Count > 0 {
+							// x-data is necessary for x-on:click to work
+							<div class="border bg-light px-2" x-data>
+								<span class="fw-semibold">{ value.Title }</span>
+								<i
+									role="button"
+									class="bi bi-x-lg"
+									@click={ fmt.Sprintf("uncheck('%s%s-%s')", value.Prefix, category.ID(), value.ID) }>
+								</i>
+							</div>
+						}
+					}
+					</div>
+				</div>
+			}
+		}
+		if anyActive {
+			<button
+				class="btn btn-link text-secondary p-0 pb-2"
+				hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/%s", model.code)) }
+				hx-target="#survey-filters-content"
+				hx-swap="innerHTML"
+				hx-include="#survey-search-form"
+				x-data="{ surveySearchInput: '' }"
+				hx-indicator="#explicit-no-loader">
+				{ t.cancelFilters }
+			</button>
+		}
+	</div>
 }
 
 templ SurveysContent(model surveyViewModel, t text) {
-    for _, s := range model.survey {
-        <div class="card mb-1">
-            <div class="card-header">
-                <div class="d-flex justify-content-between lh-1">
-                    <span class="text-muted small font08">{ fmt.Sprintf("%d %s", s.AcademicYear, s.Type) }</span>
-                    <span class="small">{ s.Study.Name }</span>
-                </div>
-                <div class="d-flex justify-content-between">
-                    @teacherStyled(s.TargetTeacher, t)
-                    <span class="small text-end mt-auto mb-0">{ fmt.Sprintf("%s, %s", t.yearStr(s.StudyYear), s.StudyField) }</span>
-                </div>
-            </div>
-            <div class="card-body text-justify py-2">
-                { s.Content }
-            </div>
-        </div>
-    }
-    if (!model.isEnd) {
-        // lazy loading of more surveys
-        <div
-            hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/next/%s", model.code)) }
-            hx-trigger="intersect once"
-            hx-include="#survey-search-form, #survey-filters-form"
-            hx-target="#surveys-content"
-            hx-swap="beforeend"
-            hx-vals={ fmt.Sprintf(`"%s": %d`, surveyOffset, model.offset + numberOfComments) }
-            hx-indicator="#lazy-loader">
-        </div>
-    }
+	for _, s := range model.survey {
+		<div class="card mb-1">
+			<div class="card-header">
+				<div class="d-flex justify-content-between lh-1">
+					<span class="text-muted small font08">{ fmt.Sprintf("%d %s", s.AcademicYear, s.Type) }</span>
+					<span class="small">{ s.Study.Abbr }</span>
+				</div>
+				<div class="d-flex justify-content-between">
+					@teacherStyled(s.TargetTeacher, t)
+					<span class="small text-end mt-auto mb-0">{ fmt.Sprintf("%s, %s", t.yearStr(s.Year), s.Field.ID) }</span>
+				</div>
+			</div>
+			<div class="card-body text-justify py-2">
+				{ s.Content }
+			</div>
+		</div>
+	}
+	if (!model.isEnd) {
+		// lazy loading of more surveys
+		<div
+			hx-get={ t.language.LocalizeURL(fmt.Sprintf("/course/survey/next/%s", model.code)) }
+			hx-trigger="intersect once"
+			hx-include="#survey-search-form, #survey-filters-form"
+			hx-target="#surveys-content"
+			hx-swap="beforeend"
+			hx-vals={ fmt.Sprintf(`"%s": %d`, surveyOffset, model.offset + resultsPerPage) }
+			hx-indicator="#lazy-loader">
+		</div>
+	}
 }
 
 templ lazyLoader() {
-    <div id="lazy-loader" class="justify-content-center">
-        <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
+	<div id="lazy-loader" class="justify-content-center">
+		<div class="spinner-border" role="status">
+			<span class="visually-hidden">Loading...</span>
+		</div>
+	</div>
 }
 
 templ scrollToSearchBtn(t text) {
-    <a
-        class="link-primary justify-content-center d-flex mt-3"
-        href="#details-nav-tabs">
-        { t.scrollToSearch }
-    </a>
+	<a
+		class="link-primary justify-content-center d-flex mt-3"
+		href="#details-nav-tabs">
+		{ t.scrollToSearch }
+	</a>
 }
 
 templ teacherStyled(tt teacher, t text) {
-    if len(tt.SisID) == 0 {
-        <span class="fs-6 text-dark fw-semibold">{ t.courseGlobalNotes }</span>
-    } else {
-        <span>
-            @teacherTitleBefore(tt)
-            @teacherNameTitleAfter(tt)
-        </span>
-    }
+	if len(tt.SisID) == 0 {
+		<span class="fs-6 text-dark fw-semibold">{ t.courseGlobalNotes }</span>
+	} else {
+		<span>
+			@teacherTitleBefore(tt)
+			@teacherNameTitleAfter(tt)
+		</span>
+	}
 }
 
 templ detailInfo(course *course, t text) {
-    if !course.hasDetailInfo() {
-        <div class="alert alert-primary" role="alert">
-            { t.noDetail }
-        </div>
-    } else {
-        <div class="row">
-            // left column classes, classification and requisites
-            <div class="col-12 col-md-6">
-                <table class="info-table-borders m-auto">
-                    if len(course.classes) > 0 {
-                        @infoRow(t.classes) {
-                            for _, c := range course.classes {
-                                <p class="mb-0">{ c.name }</p>
-                            }
-                        }
-                    }
-                    if len(course.classifications) > 0 {
-                        @infoRow(t.classification) {
-                            for _, c := range course.classifications {
-                                <p class="mb-0">{ c.name }</p>
-                            }
-                        }
-                    }
-                    @requisitesLinksRow(course.corequisites, t.corequisites, t)
-                    @requisitesLinksRow(course.interchange, t.interchange, t)
-                    @requisitesLinksRow(course.incompatible, t.incompatible, t)
-                </table>
-            </div>
-            // right column teachers
-            <div class="col-12 col-md-6">
-                <table class="info-table-borders m-auto">
-                    if len(course.teachers) > 0 {
-                        @infoRow(t.teachers) {
-                            <table id="teachers-table" class="mb-0">
-                                for _, teacher := range course.teachers {
-                                    @teacherStyledRow(teacher)
-                                }
-                            </table>
-                        }
-                    }
-                </table>
-            </div>
-        </div>
-    }
+	if !course.hasDetailInfo() {
+		<div class="alert alert-primary" role="alert">
+			{ t.noDetail }
+		</div>
+	} else {
+		<div class="row">
+			// left column classes, classification and requisites
+			<div class="col-12 col-md-6">
+				<table class="info-table-borders m-auto">
+					if len(course.classes) > 0 {
+						@infoRow(t.classes) {
+							for _, c := range course.classes {
+								<p class="mb-0">{ c }</p>
+							}
+						}
+					}
+					if len(course.classifications) > 0 {
+						@infoRow(t.classification) {
+							for _, c := range course.classifications {
+								<p class="mb-0">{ c }</p>
+							}
+						}
+					}
+					@requisitesLinksRow(course.corequisites, t.corequisites, t)
+					@requisitesLinksRow(course.interchange, t.interchange, t)
+					@requisitesLinksRow(course.incompatible, t.incompatible, t)
+				</table>
+			</div>
+			// right column teachers
+			<div class="col-12 col-md-6">
+				<table class="info-table-borders m-auto">
+					if len(course.teachers) > 0 {
+						@infoRow(t.teachers) {
+							<table id="teachers-table" class="mb-0">
+								for _, teacher := range course.teachers {
+									@teacherStyledRow(teacher)
+								}
+							</table>
+						}
+					}
+				</table>
+			</div>
+		</div>
+	}
 }
 
-templ requisitesLinksRow(req []string, title string, t text) {
-    if len(req) != 0 {
-        @infoRow(title) {
-            for i, c := range req {
-                if i != len(req) - 1 {
-                    @utils.CourseLink(c, t.language)<span>, </span>
-                } else {
-                    @utils.CourseLink(c, t.language)
-                }
-            }
-        }
-    }
+templ requisitesLinksRow(req []requisite, title string, t text) {
+	if len(req) != 0 {
+		@infoRow(title) {
+			for i, c := range req {
+				if i != len(req) - 1 {
+					@courseLink(c.courseCode, t)<span>, </span>
+				} else {
+					@courseLink(c.courseCode, t)
+				}
+			}
+		}
+	}
+}
+
+templ courseLink(code string, t text) {
+    <a
+        class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+        { code }
+    </a>
 }
 
 templ infoRow(title string) {
-    <tr>
-        <td class="text-end align-top fw-semibold p-2">{ title }</td>
-        <td class="border-bottom p-2">{ children... }</td>
-    </tr>
+	<tr>
+		<td class="text-end align-top fw-semibold p-2">{ title }</td>
+		<td class="border-bottom p-2">{ children... }</td>
+	</tr>
 }
 
 
 templ teacherStyledRow(tt teacher) {
-    <tr>
-        <td class="text-end teachers-first-column">
-            @teacherTitleBefore(tt)
-        </td>
-        <td>
-            @teacherNameTitleAfter(tt)
-        </td>
-    </tr>
+	<tr>
+		<td class="text-end teachers-first-column">
+			@teacherTitleBefore(tt)
+		</td>
+		<td>
+			@teacherNameTitleAfter(tt)
+		</td>
+	</tr>
 }
 
 templ teacherTitleBefore(tt teacher) {
-    if tt.TitleBefore != "" {
-        <small class="font06">{ tt.TitleBefore + " " }</small>
-    }
+	if tt.TitleBefore != "" {
+		<small class="font06">{ tt.TitleBefore + " " }</small>
+	}
 }
 
 templ teacherName(tt teacher) {
-    <span class="fs-6 text-dark fw-semibold">{ tt.FirstName + " " + tt.LastName }</span>
+	<span class="fs-6 text-dark fw-semibold">{ tt.FirstName + " " + tt.LastName }</span>
 }
 
 templ teacherTitleAfter(tt teacher) {
-    <small class="font06">{ ", " + tt.TitleAfter }</small>
+	<small class="font06">{ ", " + tt.TitleAfter }</small>
 }
 
 templ teacherNameTitleAfter(tt teacher) {
-    if tt.TitleAfter != "" {
-        @teacherName(tt)@teacherTitleAfter(tt)
-    } else {
-        @teacherName(tt)
-    }
+	if tt.TitleAfter != "" {
+		@teacherName(tt)@teacherTitleAfter(tt)
+	} else {
+		@teacherName(tt)
+	}
 }
 
 templ ratings(overall courseRating, categories []courseCategoryRating, code string, t text) {
-    <div class="mx-2 mx-md-0 mx-lg-3">
-        <div class="d-flex flex-wrap justify-content-center justify-content-sm-between gap-1 mb-3">
-            @OverallRating(overall, code, t)
-            <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#rate-modal">
-                { t.additionalRatings }
-            </button>
-        </div>
-        @CategoryRating(categories, code, t)
-    </div>
-    // Modal with rating categories
-    @rateModal(categories, code, t)
+	<div class="mx-2 mx-md-0 mx-lg-3">
+		<div class="d-flex flex-wrap justify-content-center justify-content-sm-between gap-1 mb-3">
+			@OverallRating(overall, code, t)
+			<button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#rate-modal">
+				{ t.additionalRatings }
+			</button>
+		</div>
+		@CategoryRating(categories, code, t)
+	</div>
+	@rateModal(categories, code, t)
 }
 
 templ OverallRating(overall courseRating, code string, t text) {
-    <div id="simple-rating">
-        <div class="btn-group" role="group">
-            @likeButton(overall, code, t)
-            @dislikeButton(overall.userRating, code, t)
-        </div>
-    </div>
+	<div id="simple-rating">
+		<div class="btn-group" role="group">
+			@likeButton(overall, code, t)
+			@dislikeButton(overall.userRating, code, t)
+		</div>
+	</div>
 }
 
 templ likeButton(overall courseRating, code string, t text) {
-    @rateButton(overall.userRating, "bi-hand-thumbs-up", code, positiveRating, t, "rounded-start-pill", "ps-3") {
-        if overall.avgRating.Valid {
-            <span>{ fmt.Sprintf(" %.0f%% (%d)", overall.avgRating.Float64 * 100, overall.ratingCount.Int64) }</span>
-        } else {
-            <span>{ " " + t.noRatings }</span>
-        }
-    }
+	@rateButton(overall.userRating, "bi-hand-thumbs-up", code, positiveRating, t, "rounded-start-pill", "ps-3") {
+		if overall.avgRating.Valid {
+			<span>{ fmt.Sprintf(" %.0f%% (%d)", overall.avgRating.Float64 * 100, overall.ratingCount.Int64) }</span>
+		} else {
+			<span>{ " " + t.noRatings }</span>
+		}
+	}
 }
 
 templ dislikeButton(rating sql.NullInt64, code string, t text) {
-    @rateButton(rating, "bi-hand-thumbs-down", code, negativeRating, t, "rounded-end-pill", "pe-3")
+	@rateButton(rating, "bi-hand-thumbs-down", code, negativeRating, t, "rounded-end-pill", "pe-3")
 }
 
 templ rateButton(rating sql.NullInt64, icon, code string, rate int64, t text, classes ...string) {
-    <button
-        class={
-            classes,
-            "btn btn-outline-dark bi",
-            templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
-            templ.KV(icon, !rating.Valid || rating.Int64 != rate),
-        }
-        if rating.Valid && rating.Int64 == rate {
-            hx-delete={ t.language.LocalizeURL("/course/rating/" + code) }
-        } else {
-            hx-put={ t.language.LocalizeURL("/course/rating/" + code) }
-            hx-vals={ `"rating": ` + fmt.Sprintf("%d", rate) }
-        }
-        hx-target="#simple-rating"
-        hx-swap="outerHTML">
-        { children... }
-    </button>
+	<button
+		class={
+			classes,
+			"btn btn-outline-dark bi",
+			templ.KV(icon + "-fill", rating.Valid && rating.Int64 == rate),
+			templ.KV(icon, !rating.Valid || rating.Int64 != rate),
+		}
+		if rating.Valid && rating.Int64 == rate {
+			hx-delete={ t.language.LocalizeURL("/course/rating/" + code) }
+		} else {
+			hx-put={ t.language.LocalizeURL("/course/rating/" + code) }
+			hx-vals={ fmt.Sprintf(`"%s": "%d"`, ratingParam, rate) }
+		}
+		hx-target="#simple-rating"
+		hx-swap="outerHTML">
+		{ children... }
+	</button>
 }
 
 templ CategoryRating(categories []courseCategoryRating, code string, t text) {
-    <div id="category-rating">
-        for _, c := range categories {
-            <div class="mb-2">
-                <div class="d-flex justify-content-between">
-                    <span class="fw-semibold">{ c.title }</span>
-                    <span class="fw-semibold">
-                        if c.avgRating.Valid && c.ratingCount.Valid {
-                            { fmt.Sprintf("%.1f (%d)", c.avgRating.Float64, c.ratingCount.Int64) }
-                        } else {
-                            { t.noRatings }
-                        }
-                    </span>
-                </div>
-                <div class="progress" role="progressbar" style="height: 10px;">
-                    // this div needs width style for bootstrap progress bar - DO NOT TOUCH
-                    <div
-                        class="progress-bar rounded-pill"
-                        { templ.Attributes{"style": fmt.Sprintf("width: %.2f%%;", c.avgRating.Float64 * 10)}... }>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
+	<div id="category-rating">
+		for _, c := range categories {
+			<div class="mb-2">
+				<div class="d-flex justify-content-between">
+					<span class="fw-semibold">{ c.title }</span>
+					<span class="fw-semibold">
+						if c.avgRating.Valid && c.ratingCount.Valid {
+							{ fmt.Sprintf("%.1f (%d)", c.avgRating.Float64, c.ratingCount.Int64) }
+						} else {
+							{ t.noRatings }
+						}
+					</span>
+				</div>
+				<div class="progress" role="progressbar" style="height: 10px;">
+					// this div needs width style for bootstrap progress bar - DO NOT TOUCH
+					<div
+						class="progress-bar rounded-pill"
+						{ templ.Attributes{"style": fmt.Sprintf("width: %.2f%%;", c.avgRating.Float64 * 10)}... }>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
 }
 
 templ rateModal(categories []courseCategoryRating, code string, t text) {
-    <div class="modal fade" id="rate-modal" tabindex="-1" aria-labelledby="category-modal-title">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="category-modal-title">{ t.categoricalRatings }</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body m-2">
-                    for _, c := range categories {
-                        @ratingCategoryInput(c, code, t)
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="rate-modal" tabindex="-1" aria-labelledby="category-modal-title">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="category-modal-title">{ t.categoricalRatings }</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body m-2">
+					for _, c := range categories {
+						@ratingCategoryInput(c, code, t)
+					}
+				</div>
+			</div>
+		</div>
+	</div>
 }
 
 templ ratingCategoryInput(c courseCategoryRating, code string, t text) {
-    <div class="d-flex align-items-center gap-2 pb-3" x-data={ fmt.Sprintf("{ value: %d, valid: %t}", c.userRating.Int64, c.userRating.Valid) }>
-        <button
-            class="btn bi bi-trash-fill p-0 border-0"
-            :class="valid || 'disabled'"
-            hx-delete={ t.language.LocalizeURL(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
-            hx-target="#category-rating"
-            hx-swap="outerHTML"
-            @click="valid = false">
-        </button>
-        <div class="flex-grow-1">
-            <label for={ c.title + "-range" } class="form-label d-flex justify-content-between mb-0">
-                <span class="fw-semibold">{ c.title }</span>
-                <template x-if="valid"><span class="fw-semibold" x-text="value"></span></template>
-                <template x-if="!valid"><span class="fw-semibold">{ t.notRated }</span></template>
-            </label>
-            <input
-                type="range"
-                name="rating"
-                class="form-range"
-                :class="valid || 'no-thumb'"
-                id={ c.title + "-range" }
-                min={ fmt.Sprintf("%d", minRating) } max={ fmt.Sprintf("%d", maxRating) } step="1"
-                x-model="value"
-                @click="if (!valid) { valid = true; $dispatch('rateTrigger'); }"
-                hx-put={ t.language.LocalizeURL(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
-                hx-target="#category-rating"
-                hx-swap="outerHTML"
-                hx-trigger="change, rateTrigger">
-            @ticks()
-        </div>
-    </div>
+	<div class="d-flex align-items-center gap-2 pb-3" x-data={ fmt.Sprintf("{ value: %d, valid: %t}", c.userRating.Int64, c.userRating.Valid) }>
+		<button
+			class="btn bi bi-trash-fill p-0 border-0"
+			:class="valid || 'disabled'"
+			hx-delete={ t.language.LocalizeURL(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
+			hx-target="#category-rating"
+			hx-swap="outerHTML"
+			@click="valid = false">
+		</button>
+		<div class="flex-grow-1">
+			<label for={ c.title + "-range" } class="form-label d-flex justify-content-between mb-0">
+				<span class="fw-semibold">{ c.title }</span>
+				<template x-if="valid"><span class="fw-semibold" x-text="value"></span></template>
+				<template x-if="!valid"><span class="fw-semibold">{ t.notRated }</span></template>
+			</label>
+			<input
+				type="range"
+				name={ ratingParam }
+				class="form-range"
+				:class="valid || 'no-thumb'"
+				id={ c.title + "-range" }
+				min={ fmt.Sprintf("%d", minRating) } max={ fmt.Sprintf("%d", maxRating) } step="1"
+				x-model="value"
+				@click="if (!valid) { valid = true; $dispatch('rateTrigger'); }"
+				hx-put={ t.language.LocalizeURL(fmt.Sprintf("/course/rating/%s/%d", code, c.code)) }
+				hx-target="#category-rating"
+				hx-swap="outerHTML"
+				hx-trigger="change, rateTrigger">
+			@ticks()
+		</div>
+	</div>
 }
 
 templ ticks() {
-    <div class="tick-container m-auto">
-        {{ ticksDistance := 100 / (maxRating - minRating) }}
-        for i := minRating; i <= maxRating; i++ {
-            // dynamically generated styles for ticks - DO NOT TOUCH
-            <span
-                class="tick"
-                { templ.Attributes{"style": fmt.Sprintf("left: %d%%;",  i * ticksDistance) }... }>
-                { fmt.Sprintf("%d", i) }
-            </span>
-        }
-    </div>
+	<div class="tick-container m-auto">
+		{{ ticksDistance := 100 / (maxRating - minRating) }}
+		for i := minRating; i <= maxRating; i++ {
+			// dynamically generated styles for ticks - DO NOT TOUCH
+			<span
+				class="tick"
+				{ templ.Attributes{"style": fmt.Sprintf("left: %d%%;",  i * ticksDistance) }... }>
+				{ fmt.Sprintf("%d", i) }
+			</span>
+		}
+	</div>
 }

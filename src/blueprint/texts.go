@@ -97,9 +97,10 @@ type text struct {
 }
 
 func (t text) yearStr(year int) string {
-	if t.language == language.CS {
+	switch t.language {
+	case language.CS:
 		return strconv.Itoa(year) + ". " + t.year
-	} else if t.language == language.EN {
+	case language.EN:
 		return t.year + " " + strconv.Itoa(year)
 	}
 	return ""

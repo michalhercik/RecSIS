@@ -18,7 +18,6 @@ const (
 	duplicateCoursesViolation = "blueprint_courses_blueprint_semester_id_course_code_key"
 )
 
-// public interface for the blueprint database manager
 type DBManager struct {
 	DB *sqlx.DB
 }
@@ -90,11 +89,9 @@ func makeBlueprintPage(bp *blueprintPage, semestersInfo []blueprintRecordPositio
 			texts[lang].errNoSemestersFound,
 		)
 	}
-	// make unassigned semester
 	bp.unassigned = semester{
 		folded: semestersInfo[0].Folded,
 	}
-	// make years and semesters
 	for i := 1; i < len(semestersInfo); i += 2 {
 		bp.years = append(bp.years, academicYear{
 			position: semestersInfo[i].AcademicYear,

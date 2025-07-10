@@ -3,8 +3,6 @@ package courses
 import (
     "fmt"
     "net/url"
-    
-	"github.com/michalhercik/RecSIS/utils"
 )
 
 templ Content(coursesPage *coursesPage, t text) {
@@ -36,7 +34,7 @@ templ filterSection(cp *coursesPage, t text) {
         >
             <div class="bg-filters rounded-5">
                 <div x-cloak x-show="showFilters || expandedFilters">
-                    <div class="px-4 px-sm-0 pb-4 pb-sm-0">
+                    <div class="px-4 px-sm-0 pb-4 pb-sm-0 pt-2 pt-sm-0">
                         @filtersInternal(cp, t)
                     </div>
                 </div>
@@ -50,7 +48,6 @@ templ filterSection(cp *coursesPage, t text) {
                 </div>
             </div>
         </form>
-        // move to the top of the page button
         <div id="move-to-filters-btn" class="d-none d-sm-flex justify-content-center mt-3">
             @moveToTopLink(t)
         </div>
@@ -61,12 +58,18 @@ templ filtersInternal(cp *coursesPage, t text) {
     for category := range cp.facets {
         <div x-data={ fmt.Sprintf("{ expanded: JSON.parse(sessionStorage.getItem('expanded-%s')) || false }", category.ID()) }>
             // category title (with help icon)
-            <div class="d-flex justify-content-start align-items-end">
-                <p class="form-label fw-semibold mb-0 mt-2">{ category.Title() }</p>
-                if category.Desc() != "" {
-                    @helpIcon(category.Desc())
-                }
-            </div>
+            <p class="form-label fw-semibold mb-0 mt-2" >
+                {{
+                    rest, last := splitByLastSpace(category.Title())
+                }}
+                { rest }
+                <span style="white-space:nowrap">
+                    { last }
+                    if category.Desc() != "" {
+                        @helpIcon(category.Desc())
+                    }
+                </span>
+            </p>
             // checkboxes with values
             for i, value := range category.IterWithFacets() {
                 <div x-show={ fmt.Sprintf("expanded || %d < %d", i, category.DisplayedValueLimit()) }>
@@ -93,10 +96,10 @@ templ checkboxInput(name, value, label, desc string, count int, checked bool) {
             type="checkbox" name={ name } id={ name + "-" + value } value={ value } checked?={ checked }>
         <label role="button" class="form-check-label" for={ name + "-" + value }>
             <span>{ label }</span>
+            <span class="text-muted small">{ fmt.Sprintf("(%d)", count) }</span>
             if desc != "" {
                 @helpIcon(desc)
             }
-            <span class="text-muted small">{ fmt.Sprintf("(%d)", count) }</span>
         </label>
     </div>
 }
@@ -113,7 +116,8 @@ templ moveToTopLink(t text) {
 templ helpIcon(content string) {
     <i
         x-data="{ hoverHelp: false }"
-        class="mx-1 cursor-help bi"
+        style="font-size: 0.9rem;"
+        class="ms-0 cursor-help align-bottom bi"
         :class="hoverHelp ? 'bi-question-circle-fill' : 'bi-question-circle'"
         @mouseover="hoverHelp = true"
         @mouseleave="hoverHelp = false"
@@ -209,7 +213,7 @@ templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
             >
                 // course title (link to detail page)
                 <h5 class="card-title">
-                    @utils.TitleCourseLink(course.code, course.title, false, t.language)
+                    @titleCourseLink(course.code, course.title, t)
                 </h5>
                 // guarantors
                 <h6 class="card-subtitle mb-2 text-muted">{ course.guarantors.string(t) }</h6>
@@ -243,6 +247,14 @@ templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
     </div>
 }
 
+templ titleCourseLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover"
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+        { title }
+    </a>
+}
+
 templ badge(course *course, ba assignment, t text) {
     if ba.year == 0 {
         @clickableBadge("blueprint", fmt.Sprintf("bp-unassigned-row-%s", course.code), "bg-unassigned", t) {
@@ -265,18 +277,9 @@ templ clickableBadge(target, fragment, bgColor string, t text) {
     </a>
 }
 
-// TODO: keep this for later usage (if not used, remove it)
-// templ ribbon(ba AssignmentSlice, t text) {
-//     if len(ba) > 0 {
-//         <div class="ribbon">
-//             <span>{ ba.String(t.language) }</span>
-//         </div>
-//     }
-// }
-
 templ pagination(cp *coursesPage, t text) {
     // disable pagination if loaded more courses
-    if cp.pageSize == coursesPerPage {
+    if cp.pageSize == defaultCoursesPerPage {
         <div class="mt-3 d-flex justify-content-center">
             <ul
                 class="pagination mt-3"
@@ -303,9 +306,9 @@ templ pagination(cp *coursesPage, t text) {
         </div>
     }
     // disable load more button if it is not the first page
-    if cp.page == 1 {
+    if cp.page == firstPage {
         <div class="mt-3 d-flex justify-content-center">
-            @loadMoreButton(cp.pageSize + coursesPerPage, cp, t)
+            @loadMoreButton(cp.pageSize + defaultCoursesPerPage, cp, t)
         </div>
     }
 }

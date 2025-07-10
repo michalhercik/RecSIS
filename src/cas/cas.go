@@ -3,7 +3,6 @@ package cas
 import (
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -60,7 +59,7 @@ func (c CAS) userIDTicketFromCASLogoutRequest(r *http.Request) (string, string, 
 	err := xml.Unmarshal([]byte(rawPayload), &payload)
 	if err != nil {
 		return "", "", errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("UserIDTicketFromCASLogoutRequest: %w", err)),
+			errorx.AddContext(err),
 			http.StatusBadRequest,
 			texts[language.FromContext(r.Context())].errCannotGetTicket,
 		)

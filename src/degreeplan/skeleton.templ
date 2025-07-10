@@ -14,6 +14,8 @@ templ Skeleton(lang language.Language) {
         x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].pageTitle) }>
         // checked courses menu
         <div id="dp-checked-courses-menu-skeleton"></div>
+        // DP code and year
+        <h1 class="text-center pt-0 pt-md-3">@placeholder(2)</h1>
         // first group
         @skeletonBadges()
         <h5 class="d-md-none px-1 my-1">
@@ -160,7 +162,7 @@ templ skeletonRow(code, title, credits, winter, summer, guarantor1, guarantor2, 
                         @placeholder(10)
                     </span>
                 </div>
-                <span class="fw-semibold small-screen-title">
+                <span class="fw-semibold text-truncate">
                     @placeholder(title)
                 </span>
             </div>

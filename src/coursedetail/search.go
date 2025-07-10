@@ -60,15 +60,14 @@ type expression interface {
 }
 
 type request struct {
-	userID   string
-	query    string
-	indexUID string
-	offset   int
-	limit    int
-	lang     language.Language
-	filter   expression
-	facets   []string
-	sort     string
+	userID string
+	query  string
+	offset int
+	limit  int
+	lang   language.Language
+	filter expression
+	facets []string
+	sort   string
 }
 
 type response struct {
@@ -111,23 +110,32 @@ func makeMultiSearchRequest(r request, index meilisearch.IndexConfig) *meilisear
 	return result
 }
 
-// TODO: remove params package
 func attributesToRetrieve(lang language.Language) []string {
-	var studyTypeName string
+	var (
+		studyTypeName  string
+		studyTypeAbbr  string
+		studyFieldName string
+	)
 	if lang == language.CS {
-		studyTypeName = "study_type.name_cs"
+		studyTypeName = "study_type.name.cs"
+		studyTypeAbbr = "study_type.abbr.cs"
+		studyFieldName = "study_field.name.cs"
 	} else {
-		studyTypeName = "study_type.name_en"
+		studyTypeName = "study_type.name.en"
+		studyTypeAbbr = "study_type.abbr.en"
+		studyFieldName = "study_field.name.en"
 	}
 	attrs := []string{
 		"content",
 		"course_code",
 		"study_year",
 		"academic_year",
-		"study_field",
 		"teacher",
 		"target_type",
+		"study_field.id",
+		studyFieldName,
 		studyTypeName,
+		studyTypeAbbr,
 	}
 	return attrs
 }

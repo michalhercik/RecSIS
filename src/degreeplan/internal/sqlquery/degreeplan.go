@@ -3,13 +3,13 @@ package sqlquery
 const UserDegreePlan = `--sql
 WITH user_start_year AS (
 	-- TODO: pick a user selected study plan or max
-	SELECT MIN(start_year) AS year FROM bla_studies WHERE user_id = $1
+	SELECT MIN(start_year) AS year FROM studies WHERE user_id = $1
 ),
 user_blueprint_semesters AS (
 	SELECT
 		dp.course_code,
 		array_agg(bc.course_code IS NOT NULL ORDER BY by.academic_year, bs.semester) AS semesters
-	FROM bla_studies s
+	FROM studies s
 	INNER JOIN user_start_year my
 		ON s.start_year = my.year
 	LEFT JOIN degree_plans dp
@@ -27,6 +27,8 @@ user_blueprint_semesters AS (
 	GROUP BY dp.course_code, dp.bloc_subject_code
 )
 SELECT
+	s.degree_plan_code,
+	s.start_year,
 	dp.bloc_subject_code,
 	COALESCE(dp.bloc_limit, -1) bloc_limit,
 	COALESCE(dp.bloc_name, '') bloc_name,
@@ -36,18 +38,18 @@ SELECT
 	c.title,
 	c.credits,
 	c.start_semester,
-	c.lecture_range1,
-	c.lecture_range2,
-	c.seminar_range1,
-	c.seminar_range2,
-	c.exam_type,
+	c.lecture_range_winter,
+	c.lecture_range_summer,
+	c.seminar_range_winter,
+	c.seminar_range_summer,
+	c.exam,
 	c.guarantors,
 	ubs.semesters,
 	CASE
 		WHEN dp.bloc_type = 'A' THEN TRUE
 		WHEN dp.bloc_type = 'B' THEN FALSE
 	END AS is_compulsory
-FROM bla_studies s
+FROM studies s
 INNER JOIN user_start_year my
 	ON s.start_year = my.year
 LEFT JOIN degree_plans dp
@@ -68,13 +70,13 @@ ORDER BY dp.bloc_type, dp.seq;
 const DegreePlan = `
 WITH user_start_year AS (
 	-- TODO: pick a user selected study plan or max
-	SELECT MIN(start_year) AS year FROM bla_studies WHERE user_id = $1
+	SELECT MIN(start_year) AS year FROM studies WHERE user_id = $1
 ),
 user_blueprint_semesters AS (
 	SELECT
 		dp.course_code,
 		array_agg(bc.course_code IS NOT NULL ORDER BY by.academic_year, bs.semester) AS semesters
-	FROM bla_studies s
+	FROM studies s
 	INNER JOIN user_start_year my
 		ON s.start_year = my.year
 	LEFT JOIN degree_plans dp
@@ -92,6 +94,7 @@ user_blueprint_semesters AS (
 	GROUP BY dp.course_code, dp.bloc_subject_code
 )
 SELECT
+	dp.plan_code AS degree_plan_code,
 	dp.bloc_subject_code,
 	COALESCE(dp.bloc_limit, -1) bloc_limit,
 	COALESCE(dp.bloc_name, '') bloc_name,
@@ -101,11 +104,11 @@ SELECT
 	c.title,
 	c.credits,
 	c.start_semester,
-	c.lecture_range1,
-	c.lecture_range2,
-	c.seminar_range1,
-	c.seminar_range2,
-	c.exam_type,
+	c.lecture_range_winter,
+	c.lecture_range_summer,
+	c.seminar_range_winter,
+	c.seminar_range_summer,
+	c.exam,
 	c.guarantors,
 	ubs.semesters,
 	CASE
@@ -124,4 +127,12 @@ WHERE dp.plan_code = $2
 	AND interchangeability IS NULL
 -- TODO: pick a user selected study or max
 ORDER BY dp.bloc_type, dp.seq;
+`
+
+const SaveDegreePlan = `--sql
+UPDATE studies
+SET degree_plan_code = $2, start_year = $3
+WHERE user_id = $1
+-- TODO: pick a user selected study plan or max
+AND start_year = (SELECT MIN(start_year) FROM studies WHERE user_id = $1)
 `

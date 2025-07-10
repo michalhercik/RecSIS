@@ -2,8 +2,10 @@ package coursedetail
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"iter"
+	"net/url"
 	"sort"
 
 	"github.com/michalhercik/RecSIS/filters"
@@ -15,30 +17,52 @@ import (
 //================================================================================
 
 const (
-	minRating        = 0
-	maxRating        = 10
-	negativeRating   = 0
-	positiveRating   = 1
-	numberOfComments = 20
-	searchQuery      = "survey-search"
-	surveyOffset     = "survey-offset"
+	defaultSurveyOffset = 0
+	minRating           = 0
+	maxRating           = 10
+	negativeRating      = 0
+	positiveRating      = 1
+	resultsPerPage      = 20
+	ttDelay             = 200 // tooltip delay in ms
+)
+
+const (
+	searchQuery  = "survey-search"
+	surveyOffset = "survey-offset"
+	ratingParam  = "rating"
+)
+
+const (
+	courseCode     = "code"
+	ratingCategory = "category"
+)
+
+const (
+	meiliCourseCode = "course_code"
+	meiliSort       = "academic_year:desc"
 )
 
 //================================================================================
 // Data Types and Methods
 //================================================================================
 
-// all data needed for the course detail page
 type courseDetailPage struct {
 	course *course
 }
 
-// course representation
+func urlHostPath(urlStr string) string {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return urlStr
+	}
+	return u.Host + u.Path
+}
+
 type course struct {
 	code                   string
 	title                  string
-	faculty                string
-	guarantorDepartment    string
+	faculty                faculty
+	guarantorDepartment    department
 	state                  string
 	semester               teachingSemester
 	language               string
@@ -46,12 +70,13 @@ type course struct {
 	seminarRangeWinter     sql.NullInt64
 	lectureRangeSummer     sql.NullInt64
 	seminarRangeSummer     sql.NullInt64
-	rangeUnit              sql.NullString
+	rangeUnit              nullRangeUnit
 	examType               string
 	credits                int
 	guarantors             teacherSlice
 	teachers               teacherSlice
 	capacity               string
+	url                    sql.NullString
 	annotation             nullDescription
 	syllabus               nullDescription
 	passingTerms           nullDescription
@@ -59,13 +84,12 @@ type course struct {
 	assessmentRequirements nullDescription
 	entryRequirements      nullDescription
 	aim                    nullDescription
-	prerequisites          []string
-	corequisites           []string
-	incompatible           []string
-	interchange            []string
-	classes                []class
-	classifications        []class
-	link                   string // link to course webpage (not SIS)
+	prerequisites          []requisite
+	corequisites           []requisite
+	incompatible           []requisite
+	interchange            []requisite
+	classes                []string
+	classifications        []string
 	blueprintAssignments   assignmentSlice
 	blueprintSemesters     []bool
 	inDegreePlan           bool
@@ -86,7 +110,16 @@ func (c course) semesterStyleClass() string {
 	}
 }
 
-// semester type - winter, summer, or both
+type faculty struct {
+	abbr string
+	name string
+}
+
+type department struct {
+	id   string
+	name string
+}
+
 type teachingSemester int
 
 const (
@@ -108,28 +141,33 @@ func (ts teachingSemester) string(t text) string {
 	}
 }
 
-// wrapper for teacher slice
+type nullRangeUnit struct {
+	rangeUnit
+	valid bool
+}
+
+type rangeUnit struct {
+	abbr string
+	name string
+}
+
 type teacherSlice []teacher
 
-// wrapper for Description that allows it to be nullable
 type nullDescription struct {
 	description
 	valid bool
 }
 
-// description type - title and content
 type description struct {
 	title   string
 	content string
 }
 
-// categorization of course
-type class struct {
-	code string
-	name string
+type requisite struct {
+	courseCode string
+	state      string
 }
 
-// assignment slice for blueprint assignments
 type assignmentSlice []assignment
 
 func (a assignmentSlice) sort() assignmentSlice {
@@ -142,7 +180,6 @@ func (a assignmentSlice) sort() assignmentSlice {
 	return a
 }
 
-// assignment type - year and semester
 type assignment struct {
 	year     int
 	semester semesterAssignment
@@ -169,7 +206,6 @@ func (a assignment) string(lang language.Language) string {
 	return result
 }
 
-// semester assignment type - winter or summer (none = unassigned)
 type semesterAssignment int
 
 const (
@@ -191,7 +227,6 @@ func (sa semesterAssignment) stringID() string {
 	}
 }
 
-// rating structures
 type courseCategoryRating struct {
 	code  int
 	title string
@@ -204,7 +239,6 @@ type courseRating struct {
 	ratingCount sql.NullInt64
 }
 
-// surveys structs and methods
 type surveyViewModel struct {
 	lang   language.Language
 	code   string
@@ -212,41 +246,86 @@ type surveyViewModel struct {
 	survey []survey
 	offset int
 	isEnd  bool
-	facets iter.Seq[filters.FacetIterator] // TODO
+	facets iter.Seq[filters.FacetIterator]
 }
 
 type survey struct {
 	student
 	surveyTarget
-	AcademicYear int `json:"academic_year"`
-	// Semester string `json:"semester"`
-	Content string `json:"content"`
+	AcademicYear int    `json:"academic_year"`
+	Content      string `json:"content"`
 }
 
 type student struct {
-	StudyYear  int       `json:"study_year"`
-	StudyField string    `json:"study_field"`
-	Study      studyType `json:"study_type"`
+	Year  int        `json:"study_year"`
+	Field StudyField `json:"study_field"`
+	Study studyType  `json:"study_type"`
+}
+
+type StudyField struct {
+	ID   string
+	Name string
+}
+
+func (s *StudyField) UnmarshalJSON(data []byte) error {
+	var temp struct {
+		ID   string `json:"id"`
+		Name struct {
+			CS string `json:"cs"`
+			EN string `json:"en"`
+		} `json:"name"`
+	}
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+	s.ID = temp.ID
+	s.Name = temp.Name.CS
+	if s.Name == "" {
+		s.Name = temp.Name.EN
+	}
+	return nil
 }
 
 type studyType struct {
-	// Code string `json:"code"`
-	// Abbr string `json:"abbr"`
-	Name string `json:"name"`
+	Abbr string
+	Name string
+}
+
+func (s *studyType) UnmarshalJSON(data []byte) error {
+	var temp struct {
+		Abbr struct {
+			CS string `json:"cs"`
+			EN string `json:"en"`
+		} `json:"abbr"`
+		Name struct {
+			CS string `json:"cs"`
+			EN string `json:"en"`
+		} `json:"name"`
+	}
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+	s.Abbr = temp.Abbr.CS
+	s.Name = temp.Name.CS
+	if s.Abbr == "" && s.Name == "" {
+		s.Abbr = temp.Abbr.EN
+		s.Name = temp.Name.EN
+	}
+	return nil
 }
 
 type surveyTarget struct {
-	Type          string  `json:"target_type"` // Lecture or Seminar
+	Type          string  `json:"target_type"`
 	CourseCode    string  `json:"course_code"`
 	TargetTeacher teacher `json:"teacher"`
 }
 
 type teacher struct {
-	SisID       string `json:"KOD"`
-	LastName    string `json:"PRIJMENI"`
-	FirstName   string `json:"JMENO"`
-	TitleBefore string `json:"TITULPRED"`
-	TitleAfter  string `json:"TITULZA"`
+	SisID       string `json:"id"`
+	LastName    string `json:"last_name"`
+	FirstName   string `json:"first_name"`
+	TitleBefore string `json:"title_before"`
+	TitleAfter  string `json:"title_after"`
 }
 
 // ================================================================================
@@ -272,28 +351,29 @@ func (c course) hasDetailInfo() bool {
 		len(c.teachers) > 0
 }
 
-func hoursString(course *course) string {
+func (c *course) hoursString() string {
 	result := ""
-	winter := course.lectureRangeWinter.Valid && course.seminarRangeWinter.Valid
-	summer := course.lectureRangeSummer.Valid && course.seminarRangeSummer.Valid
+	winter := c.lectureRangeWinter.Valid && c.seminarRangeWinter.Valid
+	summer := c.lectureRangeSummer.Valid && c.seminarRangeSummer.Valid
 	if winter {
-		result += fmt.Sprintf("%d/%d", course.lectureRangeWinter.Int64, course.seminarRangeWinter.Int64)
+		result += fmt.Sprintf("%d/%d", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64)
 	}
 	if winter && summer {
 		result += ", "
 	}
 	if summer {
-		result += fmt.Sprintf("%d/%d", course.lectureRangeSummer.Int64, course.seminarRangeSummer.Int64)
+		result += fmt.Sprintf("%d/%d", c.lectureRangeSummer.Int64, c.seminarRangeSummer.Int64)
 	}
 	return result
 }
 
 func courseSISLink(code string, t text) string {
-	if t.language == language.CS {
-		return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
-	} else if t.language == language.EN {
-		return "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
+	var (
+		csLink = "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
+		enLink = "https://is.cuni.cz/studium/eng/predmety/index.php?do=predmet&kod=" + code
+	)
+	if t.language == language.EN {
+		return enLink
 	}
-	// default to Czech if language is not recognized
-	return "https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=" + code
+	return csLink
 }

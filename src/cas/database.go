@@ -17,7 +17,14 @@ type DBManager struct {
 
 func (m DBManager) authenticate(sessionID string, lang language.Language) (string, error) {
 	var userID sql.NullString
-	err := m.DB.Get(&userID, "SELECT user_id FROM sessions WHERE id = $1", sessionID)
+	query := `
+		SELECT
+			user_id
+		FROM sessions
+		WHERE id = $1
+		AND expires_at > NOW();
+	`
+	err := m.DB.Get(&userID, query, sessionID)
 	if err != nil {
 		return "", errorx.NewHTTPErr(
 			errorx.AddContext(err),
@@ -38,7 +45,7 @@ func (m DBManager) authenticate(sessionID string, lang language.Language) (strin
 func (m DBManager) login(userID, ticket string, lang language.Language) (string, error) {
 	var sessionID string
 	expiresAt := time.Now().Add(24 * time.Hour)
-	query := `
+	query := `--sql
 		INSERT INTO sessions (user_id, ticket, expires_at)
 		SELECT $1::VARCHAR(8), $2, $3
 		WHERE EXISTS ( SELECT id FROM users WHERE id = $1::VARCHAR(8) )
@@ -55,7 +62,6 @@ func (m DBManager) login(userID, ticket string, lang language.Language) (string,
 			return "", errorx.AddContext(err)
 		}
 	} else if err != nil {
-		//fmt.Println(len(ticket))
 		return "", errorx.NewHTTPErr(
 			errorx.AddContext(err),
 			http.StatusInternalServerError,
@@ -66,7 +72,13 @@ func (m DBManager) login(userID, ticket string, lang language.Language) (string,
 }
 
 func (m DBManager) logoutWithSession(userID, sessionID string, lang language.Language) error {
-	query := "DELETE FROM sessions WHERE user_id = $1 AND id = $2"
+	query := `--sql
+		UPDATE sessions
+		SET expires_at = NOW()
+		WHERE user_id = $1
+		AND id = $2
+		AND expires_at > NOW();
+	`
 	_, err := m.DB.Exec(query, userID, sessionID)
 	if err != nil {
 		return errorx.NewHTTPErr(
@@ -79,7 +91,13 @@ func (m DBManager) logoutWithSession(userID, sessionID string, lang language.Lan
 }
 
 func (m DBManager) logoutWithTicket(userID, ticket string, lang language.Language) error {
-	query := "DELETE FROM sessions WHERE user_id = $1 AND ticket = $2"
+	query := `--sql
+		UPDATE sessions
+		SET expires_at = NOW()
+		WHERE user_id = $1
+		AND ticket = $2
+		AND expires_at > NOW();
+	`
 	_, err := m.DB.Exec(query, userID, ticket)
 	if err != nil {
 		return errorx.NewHTTPErr(
@@ -129,7 +147,16 @@ func (m DBManager) createUser(userID string, lang language.Language) error {
 			texts[lang].errCannotCreateUser,
 		)
 	}
-	// TODO: here must commit the transaction before inserting study plan (because of foreign key constraint)
+	// TODO: remove this after SIS integration
+	createStudy := "INSERT INTO studies (user_id, degree_plan_code, start_year) VALUES ($1, 'NIPVS19B', 2020)"
+	_, err = tx.Exec(createStudy, userID)
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(err),
+			http.StatusInternalServerError,
+			texts[lang].errCannotCreateUser,
+		)
+	}
 	err = tx.Commit()
 	if err != nil {
 		return errorx.NewHTTPErr(
@@ -138,15 +165,6 @@ func (m DBManager) createUser(userID string, lang language.Language) error {
 			texts[lang].errCannotCreateUser,
 		)
 	}
-	// TODO: remove this after SIS integration
-	createStudy := "INSERT INTO bla_studies (user_id, degree_plan_code, start_year) VALUES ($1, 'NIPVS19B', 2020)"
-	_, err = m.DB.Exec(createStudy, userID)
-	if err != nil {
-		return errorx.NewHTTPErr(
-			errorx.AddContext(err),
-			http.StatusInternalServerError,
-			texts[lang].errCannotCreateUser,
-		)
-	}
+
 	return nil
 }
