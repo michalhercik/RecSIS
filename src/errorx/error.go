@@ -20,7 +20,7 @@ type ErrorHandler struct {
 
 // implementing Error interface
 func (eh ErrorHandler) Log(err error) {
-	log.Println(err)
+	log.Println(fmt.Errorf("ERROR: %w", err))
 }
 
 func (eh ErrorHandler) Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language) {
@@ -60,10 +60,8 @@ func (eh ErrorHandler) CannotRenderPage(w http.ResponseWriter, r *http.Request, 
 	if r.Header.Get("HX-Request") != "" {
 		w.Header().Set("HX-Retarget", "html")
 		w.Header().Set("HX-Reswap", "outerHTML")
-		w.Header().Set("HX-Error-Code", fmt.Sprintf("%d", code))
-	} else {
-		w.WriteHeader(code)
 	}
+	w.WriteHeader(code)
 
 	// Render the error message
 	eh.RenderPage(w, r, code, userMsg, title, userID, lang)
@@ -79,10 +77,9 @@ func (eh ErrorHandler) CannotRenderComponent(w http.ResponseWriter, r *http.Requ
 	if r.Header.Get("HX-Request") != "" {
 		w.Header().Set("HX-Retarget", "#error-content")
 		w.Header().Set("HX-Reswap", "innerHTML")
-		w.Header().Set("HX-Error-Code", fmt.Sprintf("%d", code))
-	} else {
-		w.WriteHeader(code)
 	}
+
+	w.WriteHeader(code)
 
 	// Render the error message
 	eh.Render(w, r, code, userMsg, lang)

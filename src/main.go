@@ -117,8 +117,9 @@ func setupHandler(conf config) http.Handler {
 	exePath, _ := os.Executable()
 	static := http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "static")))
 
-	protectedHandler := setupProtectedHandler(homeServer, pageTempl, blueprintServer, coursedetailServer, coursesServer, degreePlanServer, static, db, errorHandler, conf)
-	unprotectedHandler := setupUnprotectedHandler(protectedHandler, static)
+	protectedHandler := setupProtectedHandler(homeServer, pageTempl, blueprintServer, coursedetailServer, coursesServer, degreePlanServer, static)
+	authenticationHandler := setupAuthenticationHandler(protectedHandler, db, errorHandler, conf)
+	unprotectedHandler := setupUnprotectedHandler(authenticationHandler, static)
 
 	return unprotectedHandler
 }
@@ -270,7 +271,7 @@ func setupDegreePlanServer(db *sqlx.DB, errorHandler degreeplan.Error, pageTempl
 	return degreePlan.Router()
 }
 
-func setupProtectedHandler(homeServer http.Handler, pageTempl page.Page, blueprintServer, coursedetailServer, coursesServer, degreePlanServer, static http.Handler, db *sqlx.DB, errorHandler cas.Error, conf config) http.Handler {
+func setupProtectedHandler(homeServer http.Handler, pageTempl page.Page, blueprintServer, coursedetailServer, coursesServer, degreePlanServer, static http.Handler) http.Handler {
 	protectedRouter := http.NewServeMux()
 	protectedRouter.Handle("/", homeServer)
 	handle(protectedRouter, "/page/", pageTempl.Router())
@@ -282,40 +283,37 @@ func setupProtectedHandler(homeServer http.Handler, pageTempl page.Page, bluepri
 	protectedRouter.Handle("GET /style.css", static)
 	protectedRouter.Handle("GET /js/", static)
 
+	return protectedRouter
+}
+
+func setupAuthenticationHandler(prev http.Handler, db *sqlx.DB, errorHandler cas.Error, conf config) http.Handler {
 	authentication := cas.Authentication{
 		Data:           cas.DBManager{DB: db},
 		Error:          errorHandler,
 		CAS:            cas.CAS{Host: conf.CAS.Host},
 		AfterLoginPath: "/",
 	}
-	var protectedHandler http.Handler
-	protectedHandler = protectedRouter
-	protectedHandler = authentication.AuthenticateHTTP(protectedHandler)
+	var authenticationHandler http.Handler
+	authenticationHandler = prev
+	authenticationHandler = authentication.AuthenticateHTTP(authenticationHandler)
 
-	return protectedHandler
+	return authenticationHandler
 }
 
-func setupUnprotectedHandler(protectedHandler http.Handler, static http.Handler) http.Handler {
+func setupUnprotectedHandler(prev http.Handler, static http.Handler) http.Handler {
 	unprotectedRouter := http.NewServeMux()
-	unprotectedRouter.Handle("/", protectedHandler)
+	unprotectedRouter.Handle("/", prev)
 	unprotectedRouter.Handle("GET /favicon.ico", static)
 	unprotectedRouter.Handle("GET /logo.svg", static)
 
 	var unprotectedHandler http.Handler
 	unprotectedHandler = unprotectedRouter
-	unprotectedHandler = language.SetAndStripLanguage(unprotectedHandler)
+	unprotectedHandler = language.SetAndStripLanguageHandler(unprotectedHandler)
 	unprotectedHandler = logging(unprotectedHandler)
 	return unprotectedHandler
 }
 
 // ===========================
-
-func redirectToTLS(port int) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		url := fmt.Sprintf("https://%s:%d%s", r.Host, port, r.URL.String())
-		http.Redirect(w, r, url, http.StatusMovedPermanently)
-	}
-}
 
 func logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -329,6 +327,13 @@ func logging(next http.Handler) http.Handler {
 
 func handle(router *http.ServeMux, prefix string, handler http.Handler) {
 	router.Handle(prefix, http.StripPrefix(prefix[:len(prefix)-1], handler))
+}
+
+func redirectToTLS(port int) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		url := fmt.Sprintf("https://%s:%d%s", r.Host, port, r.URL.String())
+		http.Redirect(w, r, url, http.StatusMovedPermanently)
+	}
 }
 
 const (
