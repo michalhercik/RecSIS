@@ -250,7 +250,7 @@ templ CourseCard(course *course, t text, addBtn PartialBlueprintAdd) {
 templ titleCourseLink(code, title string, t text) {
     <a
         class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover"
-        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
         { title }
     </a>
 }

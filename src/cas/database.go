@@ -17,7 +17,8 @@ type DBManager struct {
 
 func (m DBManager) authenticate(sessionID string, lang language.Language) (string, error) {
 	var userID sql.NullString
-	err := m.DB.Get(&userID, "SELECT user_id FROM sessions WHERE id = $1", sessionID)
+	query := "SELECT user_id FROM sessions WHERE id = $1"
+	err := m.DB.Get(&userID, query, sessionID)
 	if err != nil {
 		return "", errorx.NewHTTPErr(
 			errorx.AddContext(err),
@@ -38,7 +39,7 @@ func (m DBManager) authenticate(sessionID string, lang language.Language) (strin
 func (m DBManager) login(userID, ticket string, lang language.Language) (string, error) {
 	var sessionID string
 	expiresAt := time.Now().Add(24 * time.Hour)
-	query := `
+	query := `--sql
 		INSERT INTO sessions (user_id, ticket, expires_at)
 		SELECT $1::VARCHAR(8), $2, $3
 		WHERE EXISTS ( SELECT id FROM users WHERE id = $1::VARCHAR(8) )
@@ -55,7 +56,6 @@ func (m DBManager) login(userID, ticket string, lang language.Language) (string,
 			return "", errorx.AddContext(err)
 		}
 	} else if err != nil {
-		//fmt.Println(len(ticket))
 		return "", errorx.NewHTTPErr(
 			errorx.AddContext(err),
 			http.StatusInternalServerError,

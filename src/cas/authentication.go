@@ -18,22 +18,12 @@ func (UserIDFromContext) UserID(r *http.Request) string {
 	return userID
 }
 
-type userIDKey struct{}
-
 type Authentication struct {
 	AfterLoginPath string
 	CAS            CAS
 	Data           DBManager
 	Error          Error
 	loginPath      string
-}
-
-type Error interface {
-	Log(err error)
-	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
-	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
-	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
-	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }
 
 func (a Authentication) AuthenticateHTTP(next http.Handler) http.Handler {
@@ -93,13 +83,13 @@ func (a Authentication) logoutFromCAS(w http.ResponseWriter, r *http.Request) {
 		a.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	_ = ticket
-	_ = userID
-	// err = a.Data.LogoutWithTicket(userID, ticket)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return
-	// }
+	err = a.Data.logoutWithTicket(userID, ticket, lang)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		a.Error.Log(errorx.AddContext(err))
+		a.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
 }
 
 func (a Authentication) logoutFromUser(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +119,8 @@ func (a Authentication) logoutFromUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.deleteSessionCookie(w)
-	err = Logout(a.CAS.loginURLToCAS(a.loginURL(r)), t).Render(r.Context(), w)
+	page := Logout(a.CAS.loginURLToCAS(a.loginURL(r)), t)
+	err = page.Render(r.Context(), w)
 	if err != nil {
 		a.Error.CannotRenderComponent(w, r, err, lang)
 	}
@@ -159,4 +150,14 @@ func (a Authentication) sessionCookie() http.Cookie {
 
 func (a Authentication) loginURL(r *http.Request) string {
 	return "https://" + r.Host + a.loginPath
+}
+
+type userIDKey struct{}
+
+type Error interface {
+	Log(err error)
+	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
+	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
+	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }

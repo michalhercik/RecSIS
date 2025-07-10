@@ -8,13 +8,6 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
-type SearchBar interface {
-	View(string, language.Language, bool) templ.Component
-	QuickSearchResult(query string, lang language.Language) (templ.Component, error)
-	QuickSearchEndpoint() string
-	SearchParam() string
-}
-
 type PageWithNoFiltersAndForgetsSearchQueryOnRefresh struct {
 	Page
 }
@@ -24,21 +17,23 @@ func (p PageWithNoFiltersAndForgetsSearchQueryOnRefresh) View(main templ.Compone
 }
 
 type Page struct {
-	Error           Error
-	Home            string
-	NavItems        []NavItem
-	QuickSearchPath string
-	router          *http.ServeMux
-	SearchBar       SearchBar
+	Error                 Error
+	Home                  string
+	NavItems              []NavItem
+	Search                MeiliSearch
+	Param                 string
+	SearchEndpoint        string
+	ResultsDetailEndpoint func(code string) string
+	router                *http.ServeMux
 }
 
 func (p Page) SearchParam() string {
-	return p.SearchBar.SearchParam()
+	return p.Param
 }
 
 func (p *Page) Init() {
 	router := http.NewServeMux()
-	router.HandleFunc("GET "+p.QuickSearchPath, p.quickSearch)
+	router.HandleFunc("GET /quicksearch", p.quickSearch)
 	p.router = router
 }
 
@@ -51,31 +46,41 @@ func (p Page) View(main templ.Component, lang language.Language, title string, s
 	return p.view(main, lang, title, searchQuery, true, userID)
 }
 
-func (p Page) view(main templ.Component, lang language.Language, title string, searchQuery string, includeFilters bool, userID string) templ.Component {
-	searchBarView := p.SearchBar.View(searchQuery, lang, includeFilters)
+func (p Page) view(main templ.Component, lang language.Language, title string, searchInput string, includeFilters bool, userID string) templ.Component {
 	model := pageModel{
-		title:    title,
-		main:     main,
-		lang:     lang,
-		text:     texts[lang],
-		search:   searchBarView,
-		home:     p.Home,
-		navItems: p.NavItems,
-		userID:   userID,
+		title:          title,
+		main:           main,
+		lang:           lang,
+		text:           texts[lang],
+		home:           p.Home,
+		navItems:       p.NavItems,
+		userID:         userID,
+		searchInput:    searchInput,
+		includeFilters: includeFilters,
+		searchParam:    p.Param,
+		searchEndpoint: p.SearchEndpoint,
 	}
 	return PageView(model)
 }
 
 func (p Page) quickSearch(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
-	query := r.FormValue(p.SearchBar.SearchParam())
-	view, err := p.SearchBar.QuickSearchResult(query, lang)
+	t := texts[lang]
+	query := r.FormValue(p.Param)
+	courses, err := p.Search.QuickSearchResult(query, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		p.Error.Log(errorx.AddContext(err))
 		p.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
+	model := quickResultsModel{
+		t:                    t,
+		lang:                 lang,
+		courses:              courses,
+		resultDetailEndpoint: p.ResultsDetailEndpoint,
+	}
+	view := QuickResults(model)
 	err = view.Render(r.Context(), w)
 	if err != nil {
 		p.Error.CannotRenderComponent(w, r, err, lang)
@@ -89,14 +94,24 @@ type Error interface {
 }
 
 type pageModel struct {
-	title    string
-	main     templ.Component
-	lang     language.Language
-	text     text
-	search   templ.Component
-	home     string
-	navItems []NavItem
-	userID   string
+	title          string
+	main           templ.Component
+	lang           language.Language
+	text           text
+	home           string
+	navItems       []NavItem
+	userID         string
+	includeFilters bool
+	searchParam    string
+	searchInput    string
+	searchEndpoint string
+}
+
+type quickResultsModel struct {
+	t                    text
+	lang                 language.Language
+	courses              []quickCourse
+	resultDetailEndpoint func(code string) string
 }
 
 type NavItem struct {

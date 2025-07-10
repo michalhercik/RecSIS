@@ -20,11 +20,7 @@ type Server struct {
 	Error       Error
 	Page        Page
 	Recommender string
-	router      *http.ServeMux
-}
-
-func (s Server) Router() *http.ServeMux {
-	return s.router
+	router      http.Handler
 }
 
 type Authentication interface {
@@ -45,6 +41,10 @@ type Page interface {
 //================================================================================
 // Routing
 //================================================================================
+
+func (s Server) Router() http.Handler {
+	return s.router
+}
 
 func (s *Server) Init() {
 	router := http.NewServeMux()
@@ -86,7 +86,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 
 	main := Content(&content, t)
-	err = s.Page.View(main, lang, t.pageTitle, userID).Render(r.Context(), w)
+	page := s.Page.View(main, lang, t.pageTitle, userID)
+	err = page.Render(r.Context(), w)
 
 	if err != nil {
 		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
@@ -132,7 +133,7 @@ func (s Server) fetchCourses(endpoint string, lang language.Language) ([]course,
 		)
 	}
 
-	return courses, err
+	return courses, nil
 }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {

@@ -13,7 +13,6 @@ import (
 	"github.com/michalhercik/RecSIS/cas"
 	"github.com/michalhercik/RecSIS/components/bpbtn"
 	"github.com/michalhercik/RecSIS/components/page"
-	"github.com/michalhercik/RecSIS/components/searchbar"
 	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
@@ -162,20 +161,15 @@ func setupPage(conf config, errorHandler page.Error, meiliClient meilisearch.Ser
 			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: "/blueprint/", Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
 			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: "/degreeplan/", Skeleton: degreeplan.Skeleton, Indicator: "#degreeplan-skeleton"},
 		},
-		QuickSearchPath: "/quicksearch",
-		SearchBar: searchbar.MeiliSearch{
-			Client:            meiliClient,
-			Index:             "courses",
-			Limit:             5,
-			Param:             "search",
-			FiltersSelector:   "#filter-form",
-			SearchEndpoint:    "/courses/",
-			QuickEndpoint:     "/page/quicksearch",
-			SearchBarView:     searchbar.SearchBar,
-			SearchResultsView: searchbar.QuickResults,
-			ResultsDetailEndpoint: func(code string) string {
-				return fmt.Sprintf("/course/%s", code)
-			},
+		Search: page.MeiliSearch{
+			Client: meiliClient,
+			Index:  "courses",
+			Limit:  5,
+		},
+		Param:          "search",
+		SearchEndpoint: "/courses/",
+		ResultsDetailEndpoint: func(code string) string {
+			return fmt.Sprintf("/course/%s", code)
 		},
 	}
 	pageTempl.Init()
@@ -215,13 +209,10 @@ func setupCourseDetailServer(db *sqlx.DB, errorHandler coursedetail.Error, pageT
 				HxPostBase: "/course",
 			},
 		},
-		Data:  coursedetail.DBManager{DB: db},
-		Error: errorHandler,
-		Filters: filters.Filters{
-			DB:     db,
-			Filter: "course-survey",
-		},
-		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Data:    coursedetail.DBManager{DB: db},
+		Error:   errorHandler,
+		Filters: filters.MakeFilters(db, "course-survey"),
+		Page:    page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		Search: coursedetail.Search{
 			Client: meiliClient,
 			Survey: meilisearch.IndexConfig{Uid: "survey"},
@@ -241,13 +232,10 @@ func setupCoursesServer(db *sqlx.DB, errorHandler courses.Error, pageTempl page.
 				HxPostBase: "/courses",
 			},
 		},
-		Data:  courses.DBManager{DB: db},
-		Error: errorHandler,
-		Filters: filters.Filters{
-			DB:     db,
-			Filter: "courses",
-		},
-		Page: pageTempl,
+		Data:    courses.DBManager{DB: db},
+		Error:   errorHandler,
+		Filters: filters.MakeFilters(db, "courses"),
+		Page:    pageTempl,
 		Search: courses.MeiliSearch{
 			Client:  meiliClient,
 			Courses: meilisearch.IndexConfig{Uid: "courses"},

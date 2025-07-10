@@ -168,11 +168,6 @@ type requisite struct {
 	state      string
 }
 
-type class struct {
-	code string
-	name string
-}
-
 type assignmentSlice []assignment
 
 func (a assignmentSlice) sort() assignmentSlice {

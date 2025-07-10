@@ -3,7 +3,7 @@ package degreeplan
 import (
     "fmt"
     "time"
-    
+
     "github.com/michalhercik/RecSIS/stringsx"
 )
 
@@ -42,11 +42,11 @@ templ chooseDegreePlanModal(canSave bool, code string, year int, t text) {
             <button
                 type="button"
                 class="btn bg-degreeplan"
-                hx-patch={ templ.URL(t.language.LocalizeURL("/degreeplan/" + code)) }
+                hx-patch={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }
                 hx-vals={ fmt.Sprintf(`"%s": "%d"`, saveDegreePlanYear, year) }
                 hx-target="this"
                 hx-swap="outerHTML"
-                hx-push-url={ templ.URL(t.language.LocalizeURL("/degreeplan/")) }>
+                hx-push-url={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/")) }>
                 <span class="d-none d-sm-inline">{ t.saveDegreePlan }</span>
                 <span class="d-sm-none">{ t.saveDegreePlanShort }</span>
             </button>
@@ -129,12 +129,12 @@ templ QuickSearchResultsContent(results []quickDegreePlan, t text) {
                 for _, result := range results {
                     <tr>
                         <td><a
-                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
+                            href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
                             data-bs-dismiss="modal">
                             { result.Code }
                         </a></td>
                         <td class="text-wrap"><a
-                            href={ templ.URL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
+                            href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
                             data-bs-dismiss="modal">
                             { result.Name }
                         </a> </td>
@@ -285,7 +285,7 @@ templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
 templ courseLink(code string, t text) {
     <a
         class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
-        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
         { code }
     </a>
 }
@@ -347,7 +347,7 @@ templ mobileInfoTd(course *course, isCompulsory bool, t text) {
 templ titleCourseLink(code, title string, t text) {
     <a
         class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
-        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
         { title }
     </a>
 }

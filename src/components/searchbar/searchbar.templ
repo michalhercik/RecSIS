@@ -46,7 +46,7 @@ templ SearchBar(model searchBarModel) {
                     // TODO: this might reload results as empty search query
                     <button
                         type="reset"
-                        x-cloak x-show="searchInput.length > 0" 
+                        x-cloak x-show="searchInput.length > 0"
                         class="btn bg-white border-0 position-absolute navbar-clear-search-btn"
                         @click="searchInput = ''; quickResOpen = false; $refs.searchInput.focus();">
                         <i class="bi bi-x-lg"></i>
@@ -77,7 +77,7 @@ templ QuickResults(model quickResultsModel) {
             } else {
                 for _, course := range model.courses {
                     <a
-                        href={ templ.URL(model.lang.LocalizeURL(model.resultDetailEndpoint(course.code))) }
+                        href={ templ.SafeURL(model.lang.LocalizeURL(model.resultDetailEndpoint(course.code))) }
                         class="dropdown-item text-truncate responsive-font"
                         hx-boost="false"
                         tabindex="0"

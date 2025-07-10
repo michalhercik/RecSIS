@@ -110,7 +110,6 @@ func makeMultiSearchRequest(r request, index meilisearch.IndexConfig) *meilisear
 	return result
 }
 
-// TODO: remove params package
 func attributesToRetrieve(lang language.Language) []string {
 	var (
 		studyTypeName  string

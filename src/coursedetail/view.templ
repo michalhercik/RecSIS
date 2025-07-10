@@ -578,7 +578,7 @@ templ requisitesLinksRow(req []requisite, title string, t text) {
 templ courseLink(code string, t text) {
     <a
         class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
-        href={ templ.URL(t.language.LocalizeURL("/course/" + code)) }>
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
         { code }
     </a>
 }

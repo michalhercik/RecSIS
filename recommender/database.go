@@ -48,7 +48,7 @@ func getCourses(w http.ResponseWriter, r *http.Request, query string) {
 	var courses []Course
 	lang := r.URL.Query().Get("lang")
 	if lang == "" {
-		lang = "cs" // Default language
+		lang = "cs"
 	}
 	err := db.Select(&courses, query, lang)
 	if err != nil {

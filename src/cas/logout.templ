@@ -18,7 +18,7 @@ templ Logout(loginURL string, t text) {
                     <h1>{ t.logoutSuccessHeadline }</h1>
                     <p>{ t.logoutSuccessMessage }</p>
                     <a
-                        href={ templ.URL(loginURL) }
+                        href={ templ.SafeURL(loginURL) }
                         class="btn btn-outline-primary mt-3"
                     >
                         { t.loginButton }
