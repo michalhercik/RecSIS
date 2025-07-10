@@ -33,6 +33,7 @@ type BlueprintAddButton interface {
 	PartialComponentSecond(lang language.Language) PartialBlueprintAdd
 	ParseRequest(r *http.Request, additionalCourses []string) ([]string, int, int, error)
 	Action(userID string, year int, semester int, lang language.Language, course ...string) ([]int, error)
+	Endpoint() string
 }
 
 type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, years []bool, course string) templ.Component
@@ -63,7 +64,7 @@ func (s *Server) Init() {
 	router.HandleFunc(fmt.Sprintf("GET /{%s}", dpCode), s.degreePlanByCodePage)
 	router.HandleFunc(fmt.Sprintf("PATCH /{%s}", dpCode), s.saveDegreePlan)
 	router.HandleFunc("GET /search", s.searchDegreePlan)
-	router.HandleFunc("POST /blueprint", s.addCourseToBlueprint)
+	router.HandleFunc(s.BpBtn.Endpoint(), s.addCourseToBlueprint)
 	router.HandleFunc("/", s.pageNotFound)
 	s.router = router
 }

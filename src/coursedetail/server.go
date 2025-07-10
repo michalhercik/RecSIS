@@ -43,6 +43,7 @@ type BlueprintAddButton interface {
 	PartialComponent(lang language.Language) PartialBlueprintAdd
 	ParseRequest(r *http.Request, additionalCourses []string) ([]string, int, int, error)
 	Action(userID string, year int, semester int, lang language.Language, course ...string) ([]int, error)
+	Endpoint() string
 }
 
 type PartialBlueprintAdd = func(hxSwap, hxTarget, hxInclude string, semesters []bool, course string) templ.Component
@@ -81,7 +82,7 @@ func (s *Server) initRouter() {
 		{"DELETE /rating/{%s}/{%s}", s.deleteCategoryRating, []any{courseCode, ratingCategory}},
 		{"PUT /rating/{%s}", s.rate, []any{courseCode}},
 		{"DELETE /rating/{%s}", s.deleteRating, []any{courseCode}},
-		{"POST /blueprint", s.addCourseToBlueprint, nil},
+		{"%s", s.addCourseToBlueprint, []any{s.BpBtn.Endpoint()}},
 		{"/", s.pageNotFound, nil},
 	}
 	router := http.NewServeMux()

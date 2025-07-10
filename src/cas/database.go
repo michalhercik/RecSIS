@@ -17,7 +17,13 @@ type DBManager struct {
 
 func (m DBManager) authenticate(sessionID string, lang language.Language) (string, error) {
 	var userID sql.NullString
-	query := "SELECT user_id FROM sessions WHERE id = $1"
+	query := `
+		SELECT
+			user_id
+		FROM sessions
+		WHERE id = $1
+		AND expires_at > NOW();
+	`
 	err := m.DB.Get(&userID, query, sessionID)
 	if err != nil {
 		return "", errorx.NewHTTPErr(
@@ -66,7 +72,13 @@ func (m DBManager) login(userID, ticket string, lang language.Language) (string,
 }
 
 func (m DBManager) logoutWithSession(userID, sessionID string, lang language.Language) error {
-	query := "DELETE FROM sessions WHERE user_id = $1 AND id = $2"
+	query := `--sql
+		UPDATE sessions
+		SET expires_at = NOW()
+		WHERE user_id = $1
+		AND id = $2
+		AND expires_at > NOW();
+	`
 	_, err := m.DB.Exec(query, userID, sessionID)
 	if err != nil {
 		return errorx.NewHTTPErr(
@@ -79,7 +91,13 @@ func (m DBManager) logoutWithSession(userID, sessionID string, lang language.Lan
 }
 
 func (m DBManager) logoutWithTicket(userID, ticket string, lang language.Language) error {
-	query := "DELETE FROM sessions WHERE user_id = $1 AND ticket = $2"
+	query := `--sql
+		UPDATE sessions
+		SET expires_at = NOW()
+		WHERE user_id = $1
+		AND ticket = $2
+		AND expires_at > NOW();
+	`
 	_, err := m.DB.Exec(query, userID, ticket)
 	if err != nil {
 		return errorx.NewHTTPErr(

@@ -74,7 +74,7 @@ func runTests(t *testing.T, tests []testCase) {
 }
 
 func setupTestServer() *httptest.Server {
-	conf := getConfig("./config.dev.toml")
+	conf := configFrom("./config.dev.toml")
 	handler := setupHandler(conf)
 	return httptest.NewTLSServer(handler)
 }
