@@ -9,7 +9,7 @@ services:
       - postgres
       # - meilisearch
     environment:
-      - ACHERON_USER=${ACHERON_USER}
+      - ACHERON_USER=${ACHERON_USER:-}
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - RECSIS_USER=${RECSIS_USER}
@@ -24,7 +24,7 @@ services:
     build:
       dockerfile: Dockerfile
       context: ./src/
-      target: dev-stage
+      target: deploy-stage
     depends_on:
       - postgres
       # - meilisearch
@@ -52,7 +52,7 @@ services:
       - recsis-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-U", "${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready", "-U", "${POSTGRES_USER}"]
       interval: 1s
       timeout: 5s
       retries: 10
