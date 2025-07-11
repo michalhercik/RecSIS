@@ -12,8 +12,9 @@ import (
 //================================================================================
 
 const (
-	lastPosition = -1
-	ttDelay      = "600"
+	lastPosition   = -1
+	unassignedYear = -1
+	ttDelay        = "600"
 )
 
 const (
@@ -58,6 +59,31 @@ func (bp *blueprintPage) totalCredits() int {
 		total += year.credits()
 	}
 	return total
+}
+
+type courseLocation struct {
+	year     int
+	semester semesterAssignment
+	course   *course
+}
+
+func (bp *blueprintPage) courses() <-chan courseLocation {
+	ch := make(chan courseLocation)
+	go func() {
+		for i := range bp.unassigned.courses {
+			ch <- courseLocation{unassignedYear, assignmentNone, &bp.unassigned.courses[i]}
+		}
+		for _, year := range bp.years {
+			for i := range year.winter.courses {
+				ch <- courseLocation{year.position, assignmentWinter, &year.winter.courses[i]}
+			}
+			for i := range year.summer.courses {
+				ch <- courseLocation{year.position, assignmentSummer, &year.summer.courses[i]}
+			}
+		}
+		close(ch)
+	}()
+	return ch
 }
 
 type assignedYears []academicYear

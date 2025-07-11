@@ -544,87 +544,52 @@ func generateWarnings(bp *blueprintPage, t text) {
 }
 
 func forCorrectAssignment(bp *blueprintPage, t text) {
-	for _, year := range bp.years {
-		winter := year.winter
-		if !winter.folded {
-			courses := winter.courses
-			for ci := range courses {
-				if courses[ci].semester == teachingSummerOnly {
-					courses[ci].warnings = append(courses[ci].warnings, t.wWrongAssignWinter)
-				}
-			}
+	for c := range bp.courses() {
+		if c.year == unassignedYear {
+			continue
 		}
-		summer := year.summer
-		if !summer.folded {
-			courses := summer.courses
-			for ci := range courses {
-				if courses[ci].semester == teachingWinterOnly {
-					courses[ci].warnings = append(courses[ci].warnings, t.wWrongAssignSummer)
-				}
-			}
+		if c.course.semester == teachingWinterOnly && c.semester == assignmentSummer {
+			c.course.warnings = append(c.course.warnings, t.wWrongAssignSummer)
+		}
+		if c.course.semester == teachingSummerOnly && c.semester == assignmentWinter {
+			c.course.warnings = append(c.course.warnings, t.wWrongAssignWinter)
 		}
 	}
 }
 
 func forDuplicateAssignments(bp *blueprintPage, t text) {
-	unassigned := bp.unassigned.courses
-	generateDuplicateWarnings(unassigned, bp, t)
-
-	for _, year := range bp.years {
-		winter := year.winter.courses
-		generateDuplicateWarnings(winter, bp, t)
-
-		summer := year.summer.courses
-		generateDuplicateWarnings(summer, bp, t)
+	courseCodes := make(map[string][]courseLocation)
+	for c := range bp.courses() {
+		code := c.course.code
+		courseCodes[code] = append(courseCodes[code], courseLocation{
+			year:     c.year,
+			semester: c.semester,
+			course:   c.course,
+		})
 	}
-}
 
-func generateDuplicateWarnings(courses []course, bp *blueprintPage, t text) {
-	for ci1 := range courses {
-		duplicates := make([]struct {
-			year     int
-			semester string
-		}, 0)
-		for ci2 := range bp.unassigned.courses {
-			if courses[ci1].code == bp.unassigned.courses[ci2].code {
-				duplicates = append(duplicates, struct {
-					year     int
-					semester string
-				}{year: -1, semester: ""})
-			}
-		}
-		for y, year := range bp.years {
-			winter := year.winter.courses
-			for ci2 := range winter {
-				if courses[ci1].code == winter[ci2].code {
-					duplicates = append(duplicates, struct {
-						year     int
-						semester string
-					}{year: y, semester: t.winter})
-				}
-			}
-			summer := year.summer.courses
-			for ci2 := range summer {
-				if courses[ci1].code == summer[ci2].code {
-					duplicates = append(duplicates, struct {
-						year     int
-						semester string
-					}{year: y, semester: t.summer})
-				}
-			}
-		}
-		if len(duplicates) > 1 {
-			warning := t.wAssignedMoreThanOnce + "("
-			duplicatesStr := make([]string, len(duplicates))
-			for i, dup := range duplicates {
-				if dup.year == -1 {
-					duplicatesStr[i] = t.unassigned
+	for _, locations := range courseCodes {
+		if len(locations) > 1 {
+			warning := t.wAssignedMoreThanOnce + " ("
+			locationsStr := make([]string, len(locations))
+			for i, loc := range locations {
+				if loc.year == unassignedYear {
+					locationsStr[i] = t.unassigned
 				} else {
-					duplicatesStr[i] = fmt.Sprintf("%s %s", t.yearStr(dup.year+1), dup.semester)
+					semester := ""
+					switch loc.semester {
+					case assignmentWinter:
+						semester = t.winter
+					case assignmentSummer:
+						semester = t.summer
+					}
+					locationsStr[i] = fmt.Sprintf("%s %s", t.yearStr(loc.year), semester)
 				}
 			}
-			warning += strings.Join(duplicatesStr, ", ") + ")."
-			courses[ci1].warnings = append(courses[ci1].warnings, warning)
+			warning += strings.Join(locationsStr, ", ") + ")."
+			for _, loc := range locations {
+				loc.course.warnings = append(loc.course.warnings, warning)
+			}
 		}
 	}
 }
