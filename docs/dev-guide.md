@@ -1,7 +1,5 @@
 # RecSIS Development Guide
 
-**LAST UPDATED**: 18.2. 2025
-
 - [RecSIS Development Guide](#recsis-development-guide)
   - [External Dependencies (summary)](#external-dependencies-summary)
   - [Clone](#clone)

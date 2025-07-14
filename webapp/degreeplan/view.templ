@@ -1,0 +1,353 @@
+package degreeplan
+
+import (
+    "fmt"
+    "time"
+
+    "github.com/michalhercik/RecSIS/stringsx"
+)
+
+templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChecked PartialBlueprintAdd) {
+    <div
+        id="degreeplan-content"
+        class="container position-relative"
+        x-data="{ checkedNumber: 0, smallScreen: window.innerWidth < 768, searchOpened: false }"
+        x-init="$nextTick(() => requestAnimationFrame(() => { updateStickyOffset(); }))"
+        @resize.window="smallScreen = window.innerWidth < 768"
+        hx-indicator="#loader"
+    >
+        @chooseDegreePlanModal(dp.canSave, dp.degreePlanCode, dp.degreePlanYear, t)
+        @checkedCoursesMenu(dp.bpNumberOfSemesters(), bpBtnChecked, t)
+        // TODO: add title
+        <h1 class="text-center pt-0 pt-md-3">{ fmt.Sprintf("%s - %d", dp.degreePlanCode, dp.degreePlanYear) }</h1>
+        for _, bloc := range dp.blocs {
+            @completionStatusBadges(&bloc, t)
+            @blocName(&bloc, "d-md-none", "px-1 my-1", t)
+            <table class="table table-sm degree-plan-table mb-4" :class="{ 'table-hover': !smallScreen }">
+                @tableHeader(&bloc, t)
+                <tbody>
+                    for _, course := range bloc.courses {
+                        @CourseRow(&course, bloc.isCompulsory, bpBtnRow, t)
+                    }
+                </tbody>
+            </table>
+        }
+        @scripts()
+    </div>
+}
+
+templ chooseDegreePlanModal(canSave bool, code string, year int, t text) {
+    <div class="position-absolute choose-degree-plan-btn">
+        if canSave {
+            <button
+                type="button"
+                class="btn bg-degreeplan"
+                hx-patch={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }
+                hx-vals={ fmt.Sprintf(`"%s": "%d"`, saveDegreePlanYear, year) }
+                hx-target="this"
+                hx-swap="outerHTML"
+                hx-push-url={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/")) }>
+                <span class="d-none d-sm-inline">{ t.saveDegreePlan }</span>
+                <span class="d-sm-none">{ t.saveDegreePlanShort }</span>
+            </button>
+        }
+        <button
+            type="button"
+            class="btn bg-degreeplan"
+            data-bs-toggle="modal" data-bs-target="#chooseDegreePlanModal">
+            <span class="d-none d-sm-inline">{ t.showDegreePlan }</span>
+            <span class="d-sm-none">{ t.showDegreePlanShort }</span>
+        </button>
+    </div>
+
+    <div class="modal fade" id="chooseDegreePlanModal" tabindex="-1" aria-labelledby="chooseDegreePlanModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="chooseDegreePlanModalLabel">
+                        { t.chooseDegreePlan }
+                        @chooseDegreePlanHelp(t)
+                    </h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="choose-degree-plan-modal-body" class="modal-body">
+                    <div class="input-group mb-3">
+                        <input
+                            type="text"
+                            name={ searchDegreePlanName }
+                            class="form-control search-input"
+                            placeholder={ t.degreePlanPlaceholder }
+                            hx-get={ t.language.LocalizeURL("/degreeplan/search") }
+                            hx-trigger="keyup changed delay:200ms"
+                            hx-target="#dp-results"
+                            hx-indicator="#explicit-no-loader"
+                            autocomplete="off">
+                        <div class="form-floating dp-select-year-width">
+                            <select id="dp-year" class="form-select" name={ searchDegreePlanYear }>
+                                <option selected value={ fmt.Sprintf("%d", time.Now().Year()) }>{ fmt.Sprintf("%d", time.Now().Year()) }</option>
+                                for i := time.Now().Year() - 1; i >= 2015; i-- {
+                                    <option value={ fmt.Sprintf("%d", i) }>{ fmt.Sprintf("%d", i) }</option>
+                                }
+                            </select>
+                            <label for="dp-year">{ t.enrollmentYear }</label>
+                        </div>
+                    </div>
+                    @quickSearchResults()
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+templ chooseDegreePlanHelp(t text) {
+    <span
+        class="bi ps-1 cursor-help"
+        x-data="{ hover: false }"
+        @mouseenter="hover = true"
+        @mouseleave="hover = false"
+        :class="hover ? 'bi-info-circle-fill' : 'bi-info-circle'"
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-title={ t.chooseDegreePlanHelp }>
+    </span>
+}
+
+templ quickSearchResults() {
+    <div id="dp-results">
+        { children... }
+    </div>
+}
+
+templ QuickSearchResultsContent(results []quickDegreePlan, t text) {
+    @quickSearchResults() {
+        if len(results) == 0 {
+            <div class="alert alert-info" role="alert">
+                { t.noDegreePlanResults }
+            </div>
+        } else {
+            <table class="table table-sm table-borderless mb-0" hx-include="#dp-year">
+                for _, result := range results {
+                    <tr>
+                        <td><a
+                            href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
+                            data-bs-dismiss="modal">
+                            { result.Code }
+                        </a></td>
+                        <td class="text-wrap"><a
+                            href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
+                            data-bs-dismiss="modal">
+                            { result.Name }
+                        </a> </td>
+                        <td class="text-end">
+                            <span class="badge bg-degreeplan">{ result.Type }</span>
+                        </td>
+                    </tr>
+                }
+            </table>
+        }
+    }
+}
+
+templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
+    <div id="dp-checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
+        <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
+            // uncheck all checkboxes
+            <button
+                class="btn big-mobile-btn btn-outline-secondary border-0 bi bi-dash-square"
+                @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur();">
+            </button>
+            @bpBtn("outerHTML", "#degreeplan-content", fmt.Sprintf("input:checked[name=%s]", checkboxName), make([]bool, semCount), "")
+        </div>
+    </div>
+}
+
+templ completionStatusBadges(bloc *bloc, t text) {
+    <h5 class="d-flex gap-2 status-badges mb-0">
+        // TODO: after SIS integration, uncomment this badge -> should be already working
+        // <div class="d-flex justify-content-start">
+        //     <span class="badge bg-success rounded-end-0 py-2">{ t.completed }</span>
+        //     <span class="badge bg-success-dark rounded-start-0 py-2">
+        //         { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.limit) }
+        //     </span>
+        // </div>
+        <div class="d-flex justify-content-start">
+            <span class="badge bg-blueprint rounded-end-0 py-2">{ t.blueprint }</span>
+            <span class="badge bg-blueprint-dark rounded-start-0 py-2">
+                { fmt.Sprintf("%d/%d", bloc.assignedCredits(), bloc.limit) }
+                if bloc.assignedCredits() != bloc.blueprintCredits() {
+                    <span class="small-dark-text">{ fmt.Sprintf("%d/%d", bloc.blueprintCredits(), bloc.limit) }</span>
+                }
+            </span>
+        </div>
+    </h5>
+}
+
+templ tableHeader(bloc *bloc, t text) {
+    <thead>
+        <tr>
+            // checkbox + status
+            <th></th>
+            if bloc.name != "" {
+                // code
+                <th class="d-none d-md-table-cell">
+                    @blocName(bloc, "d-none d-md-block", "text-nowrap", t)
+                </th>
+                // title
+                <th></th>
+            } else {
+                // code
+                <th class="d-none d-md-table-cell">{ t.code }</th>
+                // title
+                <th><span class="d-none d-md-inline">{ t.title }</span></th>
+            }
+            // credits
+            <th class="d-none d-md-table-cell th-overflow credits-column">{ t.credits }</th>
+            // winter
+            <th class="d-none d-lg-table-cell">{ t.winter }</th>
+            // summer
+            <th class="d-none d-lg-table-cell">{ t.summer }</th>
+            // guarantors
+            <th class="d-none d-xl-table-cell">{ t.guarantors }</th>
+            // blueprint button
+            <th class="d-none d-md-table-cell th-overflow">
+                <span class="d-none d-lg-inline">{ t.blueprint }</span>
+            </th>
+        </tr>
+    </thead>
+}
+
+templ blocName(bloc *bloc, show, classes string, t text) {
+    if bloc.name != "" {
+        <h5 class={ "mb-0", classes, show }>
+            { stringsx.Capitalize(bloc.name) }&nbsp;
+            @statusIcon(bloc, t)
+        </h5>
+    }
+}
+
+templ statusIcon(bloc *bloc, t text) {
+    if bloc.isCompleted() {
+        <i class="bi bi-check-lg text-success"></i>
+    } else if bloc.isAssigned() {
+        <i class="bi bi-basket2 blueprint-color"></i>
+    } else if bloc.hasLimit() {
+        <i class="bi bi-x-lg text-danger"></i>
+    }
+}
+
+templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t text) {
+    <tr
+        id={ fmt.Sprintf("dp-row-%s", course.code) }
+        x-data="{ hoverRow: false }"
+        @mouseover="hoverRow = true"
+        @mouseleave="hoverRow = false">
+        // checkbox + status
+        <td
+            class="text-center align-middle position-relative"
+            @click.self="if (smallScreen) handleTdClick($event)">
+            @checkbox(course)
+            <div class="d-md-none">
+                @warningIcon(course, t)
+            </div>
+        </td>
+        // code
+        <td class="d-none d-md-table-cell position-relative">
+            @courseLink(course.code, t)
+            @warningIcon(course, t)
+        </td>
+        // title
+        <td>
+            <div class="d-flex justify-content-between">
+                <span class={ "d-none d-md-inline", templ.KV("fw-bold", isCompulsory) }>
+                    @titleCourseLink(course.code, course.title, t)
+                </span>
+                <span class="d-none d-md-inline d-lg-none dp-lg-semester">
+                    { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
+                </span>
+            </div>
+            @mobileInfoTd(course, isCompulsory, t)
+        </td>
+        // credits
+        <td class="d-none d-md-table-cell text-end credits-column">{ fmt.Sprintf("%d", course.credits) }</td>
+        // winter
+        <td class="d-none d-lg-table-cell">{ course.winterString() }</td>
+        // summer
+        <td class="d-none d-lg-table-cell">{ course.summerString() }</td>
+        // guarantors
+        <td class="d-none d-xl-table-cell">{ course.guarantors.string() }</td>
+        // blueprint button
+        <td class="d-none d-md-table-cell text-start align-middle p-0">
+            @bpBtn("outerHTML", "#degreeplan-content", "", course.blueprintSemesters, course.code)
+        </td>
+    </tr>
+}
+
+templ courseLink(code string, t text) {
+    <a
+        class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+        { code }
+    </a>
+}
+
+templ checkbox(course *course) {
+    <div class="checkbox-container position-relative">
+        // circle under the checkbox - course status
+        <div class={ "circle-underlay", course.statusBackgroundColor() }></div>
+        <input
+            type="checkbox"
+            id={ fmt.Sprintf("dp-checkbox-%s", course.code) }
+            class="form-check-input dp-checkbox"
+            name={ checkboxName }
+            value={ course.code }
+            @change={ fmt.Sprintf("checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; updateCheckedCoursesMenu(%d)", len(course.blueprintSemesters)) }
+            @uncheck-all.window="$el.checked = false;"
+        />
+        // circle overlay for easier clicking
+        <div class="d-none d-md-inline">
+            <div
+                role="button"
+                class="circle-overlay"
+                @click="handleCircleClick($event)">
+            </div>
+        </div>
+    </div>
+}
+
+templ warningIcon(course *course, t text) {
+    if course.isUnassigned() && !course.isAssigned() {
+        <span
+            class="bi bi-exclamation-lg text-danger fs-4 position-absolute dp-warning"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title={ t.courseIsUnassigned }>
+        </span>
+    }
+}
+
+templ mobileInfoTd(course *course, isCompulsory bool, t text) {
+    <div class="d-flex flex-column d-md-none">
+        <div class="d-flex justify-content-between align-items-center small lh-1">
+            <span class="text-muted dp-mobile-code">
+                { course.code }
+            </span>
+            <span class="text-muted dp-mobile-semester">
+                { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
+            </span>
+            <span class="text-muted dp-mobile-credits">
+                { fmt.Sprintf("%s: %d", t.creditsShort, course.credits) }
+            </span>
+        </div>
+        <span class={ "fw-semibold text-truncate", templ.KV("fw-bold", isCompulsory) }>
+            @titleCourseLink(course.code, course.title, t)
+        </span>
+    </div>
+}
+
+templ titleCourseLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+        { title }
+    </a>
+}
