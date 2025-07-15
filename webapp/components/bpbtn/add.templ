@@ -1,0 +1,101 @@
+package bpbtn
+
+import (
+    "fmt"
+)
+
+templ AddBtn(model ViewModel, t text) {
+    <div class="btn-group">
+        @assignToUnassignedBtn(model, "", nil, nil, t) {
+            { t.assign }
+        }
+        @dropdown(model, "", nil, nil, true, t)
+    </div>
+}
+
+templ PlusSignBtn(model ViewModel, t text) {
+    <div
+        class="btn-group w-100"
+        x-cloak
+        x-show="hoverRow"
+        x-data="{ hover: false, hoverSelection: false }"
+        @mouseover="hover = true"
+        @mouseleave="hover = false">
+        @assignToUnassignedBtn(model, "btn-sm dp-bp-assign-btn-sm bi bi-plus lh-1 p-0", templ.Attributes{":class": "{ 'border-transparent': !hover, 'dp-bp-delimiter': !hover }"}, templ.Attributes{":class": "{ 'border-transparent': !hover }"}, t)
+        @dropdown(model, "btn-sm", templ.Attributes{":class": "{ 'btn-blueprint-hover': hoverSelection, 'border-transparent': !hover }"}, templ.Attributes{"@mouseover": "hoverSelection = true", "@mouseleave": "hoverSelection = false"}, true, t)
+    </div>
+}
+
+templ PlusSignBtnChecked(model ViewModel, t text) {
+    <div
+        class="btn-group dropdown-center"
+        x-data="{ hover: false, hoverSelection: false }"
+        @mouseover="hover = true"
+        @mouseleave="hover = false">
+        @assignToUnassignedBtn(model, "dp-bp-assign-btn bi bi-plus lh-1 p-0 border-0", templ.Attributes{":class": "{ 'dp-bp-delimiter': !hover }"}, nil, t)
+        @dropdown(model, "border-0 pb-1", templ.Attributes{":class": "{ 'btn-blueprint-hover': hoverSelection }"}, templ.Attributes{"@mouseover": "hoverSelection = true", "@mouseleave": "hoverSelection = false"}, false, t)
+    </div>
+}
+
+templ assignToUnassignedBtn(model ViewModel, classes string, alpineClassesTrue, alpineClassesFalse templ.Attributes, t text) {
+    <button
+        type="button"
+        class={ "btn btn-outline-blueprint assign-to-unassigned-btn", classes }
+        if len(model.semesters) > 1 {
+            { alpineClassesTrue... }
+        } else {
+            { alpineClassesFalse... }
+        }
+        hx-post={ t.language.LocalizeURL(model.hxPostBase + endpointPath) }
+        if model.course == "" {
+            hx-vals={ fmt.Sprintf(`"%s": 0, "%s": 0`, yearParam, semesterParam) }
+        } else {
+            hx-vals={ fmt.Sprintf(`"%s": 0, "%s": 0, "%s": "%s"`, yearParam, semesterParam, courseParam, model.course) }
+        }
+        hx-swap={ model.hxSwap }
+        hx-target={ model.hxTarget }
+        hx-include={ model.hxInclude }
+        disabled?={ len(model.semesters) > 0 && model.semesters[0] }
+    >
+        { children... }
+    </button>
+}
+
+templ dropdown(model ViewModel, classes string, alpineClasses, ulAttributes templ.Attributes, menuEnd bool, t text) {
+    if (len(model.semesters) > 1) {
+        <button
+            class={ "btn btn-outline-blueprint dropdown-toggle dropdown-toggle-split", classes }
+            { alpineClasses... }
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            data-bs-offset="0, 0">
+        </button>
+        <ul
+            class={ "dropdown-menu", templ.KV("dropdown-menu-end", menuEnd) }
+            { ulAttributes... }>
+            for i, v := range iterateOverAssignedYears(model.semesters) {
+                @assignSemesterButton(t.winterAssign, i, 1, v.disableWinter, t, model)
+                @assignSemesterButton(t.summerAssign, i, 2, v.disableSummer, t, model)
+            }
+        </ul>
+    }
+}
+
+templ assignSemesterButton(semesterText string, year, semester int, disabled bool, t text, model ViewModel) {
+    <li class="mx-3">
+        <button
+            class="dropdown-item rounded text-center dropdown-item-blueprint"
+            hx-post={ t.language.LocalizeURL(model.hxPostBase + endpointPath) }
+            if model.course == "" {
+                hx-vals={ fmt.Sprintf(`"%s": %d, "%s": %d`,yearParam, year, semesterParam, semester) }
+            } else {
+                hx-vals={ fmt.Sprintf(`"%s": %d, "%s": %d, "%s": "%s"`, yearParam, year, semesterParam, semester, courseParam, model.course) }
+            }
+            hx-include={ model.hxInclude }
+            hx-swap={ model.hxSwap }
+            hx-target={ model.hxTarget }
+            disabled?={ disabled }>
+            { fmt.Sprintf("%s %s", t.yearStr(year), semesterText) }
+        </button>
+    </li>
+}

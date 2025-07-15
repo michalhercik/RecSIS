@@ -11,9 +11,9 @@ try {
                 -file='.go' `
                 -file='.templ' `
                 -xfile='_templ.go' `
-                templ generate -path ./src :: `
-                go build -C ./src -o RecSIS.exe :: `
-                ./src/RecSIS.exe --config ./src/config.dev.toml
+                templ generate -path ./webapp :: `
+                go build -C ./webapp -o RecSIS.exe :: `
+                ./webapp/RecSIS.exe --config ./webapp/config.dev.toml
         } -Name 'OtherJob'
     )
 

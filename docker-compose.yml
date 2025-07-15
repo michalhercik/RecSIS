@@ -27,7 +27,7 @@ services:
     container_name: recsis-webapp
     build:
       dockerfile: Dockerfile
-      context: ./src/
+      context: ./webapp/
       target: deploy-stage
     depends_on:
       postgres:
