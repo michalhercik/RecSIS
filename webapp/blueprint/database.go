@@ -327,7 +327,7 @@ func (m DBManager) addYear(userID string, lang language.Language) error {
 	return nil
 }
 
-func (m DBManager) removeYear(userID string, lang language.Language, year int, shouldUnassign bool) error {
+func (m DBManager) removeYear(userID string, lang language.Language, shouldUnassign bool) error {
 	tx, err := m.DB.Beginx()
 	if err != nil {
 		return errorx.NewHTTPErr(
@@ -338,27 +338,27 @@ func (m DBManager) removeYear(userID string, lang language.Language, year int, s
 	}
 	defer tx.Rollback()
 	if shouldUnassign {
-		_, err := tx.Exec(sqlquery.UnassignYear, userID, year)
+		_, err := tx.Exec(sqlquery.UnassignLastYear, userID)
 		if err != nil {
 			// Handle unique violation for blueprint_semester_id, course_code
 			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
 				return errorx.NewHTTPErr(
-					errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
+					errorx.AddContext(fmt.Errorf("sqlquery.UnassignLastYear: %w", err)),
 					http.StatusConflict,
 					texts[lang].errDuplicateCoursesInBPUnassigned,
 				)
 			}
 			return errorx.NewHTTPErr(
-				errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
+				errorx.AddContext(fmt.Errorf("sqlquery.UnassignLastYear: %w", err)),
 				http.StatusInternalServerError,
 				texts[lang].errCannotUnassignYear,
 			)
 		}
 	}
-	_, err = tx.Exec(sqlquery.DeleteYear, userID)
+	_, err = tx.Exec(sqlquery.DeleteLastYear, userID)
 	if err != nil {
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.DeleteYear: %w", err), errorx.P("year", year)),
+			errorx.AddContext(fmt.Errorf("sqlquery.DeleteLastYear: %w", err)),
 			http.StatusInternalServerError,
 			texts[lang].errCannotRemoveYear,
 		)

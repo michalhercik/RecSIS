@@ -393,7 +393,7 @@ templ summarizeFooter(years assignedYears, totalCredits int, t text) {
                     <button
                         class="btn btn-outline-secondary btn-sm bi bi-dash"
                         hx-delete={ t.language.LocalizeURL("/blueprint/year") }
-                        hx-vals={ mergeVals(vUnassign(false), vYear(len(years) - 1)) }
+                        hx-vals={ mergeVals(vUnassign(false)) }
                         hx-target="#blueprint-page"
                         hx-swap="outerHTML"
                         disabled?={ len(years) <= 0 }>
@@ -404,10 +404,10 @@ templ summarizeFooter(years assignedYears, totalCredits int, t text) {
         </tr></thead>
     </table>
     // modal for removing non-empty last year
-    @deleteYearModal(len(years), t)
+    @deleteYearModal(t)
 }
 
-templ deleteYearModal(lastYear int, t text) {
+templ deleteYearModal(t text) {
     <div class="modal fade" id="courses-option-modal" tabindex="-1" aria-labelledby="courses-option-modal-label" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -421,7 +421,7 @@ templ deleteYearModal(lastYear int, t text) {
                         data-bs-dismiss="modal"
                         class="btn btn-primary"
                         hx-delete={ t.language.LocalizeURL("/blueprint/year") }
-                        hx-vals={ mergeVals(vUnassign(false), vYear(lastYear)) }
+                        hx-vals={ mergeVals(vUnassign(false)) }
                         hx-target="#blueprint-page"
                         hx-swap="outerHTML">
                         { t.removeCourses }
@@ -430,7 +430,7 @@ templ deleteYearModal(lastYear int, t text) {
                         data-bs-dismiss="modal"
                         class="btn btn-primary"
                         hx-delete={ t.language.LocalizeURL("/blueprint/year") }
-                        hx-vals={ mergeVals(vUnassign(true), vYear(lastYear)) }
+                        hx-vals={ mergeVals(vUnassign(true)) }
                         hx-target="#blueprint-page"
                         hx-swap="outerHTML">
                         { t.unassignCourses }
