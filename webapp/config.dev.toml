@@ -27,5 +27,5 @@ port = 8002
 host = "localhost:8001"
 
 [ssl]
-certificate = "server.crt"
-key 	    = "server.key"
+certificate = "cert/server.crt"
+key 	    = "cert/server.key"
