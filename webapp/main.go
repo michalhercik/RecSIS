@@ -329,9 +329,6 @@ const (
 type config struct {
 	Environment string `toml:"environment"`
 	Server      struct {
-		HTTP struct {
-			Port int `toml:"port"`
-		} `toml:"http"`
 		HTTPS struct {
 			Port int `toml:"port"`
 		} `toml:"https"`
