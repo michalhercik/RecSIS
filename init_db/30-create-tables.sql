@@ -63,12 +63,14 @@ CREATE TABLE users (
     id VARCHAR(8) PRIMARY KEY
 );
 
-CREATE TABLE blueprint_years(
+CREATE TABLE blueprint_years (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id VARCHAR(8) NOT NULL REFERENCES users(id),
+    user_id VARCHAR(8) NOT NULL,
     academic_year INT NOT NULL,
-    UNIQUE (user_id, academic_year)
+    UNIQUE (user_id, academic_year),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE blueprint_semesters(
     id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -131,18 +133,22 @@ EXECUTE FUNCTION blueprint_course_reordering();
 
 CREATE TABLE studies (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id VARCHAR(8) REFERENCES users(id) NOT NULL,
+    user_id VARCHAR(8) NOT NULL,
     degree_plan_code VARCHAR(15) NOT NULL,
-    start_year INT NOT NULL
+    start_year INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 
 -- TODO: Clean up expired sessions
 CREATE TABLE sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id VARCHAR(8) REFERENCES users(id),
+    user_id VARCHAR(8),
     ticket VARCHAR(42) NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL
+    expires_at TIMESTAMPTZ NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE course_rating_categories (
     code INT NOT NULL,
@@ -153,23 +159,27 @@ CREATE TABLE course_rating_categories (
 CREATE DOMAIN course_overall_rating_domain AS INT CHECK (VALUE = 0 OR VALUE = 1);
 
 CREATE TABLE course_overall_ratings (
-    user_id VARCHAR(8) NOT NULL REFERENCES users(id),
+    user_id VARCHAR(8) NOT NULL,
     course_code VARCHAR(10) NOT NULL,
     rating course_overall_rating_domain NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (user_id, course_code)
+    UNIQUE (user_id, course_code),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 
 CREATE DOMAIN course_rating_domain AS INT CHECK (VALUE >= 0 AND VALUE <= 10);
 
 CREATE TABLE course_ratings (
-    user_id VARCHAR(8) NOT NULL REFERENCES users(id),
+    user_id VARCHAR(8) NOT NULL,
     course_code VARCHAR(10) NOT NULL,
     category_code INT NOT NULL,
     rating course_rating_domain NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (user_id, category_code, course_code)
+    UNIQUE (user_id, category_code, course_code),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE filters (
     id VARCHAR(50) PRIMARY KEY

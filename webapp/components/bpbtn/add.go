@@ -174,6 +174,13 @@ func (b Add) Action(userID string, year int, semester int, lang language.Languag
 			texts[lang].errAddCourseToBPFailed,
 		)
 	}
+	if len(courseIDs) == 0 {
+		return []int{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("no rows were changed"), errorx.P(yearParam, year), errorx.P(semesterParam, semester), errorx.P("courses", strings.Join(courses, ","))),
+			http.StatusBadRequest,
+			texts[lang].errAddCourseToBPFailed,
+		)
+	}
 	return courseIDs, nil
 }
 

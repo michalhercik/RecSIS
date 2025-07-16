@@ -343,14 +343,7 @@ func (s Server) yearRemoval(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, http.StatusBadRequest, t.errInvalidUnassignParam, lang)
 		return
 	}
-	year, err := parseYear(r)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.Render(w, r, code, userMsg, lang)
-		return
-	}
-	if err := s.Data.removeYear(userID, lang, year, shouldUnassign); err != nil {
+	if err := s.Data.removeYear(userID, lang, shouldUnassign); err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
 		s.Error.Render(w, r, code, userMsg, lang)
