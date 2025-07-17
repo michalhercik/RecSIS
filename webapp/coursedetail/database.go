@@ -75,11 +75,19 @@ func (db DBManager) rateCategory(userID string, code string, category string, ra
 
 func (db DBManager) deleteCategoryRating(userID string, code string, category string, lang language.Language) ([]courseCategoryRating, error) {
 	var updatedRating []dbds.CourseCategoryRating
-	_, err := db.DB.Exec(sqlquery.DeleteCategoryRating, userID, code, category)
+	res, err := db.DB.Exec(sqlquery.DeleteCategoryRating, userID, code, category)
 	if err != nil {
 		return []courseCategoryRating{}, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("sqlquery.DeleteCategoryRating: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("lang", lang)),
 			http.StatusInternalServerError,
+			texts[lang].errCannotDeleteRating,
+		)
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		return []courseCategoryRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.DeleteCategoryRating: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("lang", lang)),
+			http.StatusBadRequest,
 			texts[lang].errCannotDeleteRating,
 		)
 	}
@@ -115,11 +123,19 @@ func (db DBManager) rate(userID string, code string, value int, lang language.La
 
 func (db DBManager) deleteRating(userID string, code string, lang language.Language) (courseRating, error) {
 	var rating dbds.OverallRating
-	_, err := db.DB.Exec(sqlquery.DeleteRating, userID, code)
+	res, err := db.DB.Exec(sqlquery.DeleteRating, userID, code)
 	if err != nil {
 		return courseRating{}, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("sqlquery.DeleteRating: %w", err), errorx.P("code", code)),
 			http.StatusInternalServerError,
+			texts[lang].errCannotDeleteRating,
+		)
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		return courseRating{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.DeleteRating: %w", err), errorx.P("code", code)),
+			http.StatusBadRequest,
 			texts[lang].errCannotDeleteRating,
 		)
 	}

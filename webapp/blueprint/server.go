@@ -11,11 +11,6 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
-/**
-TODO:
-	- document functions
-*/
-
 //================================================================================
 // Server Type
 //================================================================================
@@ -145,8 +140,6 @@ func (s Server) coursesMovement(w http.ResponseWriter, r *http.Request) {
 	t := texts[lang]
 	userID := s.Auth.UserID(r)
 	switch r.FormValue(typeParam) {
-	case yearUnassign:
-		err = s.unassignYear(r, userID)
 	case semesterUnassign:
 		err = s.unassignSemester(r, userID)
 	case selectedMove:
@@ -163,19 +156,6 @@ func (s Server) coursesMovement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.renderBlueprintContent(w, r, userID, lang)
-}
-
-func (s Server) unassignYear(r *http.Request, userID string) error {
-	lang := language.FromContext(r.Context())
-	year, err := parseYear(r)
-	if err != nil {
-		return errorx.AddContext(err)
-	}
-	err = s.Data.unassignYear(userID, lang, year)
-	if err != nil {
-		return errorx.AddContext(err)
-	}
-	return nil
 }
 
 func (s Server) unassignSemester(r *http.Request, userID string) error {
@@ -251,8 +231,6 @@ func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
 	userID := s.Auth.UserID(r)
 	var err error
 	switch r.FormValue(typeParam) {
-	case yearRemove:
-		err = s.removeCoursesByYear(r, userID)
 	case semesterRemove:
 		err = s.removeCoursesBySemester(r, userID)
 	case selectedRemove:
@@ -269,19 +247,6 @@ func (s Server) coursesRemoval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.renderBlueprintContent(w, r, userID, lang)
-}
-
-func (s Server) removeCoursesByYear(r *http.Request, userID string) error {
-	lang := language.FromContext(r.Context())
-	year, err := parseYear(r)
-	if err != nil {
-		return errorx.AddContext(err)
-	}
-	err = s.Data.removeCoursesByYear(userID, lang, year)
-	if err != nil {
-		return errorx.AddContext(err)
-	}
-	return nil
 }
 
 func (s Server) removeCoursesBySemester(r *http.Request, userID string) error {

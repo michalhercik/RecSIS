@@ -24,7 +24,6 @@ templ PageView(model pageModel) {
             // htmx
             <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
             <script src="https://cdn.jsdelivr.net/npm/htmx-ext-response-targets@2.0.2" integrity="sha384-aiAPowx3gG+h620/TJLIfLPgBcn6DMWlhu45oOhWVwTOjds9E6X2pmGbT4Xc8XMJ" crossorigin="anonymous"></script>
-
             // alpine js
             <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script> // drag and drop
             <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script> // intersection observer
@@ -73,6 +72,7 @@ templ Header(model pageModel) {
                     </div>
                     <div class="d-flex justify-content-between flex-row-reverse flex-lg-row py-2 py-lg-0">
                         @profileBtn(model, model.text)
+                        @userGuide(model.text, model.lang)
                         switch model.lang {
                             case language.CS:
                                 @langBtn(language.EN)
@@ -112,6 +112,79 @@ templ navItemView(nav NavItem, model pageModel) {
         hx-indicator={ nav.Indicator }>
         { nav.Title.String(model.lang) }
     </a>
+}
+
+templ profileBtn(model pageModel, t text) {
+    @profileBtnForMobiles(model, t)
+    @profileBtnForDesktop(model, t)
+}
+
+templ userGuide(t text, lang language.Language) {
+     <a
+        class="btn btn-outline-secondary border-0 d-none d-lg-inline"
+        href={ templ.SafeURL(lang.LocalizeURL("/help/cs.html")) }
+        target="_blank"
+        hx-boost="false">
+        // <i class="bi bi-lightbulb"></i>
+        <i class="bi bi-book"></i>
+    </a>
+}
+
+templ langBtn(l language.Language) {
+    <button
+        class="btn btn-outline-secondary border-0"
+        x-data @click={ fmt.Sprintf("changeLanguage('%s')", string(l)) }>
+        { string(l) }
+    </button>
+}
+
+templ profileBtnForMobiles(model pageModel, t text) {
+    <div class="d-lg-none">
+        <div class="d-flex justify-content-end">
+            <button
+                type="button"
+                class="btn btn-outline-secondary bi bi-person-circle border-0"
+                data-bs-toggle="collapse" data-bs-target="#userCollapse" aria-expanded="false">
+            </button>
+        </div>
+        <div class="collapse" id="userCollapse">
+            <ul class="list-unstyled ps-3">
+                @userID(model.userID)
+                <hr>
+                @logout(model.text, model.lang)
+            </ul>
+        </div>
+    </div>
+
+}
+
+templ profileBtnForDesktop(model pageModel, t text) {
+    <li class="dropdown d-none d-lg-block">
+        <button
+            type="button"
+            class="btn btn-outline-secondary bi bi-person-circle border-0"
+            data-bs-toggle="dropdown" aria-expanded="false">
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            @userID(model.userID)
+            <li><hr class="dropdown-divider"></li>
+            @logout(model.text, model.lang)
+        </ul>
+    </li>
+}
+
+templ userID(userID string) {
+    <li>
+        <span class="dropdown-item disabled text-center">{ userID }</span>
+    </li>
+}
+
+templ logout(t text, lang language.Language) {
+    <li>
+        <form hx-boost="false" method="POST" action={ templ.SafeURL(lang.LocalizeURL("/logout")) }>
+            <button type="submit" class="dropdown-item text-center"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
+        </form>
+    </li>
 }
 
 templ SearchBar(model pageModel) {
@@ -209,68 +282,6 @@ templ quickResults() {
     <div id="quick-search-results">
         { children... }
     </div>
-}
-
-templ langBtn(l language.Language) {
-    <button
-        class="btn btn-outline-secondary align-self-start border-0"
-        x-data @click={ "changeLanguage('" + string(l) + "')" }>
-        { string(l) }
-    </button>
-}
-
-templ profileBtn(model pageModel, t text) {
-    @profileBtnForMobiles(model, t)
-    @profileBtnForDesktop(model, t)
-}
-
-templ profileBtnForMobiles(model pageModel, t text) {
-    <div class="d-lg-none">
-        <div class="d-flex justify-content-end">
-            <button
-                type="button"
-                class="btn btn-outline-secondary bi bi-person-circle border-0"
-                data-bs-toggle="collapse" data-bs-target="#userCollapse" aria-expanded="false">
-            </button>
-        </div>
-        <div class="collapse" id="userCollapse">
-            <ul class="list-unstyled ps-3">
-                @userID(model.userID)
-                <hr>
-                @logout(model.text, model.lang)
-            </ul>
-        </div>
-    </div>
-
-}
-
-templ profileBtnForDesktop(model pageModel, t text) {
-    <li class="dropdown d-none d-lg-block">
-        <button
-            type="button"
-            class="btn btn-outline-secondary bi bi-person-circle border-0"
-            data-bs-toggle="dropdown" aria-expanded="false">
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            @userID(model.userID)
-            <li><hr class="dropdown-divider"></li>
-            @logout(model.text, model.lang)
-        </ul>
-    </li>
-}
-
-templ userID(userID string) {
-    <li>
-        <span class="dropdown-item disabled text-center">{ userID }</span>
-    </li>
-}
-
-templ logout(t text, lang language.Language) {
-    <li>
-        <form hx-boost="false" method="POST" action={ templ.SafeURL(lang.LocalizeURL("/logout")) }>
-            <button type="submit" class="dropdown-item text-center"><i class="bi bi-box-arrow-right"></i> { t.logout }</button>
-        </form>
-    </li>
 }
 
 templ Footer(model pageModel) {

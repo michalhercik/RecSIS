@@ -37,7 +37,7 @@ templ checkedCoursesMenu(yearCount int, t text) {
                 data-bs-delay={ ttDelay }
                 data-bs-title={ t.ttUncheckAll }>
             </button>
-            @unassignCoursesButton(t.ttUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(0), vPos()), "input[type=checkbox]:checked", true, t)
+            @unassignCoursesButton(t.ttUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(int(assignmentNone)), vPos()), "input[type=checkbox]:checked", true, t)
             @assignCoursesButton(yearCount, t)
             @removeCoursesButton(t.ttRemoveChecked, mergeVals(vType(selectedRemove)), "input[type=checkbox]:checked", true, t)
         </div>
@@ -88,7 +88,7 @@ templ unassignHeadline(folded bool, t text) {
             <th class="d-none d-xl-table-cell">{ t.guarantors }</th>
         }
         <th class="d-none d-md-table-cell text-end align-middle py-0 lh-1">
-            @removeCoursesButton(t.ttRemoveUnassigned, mergeVals(vType(yearRemove), vYear(0)), "", false, t)
+            @removeCoursesButton(t.ttRemoveUnassigned, mergeVals(vType(semesterRemove), vYear(0), vSem(int(assignmentNone))), "", false, t)
         </th>
     </tr></thead>
 }
@@ -509,7 +509,7 @@ templ removeCourseButton(id int, t text) {
 }
 
 templ unassignCourseButton(id int, t text) {
-    @adjustCoursesButton("bi-dash-circle", "hover && !isSorting", t.ttUnassign, mergeVals(vYear(0), vSem(0), vPos()), "", false, templ.Attributes{"hx-patch": t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id))})
+    @adjustCoursesButton("bi-dash-circle", "hover && !isSorting", t.ttUnassign, mergeVals(vYear(0), vSem(int(assignmentNone)), vPos()), "", false, templ.Attributes{"hx-patch": t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id))})
 }
 
 templ removeCoursesButton(tooltip, vals, include string, big bool, t text) {

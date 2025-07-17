@@ -18,13 +18,11 @@ const (
 )
 
 const (
-	yearUnassign     string = "year-unassign"
 	semesterUnassign string = "semester-unassign"
 	selectedMove     string = "selected-move"
 )
 
 const (
-	yearRemove     string = "year-remove"
 	semesterRemove string = "semester-remove"
 	selectedRemove string = "selected-remove"
 )
