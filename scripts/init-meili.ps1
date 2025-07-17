@@ -1,27 +1,3 @@
-# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents" `
-#     -Method Delete `
-#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" }
-# echo "$($response.StatusCode) $($response.Content)"
-
-# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/documents" `
-#     -Method Delete `
-#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" }
-# echo "$($response.StatusCode) $($response.Content)"
-
-# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settings/pagination" `
-#     -Method Patch `
-#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
-#     -ContentType "application/json" `
-#     -Body (@{"maxTotalHits" = 1000} | ConvertTo-Json)
-# echo "$($response.StatusCode) $($response.Content)"
-
-# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/documents?primaryKey=id" `
-#     -Method Post `
-#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
-#     -ContentType "application/x-ndjson" `
-#     -InFile "$PSScriptRoot/../init_search/courses.json"
-# echo "$($response.StatusCode) $($response.Content)"
-
 $filterable = @(
     "start_semester",
     "semester_count",
@@ -72,13 +48,6 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settin
     -Body ($dict | ConvertTo-Json)
 echo "$($response.StatusCode) $($response.Content)"
 
-# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/documents?primaryKey=id" `
-#     -Method Post `
-#     -Headers @{ "Authorization" = "Bearer MASTER_KEY" } `
-#     -ContentType "application/x-ndjson" `
-#     -InFile "$PSScriptRoot/../init_search/comments.json"
-# echo "$($response.StatusCode) $($response.Content)"
-
 $filterable = @(
     "teacher.id",
     "study_field.id",
@@ -86,8 +55,6 @@ $filterable = @(
     "study_year",
     "course_code",
     "study_type.id",
-    # "study_type.name_cs",
-    # "study_type.name_en",
     "target_type"
 )
 $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/settings/filterable-attributes" `

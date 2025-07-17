@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/BurntSushi/toml"
 	"github.com/jmoiron/sqlx"
@@ -38,8 +39,9 @@ func main() {
 	// Database setup
 	//////////////////////////////////////////
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		conf.Postgres.Host, conf.Postgres.Port, conf.Postgres.User, conf.Postgres.Password, conf.Postgres.DBName)
+	pass := os.Getenv("RECSIS_RECOMMENDER_DB_PASS")
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s search_path=%s sslmode=disable",
+		conf.Postgres.Host, conf.Postgres.Port, conf.Postgres.User, pass, conf.Postgres.DBName, conf.Postgres.Schema)
 	db, err = sqlx.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
@@ -72,11 +74,11 @@ func main() {
 
 type config struct {
 	Postgres struct {
-		Host     string `toml:"host"`
-		Port     int    `toml:"port"`
-		User     string `toml:"user"`
-		Password string `toml:"password"`
-		DBName   string `toml:"dbname"`
+		Host   string `toml:"host"`
+		Port   int    `toml:"port"`
+		User   string `toml:"user"`
+		DBName string `toml:"dbname"`
+		Schema string `toml:"schema"`
 	} `toml:"postgres"`
 }
 

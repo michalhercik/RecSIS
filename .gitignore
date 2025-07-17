@@ -4,4 +4,4 @@ meili_data
 *.exe
 src/recsis
 *.env
-src/config.prod.toml
+webapp/config.prod.toml

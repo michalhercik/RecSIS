@@ -9,12 +9,10 @@ port = 8000
 host     = "localhost"
 port     = 5432
 user     = "webapp"
-password = "webapp"
 dbname   = "recsis"
 
 [meilisearch]
 host = "http://localhost:7700"
-key  = "MASTER_KEY"
 
 [recommender]
 host = "localhost"

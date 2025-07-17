@@ -110,8 +110,9 @@ func setupHandler(conf config) http.Handler {
 }
 
 func setupDB(conf config) *sqlx.DB {
+	pass := os.Getenv("RECSIS_WEBAPP_DB_PASS")
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		conf.Postgres.Host, conf.Postgres.Port, conf.Postgres.User, conf.Postgres.Password, conf.Postgres.DBName)
+		conf.Postgres.Host, conf.Postgres.Port, conf.Postgres.User, pass, conf.Postgres.DBName)
 	db, err := sqlx.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
@@ -123,7 +124,8 @@ func setupDB(conf config) *sqlx.DB {
 }
 
 func meiliServiceManager(conf config) meilisearch.ServiceManager {
-	ms := meilisearch.New(conf.MeiliSearch.Host, meilisearch.WithAPIKey(conf.MeiliSearch.Key))
+	key := os.Getenv("MEILI_MASTER_KEY")
+	ms := meilisearch.New(conf.MeiliSearch.Host, meilisearch.WithAPIKey(key))
 	if !ms.IsHealthy() {
 		log.Fatalf("MeiliSearch connection failed")
 	}
@@ -334,11 +336,10 @@ type config struct {
 		} `toml:"https"`
 	} `toml:"server"`
 	Postgres struct {
-		Host     string `toml:"host"`
-		Port     int    `toml:"port"`
-		User     string `toml:"user"`
-		Password string `toml:"password"`
-		DBName   string `toml:"dbname"`
+		Host   string `toml:"host"`
+		Port   int    `toml:"port"`
+		User   string `toml:"user"`
+		DBName string `toml:"dbname"`
 	} `toml:"postgres"`
 	MeiliSearch struct {
 		Host string `toml:"host"`

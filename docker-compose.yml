@@ -14,16 +14,15 @@ services:
         restart: true
     environment:
       - ACHERON_USER=${ACHERON_USER:-}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-      - RECSIS_USER=${RECSIS_USER}
-      - RECSIS_PASS=${RECSIS_PASS}
+      - SIS_DB_USER=${SIS_DB_USER}
+      - SIS_DB_PASS=${SIS_DB_PASS}
+      - RECSIS_ELT_DB_PASS=${RECSIS_ELT_DB_PASS}
       - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
     networks:
       - recsis-network
     volumes:
       - ~/.ssh/id_rsa:/root/.ssh/id_rsa
-  recsis:
+  webapp:
     container_name: recsis-webapp
     build:
       dockerfile: Dockerfile
@@ -39,7 +38,9 @@ services:
         condition: service_completed_successfully
     ports:
       - 443:8000
-      - 80:80
+    environment:
+      - RECSIS_WEBAPP_DB_PASS=${RECSIS_WEBAPP_DB_PASS}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
     networks:
       - recsis-network
     volumes:
@@ -48,10 +49,10 @@ services:
     container_name: recsis-postgres
     image: postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      ELT_PASS: ${ELT_PASS}
-      WEBAPP_PASS: ${WEBAPP_PASS}
+      RECSIS_ELT_DB_PASS: ${RECSIS_ELT_DB_PASS}
+      RECSIS_WEBAPP_DB_PASS: ${RECSIS_WEBAPP_DB_PASS}
+      RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
       PGDATA: /data/postgres
     volumes:
        - ./init_db:/docker-entrypoint-initdb.d
@@ -80,7 +81,7 @@ services:
       - recsis-network
   meilisearch:
     container_name: recsis-meilisearch
-    image: getmeili/meilisearch
+    image: getmeili/meilisearch:v1.12
     environment:
       MEILI_MASTER_KEY: MASTER_KEY
       MEILI_HTTP_PAYLOAD_SIZE_LIMIT: "200MB"
@@ -105,6 +106,8 @@ services:
       postgres:
         condition: service_healthy
         restart: true
+    environment:
+      RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
     ports:
       - 8002:8002
     networks:
