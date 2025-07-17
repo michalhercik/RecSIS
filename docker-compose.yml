@@ -109,6 +109,20 @@ services:
       - 8002:8002
     networks:
       - recsis-network
+  mockcas:
+    container_name: recsis-mock-cas
+    build:
+      dockerfile: Dockerfile
+      context: ./mock_cas/
+      target: dev-stage
+    volumes:
+    - ./cert/:/app/cert/
+    ports:
+      - 8001:8001
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - recsis-network
 
 networks:
   recsis-network:
