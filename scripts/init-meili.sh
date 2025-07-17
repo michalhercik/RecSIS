@@ -1,22 +1,8 @@
 #!/bin/bash
 
 # Set the MeiliSearch API key
-API_KEY="MASTER_KEY"
+API_KEY=$MEILI_MASTER_KEY
 BASE_URL="http://localhost:7700"
-
-# Delete all documents from the "courses" index
-# response=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
-#   -H "Authorization: Bearer $API_KEY" \
-#   "$BASE_URL/indexes/courses/documents")
-# echo "DELETE documents: $response"
-
-# Add documents to the "courses" index
-# response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-#   -H "Authorization: Bearer $API_KEY" \
-#   -H "Content-Type: application/x-ndjson" \
-#   --data-binary @"$(dirname "$0")/../init_search/courses.json" \
-#   "$BASE_URL/indexes/courses/documents?primaryKey=id")
-# echo "POST documents: $response"
 
 # Set filterable attributes
 filterable='[
@@ -75,13 +61,6 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -d "$dict" \
   "$BASE_URL/indexes/courses/settings/dictionary")
 echo "PUT dictionary: $response"
-
-# response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-#   -H "Authorization: Bearer $API_KEY" \
-#   -H "Content-Type: application/x-ndjson" \
-#   --data-binary @"$(dirname "$0")/../init_search/comments.json" \
-#   "$BASE_URL/indexes/courses-comments/documents?primaryKey=id")
-# echo "POST documents: $response"
 
 filterable='[
     "teacher.id",
