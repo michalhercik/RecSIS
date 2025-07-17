@@ -285,6 +285,7 @@ func unprotectedHandler(prev http.Handler, static http.Handler) http.Handler {
 	unprotectedRouter.Handle("/", prev)
 	unprotectedRouter.Handle("GET /favicon.ico", static)
 	unprotectedRouter.Handle("GET /logo.svg", static)
+	unprotectedRouter.Handle("GET /help/", static)
 
 	var unprotectedHandler http.Handler
 	unprotectedHandler = unprotectedRouter

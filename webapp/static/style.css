@@ -143,25 +143,25 @@ tr:target td {
 
 /* NAV -> background color */
 .bg-navbar {
-    background-color: rgb(233, 244, 222)!important;
+    background-color: rgb(233, 244, 222) !important;
 }
 
 /* NAV -> search bar styles */
 #search-bar-container {
     width: 500px;
     top: 7px;
-    right: 106px;
+    right: 146px;
 }
 
 @media (max-width: 1399.5px) {
     #search-bar-container {
-        width: 430px;
+        width: 390px;
     }
 }
 
 @media (max-width: 1199.5px) {
     #search-bar-container {
-        width: 320px;
+        width: 280px;
     }
 }
 

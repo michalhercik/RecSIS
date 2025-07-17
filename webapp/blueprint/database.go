@@ -167,7 +167,7 @@ func intoTeacherSlice(from []dbds.Teacher) []teacher {
 }
 
 func (m DBManager) moveCourses(userID string, lang language.Language, year int, semester semesterAssignment, position int, courses ...int) error {
-	_, err := m.DB.Exec(sqlquery.MoveCourses, userID, pq.Array(courses), year, int(semester), position)
+	res, err := m.DB.Exec(sqlquery.MoveCourses, userID, pq.Array(courses), year, int(semester), position)
 	if err != nil {
 		// Handle unique violation for blueprint_semester_id, course_code
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
@@ -187,11 +187,19 @@ func (m DBManager) moveCourses(userID string, lang language.Language, year int, 
 			texts[lang].errCannotMoveCourses,
 		)
 	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("position", position), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			http.StatusBadRequest,
+			texts[lang].errCannotMoveCourses,
+		)
+	}
 	return nil
 }
 
 func (m DBManager) appendCourses(userID string, lang language.Language, year int, semester semesterAssignment, courses ...int) error {
-	_, err := m.DB.Exec(sqlquery.AppendCourses, userID, year, int(semester), pq.Array(courses))
+	res, err := m.DB.Exec(sqlquery.AppendCourses, userID, year, int(semester), pq.Array(courses))
 	if err != nil {
 		// Handle unique violation for blueprint_semester_id, course_code
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
@@ -211,31 +219,19 @@ func (m DBManager) appendCourses(userID string, lang language.Language, year int
 			texts[lang].errCannotAppendCourses,
 		)
 	}
-	return nil
-}
-
-func (m DBManager) unassignYear(userID string, lang language.Language, year int) error {
-	_, err := m.DB.Exec(sqlquery.UnassignYear, userID, year)
-	if err != nil {
-		// Handle unique violation for blueprint_semester_id, course_code
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
-			return errorx.NewHTTPErr(
-				errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
-				http.StatusConflict,
-				texts[lang].errDuplicateCoursesInBPUnassigned,
-			)
-		}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected == 0 {
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.UnassignYear: %w", err), errorx.P("year", year)),
-			http.StatusInternalServerError,
-			texts[lang].errCannotUnassignYear,
+			errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			http.StatusBadRequest,
+			texts[lang].errCannotAppendCourses,
 		)
 	}
 	return nil
 }
 
 func (m DBManager) unassignSemester(userID string, lang language.Language, year int, semester semesterAssignment) error {
-	_, err := m.DB.Exec(sqlquery.UnassignSemester, userID, year, int(semester))
+	res, err := m.DB.Exec(sqlquery.UnassignCoursesBySemester, userID, year, int(semester))
 	if err != nil {
 		// Handle unique violation for blueprint_semester_id, course_code
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == uniqueViolationCode && pqErr.Constraint == duplicateCoursesViolation {
@@ -251,11 +247,19 @@ func (m DBManager) unassignSemester(userID string, lang language.Language, year 
 			texts[lang].errCannotUnassignSemester,
 		)
 	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.UnassignSemester: %w", err), errorx.P("year", year), errorx.P("semester", semester)),
+			http.StatusBadRequest,
+			texts[lang].errCannotUnassignSemester,
+		)
+	}
 	return nil
 }
 
 func (m DBManager) removeCourses(userID string, lang language.Language, courses ...int) error {
-	_, err := m.DB.Exec(sqlquery.RemoveCoursesByID, userID, pq.Array(courses))
+	res, err := m.DB.Exec(sqlquery.RemoveCoursesByID, userID, pq.Array(courses))
 	if err != nil {
 		return errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesByID: %w", err), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
@@ -263,11 +267,19 @@ func (m DBManager) removeCourses(userID string, lang language.Language, courses 
 			texts[lang].errCannotRemoveCourses,
 		)
 	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesByID: %w", err), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			http.StatusBadRequest,
+			texts[lang].errCannotRemoveCourses,
+		)
+	}
 	return nil
 }
 
 func (m DBManager) removeCoursesBySemester(userID string, lang language.Language, year int, semester semesterAssignment) error {
-	_, err := m.DB.Exec(sqlquery.RemoveCoursesBySemester, userID, year, int(semester))
+	res, err := m.DB.Exec(sqlquery.RemoveCoursesBySemester, userID, year, int(semester))
 	if err != nil {
 		return errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesBySemester: %w", err), errorx.P("year", year), errorx.P("semester", semester)),
@@ -275,15 +287,11 @@ func (m DBManager) removeCoursesBySemester(userID string, lang language.Language
 			texts[lang].errCannotRemoveCourses,
 		)
 	}
-	return nil
-}
-
-func (m DBManager) removeCoursesByYear(userID string, lang language.Language, year int) error {
-	_, err := m.DB.Exec(sqlquery.RemoveCoursesByYear, userID, year)
-	if err != nil {
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected == 0 {
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesByYear: %w", err), errorx.P("year", year)),
-			http.StatusInternalServerError,
+			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesBySemester: %w", err), errorx.P("year", year), errorx.P("semester", semester)),
+			http.StatusBadRequest,
 			texts[lang].errCannotRemoveCourses,
 		)
 	}
