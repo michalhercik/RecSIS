@@ -33,21 +33,29 @@ decided to go with younger Meilisearch because it looked more shiny.
 
 ### ELT
 
-Even though implementation of ELT is pretty straightforward and if you are
-interested you should read the source code, it is worth mentioning the magic
-happining inside the container. ELT is reponsible for extracting, transforming
-and loading neccessary data from SIS database into RecSIS database. The catch is
-that SIS database is not accessible from outside networks. The container simply
-forwards all traffic to a server on which is RecSIS hosted. Which means that to
-run ELT you need to have access to server on which RecSIS is hosted. This should
-answer possible questions in the future about why ELT needs this or that to
-properly execute.
+It's worth mentioning that to access SIS DB you need to be inside MFF network.
+Therfore inside the container is setuped SSH tunnel to Acheron. This is also why
+you need access to Acheron server to run ELT.
 
-### Adminer
+### List of technologies
 
-Last Docker container not mentioned is [Adminer](https://www.adminer.org/).
-Adminer is a lightweight database management tool which helps to investigate
-postgres through simple web interface when developing.
+ - [Go](https://go.dev/) - The main language of the entire RecSIS. Should be a
+ preferable choice for any implementation.
+ - [HTMX](https://htmx.org/) - The core of HTMX is a set of attributes that
+ allow you to issue AJAX requests directly from HTML. Brings SPA like experience
+ to the SSR web apps.
+ - [Templ](https://templ.guide/) - Compiler for HTML templates to minimize run
+ time errors. Because the tooling is not the best we sometimes asking ourselfs
+ if it was a wise choice.
+ - [Bootstrap](https://getbootstrap.com/) - Simple way to style web apps.
+ - [PostgreSQL](https://postgresql.org/) - Relational database of our choice
+ with rich support for binary JSON format.
+ - [Meilisearch](https://meilisearch.com/) - Simple and powerful search engine.
+ - [Docker](https://docker.com/) - To simplify development and deployment in
+ production. In development using Docker not always simplifies things so we
+ thinks it is ok to not use it but in production it is a must.
+ - [Adminer](https://adminer.org/) - Web based DB client deployed as a
+ container.
 
 ## How to run RecSIS
 

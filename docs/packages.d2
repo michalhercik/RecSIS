@@ -50,7 +50,7 @@ middleware: {
       isn't present in URL than uses default. Language package also defines language constants used  
       across the application.
     | {
-        class: description
+      class: description
     }
   }
   cas: {
@@ -59,7 +59,7 @@ middleware: {
       Authenticates user using session key and sets user ID to request context.  If session key  
       not present or authentication failes than redirects to log in page.
     | {
-        class: description
+      class: description
     }
   }
 }
@@ -130,58 +130,58 @@ pages: {
 
 dbds: {
   class: package-row
-    description: |md
-        Provides structures that maps to database tables. The mapping is not necessary one to one, it can be  
-        used to combine multiple tables into one structure or to split one table into multiple structures.  
-        The main idea is to have only one exisitng mapping of column to structure field so that when any change  
-        to the name happens it can be easily resolved. This package should be used whenever data are fetched  
-        from a database. The only reason allowed to not used this package for mapping is when the query  
-        defines new column - for example some kind of aggregation. After data are fetched from the database  
-        into dbds structures they should be remapped to local structures to depend on common structures  
-        as little as possible so that any change to dbds package can be easily resolved.
-    | {
+  description: |md
+    Provides structures that maps to database tables. The mapping is not necessary one to one, it can be  
+    used to combine multiple tables into one structure or to split one table into multiple structures.  
+    The main idea is to have only one exisitng mapping of column to structure field so that when any change  
+    to the name happens it can be easily resolved. This package should be used whenever data are fetched  
+    from a database. The only reason allowed to not used this package for mapping is when the query  
+    defines new column - for example some kind of aggregation. After data are fetched from the database  
+    into dbds structures they should be remapped to local structures to depend on common structures  
+    as little as possible so that any change to dbds package can be easily resolved.
+  | {
     class: description
   }
 }
 errorx: {
   class: package-row
-    description: |md
-        Whenever an error occurs in the application it should be handled by errorx package. It provides a way  
-        to set context of an error such as function name and its parameters. It is also responsible for  
-        presenting the error to a user.
-    | {
+  description: |md
+    Whenever an error occurs in the application it should be handled by errorx package. It provides a way  
+    to set context of an error such as function name and its parameters. It is also responsible for  
+    presenting the error to a user.
+  | {
     class: description
   }
 }
 filters: {
   class: package-row
-    description: |md
-        Parse filters for search from user request and convert them into filter query for search engine. To be  
-        able to parse user request the package needs to be used also for generating the filtering options so  
-        that they use proper IDs. 
-    | {
+  description: |md
+    Parse filters for search from user request and convert them into filter query for search engine. To be  
+    able to parse user request the package needs to be used also for generating the filtering options so  
+    that they use proper IDs. 
+  | {
     class: description
   }
 }
 bpbtn: {
   class: package-row
-    description: |md
-        Adding course to blueprint is done on many pages. To avoid code duplication this package provides  
-        a view component as well as logic which can be triggered to add course or courses to a blueprint.
-    | {
+  description: |md
+    Adding course to blueprint is done on many pages. To avoid code duplication this package provides  
+    a view component as well as logic which can be triggered to add course or courses to a blueprint.
+  | {
     class: description
   }
 }
 stringsx: {
   class: package-row
-    description: |md
-        defines additional operations on strings such as capitalization.
-    | {
+  description: |md
+    defines additional operations on strings such as capitalization.
+  | {
     class: description
   }
 }
 
-legend: ""{
+legend: "" {
   grid-columns: 8
   grid-rows: 1
   grid-gap: 10
@@ -212,4 +212,3 @@ legend: ""{
     label: Packages inner concept
   }
 }
-
