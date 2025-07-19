@@ -29,7 +29,7 @@ classes: {
     grid-gap: 15
   }
   description: {
-    style.font-size: 20
+    style.font-size: 19
   }
 }
 
@@ -46,8 +46,9 @@ middleware: {
   language: {
     class: package-row
     description: |md
-      Determines language of request from URL and sets it to request context. If language definition isn't present in URL than  
-      uses default. Language package also defines language constants used across the application.
+      Determines language of request from URL and sets it to request context. If language definition  
+      isn't present in URL than uses default. Language package also defines language constants used  
+      across the application.
     | {
         class: description
     }
@@ -55,8 +56,8 @@ middleware: {
   cas: {
     class: package-row
     description: |md
-      Authenticates user using session key and sets user ID to request context.  If session key not present or authentication  
-      failes than redirects to log in page.
+      Authenticates user using session key and sets user ID to request context.  If session key  
+      not present or authentication failes than redirects to log in page.
     | {
         class: description
     }
@@ -67,11 +68,12 @@ pages: {
   grid-rows: 2
   grid-gap: 20
   description: |md
-    Serves content to a user. Should be as standalone as possible. Meaning if you would like to make each page a standalone service  
-    it should be possible to do it with little to no change. After collecting data passed by middlewares each request handler retrieves  
-    resources using database or search. Result is then presented to a user via view. Page page is little bit different  its main purpose  
-    is to be used as a template with nav bar for other pages but since the navbar contains search bar it also  handles live search  
-    requests from that search bar.
+    Serves content to a user. Should be as standalone as possible. Meaning if you would like to make each page  
+    a standalone service it should be possible to do it with little to no change. After collecting data passed  
+    by middlewares each request handler retrieves resources using database or search. Result is then presented  
+    to a user via view. Page page is little bit different its main purpose is to be used as a template with nav bar  
+    for other pages but since the navbar contains search bar it also handles live search requests from that search  
+    bar.
   | {
     class: description
   }
@@ -129,13 +131,14 @@ pages: {
 dbds: {
   class: package-row
     description: |md
-        Provides structures that maps to database tables. The mapping is not necessary one to one, it can be used to combine  
-        multiple tables into one structure or to split one table into multiple structures. The main idea is to have only one  
-        exisitng mapping of column to structure field so that when any change to the name happens it can be easily resolved.  
-        This package should be used whenever data are fetched from a database. The only reason allowed to not used this  
-        package for mapping is when the query defines new column - for example some kind of aggregation. After data are  
-        fetched from the database into dbds structures they should be remapped to local structures to depend on common  
-        structures as little as possible so that any change to dbds package can be easily resolved.
+        Provides structures that maps to database tables. The mapping is not necessary one to one, it can be  
+        used to combine multiple tables into one structure or to split one table into multiple structures.  
+        The main idea is to have only one exisitng mapping of column to structure field so that when any change  
+        to the name happens it can be easily resolved. This package should be used whenever data are fetched  
+        from a database. The only reason allowed to not used this package for mapping is when the query  
+        defines new column - for example some kind of aggregation. After data are fetched from the database  
+        into dbds structures they should be remapped to local structures to depend on common structures  
+        as little as possible so that any change to dbds package can be easily resolved.
     | {
     class: description
   }
@@ -143,8 +146,9 @@ dbds: {
 errorx: {
   class: package-row
     description: |md
-        Whenever an error occurs in the application it should be handled by errorx package. It provides a way to set context of  
-        an error such as function name and its parameters. It is also responsible for presenting the error to a user.
+        Whenever an error occurs in the application it should be handled by errorx package. It provides a way  
+        to set context of an error such as function name and its parameters. It is also responsible for  
+        presenting the error to a user.
     | {
     class: description
   }
@@ -152,8 +156,9 @@ errorx: {
 filters: {
   class: package-row
     description: |md
-        Parse filters for search from user request and convert them into filter query for search engine. To be able to parse user  
-        request the package needs to be used also for generating the filtering options so that they use proper IDs. 
+        Parse filters for search from user request and convert them into filter query for search engine. To be  
+        able to parse user request the package needs to be used also for generating the filtering options so  
+        that they use proper IDs. 
     | {
     class: description
   }
@@ -161,8 +166,8 @@ filters: {
 bpbtn: {
   class: package-row
     description: |md
-        Adding course to blueprint is done on many pages. To avoid code duplication this package provides a view component  
-        as well as logic which can be triggered to add course or courses to a blueprint.
+        Adding course to blueprint is done on many pages. To avoid code duplication this package provides  
+        a view component as well as logic which can be triggered to add course or courses to a blueprint.
     | {
     class: description
   }

@@ -3,7 +3,7 @@
 Before diving into the concrete steps of building and running RecSIS, it would
 be beneficial to understand overall structure of the project. If you feel like
 ignoring it for now, feel free to skip it and jump right into
-[Setup](#setup).
+[Setup](#how-to-run-recsis).
 
 ## Introduction
 
@@ -205,11 +205,11 @@ codebase and purpose of each package.
 
 ![Package diagram](packages.svg)
 
-Other services are much simpler and you should be able to understand them pretty
-quickly just by reading the code if needed. Before diving into implementing new
-features you should get even deeper understanding by reading at least some of
-the package implementations. We suggest you to start in the main file and then
-continue in any of the packages implementing page handlers (e.g. coursedetail,
-courses, ...).
+Other services are much simpler and if needed you should be able to understand
+them pretty quickly just by reading the code. Before diving into implementing
+new features you should get even deeper understanding by reading at least some
+of the package implementations. We suggest you to start in the main file and
+then continue in any of the packages implementing page handlers (e.g.
+coursedetail, courses, ...).
 
 Happy developing!
