@@ -14,3 +14,6 @@ ON
     webapp.filter_categories,
     webapp.filter_values
 TO elt;
+
+GRANT USAGE ON SCHEMA webapp TO recommender;
+GRANT SELECT ON ALL TABLES IN SCHEMA webapp TO recommender;

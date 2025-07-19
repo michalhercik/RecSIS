@@ -18,6 +18,7 @@ type config struct {
 		Host   string `toml:"host"`
 		Port   int    `toml:"port"`
 		DBName string `toml:"dbname"`
+		User   string `toml:"user"`
 	} `toml:"recsis"`
 	MeiliSearch struct {
 		Host string `toml:"host"`

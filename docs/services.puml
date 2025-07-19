@@ -1,0 +1,68 @@
+@startuml dev_services
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+
+!include <C4/C4_Container>
+!include DEVICONS/go.puml
+!include DEVICONS/python.puml
+!include DEVICONS/postgresql.puml
+
+title RecSIS development services overview
+
+!startsub STUDENT
+SHOW_PERSON_OUTLINE()
+!endsub
+
+Person(student, "Student")
+
+System_Boundary(rec_sis, "RecSIS") {
+    Container(webapp, "Webapp", "Go, Templ, HTMX, JS, Bootstrap", $sprite=go)
+    Container(elt, "ELT", "Go, Docker", $sprite=go)
+    Container(recommender, "Recommender", "Go, Docker", $sprite=go)
+    Container(cas, "Mock CAS", "Go", "Authentication service only for development purposes", $sprite=go)
+    !startsub POSTGRES
+    ContainerDb(postgres, "Postgres", "SQL, Docker", "Stores user and university data.", $sprite=postgresql)
+    !endsub
+    !startsub MEILISEARCH
+    ContainerDb(meilisearch, "Meilisearch", "Docker", "Search engine for courses, survey and degree plans.")
+    !endsub
+}
+
+ContainerDb_Ext(sis, "SIS", "Oracle, SQL", "Source of all university related data.")
+
+Rel(student, webapp, "Uses", "HTML/HTTPS")
+Rel(webapp, postgres, "Reads & Writes", "TCP/IP")
+Rel(webapp, meilisearch, "Searches", "JSON/HTTP")
+Rel_R(webapp, recommender, "Fetches", "JSON/HTTP")
+Rel_L(webapp, cas, "Authenticates", "JSON/HTTP")
+Rel(recommender, postgres, "Reads", "TCP/IP")
+Rel_D(elt, sis, "Extracts", "TCP/IP")
+Rel_U(elt, postgres, "Loads", "TCP/IP")
+Rel_U(elt, meilisearch, "Loads", "JSON/HTTP")
+
+@enduml
+
+@startuml webapp
+
+!include <C4/C4_Component>
+
+' !includesub services.puml!STUDENT
+' !includesub services.puml!POSTGRES
+' !includesub services.puml!MEILISEARCH
+
+Boundary(webapp, "webapp") {
+    Component(home, "home")
+    Component(coursedetail, "coursedetail")
+    Component(courses, "courses")
+    Component(blueprint, "blueprint")
+    Component(degreeplan, "degreeplan")
+    Component(cas, "cas")
+    Component(dbds, "dbds")
+    Component(errorx, "errorx")
+    Component(stringsx, "stringsx")
+    Component(filters, "filters")
+    Component(language, "language")
+    Component(bpbtn, "bpbtn")
+    Component(page, "page")
+}
+@enduml

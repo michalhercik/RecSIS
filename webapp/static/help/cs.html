@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+	<head>
+		<meta charset="utf-8"/>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="/style.css">
+		<title>Uživatelská příručka | RecSIS</title>
+		<script>
+			document.addEventListener('activate.bs.scrollspy', function () {
+			const activeLinks = document.querySelectorAll('.nav-link.active');
+			if (activeLinks.length > 0) {
+				const lastActive = activeLinks[activeLinks.length - 1];
+				lastActive.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+			}
+			});
+
+			document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+                    anchor.addEventListener('click', function (e) {
+                        const targetId = this.getAttribute('href').slice(1);
+                        const target = document.getElementById(targetId);
+                        if (target) {
+                            e.preventDefault();
+                            target.scrollIntoView({ behavior: 'smooth' });
+                            history.pushState(null, '', '#' + targetId);
+                        }
+                    });
+                });
+            });
+		</script>
+	</head>
+	<body class="pb-0">
+		<div class="container">
+			<div class="row">
+				<div class="col-3 py-3" style="height: 100vh; box-sizing: border-box;">
+					<nav id="navigation"
+						class="flex-column align-items-stretch pe-4 border-end"
+						style="height: 100%; max-height: 100%; overflow-y: auto;">
+						<nav class="nav nav-pills flex-column">
+							<a class="nav-link fw-bold mb-1" href="#intro">Úvod</a>
+							<nav class="nav nav-pills flex-column ms-3">
+								<a class="nav-link fw-semibold" href="#instructional-video">Instruktážní video</a>
+								<a class="nav-link fw-semibold" href="#nav-bar">Navigační lišta</a>
+							</nav>
+							<a class="nav-link fw-bold" href="#home-page">Stránka Domů</a>
+							<a class="nav-link fw-bold mb-1" href="#search-page">Stránka Hledání</a>
+							<nav class="nav nav-pills flex-column ms-3">
+								<a class="nav-link fw-semibold" href="#search-overview">Přehled</a>
+								<a class="nav-link fw-semibold mb-1" href="#search-usecases">Typické scénáře použití</a>
+								<nav class="nav nav-pills flex-column ms-3">
+									<a class="nav-link" href="#search-course-usecase">Vyhledávání předmětu</a>
+									<a class="nav-link" href="#filter-courses-usecase">Filtrování předmětů</a>
+								</nav>
+							</nav>
+							<a class="nav-link fw-bold mb-1" href="#detail-page">Stránka detailu předmětu</a>
+							<nav class="nav nav-pills flex-column ms-3">
+								<a class="nav-link fw-semibold mb-1" href="#detail-overview">Přehled</a>
+								<nav class="nav nav-pills flex-column ms-3">
+									<a class="nav-link" href="#detail-basics">Základní informace</a>
+									<a class="nav-link" href="#detail-rating-part">Hodnocení předmětu</a>
+									<a class="nav-link" href="#detail-decsription-survey-info">Popis, Anketa a Detailní informace</a>
+								</nav>
+								<a class="nav-link fw-semibold mb-1" href="#detail-usecases">Typické scénáře použití</a>
+								<nav class="nav nav-pills flex-column ms-3">
+									<a class="nav-link" href="#detail-show-detail">Zobrazení detailu předmětu</a>
+									<a class="nav-link" href="#detail-how-to-rate">Ohodnocení předmětu</a>
+									<a class="nav-link" href="#detail-survey-filter">Vyhledávání a filtrování v anketě</a>
+								</nav>
+							</nav>
+							<a class="nav-link fw-bold mb-1" href="#blueprint-page">Stránka Blueprint</a>
+							<nav class="nav nav-pills flex-column ms-3">
+								<a class="nav-link fw-semibold" href="#blueprint-overview">Přehled</a>
+								<a class="nav-link fw-semibold mb-1" href="#blueprint-usecases">Typické scénáře použití</a>
+								<nav class="nav nav-pills flex-column ms-3">
+									<a class="nav-link" href="#blueprint-add-course">Přidávání předmětů do Blueprintu</a>
+									<a class="nav-link" href="#blueprint-remove-course">Mazání předmětů v Blueprintu</a>
+									<a class="nav-link" href="#blueprint-move-course">Přemisťování předmětů v Blueprintu</a>
+									<a class="nav-link" href="#blueprint-change-num-years">Změna počtu ročníků</a>
+								</nav>
+							</nav>
+							<a class="nav-link fw-bold mb-1" href="#degreeplan-page">Stránka Studijní plán</a>
+							<nav class="nav nav-pills flex-column ms-3">
+								<a class="nav-link fw-semibold" href="#degreeplan-overview">Přehled</a>
+								<a class="nav-link fw-semibold mb-1" href="#degreeplan-usecases">Typické scénáře použití</a>
+								<nav class="nav nav-pills flex-column ms-3">
+									<a class="nav-link" href="#degreeplan-check-progress">Kontrola plnění studijního plánu</a>
+									<a class="nav-link" href="#degreeplan-change-user-plan">Změna uživatelského studijního plánu</a>
+								</nav>
+							</nav>
+						</nav>
+					</nav>
+				</div>
+				<div class="col-9 text-justify">
+					<div class="position-relative overflow-y-auto px-4" style="height:100vh;"
+					data-bs-spy="scroll" data-bs-smooth-scroll="true" data-bs-target="#navigation" tabindex="0">
+						<div class="text-center my-3">
+							<h1>RecSIS - Uživatelská příručka</h1>
+							<p class="mb-0">8. července 2025</p>
+						</div>
+						<div id="intro">
+							<h1>Úvod</h1>
+							<p>
+								RecSIS je webová aplikace nabízející plánování studia studentům Matematicko-fyzikální fakulty Univerzity Karlovy. Uživatel si může vyhledávat a filtrovat předměty, zobrazovat si detail předmětu s popisem, hodnocením a anketou, vybrat si svůj studijní plán a kontrolovat jeho plnění a pomocí zmíněných možností si stavět svůj vlastní průchod celým studiem najednou.
+							</p>
+							<p>
+								Aplikace je dostupná v češtině a angličtině a nabízí rozhraní jak pro dotyková zařízení (mobilní telefon, tablet, ...), tak pro desktopová zařízení (notebook, stolní počítač, ...).
+							</p>
+							<p>
+								V tomto dokumentu jsou popsané jednotlivé části aplikace, se kterými může uživatel interagovat a jsou zde předvedeny typické scénáře použití. Tento dokument odpovídá primárně desktopové verzi stránek a je možné, že se zobrazení stránek a jejich obsahu na mobilních zařízeních bude lišit.
+							</p>
+							<div id="instructional-video">
+								<h2>Instruktážní video</h2>
+								<p>
+									Toto video je krátký a stručný tutoriál, jak aplikaci RecSIS používat. Jsou zde představeny klíčové koncepty, hlavní stránky a typický příklad používaní aplikace.
+								</p>
+								<div class="text-center mb-3">
+									<div>
+										<video width="60%" controls>
+											<source src="intro.mp4" type="video/mp4">
+											Váš prohlížeč nepodporuje HTML5 video.
+										</video>
+									</div>
+								</div>
+							</div>
+							<div id="nav-bar">
+								<h2>Navigační lišta</h2>
+								<p>
+									Navigační lišta (obr. <a href="#fig-navbar" data-reference-type="ref" data-reference="fig-navbar">1</a>) se nachází na horní straně obrazovky a je podbarvená světle zelenou barvou.
+								</p>
+								<figure id="fig-navbar" class="text-center">
+									<img src="img/navbar.png" style="width:90%"/>
+									<figcaption>Obr. 1: Navigační lišta</figcaption>
+								</figure>
+								<p>
+									V levé části lišty (obr. <a href="#fig-navbar-detail" data-reference-type="ref" data-reference="fig-navbar-detail">2</a> oblast A) se nachází logo s názvem aplikace a odkazy na jednotlivé stránky aplikace - zleva: <a href="#home-page">Domů</a>, <a href="#search-page">Hledání</a>, <a href="#blueprint-page">Blueprint</a> a <a href="#degreeplan-page">Studijní plán</a>. Krom těchto stránek nabízí aplikace i stránku <a href="#detail-page">detailu předmětu</a>. Jak se na ní dostat je popsáno v sekci <a href="#detail-show-detail">Zobrazení detailu předmětu</a>. Jednotlivé stánky jsou detailněji popsány dále. V pravé části lišty (obr. <a href="#fig-navbar-detail" data-reference-type="ref" data-reference="fig-navbar-detail">2</a> oblast B) se nachází vyhledávací pole. Toto pole slouží k vyhledávání předmětů. Více o vyhledávání předmětů naleznete v sekci <a href="#search-course-usecase">Vyhledávání předmětu</a>. Vpravo od vyhledávacího pole můžeme najít dvě tlačítka: tlačítko pro správu uživatelského profilu (obr. <a href="#fig-navbar-detail" data-reference-type="ref" data-reference="fig-navbar-detail">2</a>, C) a tlačítko na změnu jazyka (obr. <a href="#fig-navbar-detail" data-reference-type="ref" data-reference="fig-navbar-detail">2</a>, D).
+								</p>
+								<figure id="fig-navbar-detail" class="text-center">
+									<img src="img/navbar-detail.png" style="width:90%"/>
+									<figcaption>Obr. 2: Části navigační lišty</figcaption>
+								</figure>
+								<p>
+									Po stisknutí tlačítka pro správu uživatelského profilu se zobrazí nabídka (obr. <a href="#fig-user-account" data-reference-type="ref" data-reference="fig-user-account">3</a>), kde se nachází kód uživatele a pod ním tlačítko na odhlášení se z aplikace.
+								</p>
+								<figure id="fig-user-account" class="text-center">
+									<img src="img/user-account.png" style="width:20%"/>
+									<figcaption>Obr. 3: Možnosti uživatelského profilu</figcaption>
+								</figure>
+								<p>
+									Výchozí jazyk aplikace je čeština. Po stisknutí tlačítka pro změnu jazyka se jazyk nastaví na jazyk, který je napsaný na tlačítku, kde <code>en</code> odpovídá angličtině a <code>cs</code> odpovídá češtině.
+								</p>
+							</div>
+						</div>
+						<div id="home-page">
+							<h1>Stránka <em>Domů</em></h1>
+							<p>
+								Stránka <em>Domů</em> je výchozí stránkou aplikace. Nachází se na ní dvě významné části a to sekce s doporučenými předměty a sekce s nově upravenými předměty.
+							</p>
+							<p>
+								Sekce s doporučenými předměty (obr. <a href="#fig-home" data-reference-type="ref" data-reference="fig-home">4</a> oblast A) obsahuje náhodné předměty, specificky jejich název, počet kreditů, semestr kdy jsou vyučovány, rozsah přednášky a cvičení, typ examinace, název a garanty. V budoucnu se zde budou zobrazovat předměty doporučené přímo pro daného uživatele. Po kliknutí na název předmětu se zobrazí <a href="#detail-page">detail</a> daného předmětu. Vpravo a vlevo se nacházejí tlačítka (obr. <a href="#fig-home" data-reference-type="ref" data-reference="fig-home">4</a>, A1 a A2), pomocí kterých lze listovat doporučenými předměty.
+							</p>
+							<p>
+								Pod sekcí s doporučenými předměty se nachází sekce s nově upravenými předměty (obr. <a href="#fig-home" data-reference-type="ref" data-reference="fig-home">4</a> oblast B). Ta má identický vzhled jako předchozí sekce, jenom obsahuje předměty, které buď byly nově přidány nebo upraveny. Identicky nimi lze listovat pomocí tlačítek (obr. <a href="#fig-home" data-reference-type="ref" data-reference="fig-home">4</a>, B1 a B2).
+							</p>
+							<figure id="fig-home" class="text-center">
+								<img src="img/home.png" style="width:80%"/>
+								<figcaption>Obr. 4: Domovská stránka</figcaption>
+							</figure>
+						</div>
+						<div id="search-page">
+							<h1>Stránka <em>Hledání</em></h1>
+							<p>
+								Stránka <em>Hledání</em> primárně zobrazuje výsledky vyhledávání, které je prováděno pomocí vyhledávacího pole v navigační liště. Krom toho je možné předměty filtrovat pomocí filtrů.
+							</p>
+							<div id="search-overview">
+								<h2>Přehled</h2>
+								<p>
+									V levé části stránky se nachází sekce s filtry (obr. <a href="#fig-search" data-reference-type="ref" data-reference="fig-search">5</a> oblast A), kde uživatel může filtrovat pomocí kategorií. Každý filtr se skládá ze tří částí, zleva: zaškrtávací políčko, název filtru a počet výsledků, který daný filtr zobrazí, pokud se jedná o kategorie, která ještě nebyla filtrována, a nebo přidá, pokud se jedná o kategorii, kde již jsou nějaké filtry aktivní. Některé kategorie či filtry mají vpravo otazník v kruhu (obr. <a href="#fig-search" data-reference-type="ref" data-reference="fig-search">5</a>, A1), kde se při najetí zobrazí vysvětlení dané kategorie či filtru. Některé kategorie obsahují větší množství filtrů a proto je možné je rozbalit a sbalit pomocí tlačítka na konci kategorie (obr. <a href="#fig-search" data-reference-type="ref" data-reference="fig-search">5</a>, A2).
+								</p>
+								<p>
+									Většinu obrazovky pak zabírají výsledky vyhledávání a filtrování (obr. <a href="#fig-search" data-reference-type="ref" data-reference="fig-search">5</a> oblast B), které jsou ve formě karet s informacemi o předmětech, které odpovídají vstupu. Každá karta obsahuje hlavičku (obr. <a href="#fig-search" data-reference-type="ref" data-reference="fig-search">5</a>, B1), která obsahuje zleva: kód předmětu, semestr kdy je předmět vyučován, rozsah přednášky a cvičení, examinace a počet kreditů. Pod hlavičkou je tělo (obr. <a href="#fig-search" data-reference-type="ref" data-reference="fig-search">5</a>, B2), které obsahuje shora: název předmětu, garanty předmětu, anotaci předmětu, odznaky s informací zdali je daný předmět v studijním plánu (oranžová barva) a jestli je přiřazen v Blueprintu (modrá barva) a tlačítko na přiřazení předmětu do Blueprintu. Více o přiřazování předmětů do Blueprintu je napsáno v sekci <a href="#blueprint-add-course">Přidávání předmětů do Blueprintu</a>. Po kliknutí na název předmětu se zobrazí <a href="#detail-page">detail</a> daného předmětu. Po kliknutí na odznak se studijním plánem se uživateli zobrazí stránka studijního plánu a na ní zvýrazněný zvolený předmět. Identicky po kliknutí na odznak s Blueprintem se uživateli zobrazí stránka Blueprint a na ní zvýrazněný zvolený předmět.
+								</p>
+								<figure id="fig-search" class="text-center">
+									<img src="img/search.png" style="width:70%"/>
+									<figcaption>Obr. 5: Stránka hledání</figcaption>
+								</figure>
+								<p>
+									Na konci stránky se nachází možnost stránkování (obr. <a href="#fig-pagination" data-reference-type="ref" data-reference="fig-pagination">6</a>), kde si uživatel buď může nechat načíst další výsledky (obr. <a href="#fig-pagination" data-reference-type="ref" data-reference="fig-pagination">6</a>, A1), nebo listovat mezi stránkami s výsledky (obr. <a href="#fig-pagination" data-reference-type="ref" data-reference="fig-pagination">6</a>, A2).
+								</p>
+								<figure id="fig-pagination" class="text-center">
+									<img src="img/pagination.png" style="width:60%"/>
+									<figcaption>Obr. 6: Stránkování</figcaption>
+								</figure>
+							</div>
+							<div id="search-usecases">
+								<h2>Typické scénáře použití</h2>
+								<p>
+									Tato sekce představí typické scénáře použití stránky <em>Hledání</em>.
+								</p>
+								<div id="search-course-usecase">
+									<h3>Vyhledávání předmětu</h3>
+									<p>
+										K vyhledávání předmětů slouží vyhledávací pole v navigační liště (obr. <a href="#fig-search-bar" data-reference-type="ref" data-reference="fig-search-bar">7</a>). Jelikož je lišta pořád viditelná, lze vyhledávat z každé stránky.
+									</p>
+									<figure id="fig-search-bar" class="text-center">
+										<img src="img/search-bar.png" style="width:80%"/>
+										<figcaption>Obr. 7: Vyhledávací pole v navigační liště</figcaption>
+									</figure>
+									<p>
+										Pro vyhledávání specifického předmětu stačí do vyhledávacího pole napsat jeho kód nebo název (obr. <a href="#fig-searching" data-reference-type="ref" data-reference="fig-searching">8</a>). Pro hledání stačí stisknout klávesu <code>Enter</code> nebo tlačítko <code>Hledej</code> (obr. <a href="#fig-searching" data-reference-type="ref" data-reference="fig-searching">8</a>, A1). Poté se uživateli zobrazí stránka <em>Hledání</em> s výsledky (pokud byl na libovolné jiné stránce, tak bude automaticky přesměrován). Kromě vyhledávání specifického předmětu je možné vyhledávat podle garanta předmětu, stačí zadat jeho jméno. Také lze vyhledávat podle obsahu anotace.
+									</p>
+									<p>
+										Když uživatel zadá libovolný vstup do vyhledávacího pole, tak se v jeho pravé části zobrazí tlačítko <code>X</code> (obr. <a href="#fig-searching" data-reference-type="ref" data-reference="fig-searching">8</a>, A2), které po kliknutí vymaže vstup vyhledávací pole (neobnoví ovšem výsledky vyhledávání). Také se pod vyhledávacím polem zobrazí rychlé výsledky (obr. <a href="#fig-searching" data-reference-type="ref" data-reference="fig-searching">8</a>, oblast B), které obsahují nanejvýš pět nejrelevantnějších výsledků. Po kliknutí na řádek s daným předmětem se zobrazí jeho <a href="#detail-page">detail</a>. Pokud vstupu neodpovídají žádné výsledky, tak se v rychlých výsledcích objeví zpráva <code>Žádné předměty nebyly nalezeny.</code>
+									</p>
+									<p>
+										Pro rychlejší vyhledávání stačí stisknout klávesu <code>/</code>, pomocí které se aktivuje vyhledávací pole a je možné rovnou psát.
+									</p>
+									<figure id="fig-searching" class="text-center">
+										<img src="img/searching.png" style="width:80%"/>
+										<figcaption>Obr. 8: Vyhledávání pomocí názvu předmětu</figcaption>
+									</figure>
+								</div>
+								<div id="filter-courses-usecase">
+									<h3>Filtrování předmětů</h3>
+									<p>
+										K filtrování slouží levá část stránky vyhledávání. Filtrovat lze kombinovat s vyhledáváním, je tedy možné hledáním omezit výsledky, a ty pak filtrovat, nebo naopak filtrovat a ve výsledcích pak vyhledávat. Je nutné podotknout, že rychlé výsledky filtry nerespektují.
+									</p>
+									<p>
+										Pro filtrování stačí kliknout na zaškrtávací políčko, název filtru nebo počet výsledků daného filtru. Každé kliknutí je okamžitě zpracováno a uživateli se zobrazí relevantní výsledky. U aktivního filtru je pak zaškrtávací políčko zaškrtnuté (obr. <a href="#fig-filtering" data-reference-type="ref" data-reference="fig-filtering">9</a>).
+									</p>
+									<figure id="fig-filtering" class="text-center">
+										<img src="img/filtering.png" style="width:20%"/>
+										<figcaption>Obr. 9: Zaškrtnuté filtry</figcaption>
+									</figure>
+									<p>
+										Pro jednodušší práci s filtry se uživateli v horní části obrazovky zobrazují aktivní filtry (obr. <a href="#fig-active-filters" data-reference-type="ref" data-reference="fig-active-filters">10</a>). Ty vždy zobrazují název kategorie a aktivní filtry v dané kategorii. Stisknutím tlačítka <code>X</code> se daný filtr zruší. Stisknutím tlačítka <code>Zrušit vybrané filtry</code> se zruší všechny filtry a výsledek není filtrovaný. Uživatel může libovolně kombinovat aktivování a deaktivování filtrů v levé části stránky a deaktivování aktivních filtrů v horní části stránky.
+									</p>
+									<figure id="fig-active-filters" class="text-center">
+										<img src="img/active-filters.png" style="width:40%"/>
+										<figcaption>Obr. 10: Aktivní filtry v horní části obrazovky</figcaption>
+									</figure>
+								</div>
+							</div>
+						</div>
+						<div id="detail-page">
+							<h1>Stránka detailu předmětu</h1>
+							<p>
+								Stránka detailu předmětu slouží k přehlednému zobrazení všech důležitých a relevantních informací o předmětu.
+							</p>
+							<div id="detail-overview">
+								<h2>Přehled</h2>
+								<p>
+									Stránka je rozdělena do několika sekcí, které jsou zde podrobně popsány.
+								</p>
+								<div id="detail-basics">
+									<h3>Základní informace</h3>
+									<p>
+										V horní části stránky se nachází kód a název předmětu (obr. <a href="#fig-detail-basic" data-reference-type="ref" data-reference="fig-detail-basic">11</a> oblast A). Pod ní vlevo jsou pak tři odznaky (obr. <a href="#fig-detail-basic" data-reference-type="ref" data-reference="fig-detail-basic">11</a> oblast B), které obsahují zleva: počet kreditů, semestr kdy je předmět vyučován a rozsah přednášky a cvičení s examinací a jednotkou rozsahu. Barva těchto odznaků odpovídá semestru, kdy je předmět vyučován: modrá - zimní, žlutá letní a fialová oba. Vpravo také můžou být odznaky (obr. <a href="#fig-detail-basic" data-reference-type="ref" data-reference="fig-detail-basic">11</a> oblast C), které označují zdali je předmět zařazen v Blueprintu (označené modrou barvou) a jestli je v studijním plánu uživatele (označen oranžovou barvou). Na odznaky vpravo je možné kliknout. Po kliknutí na odznak se studijním plánem se uživateli zobrazí stránka studijního plánu a na ní zvýrazněný zvolený předmět. Identicky po kliknutí na odznak s Blueprintem se uživateli zobrazí stránka Blueprint a na ní zvýrazněný zvolený předmět.
+									</p>
+									<figure id="fig-detail-basic" class="text-center">
+										<img src="img/detail-basic.png" style="width:80%"/>
+										<figcaption>Obr. 11: Detail předmětu - kód, název a odznaky</figcaption>
+									</figure>
+									<p>
+										Pod nadpisem se pak nachází dva sloupečky, levý obsahuje další
+										základní informace a pravý hodnocení. O hodnocení je více napsáno v sekci <a href="#detail-rating-part">Hodnocení předmětu</a> a v sekci <a href="#detail-how-to-rate">Ohodnocení předmětu</a>. Levý sloupeček (obr. <a href="#fig-detail-left-col" data-reference-type="ref" data-reference="fig-detail-left-col">12</a>) obsahuje po řadě shora: fakultu, na které se předmět vyučuje, jeho katedru, jazyk výuky, stav předmětu (vyučován, nevyučován, zrušen), maximální kapacitu, prerekvizity, garanty a odkaz na stránku předmětu (ne do <code>SIS</code>). Pokud předmět některé z těchto dat nemá, tak zobrazeny nejsou. Na danou prerekvizitu předmětu je možné kliknout a tím se zobrazí její detail.
+									</p>
+									<figure id="fig-detail-left-col" class="text-center">
+										<img src="img/detail-left-col.png" style="width:70%"/>
+										<figcaption>Obr. 12: Detail předmětu - základní informace</figcaption>
+									</figure>
+									<p>
+										Pod sloupečky se nachází dvě tlačítka (obr. <a href="#fig-detail-buttons" data-reference-type="ref"
+										data-reference="fig-detail-buttons">13</a>), kde levé otevře na nové stránce stránku předmětu v <code>SIS</code> a pravé slouží k přiřazení do Blueprintu. Více o přiřazování předmětů do Blueprintu je napsáno v sekci <a href="#blueprint-add-course">Přidávání předmětů do Blueprintu</a>.
+									</p>
+									<figure id="fig-detail-buttons" class="text-center">
+										<img src="img/detail-buttons.png" style="width:50%"/>
+										<figcaption>Obr. 13: Detail předmětu - odkaz do <code>SIS</code> a přiřazení do
+											Blueprintu
+										</figcaption>
+									</figure>
+								</div>
+								<div id="detail-rating-part">
+									<h3>Hodnocení předmětu</h3>
+									<p>
+										Pravý sloupeček pod nadpisem obsahuje hodnocení předmětu (obr. <a href="#fig-detail-rating-part" data-reference-type="ref" data-reference="fig-detail-rating-part">14</a>), zde může uživatel jak předmět hodnotit, tak si přečíst aktuální hodnocení předmětu.
+									</p>
+									<p>
+										Vlevo nahoře je celkové hodnocení předmětu (obr. <a href="#fig-detail-rating-part" data-reference-type="ref" data-reference="fig-detail-rating-part">14</a> oblast A), které zobrazuje, jestli a jak uživatel ohodnotil předmět, procentuální ohodnocení (počet pozitivních hodnocení děleno počtem všech hodnocení) a celkový počet hodnocení. Vpravo od něj se nachází tlačítko (obr. <a href="#fig-detail-rating-part" data-reference-type="ref" data-reference="fig-detail-rating-part">14</a>, B), které zobrazí modální okno, kde může uživatel hodnotit předmět kategoricky. Dole se pak nachází výsledky kategorického hodnocení předmětu (obr. <a href="#fig-detail-rating-part" data-reference-type="ref" data-reference="fig-detail-rating-part">14</a> oblast C). Každá kategorie má škálu od 0 do 10, vlevo má název, vpravo průměrné hodnocení a počet hodnocení a dole grafický ukazatel průměrného hodnocení. Jak ohodnotit předmět celkově či kategoricky je popsáno v sekci <a href="#detail-how-to-rate">Ohodnocení předmětu</a>.
+									</p>
+									<figure id="fig-detail-rating-part" class="text-center">
+										<img src="img/detail-rating-part.png" style="width:80%"/>
+										<figcaption>Obr. 14: Detail předmětu - hodnocení předmětu</figcaption>
+									</figure>
+								</div>
+								<div id="detail-decsription-survey-info">
+									<h3>Popis, Anketa a Detailní informace</h3>
+									<p>
+										V spodní části stránky se nachází tři karty: Popis, Anketa a Detailní informace.
+									</p>
+									<p>
+										Popis obsahuje anotaci předmětu, sylabus předmětu, podmínky zakončení předmětu, literaturu doporučenou k předmětu, požadavky ke kontrole studia, vstupní požadavky předmětu a cíl předmětu. Většina předmětů ovšem obsahuje pouze podmnožinu těchto polí, jelikož ta ostatní nejsou nikým vyplněna.
+									</p>
+									<p>
+										Anketa obsahuje anketu předmětu. V anketě lze vyhledávat a lze ji filtrovat. Jak vyhledávat a filtrovat v anketě je napsáno v sekci <a href="#detail-survey-filter">Vyhledávání a filtrování v anketě</a>. Položky v anketě jsou seřazeny od nejnovějších příspěvků a kromě vlastního textu obsahují v hlavičce vlevo rok přidání, informaci, zdali jde o komentář k přednášce či ke cvičení, informaci, jakého učitele se komentář se týká (nebo jestli to je obecná připomínka k předmětu), a v hlavičce vpravo formu studia, ročník a obor autora komentáře.
+									</p>
+									<p>
+										Detailní informace pak obsahují třídu a klasifikaci předmětu, korekvizity předmětu, záměnnosti předmětu, neslučitelnosti předmětu a učitele předmětu. Opět je možné, že se zde všechna pole nenachází (předmět například nemusí mít žádné korekvizity, ...). Na danou korekvizitu, záměnnost či neslučitelnost předmětu je možné kliknout a tím se zobrazí její detail.
+									</p>
+								</div>
+							</div>
+							<div id="detail-usecases">
+								<h2>Typické scénáře použití</h2>
+								<p>
+									Tato sekce představí typické scénáře použití stránky detailu předmětu.
+								</p>
+								<div id="detail-show-detail">
+									<h3>Zobrazení detailu předmětu</h3>
+									<p>
+										Stránka detailu předmětu není obecná jako ostatní stránky, ale existuje pro každý předmět. Není tedy v navigační liště a jediný způsob, jak se na ni dostat je kliknout na nějaký předmět. To je možné na každé stránce, jelikož všechny stránky zobrazují předměty.
+									</p>
+									<p>
+										Z domovské stránky stačí na libovolné kartě předmětu kliknout na jeho název (obr. <a href="#fig-detail-from-home" data-reference-type="ref" data-reference="fig-detail-from-home">15</a>).
+									</p>
+									<figure id="fig-detail-from-home" class="text-center">
+										<img src="img/detail-from-home.png" style="width:80%"/>
+										<figcaption>Obr. 15: Přístup na detail předmětu z domovské stránky</figcaption>
+									</figure>
+									<p>
+										Ze stránky vyhledávání stačí na libovolné kartě předmětu kliknout na jeho název (obr. <a href="#fig-detail-from-search" data-reference-type="ref" data-reference="fig-detail-from-search">16</a>), podobně jako na domovské stránce.
+									</p>
+									<figure id="fig-detail-from-search" class="text-center">
+										<img src="img/detail-from-search.png" style="width:80%"/>
+										<figcaption>Obr. 16: Přístup na detail předmětu ze stránky vyhledávání</figcaption>
+									</figure>
+									<p>
+										Z detailu předmětu je také možné přejít na stránku detailu předmětu. Prerekvizity, korekvizity, záměnnosti či neslučitelnosti předmětu jsou zobrazené jako kódy daných předmětů a na ty stačí kliknout (obr. <a href="#fig-detail-from-detail" data-reference-type="ref" data-reference="fig-detail-from-detail">17</a>).
+									</p>
+									<figure id="fig-detail-from-detail" class="text-center">
+										<img src="img/detail-from-detail.png" style="width:80%"/>
+										<figcaption>Obr. 17: Přístup na detail předmětu ze stránky jiného detailu
+											předmětu
+										</figcaption>
+									</figure>
+									<p>
+										Z stránky Blueprint stačí na libovolném řádku s předmětem kliknout na jeho kód nebo název (obr. <a href="#fig-detail-from-bp" data-reference-type="ref" data-reference="fig-detail-from-bp">18</a>).
+									</p>
+									<figure id="fig-detail-from-bp" class="text-center">
+										<img src="img/detail-from-bp.png" style="width:80%"/>
+										<figcaption>Obr. 18: Přístup na detail předmětu ze stránky Blueprint</figcaption>
+									</figure>
+									<p>
+										Ze stránky se studijním plánem stačí na libovolném řádku s předmětom kliknout na jeho kód nebo název (obr. <a href="#fig-detail-from-dp" data-reference-type="ref" data-reference="fig-detail-from-dp">19</a>), podobně jako na stránce Blueprint.
+									</p>
+									<figure id="fig-detail-from-dp" class="text-center">
+										<img src="img/detail-from-dp.png" style="width:80%"/>
+										<figcaption>Obr. 19: Přístup na detail předmětu z stránky se studijním
+											plánem
+										</figcaption>
+									</figure>
+								</div>
+								<div id="detail-how-to-rate">
+									<h3>Ohodnocení předmětu</h3>
+									<p>
+										Předmět lze hodnotit celkově či kategoricky. Celkové hodnocení se provádí pomocí palce nahoru a palce dolů (obr. <a href="#fig-detail-overall-rating" data-reference-type="ref" data-reference="fig-detail-overall-rating">20</a>). Jak je vidět na obrázku, tak uživatel ohodnotil předmět pozitivně (palec nahoru je vyplněný). Pro smazání tohoto hodnocení stačí opět kliknout na palec nahoru a palec pak nebude vyplněný (identicky jako palec dolů). Pro změnu svého hodnocení stačí kliknout na příslušný palce: nahoru pro pozitivní ohodnocení, dolů pro negativní ohodnocení. Výchozí stav je, že uživatel žádný předmět nijak neohodnotil.
+									</p>
+									<figure id="fig-detail-overall-rating" class="text-center">
+										<img src="img/detail-overall-rating.png" style="width:30%"/>
+										<figcaption>Obr. 20: Celkové hodnocení předmětu pomocí palce nahoru a
+											dolů
+										</figcaption>
+									</figure>
+									<p>
+										Pro kategorické ohodnocení je potřeba kliknout na tlačítko <code>Rozšířené hodnocení</code> (obr. <a href="#fig-detail-rating-part" data-reference-type="ref" data-reference="fig-detail-rating-part">14</a>, B). To zobrazí modální okno (obr. <a href="#fig-detail-modal" data-reference-type="ref" data-reference="fig-detail-modal">21</a>), kde uživatel může spravovat své kategorické ohodnocení předmětu. Výchozí stav každé kategorie je, že není ohodnocena. Uživatel může kategorii ohodnotit tak, že klikne kamkoliv na osu hodnocení (obr. <a href="#fig-detail-modal" data-reference-type="ref" data-reference="fig-detail-modal">21</a> oblast A). Dané ohodnocení je pak znázorněno modrou tečkou (obr. <a href="#fig-detail-modal" data-reference-type="ref" data-reference="fig-detail-modal">21</a>, A1). Tu lze přesouvat a měnit tak své ohodnocení. Kategorické ohodnocení lze smazat pomocí tlačítka s ikonou popelnice (obr. <a href="#fig-detail-modal" data-reference-type="ref" data-reference="fig-detail-modal">21</a>, B) vlevo od osy hodnocení. Hodnocení musí být vždy celé číslo od 0 do 10.
+									</p>
+									<figure id="fig-detail-modal" class="text-center">
+										<img src="img/detail-modal.png" style="width:40%"/>
+										<figcaption>Obr. 21: Modální okno pro kategorické hodnocení předmětu
+										</figcaption>
+									</figure>
+								</div>
+								<div id="detail-survey-filter">
+									<h3>Vyhledávání a filtrování v anketě</h3>
+									<p>
+										Po kliknutí na kartu Anketa se uživateli zobrazí možnost vyhledávat a filtrovat v anketě (obr. <a href="#fig-detail-survey" data-reference-type="ref" data-reference="fig-detail-survey">22</a>). Pro vyhledávání stačí psát do vyhledávacího pole, výsledky se budou samy automaticky obnovovat podle vstupu od uživatele.
+									</p>
+									<figure id="fig-detail-survey" class="text-center">
+										<img src="img/detail-survey.png" style="width:90%"/>
+										<figcaption>Obr. 22: Možnost vyhledávání a filtrování v anketě</figcaption>
+									</figure>
+									<p>
+										Pro filtrování stačí rozkliknout vybranou kategorii, v ní zakliknout vybraný filtr a pak kategorii opustit. To lze kliknutím mimo kategorii nebo na její název. Tím se filtry aktivují a zobrazí se jako aktivní. Některé kategorie obsahují větší množství filtrů a je možné jimi scrollovat. To obzvlášť na mobilních zařízeních nemusí být na první pohled jasné.
+									</p>
+								</div>
+							</div>
+						</div>
+						<div id="blueprint-page">
+							<h1>Stránka <em>Blueprint</em></h1>
+							<p>
+								Stránka Blueprint je stěžejní stránka aplikace. V ní může uživatel plánovat své studium tak, že si nastaví počet ročníků, které plánuje studovat a do nich si může přiřazovat předměty. Ty pak lze rozkliknout, odstranit či přesunout. Každý ročník je rozdělen do semestrů (zimní a letní) a krom ročníků se zde nachází skupina pro nezařazené předměty, kde si může uživatel odkládat předměty, které buď teprve naplánuje nebo neví jestli chce studovat.
+							</p>
+							<div id="blueprint-overview">
+								<h2>Přehled</h2>
+								<p>
+									Stránka obsahuje tabulky pro předměty. Tabulky obsahují zleva zaškrtávací políčko, kód předmětu, název předmětu, počet kreditů, výuku v zimním a v letním semestru, garanty předmětu a tlačítka. Po kliknutí na kód či název předmětu se zobrazí <a href="#detail-page">detail</a> daného předmětu. Pokud semestr obsahuje <code>---</code> tak předmět není v daném semestru vyučován, v ostatních případech obsahuje rozsah přednášky a cvičení a examinaci. Každá tabulka může obsahovat daný předmět pouze jednou, duplikáty nejsou povoleny.
+								</p>
+								<p>
+									První tabulka shora je tabulka s nezařazenými předměty (obr. <a href="#fig-blueprint" data-reference-type="ref" data-reference="fig-blueprint">23</a> sekce A). Pak se střídají tabulky pro zimní (obr. <a href="#fig-blueprint" data-reference-type="ref" data-reference="fig-blueprint">23</a> sekce B) a letní semestr (obr. <a href="#fig-blueprint" data-reference-type="ref" data-reference="fig-blueprint">23</a> sekce C) pro počet ročníků, který si uživatel navolil.
+								</p>
+								<p>
+									Každou skupinu předmětů lze sbalit a rozbalit pomocí tlačítka (obr. <a href="#fig-blueprint" data-reference-type="ref" data-reference="fig-blueprint">23</a>, D) vedle názvu skupiny. Na název všech skupin (kromě nezařazených) lze najet myší a tím se uživateli zobrazí statistika kreditů.
+								</p>
+								<p>
+									Některé předměty mají v řádku ikonu červeného vykřičníku (obr. <a href="#fig-blueprint" data-reference-type="ref" data-reference="fig-blueprint">23</a>, E). Ten značí varování, specificky: jestli je předmět zařazen ve špatném semestru (vyučuje se v jiném) nebo jestli je zařazen ve více semestrech (skupinách). Text varování se zobrazí při najetí na ikonu vykřičníku.
+								</p>
+								<figure id="fig-blueprint" class="text-center">
+									<img src="img/blueprint.png" style="width:90%"/>
+									<figcaption>Obr. 23: Detail stránky Blueprint</figcaption>
+								</figure>
+								<p>
+									Pokud je nějaká skupina prázdná, tak je název skupiny zašedlý a tato informace je explicitně napsaná vedle názvu. Takovou skupinu není možné sbalit a neukazuje statistiku kreditů.
+								</p>
+								<p>
+									Pokud je zaškrtnuté alespoň jedno zaškrtávací políčko tak se nahoře obrazovky objeví nabídka s tlačítky (obr. <a href="#fig-blueprint-top-menu" data-reference-type="ref" data-reference="fig-blueprint-top-menu">24</a>), které pracují s označenými předměty. Tlačítko úplně vlevo odstraní označení ze všech předmětů a nabídka zmizí. Ostatní tlačítka jsou podrobně popsaná v sekci <a href="#blueprint-usecases">Typické scénáře použití</a>.
+								</p>
+								<figure id="fig-blueprint-top-menu" class="text-center">
+									<img src="img/blueprint-top-menu.png" style="width:90%"/>
+									<figcaption>Obr. 24: Nabídka s tlačítky na práci s označenými předměty </figcaption>
+								</figure>
+								<p>
+									Pro zaškrtávání více políček v řadě lze použít klávesu <code>Shift</code> společně s kliknutím. Stačí zaškrtnout první políčko a pak s klávesou <code>Shift</code> zaškrtnout poslední políčko. Stejným způsobem je možné políčka odškrtávat.
+								</p>
+								<p>
+									Na konci stránky se nachází lišta se souhrnem (obr. <a href="#fig-blueprint-footer" data-reference-type="ref" data-reference="fig-blueprint-footer">25</a>). Uprostřed je celkový počet kreditů za všechny ročníky (bez nezařazených předmětů), a pokud jsou nějaké předměty nezařazené, tak se vedle zobrazí součet i s nezařazenými předměty (menší zašedlé číslo). Úplně vpravo si pak uživatel může přidávat a ubírat počet ročníků. Minimální počet ročníků je nula, pak stránka obsahuje pouze skupinu nezařazených předmětů.
+								</p>
+								<figure id="fig-blueprint-footer" class="text-center">
+									<img src="img/blueprint-footer.png" style="width:90%"/>
+									<figcaption>Obr. 25: Lišta na konci stránky Blueprint</figcaption>
+								</figure>
+							</div>
+							<div id="blueprint-usecases">
+								<h2>Typické scénáře použití</h2>
+								<p>
+									Tato sekce představí typické scénáře použití stránky <em>Blueprint</em>.
+								</p>
+								<div id="blueprint-add-course">
+									<h3>Přidávání předmětů do Blueprintu</h3>
+									<p>
+										Předměty lze přidávat do Blueprintu ze tří stránek. Specificky ze stránky vyhledávání, stránky detailu předmětů a stránky studijního plánu.
+									</p>
+									<p>
+										Na stránce vyhledávání se kurzy nacházejí v kartách. V pravé spodní části karty se nachází tlačítko (obr. <a href="#fig-bp-add-search" data-reference-type="ref" data-reference="fig-bp-add-search">26</a>) pro přidání předmětu do Blueprintu. Po stisknutí tlačítka <code>Přiřadit</code> se předmět přiřadí do skupiny nezařazených předmětů v Blueprintu. Je ovšem možné předmět rovnou zařadit do specifického semestru. Stačí kliknout na pravou část tlačítka (označenou šipkou dolů) a zobrazí se nabídka (obr. <a href="#fig-bp-add-search-detail" data-reference-type="ref" data-reference="fig-bp-add-search-detail">27</a>) všech možných semestrů, kam lze předmět přiřadit. Po kliknutí na daný semestr se do něj předmět automaticky přiřadí. Pokud není možné kliknout na tlačítko <code>Přiřadit</code> znamená to, že předmět je již ve skupině nezařazených předmětů. Identicky, pokud nelze kliknout na některý semestr, tak je v něm daný předmět již přiřazen.
+									</p>
+									<figure id="fig-bp-add-search" class="text-center">
+										<img src="img/bp-add-search.png" style="width:30%"/>
+										<figcaption>Obr. 26: Možnost přidat předmět do Blueprintu ze stránky vyhledávání</figcaption>
+									</figure>
+									<figure id="fig-bp-add-search-detail" class="text-center">
+										<img src="img/bp-add-search-detail.png" style="width:20%"/>
+										<figcaption>Obr. 27: Detail nabídky přidání předmětu do Blueprintu</figcaption>
+									</figure>
+									<p>
+										Na stránce detailu předmětu se tlačítko na přiřazení předmětu nachází pod dvěma sloupečky uprostřed (obr. <a href="#fig-bp-add-detail" data-reference-type="ref" data-reference="fig-bp-add-detail">28</a>). Po stisknutí tlačítka <code>Přiřadit</code> se předmět přiřadí do skupiny nezařazených předmětů v Blueprintu. Je ovšem možné předmět rovnou zařadit do specifického semestru. Stačí kliknout na pravou část tlačítka (označenou šipkou dolů) a zobrazí se nabídka (obr. <a href="#fig-bp-add-detail-detail" data-reference-type="ref" data-reference="fig-bp-add-detail-detail">29</a>) všech možných semestrů, kam lze předmět přiřadit. Po kliknutí na daný semestr se do něj předmět automaticky přiřadí. Pokud není možné kliknout na tlačítko <code>Přiřadit</code> znamená to, že předmět je již ve skupině nezařazených předmětů. Identicky, pokud nelze kliknout na některý semestr, tak je v něm daný předmět již přiřazen.
+									</p>
+									<figure id="fig-bp-add-detail" class="text-center">
+										<img src="img/bp-add-detail.png" style="width:80%"/>
+										<figcaption>Obr. 28: Možnost přidat předmět do Blueprintu ze stránky detailu předmětu</figcaption>
+									</figure>
+									<figure id="fig-bp-add-detail-detail" class="text-center">
+										<img src="img/bp-add-detail-detail.png" style="width:20%"/>
+										<figcaption>Obr. 29: Detail nabídky přidání předmětu do Blueprintu</figcaption>
+									</figure>
+									<p>
+										Stránka studijního plánu nabízí dvě možnosti jak přidat předmět do Blueprintu. Ta základní spočívá v tom najet na řádek předmětu, kde se na jeho konci zobrazí tlačítko s ikonou <code>+</code> v levé části a šipkou dolů v pravé (obr. <a href="#fig-bp-add-dp" data-reference-type="ref" data-reference="fig-bp-add-dp">30</a>). Po stisknutí tlačítka <code>+</code> se předmět přiřadí do skupiny nezařazených předmětů v Blueprintu. Je ovšem možné předmět rovnou zařadit do specifického semestru. Stačí kliknout na pravou část tlačítka (označenou šipkou dolů) a zobrazí se nabídka (obr. <a href="#fig-bp-add-dp-detail" data-reference-type="ref" data-reference="fig-bp-add-dp-detail">31</a>) všech možných semestrů, kam lze předmět přiřadit. Po kliknutí na daný semestr se do něj předmět automaticky přiřadí. Pokud není možné kliknout na tlačítko <code>+</code> znamená to, že předmět je již ve skupině nezařazených předmětů. Identicky, pokud nelze kliknout na některý semestr, tak je v něm daný předmět již přiřazen.
+									</p>
+									<figure id="fig-bp-add-dp" class="text-center">
+										<img src="img/bp-add-dp.png" style="width:80%"/>
+										<figcaption>Obr. 30: Možnost přidat předmět do Blueprintu ze stránky studijního plánu na řádku předmětu</figcaption>
+									</figure>
+									<figure id="fig-bp-add-dp-detail" class="text-center">
+										<img src="img/bp-add-dp-detail.png" style="width:20%"/>
+										<figcaption>Obr. 31: Detail nabídky přidání předmětu do Blueprintu</figcaption>
+									</figure>
+									<p>
+										Alternativní možnost, je označit jeden či více předmětů pomocí zaškrtávacích políček, kde se (když je zaškrtnuté alespoň jedno políčko) nahoře obrazovky objeví nabídka s tlačítkem s možností přiřazení zvolených předmětů do Blueprintu (obr. <a href="#fig-bp-add-dp-more" data-reference-type="ref" data-reference="fig-bp-add-dp-more">32</a>). Po stisknutí tlačítka <code>+</code> se označené předměty přiřadí do skupiny nezařazených předmětů v Blueprintu. Je ovšem možné předměty rovnou zařadit do specifického semestru. Stačí kliknout na pravou část tlačítka (označenou šipkou dolů) a zobrazí se nabídka (obr. <a href="#fig-bp-add-dp-more-detail" data-reference-type="ref" data-reference="fig-bp-add-dp-more-detail">33</a>) všech možných semestrů, kam lze označené předměty přiřadit. Po kliknutí na daný semestr se do něj předměty automaticky přiřadí. Pokud není možné kliknout na tlačítko <code>+</code> znamená to, že jeden nebo více z označených předmětů je již ve skupině nezařazených předmětů. Identicky, pokud nelze kliknout na některý semestr, tak je v něm již jeden nebo více z označených předmětů přiřazeno.
+									</p>
+									<figure id="fig-bp-add-dp-more" class="text-center">
+										<img src="img/bp-add-dp-more.png" style="width:80%"/>
+										<figcaption>Obr. 32: Možnost přidat více předmětů do Blueprintu ze stránky studijního plánu v nabídce v horní části stránky</figcaption>
+									</figure>
+									<figure id="fig-bp-add-dp-more-detail" class="text-center">
+										<img src="img/bp-add-dp-more-detail.png" style="width:20%"/>
+										<figcaption>Obr. 33: Detail nabídky přidání předmětů do Blueprintu</figcaption>
+									</figure>
+								</div>
+								<div id="blueprint-remove-course">
+									<h3>Mazání předmětů v Blueprintu</h3>
+									<p>
+										Předměty lze z Blueprintu také odstranit. K tomu slouží několik tlačítek.
+									</p>
+									<p>
+										Základní možnost je najet na řádek předmětu, kde se v pravé části řádku zobrazí tlačítka. Po stisknutí tlačítka s ikonou popelnice (obr. <a href="#fig-bp-remove-row" data-reference-type="ref" data-reference="fig-bp-remove-row">34</a>) se předmět z Blueprintu odstraní.
+									</p>
+									<figure id="fig-bp-remove-row" class="text-center">
+										<img src="img/bp-remove-row.png" style="width:80%"/>
+										<figcaption>Obr. 34: Odstranění předmětu z Blueprintu pomocí tlačítka na řádku</figcaption>
+									</figure>
+									<p>
+										Alternativně je možné odstranit všechny předměty z celého semestru (skupiny). To je možné pomocí tlačítka s ikonou popelnice (obr. <a href="#fig-bp-remove-sem" data-reference-type="ref" data-reference="fig-bp-remove-sem">35</a>), které se nachází v hlavičce tabulky dané skupiny.
+									</p>
+									<figure id="fig-bp-remove-sem" class="text-center">
+										<img src="img/bp-remove-sem.png" style="width:80%"/>
+										<figcaption>Obr. 35: Odstranění předmětů z Blueprintu pomocí tlačítka v hlavičce skupiny</figcaption>
+									</figure>
+									<p>
+										Poslední možnost je odstranit předměty označené pomocí zaškrtávacích políček. Stačí zaškrtnutím označit zvolené předměty a v horní nabídce kliknout na tlačítko s ikonou popelnice (obr. <a href="#fig-bp-remove-selected" data-reference-type="ref" data-reference="fig-bp-remove-selected">36</a>).
+									</p>
+									<figure id="fig-bp-remove-selected" class="text-center">
+										<img src="img/bp-remove-selected.png" style="width:80%"/>
+										<figcaption>Obr. 36: Odstranění označených předmětů z Blueprintu pomocí tlačítka horní liště</figcaption>
+									</figure>
+									<p>
+										Je důležité podotknout, že mazání předmětů je nevratné. Předmět je ale možné opět přidat.
+									</p>
+								</div>
+								<div id="blueprint-move-course">
+									<h3>Přemisťování předmětů v Blueprintu</h3>
+									<p>
+										Pro přemisťování předmětů v Blueprintu je několik možností. Předměty lze přesunout buď přímo mezi nezařazené nebo do specifického semestru. Také je možné použít metodu <code>drag&amp;drop</code>, kde lze předmět přemístit do libovolné skupiny a na libovolnou pozici.
+									</p>
+									<p>
+										Základní možnost je najet na řádek předmětu, kde se v pravé části řádku zobrazí tlačítka. Po stisknutí tlačítka s ikonou kružnice s čárkou (obr. <a href="#fig-bp-row-buttons" data-reference-type="ref" data-reference="fig-bp-row-buttons">37</a>, A) se předmět z daného semestru přesune mezi nezařazené. Toto tlačítko není dostupné pro nezařazené předměty. Pro přemístění předmětu do jiného semestru lze použít tlačítko s ikonou čtyř šipek (obr. <a href="#fig-bp-row-buttons" data-reference-type="ref" data-reference="fig-bp-row-buttons">37</a>, B). Po jeho stisknutí se zobrazí nabídka semestrů (obr. <a href="#fig-bp-row-button-assign" data-reference-type="ref" data-reference="fig-bp-row-button-assign">38</a>), kde po kliknutí na daný semestr se do něj předmět přesune.
+									</p>
+									<figure id="fig-bp-row-buttons" class="text-center">
+										<img src="img/bp-row-buttons.png" style="width:80%"/>
+										<figcaption>Obr. 37: Přesouvání předmětu pomocí tlačítek na řádku</figcaption>
+									</figure>
+									<figure id="fig-bp-row-button-assign" class="text-center">
+										<img src="img/bp-row-button-assign.png" style="width:20%"/>
+										<figcaption>Obr. 38: Nabídka na přesunutí předmětu do jiného 	semestru </figcaption>
+									</figure>
+									<p>
+										Poslední tlačítko na řádku (obr. <a href="#fig-bp-row-dragdrop" data-reference-type="ref" data-reference="fig-bp-row-dragdrop">39</a>) slouží jako úchyt pro funkci <code>drag&amp;drop</code>. Tím lze upravit pozici předmětu v semestru (skupině) i přemístit předmět do jiného semestru (skupiny). Předmět není možné přemístit do semestru (skupiny), v kterém se už nachází. Předmět je možné přesunout pouze mezi tabulkami na stránce Blueprint. Pokud lze předmět někam přesunout, v tabulce se pro něj udělá místo. Je možné přesunou předmět do prázdného semestru (skupiny) nikoliv však do sbaleného semestru (skupiny). Samotná funkce je následující: uživatel stiskne a drží tlačítko, následně přesouvá předmět po stránce (pro scrollování stránky lze najet myší k hornímu či dolnímu okraji obrazovky) a pokud přesune myš nad tabulku, kde předmět ještě není, může tlačítko pustit a tím se předmět přesune na dané místo.
+									</p>
+									<figure id="fig-bp-row-dragdrop" class="text-center">
+										<img src="img/bp-row-dragdrop.png" style="width:80%"/>
+										<figcaption>Obr. 39: Přesouvání předmětů pomocí funkce 	<code>drag&amp;drop</code> </figcaption>
+									</figure>
+									<p>
+										Krom toho lze přesunout všechny předměty v daném semestru do skupiny nezařazených předmětů. K tomu slouží tlačítko s ikonou kružnice s čárkou (obr. <a href="#fig-bp-unassign-sem" data-reference-type="ref" data-reference="fig-bp-unassign-sem">40</a>) v hlavičce tabulky daného semestru. Skupinu nezařazených předmětů není možné přesunout do skupiny nezařazených předmětů.
+									</p>
+									<figure id="fig-bp-unassign-sem" class="text-center">
+										<img src="img/bp-unassign-sem.png" style="width:80%"/>
+										<figcaption>Obr. 40: Přesouvání všech předmětů ze semestru do skupiny nezařazených předmětů</figcaption>
+									</figure>
+									<p>
+										Poslední možnost je přesunout specifické předměty. K tomu slouží zaškrtávací políčka a nabídka nahoře. Nejprve si uživatel označí předměty, tím že je zaškrtne, čímž se zobrazí nabídka na práci s označenými předměty. Pro přesunutí označených předmětů do nezařazených stačí stisknout tlačítko s ikonou kružnice s čárkou (obr. <a href="#fig-bp-top-menu-more" data-reference-type="ref" data-reference="fig-bp-top-menu-more">41</a>, A), pro jejich přesunutí do jiného semestru slouží tlačítko s ikonou čtyř šipek (obr. <a href="#fig-bp-top-menu-more" data-reference-type="ref" data-reference="fig-bp-top-menu-more">41</a>, B). Po jeho stisknutí se zobrazí nabídka semestrů (obr. <a href="#fig-bp-top-menu-assign" data-reference-type="ref" data-reference="fig-bp-top-menu-assign">42</a>), kde po kliknutí na daný semestr se do něj předmět přesune. Pokud daný semestr či skupina obsahuje alespoň jeden z označených předmětů, operace nebude možná provést.
+									</p>
+									<figure id="fig-bp-top-menu-more" class="text-center">
+										<img src="img/bp-top-menu-more.png" style="width:80%"/>
+										<figcaption>Obr. 41: Přesouvání označených předmětů pomocí tlačítek na horní liště</figcaption>
+									</figure>
+									<figure id="fig-bp-top-menu-assign" class="text-center">
+										<img src="img/bp-top-menu-assign.png" style="width:20%"/>
+										<figcaption>Obr. 42: Nabídka na přesunutí předmětů do jiného semestru</figcaption>
+									</figure>
+								</div>
+								<div id="blueprint-change-num-years">
+									<h3>Změna počtu ročníků</h3>
+									<p>
+										Změna počtu ročníků se provádí pomocí tlačítek <code>-</code> a <code>+</code> v liště (obr. <a href="#fig-blueprint-footer" data-reference-type="ref" data-reference="fig-blueprint-footer">25</a>) v dolní části stránky.
+									</p>
+									<p>
+										Tlačítko <code>-</code> ubere počet let, minimální počet let je nula. Pokud je celý ročník (tedy oba semestry) prázdný, tak lze ročník odebrat bez problémů. Pokud je ovšem libovolný semestr v posledním ročníků neprázdný, zobrazí se modální okno (obr. <a href="#fig-blueprint-remove-modal" data-reference-type="ref" data-reference="fig-blueprint-remove-modal">43</a>), kde si uživatel může zvolit, jak pokračovat.
+									</p>
+									<figure id="fig-blueprint-remove-modal" class="text-center">
+										<img src="img/blueprint-remove-modal.png" style="width:60%"/>
+										<figcaption>Obr. 43: Modální okno varující před odstraňováním neprázdného ročníku</figcaption>
+									</figure>
+									<p>
+										Uživatel může kliknout na tlačítko <code>Zrušit</code>, na tlačítko <code>X</code> nebo kamkoliv mimo modální okno aby akci zrušil. Pokud klikne na tlačítko <code>Odstranit</code>, předměty z celého ročníku budou odstraněny, společně s posledním ročníkem. Pokud klikne na tlačítko <code>Přesunout do nezařazených</code>, tak se všechny předměty z posledního ročníku přesunou do nezařazených a poslední ročník se odstraní.
+									</p>
+									<p>
+										Tlačítko <code>+</code> přidá počet let, maximální počet let je zatím neomezený (v budoucnu bude existovat horní limit).
+									</p>
+								</div>
+							</div>
+						</div>
+						<div id="degreeplan-page">
+							<h1>Stránka <em>Studijní plán</em></h1>
+							<p>
+								Stránka se studijním plánem nabízí uživateli kontrolu plnění svého studijního plánu a přímého přidávání předmětů do Blueprintu, aby si mohl naplánovat předměty, které musí splnit. Uživatel si může zvolit svůj studijní plán, či si prohlížet jiné a kontrolovat, které předměty má zařazené v Blueprintu a tím pádem, které skupiny má plně naplánované.
+							</p>
+							<div id="degreeplan-overview">
+								<h2>Přehled</h2>
+								<p>
+									Stránka se studijním plánem je velmi přímočará. V pravém horním rohu je tlačítko (obr. <a href="#fig-dp" data-reference-type="ref" data-reference="fig-dp">44</a>, A) na zobrazení studijního plánu, uprostřed je kód zobrazeného jiného studijního plánu a rok zápisu studenta (obr. <a href="#fig-dp" data-reference-type="ref" data-reference="fig-dp">44</a>, B), a zbytek obrazovky zabírá daný studijní plán (obr. <a href="#fig-dp" data-reference-type="ref" data-reference="fig-dp">44</a> sekce C).
+								</p>
+								<figure id="fig-dp" class="text-center">
+									<img src="img/dp.png" style="width:80%"/>
+									<figcaption>Obr. 44: Stránka <em>Studijní plán</em></figcaption>
+								</figure>
+								<p>
+									Studijní plán je rozdělený do skupin. Každá skupina má název, vedle názvu je ikona, která značí, zdali je skupina úspěšně přiřazena v Blueprintu nebo ne (ano - ikona modrého košíku, ne - ikona červeného <code>X</code>), což se odvíjí od počtu potřebných kreditů za skupinu. Nad názvem je pak odznak, který znázorňuje, kolik kreditů má uživatel v Blueprintu lomeno kolik v dané skupině potřebuje. Pokud má uživatel nějaké předměty v nezařazené skupině v Blueprintu, které ale nejsou v žádném semestru v Blueprintu, tak se v odznaku také zobrazí menší zašedlý součet, který sčítá i nezařazené předměty. Takové předměty jsou v tabulce označeny ikonou červeného vykřičníku, podobně jako varování v Blueprintu.
+								</p>
+								<p>
+									Každá skupina pak obsahuje tabulku předmětů, specificky zleva zaškrtávací políčko, jejich kód, název, počet kreditů, rozsah přednášky a cvičení s examinací v zimním a následně letním semestru, garanty a tlačítko na přidání předmětu do Blueprintu. Více o přiřazování předmětů do Blueprintu je napsáno v sekci <a href="#blueprint-add-course">Přidávání předmětů do Blueprintu</a>. Po kliknutí na kód či název předmětu se zobrazí <a href="#detail-page">detail</a> daného předmětu. Pokud je název předmětu napsaný tučně, pak je předmět povinný.
+								</p>
+							</div>
+							<div id="degreeplan-usecases">
+								<h2>Typické scénáře použití</h2>
+								<p>
+									Tato sekce představí typické scénáře použití stránky <em>Studijní plán</em>.
+								</p>
+								<div id="degreeplan-check-progress">
+									<h3>Kontrola plnění studijního plánu</h3>
+									<p>
+										Ke kontrole plnění daného studijního plánu slouží několik barevných indikátorů.
+									</p>
+									<p>
+										První jsou zaškrtávací políčka. Ty určují stav každého předmětu zvlášť. Barva okrajů a pozadí daného políčka značí, zdali je daný předmět zařazený v Blueprintu (modrý okraj) a nebo není zařazený vůbec (červený okraj). Pokud je v Blueprintu, ale mezi nezařazenými předměty, je okraj zaškrtávacího políčka modrý, ale mezi kódem a názvem předmětu se objeví ikona červeného vykřičníku s varováním.
+									</p>
+									<p>
+										Ostatní indikátory indikují splnění skupin. U názvu každé skupiny je ikona, které znázorňuje jestli má uživatel v Blueprintu přiřazeno dostatečné množství předmětů z dané skupiny (z hlediska kreditů). Pokud ano, objeví se zde ikona modrého košíku, pokud ne, objeví se ikona červeného <code>X</code>. Nad každou skupinou je také odznak s názvem <code>Blueprint</code> a dvěma, respektive čtyřmi čísly <code>X/Y</code> a <code>Z/Y</code>. Druhá dvojice čísel se objeví jen v případě, že má uživatel nějaké předměty z dané skupiny nezařazené v Blueprintu. <code>X</code> pak značí součet kreditů všech předmětů dané skupiny, které má uživatel zařazené v Blueprintu (jen v semestrech, ne mezi nezařazenými předmětů) a <code>Y</code> značí minimální počet kreditů, který je potřeba v dané skupině získat. <code>Z</code> značí součet kreditů všech předmětů dané skupiny, které jsou kdekoliv v Blueprintu (nezařazené i v semestrech).
+									</p>
+								</div>
+								<div id="degreeplan-change-user-plan">
+									<h3>Změna uživatelského studijního plánu</h3>
+									<p>
+										Pro změnu uživatelského studijního plánu je nezbytné kliknou na tlačítko pro výběr studijního plánu (obr. <a href="#fig-dp" data-reference-type="ref" data-reference="fig-dp">44</a>, A). Zobrazí se modální okno s jednoduchým formulářem (obr. <a href="#fig-dp-form" data-reference-type="ref" data-reference="fig-dp-form">45</a>). Zde je potřeba do vyhledávacího pole vlevo (obr. <a href="#fig-dp-form" data-reference-type="ref" data-reference="fig-dp-form">45</a>, A) zadat kód hledaného studijního plánu a vpravo (obr. <a href="#fig-dp-form" data-reference-type="ref" data-reference="fig-dp-form">45</a>, B) vybrat rok, kdy by měl daný studijní plán platit. V zobrazených výsledcích je potřeba vybrat ten, který odpovídá zadanému kódu (obr. <a href="#fig-dp-form" data-reference-type="ref" data-reference="fig-dp-form">45</a>, C).
+									</p>
+									<figure id="fig-dp-form" class="text-center">
+										<img src="img/dp-form.png" style="width:50%"/>
+										<figcaption>Obr. 45: Formulář na hledání studijního plánu</figcaption>
+									</figure>
+									<p>
+										Po kliknutí na kód či název výsledku se zobrazí daný studijní plán. V pravém horním rohu se pak zobrazí tlačítko (obr. <a href="#fig-dp-save" data-reference-type="ref" data-reference="fig-dp-save">46</a>) na uložení studijního plánu jako studijního plánu daného uživatele.
+									</p>
+									<figure id="fig-dp-save" class="text-center">
+										<img src="img/dp-save.png" style="width:80%"/>
+										<figcaption>Obr. 46: Tlačítko na uložení studijního plánu</figcaption>
+									</figure>
+									<p>
+										Typický případ tohoto scénáře je, že si uživatel nastaví svůj studijní plán. K tomu stačí zadat kód svého studijního plánu, který nalezne v <code>SIS</code> v záložce <code>Osobní údaje a nastavení</code> v položce <code>Studijní plán</code> za názvem v závorce. Jako rok pak musí zadat rok svého zápisu do studia, který nalezne taktéž v <code>SIS</code> v záložce <code>Osobní údaje a nastavení</code> v položce <code>Datum zápisu</code>.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

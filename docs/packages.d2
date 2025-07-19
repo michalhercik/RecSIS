@@ -1,0 +1,214 @@
+vars: {
+  d2-config: {
+    # sketch: true
+    layout-engine: elk
+  }
+  colors: {
+    package: "#A6B8F8"
+    group: "#E3E9FD"
+    concept: "#F7F8FE"
+  }
+  icons: {
+    check-mark: https://icons.terrastruct.com/essentials%2F059-success.svg
+  }
+}
+
+classes: {
+  invisible: {
+    style.opacity: 0
+    label: a
+  }
+  package-row: {
+    style.fill: ${colors.package}
+    width: 910
+  }
+  package-page-cell: {
+    style.fill: ${colors.package}
+    grid-columns: 1
+    grid-rows: 4
+    grid-gap: 15
+  }
+  description: {
+    style.font-size: 19
+  }
+}
+
+grid-rows: 9
+grid-gap: 30
+
+title: |md
+  # webapp
+| {near: top-center}
+
+middleware: {
+  grid-rows: 2
+  grid-gap: 15
+  language: {
+    class: package-row
+    description: |md
+      Determines language of request from URL and sets it to request context. If language definition  
+      isn't present in URL than uses default. Language package also defines language constants used  
+      across the application.
+    | {
+      class: description
+    }
+  }
+  cas: {
+    class: package-row
+    description: |md
+      Authenticates user using session key and sets user ID to request context.  If session key  
+      not present or authentication failes than redirects to log in page.
+    | {
+      class: description
+    }
+  }
+}
+
+pages: {
+  grid-rows: 2
+  grid-gap: 20
+  description: |md
+    Serves content to a user. Should be as standalone as possible. Meaning if you would like to make each page  
+    a standalone service it should be possible to do it with little to no change. After collecting data passed  
+    by middlewares each request handler retrieves resources using database or search. Result is then presented  
+    to a user via view. Page page is little bit different its main purpose is to be used as a template with nav bar  
+    for other pages but since the navbar contains search bar it also handles live search requests from that search  
+    bar.
+  | {
+    class: description
+  }
+  coursedetail: {
+    class: package-page-cell
+    server
+    database
+    search
+    view
+  }
+  blueprint: {
+    class: package-page-cell
+    server
+    database
+    searchPad.class: invisible
+    view
+  }
+  degreeplan: {
+    class: package-page-cell
+    server
+    database
+    search
+    view
+  }
+  degreeplan: {
+    class: package-page-cell
+    server
+    database
+    search
+    view
+  }
+  home: {
+    class: package-page-cell
+    server
+    databasePad.class: invisible
+    searchPad.class: invisible
+    view
+  }
+  courses: {
+    class: package-page-cell
+    server
+    database
+    search
+    view
+  }
+  page: {
+    class: package-page-cell
+    server
+    databasePad.class: invisible
+    search
+    view
+  }
+}
+
+dbds: {
+  class: package-row
+  description: |md
+    Provides structures that maps to database tables. The mapping is not necessary one to one, it can be  
+    used to combine multiple tables into one structure or to split one table into multiple structures.  
+    The main idea is to have only one exisitng mapping of column to structure field so that when any change  
+    to the name happens it can be easily resolved. This package should be used whenever data are fetched  
+    from a database. The only reason allowed to not used this package for mapping is when the query  
+    defines new column - for example some kind of aggregation. After data are fetched from the database  
+    into dbds structures they should be remapped to local structures to depend on common structures  
+    as little as possible so that any change to dbds package can be easily resolved.
+  | {
+    class: description
+  }
+}
+errorx: {
+  class: package-row
+  description: |md
+    Whenever an error occurs in the application it should be handled by errorx package. It provides a way  
+    to set context of an error such as function name and its parameters. It is also responsible for  
+    presenting the error to a user.
+  | {
+    class: description
+  }
+}
+filters: {
+  class: package-row
+  description: |md
+    Parse filters for search from user request and convert them into filter query for search engine. To be  
+    able to parse user request the package needs to be used also for generating the filtering options so  
+    that they use proper IDs. 
+  | {
+    class: description
+  }
+}
+bpbtn: {
+  class: package-row
+  description: |md
+    Adding course to blueprint is done on many pages. To avoid code duplication this package provides  
+    a view component as well as logic which can be triggered to add course or courses to a blueprint.
+  | {
+    class: description
+  }
+}
+stringsx: {
+  class: package-row
+  description: |md
+    defines additional operations on strings such as capitalization.
+  | {
+    class: description
+  }
+}
+
+legend: "" {
+  grid-columns: 8
+  grid-rows: 1
+  grid-gap: 10
+  style.stroke-width: 1
+  style.stroke-dash: 10
+  style.fill: white
+  legend: |md
+    Legend:
+  | {
+    style.font-size: 32
+  }
+  pad.class: invisible
+  pad1.class: invisible
+  Package: {
+    shape: rectangle
+    style.fill: ${colors.package}
+  }
+  pad2.class: invisible
+  package-group: {
+    shape: rectangle
+    style.fill: ${colors.group}
+    label: Group of packages
+  }
+  pad3.class: invisible
+  package-concept: {
+    shape: rectangle
+    style.fill: ${colors.concept}
+    label: Packages inner concept
+  }
+}

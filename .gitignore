@@ -1,7 +1,6 @@
-*_templ.go
 venv
 meili_data
 *.exe
-src/recsis
+webapp/recsis
 *.env
-src/config.prod.toml
+webapp/config.prod.toml

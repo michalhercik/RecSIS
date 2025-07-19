@@ -1,0 +1,48 @@
+package home
+
+templ scripts() {
+	<script>
+        function setCardsWidth() {
+        const recContainer = document.getElementById("course-cards-row-rec");
+        const newContainer = document.getElementById("course-cards-row-new");
+        if (recContainer && newContainer) {
+            const recCards = recContainer.querySelectorAll(".card");
+            const newCards = newContainer.querySelectorAll(".card");
+
+            // Set the width of the cards to be the same
+            const recCardWidth = calculateCardWidth();
+            setCardWidth(recCards, recCardWidth);
+
+            const newCardWidth = calculateCardWidth();
+            setCardWidth(newCards, newCardWidth);
+        }
+    }
+
+    function calculateCardWidth() {
+        const container = document.querySelector(".container");
+        const containerWidth = container.clientWidth - 84; // Subtracting 84px for the padding of the container and buttons
+        const minCardWidth = 200; // Minimum width for each card
+        const gap = 4; // Gap between cards
+
+        // Calculate the width of each card based on the container width and number of visible cards
+        const visibleCards = Math.max(Math.floor((containerWidth + gap) / (minCardWidth + gap)), 1);
+        return (containerWidth - (visibleCards - 1) * gap) / visibleCards;
+    }
+
+    function setCardWidth(cards, width) {
+        cards.forEach(card => {
+            card.style.width = `${width}px`;
+            card.style.minWidth = `${width}px`;
+        });
+    }
+
+    function calculateVisibleCards() {
+        const container = document.querySelector(".container");
+        const containerWidth = container.clientWidth - 84; // Subtracting 8px for the padding of the inner container and 2 * 26px for buttons and 24px for container padding
+        const minCardWidth = 200; // Minimum width for each card
+        const gap = 4; // Gap between cards
+
+        return Math.max(Math.floor((containerWidth + gap) / (minCardWidth + gap)), 1);
+    }
+    </script>
+}
