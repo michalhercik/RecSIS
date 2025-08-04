@@ -7,6 +7,7 @@ service="studuk.prod"
 host="postgres"
 port=5432
 dbname="recsis"
+user="elt"
 
 [meilisearch]
 host="meilisearch"

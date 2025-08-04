@@ -15,11 +15,11 @@ func createSISConn(conf config) (*sqlx.DB, error) {
 		host    = conf.SIS.Host
 		port    = conf.SIS.Port
 		service = conf.SIS.Service
-		user    = os.Getenv("DB_USER")
-		pass    = os.Getenv("DB_PASS")
+		user    = os.Getenv("SIS_DB_USER")
+		pass    = os.Getenv("SIS_DB_PASS")
 	)
-	if len(user) == 0 || len(pass) == 0 {
-		return nil, fmt.Errorf("DB_USER and DB_PASS environment variables must be set")
+	if len(pass) == 0 {
+		return nil, fmt.Errorf("SIS_DB_USER and SIS_DB_PASS environment variables must be set")
 	}
 	connStr := go_ora.BuildUrl(host, port, service, user, pass, nil)
 	conn, err := sqlx.Open("oracle", connStr)
@@ -38,12 +38,12 @@ func createRecSISConn(conf config) (*sqlx.DB, error) {
 		host   = conf.RecSIS.Host
 		port   = conf.RecSIS.Port
 		dbname = conf.RecSIS.DBName
-		// schema = conf.RecSIS.Schema
-		user = os.Getenv("RECSIS_USER")
-		pass = os.Getenv("RECSIS_PASS")
+		user   = conf.RecSIS.User
+		pass   = os.Getenv("RECSIS_ELT_DB_PASS")
 	)
-	if len(user) == 0 || len(pass) == 0 {
-		return nil, fmt.Errorf("RECSIS_USER and RECSIS_PASS environment variables must be set")
+	fmt.Println("user: ", user, "pass: ", pass)
+	if len(pass) == 0 {
+		return nil, fmt.Errorf("RECSIS_ELT_DB_PASS environment variables must be set")
 	}
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, pass, dbname)
 	conn, err := sqlx.Open("postgres", connStr)

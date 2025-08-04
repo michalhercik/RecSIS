@@ -17,4 +17,4 @@ FROM alpine AS dev-stage
 WORKDIR /app
 COPY --from=build-stage /mockcas /mockcas
 EXPOSE 8001
-ENTRYPOINT ["/mockcas"]
+ENTRYPOINT ["/mockcas", "--cert", "/app/cert/server.crt", "--key", "/app/cert/server.key"]

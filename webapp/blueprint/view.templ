@@ -1,0 +1,566 @@
+package blueprint
+
+import (
+    "strings"
+    "fmt"
+)
+
+templ Content(data *blueprintPage, t text) {
+    <div
+        id="blueprint-page"
+        class="container"
+        x-data="{ checkedNumber: 0, isSorting: false, smallScreen: window.innerWidth < 768 }"
+        @resize.window="smallScreen = window.innerWidth < 768"
+        hx-indicator="#loader"
+    >
+        @checkedCoursesMenu(len(data.years), t)
+        @unassignedTable(data.unassigned.courses, data.unassigned.folded, len(data.years), t)
+        if len(data.years) > 0 {
+            @yearsTables(data.years, t)
+        }
+        @summarizeFooter(data.years, data.totalCredits(), t)
+        <script defer src="/js/blueprint.js"></script>
+        @scriptOnMoveCustom()
+    </div>
+}
+
+templ checkedCoursesMenu(yearCount int, t text) {
+    <div id="bp-checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
+        <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
+            // uncheck all checkboxes
+            <button
+                class="btn big-mobile-btn btn-outline-secondary border-0 bi bi-dash-square"
+                @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur(); initializeTooltips();"
+                @mouseleave="initializeTooltips()"
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                data-bs-delay={ ttDelay }
+                data-bs-title={ t.ttUncheckAll }>
+            </button>
+            @unassignCoursesButton(t.ttUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(int(assignmentNone)), vPos()), "input[type=checkbox]:checked", true, t)
+            @assignCoursesButton(yearCount, t)
+            @removeCoursesButton(t.ttRemoveChecked, mergeVals(vType(selectedRemove)), "input[type=checkbox]:checked", true, t)
+        </div>
+    </div>
+}
+
+templ yearsTables(years assignedYears, t text) {
+    {{ runningCredits := 0 }}
+    for _, year := range years {
+        <div id={ fmt.Sprintf("blueprint-year-%d", year.position) }>
+            {{ runningCredits += year.winter.credits() }}
+            @winterTable(year.winter.courses, year.winter.folded, year.position, len(years), runningCredits, year.credits(), year.winter.credits(), t)
+            {{ runningCredits += year.summer.credits() }}
+            @summerTable(year.summer.courses, year.summer.folded,  year.position, len(years), runningCredits, year.credits(), year.summer.credits(), t)
+        </div>
+    }
+}
+
+templ unassignedTable(unassigned []course, folded bool, yearCount int, t text) {
+    <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
+        if len(unassigned) > 0 {
+            @unassignHeadline(folded, t)
+            if (!folded) {
+                @coursesBody("unassigned", unassigned, false, sortHxPatch(0, 0, t), t.ttReassign, yearCount, t)
+            }
+        } else {
+            @noCoursesTableContent(t.noUnassignedText, sortHxPatch(0, 0, t))
+        }
+    </table>
+}
+
+templ unassignHeadline(folded bool, t text) {
+    <thead><tr>
+        <th class="text-center align-middle p-0 bg-white lh-1">
+            @showHideCoursesButton(0, assignmentNone, folded, t)
+        </th>
+        <th class="d-none d-md-table-cell"><h5 class="mb-0 text-nowrap">{ t.unassigned }</h5></th>
+        <th><h5 class="mb-0 text-nowrap d-md-none">{ t.unassigned }</h5></th>
+        if folded {
+            <th class="th-overflow credits-column d-none d-md-table-cell"></th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-xl-table-cell"></th>
+        } else {
+            <th class="th-overflow credits-column d-none d-md-table-cell">{ t.credits }</th>
+            <th class="d-none d-md-table-cell">{ t.winter }</th>
+            <th class="d-none d-md-table-cell">{ t.summer }</th>
+            <th class="d-none d-xl-table-cell">{ t.guarantors }</th>
+        }
+        <th class="d-none d-md-table-cell text-end align-middle py-0 lh-1">
+            @removeCoursesButton(t.ttRemoveUnassigned, mergeVals(vType(semesterRemove), vYear(0), vSem(int(assignmentNone))), "", false, t)
+        </th>
+    </tr></thead>
+}
+
+templ winterTable(courses []course, folded bool, year, yearCount, runningCredits, yearCredits, winterCredits int, t text) {
+    <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
+        if len(courses) > 0 {
+            @winterHeadline(year, runningCredits, yearCredits, winterCredits, folded, t)
+            if (!folded) {
+                @coursesBody(fmt.Sprintf("%d-winter", year), courses, true, sortHxPatch(year, int(assignmentWinter), t), t.ttReassign, yearCount, t)
+            }
+        } else {
+            {{
+                text := t.yearStr(year) + " " + t.winter + " - " + t.emptySemester
+            }}
+            @noCoursesTableContent(text, sortHxPatch(year, int(assignmentWinter), t))
+        }
+    </table>
+}
+
+templ winterHeadline(year, runningCredits, yearCredits, winterCredits int, folded bool, t text) {
+    <thead><tr>
+        <th class="text-center align-middle p-0 bg-white lh-1">
+            @showHideCoursesButton(year, assignmentWinter, folded, t)
+        </th>
+        <th class="d-none d-md-table-cell">
+            @popoverTitle(year, runningCredits, yearCredits, winterCredits, t.winter, t)
+        </th>
+        <th><span class="d-md-none">
+            @popoverTitle(year, runningCredits, yearCredits, winterCredits, t.winter, t)
+        </span></th>
+        <th class="th-overflow credits-column d-none d-md-table-cell">{ fmt.Sprintf("%s: %d", t.credits, winterCredits) }</th>
+        if folded {
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-xl-table-cell"></th>
+        } else {
+            <th class="d-none d-md-table-cell">{ t.winter }</th>
+            <th class="d-none d-md-table-cell">{ t.summer }</th>
+            <th class="d-none d-xl-table-cell">{ t.guarantors }</th>
+        }
+        <th class="d-none d-md-table-cell th-overflow text-end align-middle py-0 lh-1">
+            @removeCoursesButton(t.ttRemoveWinter, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentWinter))), "", false, t)
+            @unassignCoursesButton(t.ttUnassignWinter, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentWinter))), "", false, t)
+        </th>
+    </tr></thead>
+}
+
+templ summerTable(courses []course, folded bool, year, yearCount, runningCredits, yearCredits, summerCredits int, t text) {
+    <table class="table table-sm blueprint-table" :class="{ 'table-hover': !isSorting && !smallScreen }">
+        if len(courses) > 0 {
+            @summerHeadline(year, runningCredits, yearCredits, summerCredits, folded, t)
+            if (!folded) {
+                @coursesBody(fmt.Sprintf("%d-summer", year), courses, true, sortHxPatch(year, int(assignmentSummer), t), t.ttReassign, yearCount, t)
+            }
+        } else {
+            {{
+                text := t.yearStr(year) + " " + t.summer + " - " + t.emptySemester
+            }}
+            @noCoursesTableContent(text, sortHxPatch(year, int(assignmentSummer), t))
+        }
+    </table>
+}
+
+templ summerHeadline(year, runningCredits, yearCredits, summerCredits int, folded bool, t text) {
+    <thead><tr>
+        <th class="text-center align-middle p-0 bg-white lh-1">
+            @showHideCoursesButton(year, assignmentSummer, folded, t)
+        </th>
+        <th class="d-none d-md-table-cell">
+            @popoverTitle(year, runningCredits, yearCredits, summerCredits, t.summer, t)
+        </th>
+        <th><span class="d-md-none">
+            @popoverTitle(year, runningCredits, yearCredits, summerCredits, t.summer, t)
+        </span></th>
+        <th class="th-overflow credits-column d-none d-md-table-cell">{ fmt.Sprintf("%s: %d", t.credits, summerCredits) }</th>
+        if folded {
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-xl-table-cell"></th>
+        } else {
+            <th class="d-none d-md-table-cell">{ t.winter }</th>
+            <th class="d-none d-md-table-cell">{ t.summer }</th>
+            <th class="d-none d-xl-table-cell">{ t.guarantors }</th>
+        }
+        <th class="d-none d-md-table-cell th-overflow text-end align-middle py-0 lh-1">
+            @removeCoursesButton(t.ttRemoveSummer, mergeVals(vType(semesterRemove), vYear(year), vSem(int(assignmentSummer))), "", false, t)
+            @unassignCoursesButton(t.ttUnassignSummer, mergeVals(vType(semesterUnassign), vYear(year), vSem(int(assignmentSummer))), "", false, t)
+        </th>
+    </tr></thead>
+}
+
+templ popoverTitle(year, runningCredits, yearCredits, semesterCredits int, semester string, t text) {
+    <h5
+        class="mb-0 text-nowrap cursor-help"
+        data-bs-toggle="popover"
+        data-bs-trigger="hover"
+        data-bs-html="true"
+        data-bs-placement="bottom"
+        data-bs-title={ t.ttNumberOfCredits }
+        data-bs-content={ fmt.Sprintf("%s: %d<br>%s: %d<br>%s: %d", t.ttSemesterCredits, semesterCredits, t.ttYearCredits, yearCredits, t.ttRunningCredits, runningCredits) }>
+        { fmt.Sprintf("%s %s", t.yearStr(year), semester) }
+    </h5>
+}
+
+templ showHideCoursesButton(year int, semester semesterAssignment, folded bool, t text) {
+    <button
+        class={ "btn btn-sm btn-outline-secondary p-0 border-0 hide-semester-btn bi", templ.KV("bi-caret-right-fill", folded), templ.KV("bi-caret-down-fill", !folded) }
+        hx-patch={ t.language.LocalizeURL("/blueprint/fold") }
+        hx-vals={ mergeVals(vFolded(!folded), vYear(year), vSem(int(semester))) }
+        hx-target="#blueprint-page"
+        hx-swap="outerHTML">
+    </button>
+}
+
+templ coursesBody(tableID string, courses []course, canUnassign bool, xSortMethod, assignTT string, yearCount int, t text) {
+    <tbody
+        x-sort={ xSortMethod }
+        x-sort:group="courses"
+        x-sort:config="{ onMove: onMoveCustom }"
+    >
+        for _, course := range courses {
+        <tr
+            id={ fmt.Sprintf("bp-%s-row-%s", tableID, course.code) }
+            x-data="{ hover: false }"
+            @mouseover="hover = true"
+            @mouseleave="hover = false; initializeTooltips()"
+            @dragstart="isSorting = true; removeAllTooltips()"
+            @dragend="isSorting = false; initializeTooltips()"
+            x-sort:item={ fmt.Sprintf("%d", course.id) }
+        >
+            <td
+                class="align-middle position-relative"
+                @click.self="if (smallScreen) handleTdClick($event)">
+                @checkbox(course.id)
+                <div class="d-md-none">
+                    @warningIcon(&course, t)
+                </div>
+            </td>
+            <td class="d-none d-md-table-cell position-relative">
+                @courseLink(course.code, t)
+                @warningIcon(&course, t)
+            </td>
+            <td>
+                <span class="d-none d-md-inline">
+                    @titleCourseLink(course.code, course.title, t)
+                </span>
+                @mobileInfoTd(&course, false, t)
+            </td>
+            <td class="credits-column text-end d-none d-md-table-cell">{ fmt.Sprintf("%d", course.credits) }</td>
+            <td class="d-none d-md-table-cell">{ course.winterString() }</td>
+            <td class="d-none d-md-table-cell">{ course.summerString() }</td>
+            <td class="d-none d-xl-table-cell">{ course.guarantors.string() }</td>
+            <td class="d-none d-md-table-cell text-end align-middle py-0">
+                if canUnassign {
+                    @unassignCourseButton(course.id, t)
+                }
+                @assignCourseButton(assignTT, yearCount, course.id, t)
+                @removeCourseButton(course.id, t)
+                @dragCourseButton(false, t)
+            </td>
+        </tr>
+        }
+        // dummy row for sorting error (Cannot read properties of null (reading 'nextSibling')) fix
+        <tr class="dummy-row d-none" x-sort:item></tr>
+    </tbody>
+}
+
+templ courseLink(code string, t text) {
+    <a
+        class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+        { code }
+    </a>
+}
+
+templ checkbox(id int) {
+    <div class="checkbox-container position-relative text-center" x-data>
+        <input
+            type="checkbox"
+            id={ fmt.Sprintf("checkbox%d", id) }
+            class="form-check-input bp-checkbox"
+            name={ checkboxName }
+            value={ fmt.Sprintf("%d", id) }
+            @change="checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1;"
+            @uncheck-all.window="$el.checked = false;"
+        />
+        // circle overlay for easier clicking
+        <div class="d-none d-md-inline">
+            <div
+                role="button"
+                class="circle-overlay"
+                @click="handleCircleClick($event)">
+            </div>
+        </div>
+    </div>
+}
+
+templ warningIcon(course *course, t text) {
+    if len(course.warnings) > 0 {
+        <span
+            class="bi bi-exclamation-lg text-danger fs-4 position-absolute bp-warning"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title={ strings.Join(course.warnings, " ") }>
+        </span>
+    }
+}
+
+templ dragCourseButton(showAlways bool, t text) {
+    <button
+        x-cloak
+        x-show={ fmt.Sprintf("(hover && !isSorting) || %t", showAlways) }
+        @mousedown="bootstrap.Tooltip.getOrCreateInstance($el).dispose();"
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-delay={ ttDelay }
+        data-bs-title={ t.ttMove }
+        class="btn btn-sm bi bi-grip-horizontal border-0"
+        x-sort:handle>
+    </button>
+}
+
+templ mobileInfoTd(course *course, isCompulsory bool, t text) {
+    <div class="d-flex flex-column d-md-none">
+        <div class="d-flex justify-content-between align-items-center small lh-1">
+            <span class="text-muted dp-mobile-code">
+                { course.code }
+            </span>
+            <span class="text-muted dp-mobile-semester">
+                { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
+            </span>
+            <span class="text-muted dp-mobile-credits">
+                { fmt.Sprintf("%s: %d", t.creditsShort, course.credits) }
+            </span>
+        </div>
+        <span class={ "fw-semibold text-truncate", templ.KV("fw-bold", isCompulsory) }>
+            @titleCourseLink(course.code, course.title, t)
+        </span>
+    </div>
+}
+
+templ titleCourseLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
+        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+        { title }
+    </a>
+}
+
+templ noCoursesTableContent(text, xSort string) {
+    <thead><tr>
+        <th></th> // checkbox
+        <th class="d-none d-md-table-cell"><h5 class="mb-0 text-nowrap text-secondary">{ text }</h5></th> // text (or code)
+        <th><h5 class="d-md-none mb-0 text-secondary">{ text }</h5></th> // title
+        <th class="d-none d-md-table-cell"></th> // credits
+        <th class="d-none d-md-table-cell"></th> // winter
+        <th class="d-none d-md-table-cell"></th> // summer
+        <th class="d-none d-xl-table-cell"></th> // guarantors
+        <th class="d-none d-md-table-cell"></th> // buttons
+    </tr></thead>
+    <tbody x-sort={ xSort } x-sort:group="courses">
+        // dummy row for sorting error (Cannot read properties of null (reading 'nextSibling')) fix
+        <tr class="dummy-row d-none" x-sort:item></tr>
+    </tbody>
+}
+
+templ summarizeFooter(years assignedYears, totalCredits int, t text) {
+    <table class="table table-sm table-borderless blueprint-table">
+        <thead><tr>
+            <th></th>
+            <th><h5 class="d-none d-md-table-cell mb-0 text-nowrap">{ t.total }</h5></th>
+            <th></th>
+            <th class="th-overflow credits-column d-none d-md-table-cell position-relative">
+                { fmt.Sprintf("%s: %d", t.credits, years.assignedCredits()) }
+                if years.assignedCredits() != totalCredits {
+                    <span class="small-dark-text position-absolute start-50 bottom-0 p-1">{ fmt.Sprintf("%d", totalCredits) }</span>
+                }
+            </th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-md-table-cell"></th>
+            <th class="d-none d-xl-table-cell"></th>
+            <th class="th-overflow align-middle py-0 lh-1">
+                // change number of years
+                // for this to overflow left, text order is left to right so the elements are in the opposite order
+                <button
+                    class="btn btn-sm btn-outline-secondary bi bi-plus"
+                    hx-post={ t.language.LocalizeURL("/blueprint/year") }
+                    hx-target="#blueprint-page"
+                    hx-swap="outerHTML">
+                </button>
+                { fmt.Sprintf("%d", len(years)) }
+                if len(years) > 0 && (len(years[len(years) - 1].winter.courses) > 0 || len(years[len(years) - 1].summer.courses) > 0) {
+                    // if the last year is non-empty, show modal
+                    <button
+                        class="btn btn-outline-secondary btn-sm bi bi-dash"
+                        data-bs-toggle="modal"
+                        data-bs-target="#courses-option-modal"
+                        disabled?={ len(years) <= 0 }>
+                    </button>
+                } else {
+                    <button
+                        class="btn btn-outline-secondary btn-sm bi bi-dash"
+                        hx-delete={ t.language.LocalizeURL("/blueprint/year") }
+                        hx-vals={ mergeVals(vUnassign(false)) }
+                        hx-target="#blueprint-page"
+                        hx-swap="outerHTML"
+                        disabled?={ len(years) <= 0 }>
+                    </button>
+                }
+                { t.numOfYears }
+            </th>
+        </tr></thead>
+    </table>
+    // modal for removing non-empty last year
+    @deleteYearModal(t)
+}
+
+templ deleteYearModal(t text) {
+    <div class="modal fade" id="courses-option-modal" tabindex="-1" aria-labelledby="courses-option-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="courses-option-modal-label">{ t.modalTitle }</h1>
+                    <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">{ t.modalContent }</div>
+                <div class="modal-footer d-flex justify-content-center">
+                    <button
+                        data-bs-dismiss="modal"
+                        class="btn btn-primary"
+                        hx-delete={ t.language.LocalizeURL("/blueprint/year") }
+                        hx-vals={ mergeVals(vUnassign(false)) }
+                        hx-target="#blueprint-page"
+                        hx-swap="outerHTML">
+                        { t.removeCourses }
+                    </button>
+                    <button
+                        data-bs-dismiss="modal"
+                        class="btn btn-primary"
+                        hx-delete={ t.language.LocalizeURL("/blueprint/year") }
+                        hx-vals={ mergeVals(vUnassign(true)) }
+                        hx-target="#blueprint-page"
+                        hx-swap="outerHTML">
+                        { t.unassignCourses }
+                    </button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">{ t.cancel }</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+templ assignCourseButton(tooltip string, yearCount, id int, t text) {
+    @assignCourseButtonInternal(tooltip, "hover && !isSorting", t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id)), "", "", yearCount, false, t)
+}
+
+templ assignCoursesButton(yearCount int, t text) {
+    @assignCourseButtonInternal(t.ttAssignChecked, "", t.language.LocalizeURL("/blueprint/courses"), `, ` + vType(selectedMove), "input[type=checkbox]:checked", yearCount, true, t)
+}
+
+templ assignCourseButtonInternal(tooltip, showCondButton, patch, vals, include string, yearCount int, big bool, t text) {
+    if yearCount > 0 {
+        <div
+            class="dropdown-center position-relative d-inline-block"
+            @mouseleave="bootstrap.Dropdown.getOrCreateInstance($refs.dropdown).hide(); initializeTooltips()">
+            <button
+                if (showCondButton != "") {
+                    x-cloak
+                    x-show={ showCondButton }
+                }
+                class={ "btn btn-outline-secondary border-0 p-0", templ.KV("btn-sm", !big) }
+                data-bs-toggle="dropdown"
+                data-bs-offset="0, 0"
+                aria-expanded="false"
+                x-ref="dropdown">
+                <div
+                    class={ "bi bi-arrows-move", templ.KV("move-button-filler-sm", !big), templ.KV("move-button-filler-bg", big), templ.KV("big-mobile-btn", big) }
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="bottom"
+                    data-bs-delay={ ttDelay }
+                    data-bs-title={ tooltip }
+                    @click="bootstrap.Tooltip.getOrCreateInstance($el).dispose();">
+                </div>
+            </button>
+            @assignMenu(yearCount, patch, vals, include, t)
+        </div>
+    }
+}
+
+templ assignMenu(yearCount int, patch, vals, include string, t text) {
+    <ul class="dropdown-menu">
+        for year := 1; year <= yearCount; year++ {
+            @assignSemesterButton(year, int(assignmentWinter), patch, vals, include, t.winter, t)
+            @assignSemesterButton(year, int(assignmentSummer), patch, vals, include, t.summer, t)
+        }
+    </ul>
+}
+
+templ assignSemesterButton(year, semester int, patch, vals, include, semesterText string, t text) {
+    <li class="mx-3">
+        <button
+            class="dropdown-item rounded text-center"
+            hx-patch={ patch }
+            hx-vals={ mergeVals(vYear(year), vSem(semester), vPos()) + vals }
+            if (include != "") {
+                hx-include={ include }
+            }
+            hx-target="#blueprint-page"
+            hx-swap="outerHTML">
+            { t.yearStr(year) + " " + semesterText }
+        </button>
+    </li>
+}
+
+templ removeCourseButton(id int, t text) {
+    @adjustCoursesButton("bi-trash-fill", "hover && !isSorting", t.ttRemove, "", "", false, templ.Attributes{"hx-delete": t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id))})
+}
+
+templ unassignCourseButton(id int, t text) {
+    @adjustCoursesButton("bi-dash-circle", "hover && !isSorting", t.ttUnassign, mergeVals(vYear(0), vSem(int(assignmentNone)), vPos()), "", false, templ.Attributes{"hx-patch": t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id))})
+}
+
+templ removeCoursesButton(tooltip, vals, include string, big bool, t text) {
+    @adjustCoursesButton("bi-trash-fill", "", tooltip, vals, include, big, templ.Attributes{"hx-delete": t.language.LocalizeURL("/blueprint/courses")})
+}
+
+templ unassignCoursesButton(tooltip, vals, include string, big bool, t text) {
+    @adjustCoursesButton("bi-dash-circle", "", tooltip, vals, include, big, templ.Attributes{"hx-patch": t.language.LocalizeURL("/blueprint/courses")})
+}
+
+templ adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, method templ.Attributes) {
+    <button
+        if (xShow != "") {
+            x-cloak
+            x-show={ xShow }
+        }
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-delay={ ttDelay }
+        data-bs-title={ tooltip }
+        @mouseleave="initializeTooltips()"
+        class={ "btn btn-outline-secondary border-0 bi", icon, templ.KV("btn-sm", !big), templ.KV("big-mobile-btn", big) }
+        { method... }
+        if (vals != "") {
+            hx-vals={ vals }
+        }
+        if (include != "") {
+            hx-include={ include }
+        }
+        hx-target="#blueprint-page"
+        hx-swap="outerHTML">
+    </button>
+}
+
+templ scriptOnMoveCustom() {
+    // do not allow drop a course to a semester where it is already assigned
+    <script>
+        function onMoveCustom(event, originalEvent) {
+            originatorID = event.dragged.id;
+            originatorCode = getCourseCodeFromId(originatorID);
+            targetCodes = Array.from(originalEvent.target.parentElement.parentElement.querySelectorAll("tr"))
+                .filter(tr => tr.id !== originatorID)
+                .map(tr => getCourseCodeFromId(tr.id));
+
+            duplicate = targetCodes.includes(originatorCode);
+            return !duplicate
+        }
+
+        function getCourseCodeFromId(id) {
+            const parts = id.split("-");
+            return parts[parts.length - 1];
+        }
+    </script>
+}
