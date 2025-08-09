@@ -9,6 +9,8 @@ GRANT
     INSERT
 ON
     webapp.courses,
+    webapp.degree_plan_list,
+    webapp.degree_plan_years,
     webapp.degree_plans,
     webapp.filters,
     webapp.filter_categories,

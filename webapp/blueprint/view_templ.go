@@ -123,7 +123,7 @@ func checkedCoursesMenu(yearCount int, t text) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = unassignCoursesButton(t.ttUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(0), vPos()), "input[type=checkbox]:checked", true, t).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = unassignCoursesButton(t.ttUnassignChecked, mergeVals(vType(selectedMove), vYear(0), vSem(int(assignmentNone)), vPos()), "input[type=checkbox]:checked", true, t).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -382,7 +382,7 @@ func unassignHeadline(folded bool, t text) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = removeCoursesButton(t.ttRemoveUnassigned, mergeVals(vType(yearRemove), vYear(0)), "", false, t).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = removeCoursesButton(t.ttRemoveUnassigned, mergeVals(vType(semesterRemove), vYear(0), vSem(int(assignmentNone))), "", false, t).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2257,7 +2257,7 @@ func unassignCourseButton(id int, t text) templ.Component {
 			templ_7745c5c3_Var106 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = adjustCoursesButton("bi-dash-circle", "hover && !isSorting", t.ttUnassign, mergeVals(vYear(0), vSem(0), vPos()), "", false, templ.Attributes{"hx-patch": t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id))}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = adjustCoursesButton("bi-dash-circle", "hover && !isSorting", t.ttUnassign, mergeVals(vYear(0), vSem(int(assignmentNone)), vPos()), "", false, templ.Attributes{"hx-patch": t.language.LocalizeURL(fmt.Sprintf("/blueprint/course/%d", id))}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

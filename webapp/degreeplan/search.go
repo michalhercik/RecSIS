@@ -15,9 +15,9 @@ type quickRequest struct {
 }
 
 type quickDegreePlan struct {
-	Code string `json:"SPLAN"`
-	Name string `json:"NAZEV"`
-	Type string `json:"ZKRATKA"`
+	Code string `json:"code"`
+	Name string `json:"title"`
+	Type string `json:"study_type"`
 }
 
 type quickResponse struct {
@@ -36,7 +36,7 @@ func (s MeiliSearch) QuickSearch(r quickRequest, t text) (quickResponse, error) 
 	searchReq := &meilisearch.SearchRequest{
 		Limit:                r.limit,
 		Offset:               0,
-		AttributesToRetrieve: []string{"SPLAN", "NAZEV", "ZKRATKA"},
+		AttributesToRetrieve: []string{"code", "title", "study_type"},
 	}
 	rawResponse, err := index.SearchRaw(r.query, searchReq)
 	if err != nil {

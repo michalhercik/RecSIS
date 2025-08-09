@@ -45,7 +45,7 @@ func (dp *degreePlanPage) bpNumberOfSemesters() int {
 
 type bloc struct {
 	name         string
-	code         int
+	code         string
 	note         string
 	limit        int
 	isCompulsory bool

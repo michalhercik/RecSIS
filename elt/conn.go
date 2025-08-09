@@ -41,7 +41,6 @@ func createRecSISConn(conf config) (*sqlx.DB, error) {
 		user   = conf.RecSIS.User
 		pass   = os.Getenv("RECSIS_ELT_DB_PASS")
 	)
-	fmt.Println("user: ", user, "pass: ", pass)
 	if len(pass) == 0 {
 		return nil, fmt.Errorf("RECSIS_ELT_DB_PASS environment variables must be set")
 	}

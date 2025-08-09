@@ -20,7 +20,7 @@ type DBManager struct {
 type dbDegreePlanRecord struct {
 	DegreePlanCode   string `db:"degree_plan_code"`
 	DegreePlanYear   int    `db:"start_year"`
-	BlocCode         int    `db:"bloc_subject_code"`
+	BlocCode         string `db:"bloc_subject_code"`
 	BlocLimit        int    `db:"bloc_limit"`
 	BlocName         string `db:"bloc_name"`
 	BlocNote         string `db:"bloc_note"`
@@ -35,6 +35,13 @@ func (m DBManager) userDegreePlan(uid string, lang language.Language) (*degreePl
 	if err := m.DB.Select(&records, sqlquery.UserDegreePlan, uid, lang); err != nil {
 		return nil, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("sqlquery.UserDegreePlan: %w", err), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotGetUserDP,
+		)
+	}
+	if len(records) == 0 {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.UserDegreePlan: no degree plan returned"), errorx.P("lang", lang)),
 			http.StatusInternalServerError,
 			texts[lang].errCannotGetUserDP,
 		)

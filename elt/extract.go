@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -1275,6 +1276,210 @@ func (ep *Ciselnik) insertData(to *sqlx.DB) error {
 	return nil
 }
 
+// STUDPLAN
+
+type studplanRecord struct {
+	Code               string         `db:"CODE"`
+	NameCz             string         `db:"NAME_CZ"`
+	NameEn             sql.NullString `db:"NAME_EN"`
+	SubjectStatus      sql.NullString `db:"SUBJECT_STATUS"`
+	Department         sql.NullString `db:"DEPARTMENT"`
+	Faculty            sql.NullString `db:"FACULTY"`
+	SemesterPrimary    sql.NullString `db:"SEMESTER_PRIMARY"`
+	SemesterCount      sql.NullInt64  `db:"SEMESTER_COUNT"`
+	SubjectType        sql.NullString `db:"SUBJECT_TYPE"`
+	WorkloadPrimary1   sql.NullInt64  `db:"WORKLOAD_PRIMARY1"`
+	WorkloadSecondary1 sql.NullInt64  `db:"WORKLOAD_SECONDARY1"`
+	WorkloadPrimary2   sql.NullInt64  `db:"WORKLOAD_PRIMARY2"`
+	WorkloadSecondary2 sql.NullInt64  `db:"WORKLOAD_SECONDARY2"`
+	WorkloadTimeUnit   sql.NullString `db:"WORKLOAD_TIME_UNIT"`
+	Credits            sql.NullInt64  `db:"CREDITS"`
+	Interchangeability sql.NullString `db:"INTERCHANGEABILITY"`
+	BlocSubjectCode    sql.NullString `db:"BLOC_SUBJECT_CODE"`
+	BlocType           sql.NullString `db:"BLOC_TYPE"`
+	BlocGrade          sql.NullString `db:"BLOC_GRADE"`
+	BlocLimit          sql.NullInt64  `db:"BLOC_LIMIT"`
+	BlocNameCs         sql.NullString `db:"BLOC_NAME_CZ"`
+	BlocNameEn         sql.NullString `db:"BLOC_NAME_EN"`
+	PlanCode           string         `db:"PLAN_CODE"`
+	PlanYear           int            `db:"PLAN_YEAR"`
+	Seq                sql.NullString `db:"SEQ"`
+}
+
+type studplanListRecord struct {
+	StudiumSplan string         `db:"SPLAN"`
+	OborNazev    sql.NullString `db:"NAZEV"`
+	OborKod      sql.NullString `db:"KOD"`
+	DruhZkratka  sql.NullString `db:"ZKRATKA"`
+}
+
+type extractStudPlan struct {
+	data        []studplanRecord
+	listOfPlans []studplanListRecord
+}
+
+func (ep *extractStudPlan) name() string {
+	return "stud_plan"
+}
+
+func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
+	var err error
+	selectListQuery := `
+		SELECT DISTINCT 
+			STUDIUM.SPLAN, OBOR.NAZEV, OBOR.KOD, DRUH.ZKRATKA 
+		FROM STUDIUM
+		LEFT JOIN OBOR ON OBOR.KOD = STUDIUM.SOBOR
+		LEFT JOIN DRUH ON DRUH.KOD = STUDIUM.SDRUH
+		WHERE SROKP >= to_char(sysdate, 'YYYY') - 10
+		AND SPLAN IS NOT NULL
+	`
+	selectPlanQuery := `
+		SELECT 
+			CODE,
+			NAME_CZ,
+			NAME_EN,
+			SUBJECT_STATUS,
+			DEPARTMENT,
+			FACULTY,
+			SEMESTER_PRIMARY,
+			SEMESTER_COUNT,
+			SUBJECT_TYPE,
+			WORKLOAD_PRIMARY1,
+			WORKLOAD_SECONDARY1,
+			WORKLOAD_PRIMARY2,
+			WORKLOAD_SECONDARY2,
+			WORKLOAD_TIME_UNIT,
+			CREDITS,
+			INTERCHANGEABILITY,
+			BLOC_SUBJECT_CODE,
+			BLOC_TYPE,
+			BLOC_GRADE,
+			BLOC_LIMIT,
+			BLOC_NAME_CZ,
+			BLOC_NAME_EN,
+			PLAN_CODE,
+			PLAN_YEAR,
+			SEQ
+		FROM TABLE(study_plan.stud_plan('%s', %d))
+	`
+	err = from.Select(&ep.listOfPlans, selectListQuery)
+	if err != nil {
+		return fmt.Errorf("selectData: list of codes: %w", err)
+	}
+	now := time.Now()
+	var plan []studplanRecord
+	for _, planInfo := range ep.listOfPlans {
+		for i := range 10 {
+			err = from.Select(&plan, fmt.Sprintf(selectPlanQuery, planInfo.StudiumSplan, now.Year()-i))
+			if err != nil {
+				return fmt.Errorf("selectData: plan: %s, year: %d: %w", planInfo.StudiumSplan, now.Year()-i, err)
+			}
+			ep.data = append(ep.data, plan...)
+		}
+	}
+	return nil
+}
+
+func (ep *extractStudPlan) insertData(to *sqlx.DB) error {
+	var err error
+	if err = ep.insertStudPlanList(to); err != nil {
+		return fmt.Errorf("insertStudPlanList: %w", err)
+	}
+	if err = ep.insertStudPlan(to); err != nil {
+		return fmt.Errorf("insertStudPlan: %w", err)
+	}
+	return nil
+}
+
+func (ep *extractStudPlan) insertStudPlanList(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS stud_plan_list
+	`
+	create := `
+		CREATE TABLE stud_plan_list (
+			splan VARCHAR(15),
+			nazev VARCHAR(250),
+			kod VARCHAR(12),
+			zkratka VARCHAR(10)
+		)
+	`
+	insert := `
+		INSERT INTO stud_plan_list (
+			splan, nazev, kod, zkratka	
+		) VALUES (
+			:SPLAN, :NAZEV, :KOD, :ZKRATKA
+		)
+	`
+	err := simpleInsert(to, drop, create, insert, ep.listOfPlans)
+	if err != nil {
+		return fmt.Errorf("insertData: %w", err)
+	}
+	return nil
+}
+
+func (ep *extractStudPlan) insertStudPlan(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS stud_plan
+	`
+	create := `
+		CREATE TABLE stud_plan (
+			code VARCHAR(10),
+			name_cz VARCHAR(250),
+			name_en VARCHAR(250),
+			subject_status VARCHAR(1),
+			department VARCHAR(10),
+			faculty VARCHAR(5),
+			semester_primary VARCHAR(1),
+			semester_count INT,
+			subject_type VARCHAR(2),
+			workload_primary1 INT,
+			workload_secondary1 INT,
+			workload_primary2 INT,
+			workload_secondary2 INT,
+			workload_time_unit VARCHAR(6),
+			credits INT,
+			interchangeability VARCHAR(10),
+			bloc_subject_code VARCHAR(20),
+			bloc_type VARCHAR(1),
+			bloc_grade VARCHAR(50),
+			bloc_limit INT,
+			bloc_name_cz VARCHAR(250),
+			bloc_name_en VARCHAR(250),
+			plan_code VARCHAR(15),
+			plan_year INT,
+			seq VARCHAR(50)
+		)
+	`
+	insert := `
+		INSERT INTO stud_plan (
+			code, name_cz, name_en, subject_status,
+			department, faculty,
+			semester_primary, semester_count, subject_type,
+			workload_primary1, workload_secondary1, workload_primary2, workload_secondary2, 
+			workload_time_unit, credits,
+			interchangeability,
+			bloc_subject_code, bloc_type, bloc_grade, bloc_limit, bloc_name_cz, bloc_name_en,
+			plan_code, plan_year,
+			seq
+		) SELECT * FROM unnest(
+			$1::text[], $2::text[], $3::text[], $4::text[],
+			$5::text[], $6::text[],
+			$7::text[], $8::int[], $9::text[],
+			$10::int[], $11::int[], $12::int[], $13::int[],
+			$14::text[], $15::int[],
+			$16::text[],
+			$17::text[], $18::text[], $19::text[], $20::int[], $21::text[], $22::text[],
+			$23::text[], $24::int[],
+			$25::text[]
+		)
+	`
+	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
+	if err != nil {
+		return fmt.Errorf("insertData: %w", err)
+	}
+	return nil
+}
+
 // Helpers
 // ============================================================================================================
 
@@ -1329,14 +1534,6 @@ func dropCreateTable(tx *sqlx.Tx, drop, create string) error {
 	}
 	return nil
 }
-
-// func Map[T any, V any](data []T, fn func(T) V) []V {
-// 	result := make([]V, len(data))
-// 	for i, item := range data {
-// 		result[i] = fn(item)
-// 	}
-// 	return result
-// }
 
 func toColumns[T any](data []T) []any {
 	numFields := reflect.TypeOf((*T)(nil)).Elem().NumField()

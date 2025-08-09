@@ -43,14 +43,21 @@ CREATE TABLE courses(
 
 CREATE INDEX courses_code_lang_idx ON courses(code, lang);
 
+CREATE TABLE degree_plan_years(
+    plan_year INT PRIMARY KEY
+);
+
+CREATE TABLE degree_plan_list(
+    code VARCHAR(15) PRIMARY KEY
+);
 
 CREATE TABLE degree_plans(
-    plan_code VARCHAR(15) NOT NULL,
-    plan_year INT NOT NULL,
+    plan_code VARCHAR(15) NOT NULL REFERENCES degree_plan_list(code) DEFERRABLE INITIALLY DEFERRED,
+    plan_year INT NOT NULL REFERENCES degree_plan_years(plan_year) DEFERRABLE INITIALLY DEFERRED,
     lang CHAR(2) NOT NULL,
     course_code VARCHAR(10) NOT NULL,
     interchangeability VARCHAR(10),
-    bloc_subject_code INT NOT NULL,
+    bloc_subject_code VARCHAR(20) NOT NULL,
     bloc_type CHAR(1) NOT NULL,
     bloc_limit INT,
     bloc_name VARCHAR(250),
@@ -58,6 +65,8 @@ CREATE TABLE degree_plans(
     note VARCHAR(250),
     seq VARCHAR(50)
 );
+
+CREATE INDEX degree_plan_code_year_lang ON degree_plans(plan_code, plan_year, lang);
 
 CREATE TABLE users (
     id VARCHAR(8) PRIMARY KEY
@@ -134,8 +143,8 @@ EXECUTE FUNCTION blueprint_course_reordering();
 CREATE TABLE studies (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id VARCHAR(8) NOT NULL,
-    degree_plan_code VARCHAR(15) NOT NULL,
-    start_year INT NOT NULL,
+    degree_plan_code VARCHAR(15) NOT NULL REFERENCES degree_plan_list(code) DEFERRABLE INITIALLY DEFERRED,
+    start_year INT NOT NULL REFERENCES degree_plan_years(plan_year) DEFERRABLE INITIALLY DEFERRED,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -149,9 +158,12 @@ CREATE TABLE sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE course_rating_categories_domain (
+    code INT PRIMARY KEY
+);
 
 CREATE TABLE course_rating_categories (
-    code INT NOT NULL,
+    code INT REFERENCES course_rating_categories_domain(code),
     lang CHAR(2) NOT NULL,
     title VARCHAR(50) NOT NULL
 );
@@ -167,13 +179,12 @@ CREATE TABLE course_overall_ratings (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-
 CREATE DOMAIN course_rating_domain AS INT CHECK (VALUE >= 0 AND VALUE <= 10);
 
 CREATE TABLE course_ratings (
     user_id VARCHAR(8) NOT NULL,
     course_code VARCHAR(10) NOT NULL,
-    category_code INT NOT NULL,
+    category_code INT NOT NULL REFERENCES course_rating_categories_domain(code),
     rating course_rating_domain NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (user_id, category_code, course_code),

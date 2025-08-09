@@ -1766,3 +1766,82 @@ var ankecy2searchable = transformation{
 		WHERE a.povinn IS NOT NULL
 	`,
 }
+
+var studplan2lang = transformation{
+	name: "studplan2lang",
+	query: `--sql
+		DROP TABLE IF EXISTS studplan2lang;
+		CREATE TABLE studplan2lang (
+			plan_code VARCHAR(15) NOT NULL,
+			plan_year INT NOT NULL,
+			lang VARCHAR(2) NOT NULL,
+			course_code VARCHAR(10) NOT NULL,
+			interchangeability VARCHAR(10),
+			bloc_name VARCHAR(250),
+			bloc_subject_code VARCHAR(20),
+			bloc_type VARCHAR(1),
+			bloc_limit INT,
+			seq VARCHAR(50)
+		);
+		INSERT INTO studplan2lang
+		SELECT
+			plan_code,
+			plan_year,
+			'cs' lang,
+			code course_code,
+			interchangeability,
+			bloc_name_cz bloc_name,
+			bloc_subject_code,
+			bloc_type,
+			bloc_limit,
+			seq
+		FROM stud_plan
+		UNION
+		SELECT
+			plan_code,
+			plan_year,
+			'en' lang,
+			code course_code,
+			interchangeability,
+			bloc_name_en bloc_name,
+			bloc_subject_code,
+			bloc_type,
+			bloc_limit,
+			seq
+		FROM stud_plan
+	`,
+}
+
+var studplanlist2searchable = transformation{
+	name: "studplanlist2searchable",
+	query: `--sql
+		DROP TABLE IF EXISTS studplanlist2searchable;
+		CREATE TABLE studplanlist2searchable (
+			id INT,
+			code VARCHAR(15),
+			title VARCHAR(250),
+			study_type VARCHAR(10)
+		);
+		INSERT INTO studplanlist2searchable
+		SELECT
+			ROW_NUMBER() OVER () id,
+			splan code,
+			nazev title,
+			zkratka study_type
+		FROM stud_plan_list
+	`,
+}
+
+var degreePlanYears = transformation{
+	name: "degree_plan_years",
+	query: `--sql
+		DROP TABLE IF EXISTS degree_plan_years;
+		CREATE TABLE degree_plan_years (
+			plan_year INT
+		);
+		INSERT INTO degree_plan_years
+		SELECT DISTINCT
+			plan_year
+		FROM stud_plan
+	`,
+}
