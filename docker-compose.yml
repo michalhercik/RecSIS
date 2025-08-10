@@ -4,7 +4,7 @@ services:
     build:
       dockerfile: Dockerfile
       context: ./elt/
-      target: deploy-stage
+      target: dev-stage
     depends_on:
       postgres:
         condition: service_healthy
