@@ -207,17 +207,72 @@ go install github.com/a-h/templ/cmd/templ@v0.2.793
 
 ## Code structure
 
+### Webapp
+
 Now that you have RecSIS up and running, it's time to explain a bit about the
 webapp architecture. We created a package diagram to help you understand the
 codebase and purpose of each package. 
 
 ![Package diagram](packages.svg)
 
+Before diving into implementing new features you should get even deeper
+understanding by reading at least some of the package implementations. We
+suggest you to start in the main file and then continue in any of the packages
+implementing page handlers (e.g.  coursedetail, courses, ...).
+
+### ELT
+
+We would also like to give you an high level overview of how the ELT process
+works.  We decided to implement it using Go and SQL. The entire process is
+simple and we didn't feel the need to use any sofisticated tools. Most of the
+logic is implemented in SQL. Go serves mainly as orchestrator of the process.
+Therefore the source code or at least the main file serves as a high level
+overview of the process. We decided to KISS (Keep It Simple, Stupid) and
+therefore running ELT deletes all the data in the database and repopulates it
+from scratch. The entire ELT process takes few minutes and doing anything more
+sophisticated would be overkill at this time.
+
+As the name suggest ELT consists of Extract, Load and Transform steps - we also
+added fourth step which is migration. The first two steps (extract and load) are
+pretty straightforward and each table is extracted in parallel into local
+database. The only caveat was related to bulk insert and you can read more about
+it in [this
+article](https://klotzandrew.com/blog/postgres-passing-65535-parameter-limit/).
+It also worth noting that before loading course descriptions into database we
+had to remove null bytes as the PostgreSQL doesn't support it. The extract
+and load process for each table is defined in structure (one structure for each
+source table) implementing `operation` interface (see below). 
+
+```go
+type operation interface {
+	name() string // for logging purposes
+	selectData(from *sqlx.DB, to *sqlx.DB) error // to parameter is there from historical reasons and can be used for filtering purposes
+	insertData(to *sqlx.DB) error
+}
+```
+
+The third step (transform) can be a bit harder to follow. Some transformations
+can run in parallel but not all since some of them depend on the previous ones.
+Each transformation takes table and produces another table. Each transformation
+is defined as instance of `transformation` structure (see below).
+
+```go
+type transformation struct {
+	name  string // for logging purposes
+	query string
+}
+```
+
+After the transformation the forth step (migration) is run. The migration takes
+transformed data and migrates it into the final tables in different schema and
+into search engine. It is possible that the ELT process will result in
+inconsistent state as failer of between tables migration does not rollback
+migration of data into search engine. This should be addressed in the future.
+
+
+### Other services
+
 Other services are much simpler and if needed you should be able to understand
-them pretty quickly just by reading the code. Before diving into implementing
-new features you should get even deeper understanding by reading at least some
-of the package implementations. We suggest you to start in the main file and
-then continue in any of the packages implementing page handlers (e.g.
-coursedetail, courses, ...).
+them pretty quickly just by reading the code. 
 
 Happy developing!
