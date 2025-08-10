@@ -38,23 +38,36 @@ func (a Authentication) AuthenticateHTTP(next http.Handler) http.Handler {
 
 func (a Authentication) authenticate(next http.Handler) func(w http.ResponseWriter, r *http.Request) {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		lang := language.FromContext(r.Context())
-		login := func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, a.CAS.loginURLToCAS(a.loginURL(r)), http.StatusFound)
-		}
 		sessionID, err := r.Cookie(sessionCookieName)
 		if err != nil {
-			login(w, r)
+			a.loginPage(w, r)
 			return
 		}
+		lang := language.FromContext(r.Context())
 		userID, err := a.Data.authenticate(sessionID.Value, lang)
 		if err != nil {
-			login(w, r)
+			a.loginPage(w, r)
 			return
 		}
 		r = r.WithContext(context.WithValue(r.Context(), userIDKey{}, userID))
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (a Authentication) loginPage(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	model := loginModel{
+		lang:     lang,
+		text:     texts[lang],
+		loginURL: a.CAS.loginURLToCAS(a.loginURL(r)),
+	}
+	err := Login(model).Render(r.Context(), w)
+	if err != nil {
+		err = errorx.AddContext(err)
+		a.Error.Log(err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a Authentication) login(w http.ResponseWriter, r *http.Request) {
