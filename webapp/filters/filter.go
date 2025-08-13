@@ -1,5 +1,13 @@
 package filters
 
+/** PACKAGE DESCRIPTION
+
+The filters package provides a flexible system for managing and applying search filters in the application. Its main purpose is to fetch filter categories and values from the database, build filter structures, and parse user-selected filter parameters from HTTP requests. This enables users to refine search results using facets like course type, department, or other attributes, with support for localization and error handling.
+
+Typical usage involves creating a Filters instance using MakeFilters and injecting it into the server, initializing it with Init() to load filter data, and then calling ParseURLQuery to convert URL query parameters into filter expressions for search. The package automatically maps filter categories and values, handles invalid or missing filter selections gracefully, and integrates with the application's error reporting and localization.
+
+*/
+
 import (
 	"database/sql"
 	"fmt"
