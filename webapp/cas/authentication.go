@@ -1,5 +1,13 @@
 package cas
 
+/** PACKAGE DESCRIPTION
+
+The cas package provides authentication middleware and utilities for integrating Central Authentication Service (CAS) single sign-on into this application. Its main purpose is to manage user sessions, handle login and logout flows, and securely associate requests with authenticated users. The package abstracts the details of CAS protocol, ticket validation, and session cookie management, so developers can easily add authentication without dealing with low-level CAS API calls.
+
+It has two main structs: UserIDFromContext, which extracts the user ID from the request context, and is injected into servers to access the authenticated user. The second struct is Authentication, which handles authentication (see main -> authenticationHandler) for access to protected parts of the application. It manages the CAS login flow, session management, and logout processes. It is used as a handler middleware to ensure that only authenticated users can access certain routes.
+
+*/
+
 import (
 	"context"
 	"net/http"
@@ -168,9 +176,18 @@ func (a Authentication) loginURL(r *http.Request) string {
 type userIDKey struct{}
 
 type Error interface {
+	// Logs the provided error.
 	Log(err error)
+
+	// Renders an error message to the user as a floating window, with a status code and localized message.
 	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
+
+	// Renders a full error page, including title and user ID, for major errors or page-level failures.
 	RenderPage(w http.ResponseWriter, r *http.Request, code int, userMsg string, title string, userID string, lang language.Language)
+
+	// Renders a fallback error page when a regular page cannot be rendered due to an error.
 	CannotRenderPage(w http.ResponseWriter, r *http.Request, title string, userID string, err error, lang language.Language)
+
+	// Renders a floating window with error when any component cannot be rendered due to an error.
 	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }

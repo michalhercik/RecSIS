@@ -93,6 +93,12 @@ be afraid of password exposure. Variables needed to be set can be found in
 Alternatively if you run the command `docker compose` it will warn you about
 missing variables.
 
+All environment variables with `_PASS` suffix (except `SIS_DB_PASS`) can be set
+to any string you want. The string will be used as a password for the corresponding
+service. Same goes for `POSTGRES_USER` and `POSTGRES_PASSWORD`. `SIS_DB_USER`,
+`SIS_DB_PASS` and `ACHERON_USER` must be set correctly and if you need them, please
+contact us at [recsis@email.cz](mailto:recsis@email.cz).
+
 You can then load it in your terminal with the following command:
 
 For **Windows**:
@@ -278,3 +284,8 @@ Other services are much simpler and if needed you should be able to understand
 them pretty quickly just by reading the code. 
 
 Happy developing!
+
+## Contact
+
+If you have any questions, suggestions, or issues with RecSIS, please feel free to contact us at
+[recsis@email.cz](mailto:recsis@email.cz).
