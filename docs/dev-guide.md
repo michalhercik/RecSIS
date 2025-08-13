@@ -16,7 +16,7 @@ development. The second undockerized application (Mock CAS) is a not used in
 production at all and the real instance of [CAS](https://cas.cuni.cz/cas/login)
 is used instead.
 
-![](../out/docs/services/dev_services.svg)
+![](./dev_services.svg)
 
 
 ### Search Engine
@@ -134,11 +134,13 @@ For **Linux**
 ```
 
 Before running the webapp you need to install [templ](https://templ.guide/) tool
-which is responsible for generating HTML templates from `.templ` files.
+which is responsible for generating HTML templates from `.templ` files
+and [wgo](https://github.com/bokwoon95/wgo) which watches live changes in the source files and rebuilds the webapp.
 
 **Steps:**
 ```
 go install github.com/a-h/templ/cmd/templ@v0.2.793
+go install github.com/bokwoon95/wgo@latest
 ```
 
 Lastly you can run the webapp. The best way to do it is using watch script. The
