@@ -7,7 +7,7 @@ The bpbtn package provides reusable components and logic for adding courses to a
 Typical usage:
 You create an instance of Add (or AddWithTwoTemplComponents for more complex UI needs), configure it with a database connection, a templating function for rendering the button, and options for HTMX integration. The server calls PartialComponent() to get a function that renders the add button, passing in flag slice with available semesters to assign to and course code. When a user clicks the button, the server uses ParseRequest to extract the course(s), year, and semester to assign to from the HTTP request, then calls Action to add the course(s) to the blueprint in the database. The package handles errors (such as duplicates or missing data) and returns localized messages using the errorx package.
 
-This approach allows developers to easily add blueprint functionality to any course listing or detail page, keeping the UI and backend logic consistent and maintainable. The package also supports partial rendering for HTMX, enabling dynamic updates.
+This approach allows developers to easily add blueprint functionality to any course listing or detail page, keeping the UI and backend logic consistent and maintainable.
 
 */
 

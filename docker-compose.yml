@@ -21,7 +21,7 @@ services:
     networks:
       - recsis-network
     volumes:
-      - ~/.ssh/id_rsa:/root/.ssh/id_rsa
+      - ~/.ssh/id_ed25519:/root/.ssh/id_rsa
   webapp:
     container_name: recsis-webapp
     build:
