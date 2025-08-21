@@ -172,7 +172,7 @@ func homeServer(conf config, errorHandler home.Error, pageTempl page.Page) http.
 func blueprintServer(db *sqlx.DB, errorHandler blueprint.Error, pageTempl page.Page) http.Handler {
 	blueprint := blueprint.Server{
 		Auth:  cas.UserIDFromContext{},
-		Data:  blueprint.DBManager{DB: db},
+		Data:  blueprint.Cache{Source: blueprint.DBManager{DB: db}},
 		Error: errorHandler,
 		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
