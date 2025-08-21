@@ -17,7 +17,7 @@ import (
 
 type Server struct {
 	Auth   Authentication
-	Data   DBManager
+	Data   Adapter
 	Error  Error
 	Page   Page
 	router http.Handler
