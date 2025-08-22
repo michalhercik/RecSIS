@@ -45,6 +45,9 @@ type text struct {
 	errDPNotFound         string
 	errFailedDPSearch     string
 	errPageNotFound       string
+	ttAssignedCredits     string
+	ttBlueprintCredits    string
+	ttCompletedCredits    string
 }
 
 func (t text) yearStr(year int) string {
@@ -96,6 +99,9 @@ var texts = map[language.Language]text{
 		errDPNotFound:         "Studijní plán nenalezen",
 		errFailedDPSearch:     "Nebylo možné vyhledat studijní plány",
 		errPageNotFound:       "Stránka nenalezena",
+		ttAssignedCredits:     "počet kreditů přiřazených do ročníků / limit skupiny",
+		ttBlueprintCredits:    "počet kreditů v blueprintu / limit skupiny",
+		ttCompletedCredits:    "počet splněných kreditů / limit skupiny",
 	},
 	language.EN: {
 		pageTitle:             "Degree Plan",
@@ -132,8 +138,12 @@ var texts = map[language.Language]text{
 		errInvalidDPYear:      "Invalid degree plan year",
 		errCannotGetUserDP:    "Unable to retrieve user degree plan",
 		errCannotGetDP:        "Unable to retrieve selected degree plan",
+		errCannotSaveDP:       "Unable to save degree plan",
 		errDPNotFound:         "Degree plan not found",
 		errFailedDPSearch:     "Failed to search for degree plans",
 		errPageNotFound:       "Page not found",
+		ttAssignedCredits:     "sum of credits assigned to years / group limit",
+		ttBlueprintCredits:    "sum of credits in the blueprint / group limit",
+		ttCompletedCredits:    "sum of completed credits / group limit",
 	},
 }

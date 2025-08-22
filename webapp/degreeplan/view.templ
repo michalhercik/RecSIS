@@ -164,18 +164,34 @@ templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
 templ completionStatusBadges(bloc *bloc, t text) {
     <h5 class="d-flex gap-2 status-badges mb-0">
         // TODO: after SIS integration, uncomment this badge -> should be already working
-        // <div class="d-flex justify-content-start">
-        //     <span class="badge bg-success rounded-end-0 py-2">{ t.completed }</span>
-        //     <span class="badge bg-success-dark rounded-start-0 py-2">
-        //         { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.limit) }
-        //     </span>
-        // </div>
+        <div class="d-flex justify-content-start">
+            <span class="badge bg-success rounded-end-0 py-2">{ t.completed }</span>
+            <span class="badge bg-success-dark rounded-start-0 py-2">
+            <span
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                data-bs-title={ t.ttCompletedCredits }>
+                { fmt.Sprintf(" %d/%d", bloc.completedCredits(), bloc.limit) }
+            </span>
+            </span>
+        </div>
         <div class="d-flex justify-content-start">
             <span class="badge bg-blueprint rounded-end-0 py-2">{ t.blueprint }</span>
             <span class="badge bg-blueprint-dark rounded-start-0 py-2">
-                { fmt.Sprintf("%d/%d", bloc.assignedCredits(), bloc.limit) }
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="bottom"
+                    data-bs-title={ t.ttAssignedCredits }>
+                    { fmt.Sprintf("%d/%d", bloc.assignedCredits(), bloc.limit) }
+                </span>
                 if bloc.assignedCredits() != bloc.blueprintCredits() {
-                    <span class="small-dark-text">{ fmt.Sprintf("%d/%d", bloc.blueprintCredits(), bloc.limit) }</span>
+                    <span
+                        class="small-dark-text"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
+                        data-bs-title={ t.ttBlueprintCredits }>
+                        { fmt.Sprintf("%d/%d", bloc.blueprintCredits(), bloc.limit) }
+                    </span>
                 }
             </span>
         </div>
