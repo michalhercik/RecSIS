@@ -47,6 +47,8 @@ type text struct {
 	ttReassign         string
 	ttUnassignSummer   string
 	ttRemoveSummer     string
+	ttAssignedCredits  string
+	ttBlueprintCredits string
 	// stats
 	ttNumberOfCredits string
 	ttSemesterCredits string
@@ -144,6 +146,8 @@ var texts = map[language.Language]text{
 		ttReassign:         "Přesunout předmět",
 		ttUnassignSummer:   "Přesunout všechny předměty z tohoto letního semestru do nezařazených",
 		ttRemoveSummer:     "Odstranit všechny předměty z tohoto letního semestru",
+		ttAssignedCredits:  "Počet kreditů přiřazených do ročníků",
+		ttBlueprintCredits: "Počet kreditů v blueprintu",
 		// stats
 		ttNumberOfCredits: "Počet kreditů",
 		ttSemesterCredits: "V tomto semestru",
@@ -229,6 +233,8 @@ var texts = map[language.Language]text{
 		ttReassign:         "Reassign course",
 		ttUnassignSummer:   "Unassign all courses from this summer semester",
 		ttRemoveSummer:     "Remove all courses from this summer semester",
+		ttAssignedCredits:  "Number of credits assigned to years",
+		ttBlueprintCredits: "Number of credits in the blueprint",
 		// stats
 		ttNumberOfCredits: "Number of credits",
 		ttSemesterCredits: "In this semester",
