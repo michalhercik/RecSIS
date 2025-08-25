@@ -189,43 +189,35 @@ type category struct {
 	values              []value
 }
 
-func (fc category) Values() []value {
-	return fc.values
-}
-
-func (fc category) DisplayedValueLimit() int {
-	return fc.displayedValueLimit
-}
-
 type categoryBuilder struct {
-	categ []category
+	categories []category
 }
 
-func (fb categoryBuilder) isLastCategory(categoryID string) bool {
-	if len(fb.categ) == 0 {
+func (cb categoryBuilder) isLastCategory(categoryID string) bool {
+	if len(cb.categories) == 0 {
 		return true
 	}
-	lastID := fb.categ[len(fb.categ)-1].id
+	lastID := cb.categories[len(cb.categories)-1].id
 	return lastID != categoryID
 }
 
-func (fb *categoryBuilder) category(identity identity, displayedValueLimit int) {
-	fb.categ = append(fb.categ, category{
+func (cb *categoryBuilder) category(identity identity, displayedValueLimit int) {
+	cb.categories = append(cb.categories, category{
 		identity:            identity,
 		displayedValueLimit: displayedValueLimit,
 		values:              []value{},
 	})
 }
 
-func (fb *categoryBuilder) value(identity identity) {
+func (cb *categoryBuilder) value(identity identity) {
 	value := makeFilterValue(identity)
-	category := fb.categ[len(fb.categ)-1]
+	category := cb.categories[len(cb.categories)-1]
 	category.values = append(category.values, value)
-	fb.categ[len(fb.categ)-1] = category
+	cb.categories[len(cb.categories)-1] = category
 }
 
-func (fb *categoryBuilder) build() []category {
-	return fb.categ
+func (cb *categoryBuilder) build() []category {
+	return cb.categories
 }
 
 type value struct {
@@ -243,18 +235,6 @@ type identity struct {
 	facetID string
 	title   language.LangString
 	desc    language.LangString
-}
-
-func (fi identity) Title(lang language.Language) string {
-	return fi.title.String(lang)
-}
-
-func (fi identity) Desc(lang language.Language) string {
-	return fi.desc.String(lang)
-}
-
-func (fi identity) ID() string {
-	return fi.id
 }
 
 func makeFilterIdentity(id, facetID string, title, desc language.LangString) identity {

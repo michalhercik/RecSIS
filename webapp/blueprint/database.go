@@ -176,13 +176,13 @@ func (m DBManager) moveCourses(userID string, lang language.Language, year int, 
 				userErrMsg = texts[lang].errDuplicateCoursesInBP
 			}
 			return errorx.NewHTTPErr(
-				errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("position", position), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+				errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("position", position), errorx.P("courses", strings.Join(itoaSlice(courses), ","))),
 				http.StatusConflict,
 				userErrMsg,
 			)
 		}
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("position", position), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("position", position), errorx.P("courses", strings.Join(itoaSlice(courses), ","))),
 			http.StatusInternalServerError,
 			texts[lang].errCannotMoveCourses,
 		)
@@ -190,7 +190,7 @@ func (m DBManager) moveCourses(userID string, lang language.Language, year int, 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil || rowsAffected == 0 {
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("position", position), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("position", position), errorx.P("courses", strings.Join(itoaSlice(courses), ","))),
 			http.StatusBadRequest,
 			texts[lang].errCannotMoveCourses,
 		)
@@ -208,13 +208,13 @@ func (m DBManager) appendCourses(userID string, lang language.Language, year int
 				userErrMsg = texts[lang].errDuplicateCoursesInBP
 			}
 			return errorx.NewHTTPErr(
-				errorx.AddContext(fmt.Errorf("sqlquery.AppendCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+				errorx.AddContext(fmt.Errorf("sqlquery.AppendCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("courses", strings.Join(itoaSlice(courses), ","))),
 				http.StatusConflict,
 				userErrMsg,
 			)
 		}
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.AppendCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			errorx.AddContext(fmt.Errorf("sqlquery.AppendCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("courses", strings.Join(itoaSlice(courses), ","))),
 			http.StatusInternalServerError,
 			texts[lang].errCannotAppendCourses,
 		)
@@ -222,7 +222,7 @@ func (m DBManager) appendCourses(userID string, lang language.Language, year int
 	rowsAffected, err := res.RowsAffected()
 	if err != nil || rowsAffected == 0 {
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			errorx.AddContext(fmt.Errorf("sqlquery.MoveCourses: %w", err), errorx.P("year", year), errorx.P("semester", semester), errorx.P("courses", strings.Join(itoaSlice(courses), ","))),
 			http.StatusBadRequest,
 			texts[lang].errCannotAppendCourses,
 		)
@@ -262,7 +262,7 @@ func (m DBManager) removeCourses(userID string, lang language.Language, courses 
 	res, err := m.DB.Exec(sqlquery.RemoveCoursesByID, userID, pq.Array(courses))
 	if err != nil {
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesByID: %w", err), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesByID: %w", err), errorx.P("courses", strings.Join(itoaSlice(courses), ","))),
 			http.StatusInternalServerError,
 			texts[lang].errCannotRemoveCourses,
 		)
@@ -270,7 +270,7 @@ func (m DBManager) removeCourses(userID string, lang language.Language, courses 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil || rowsAffected == 0 {
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesByID: %w", err), errorx.P("courses", strings.Join(errorx.ItoaSlice(courses), ","))),
+			errorx.AddContext(fmt.Errorf("sqlquery.RemoveCoursesByID: %w", err), errorx.P("courses", strings.Join(itoaSlice(courses), ","))),
 			http.StatusBadRequest,
 			texts[lang].errCannotRemoveCourses,
 		)
@@ -391,4 +391,13 @@ func (m DBManager) foldSemester(userID string, lang language.Language, year int,
 		)
 	}
 	return nil
+}
+
+// transform int slice to string slice
+func itoaSlice(ints []int) []string {
+	strs := make([]string, len(ints))
+	for i, v := range ints {
+		strs[i] = fmt.Sprintf("%d", v)
+	}
+	return strs
 }

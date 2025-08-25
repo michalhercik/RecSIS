@@ -77,7 +77,7 @@ func (p Page) quickSearch(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	query := r.FormValue(p.Param)
-	courses, err := p.Search.QuickSearchResult(query, lang)
+	courses, err := p.Search.quickSearchResult(query, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		p.Error.Log(errorx.AddContext(err))

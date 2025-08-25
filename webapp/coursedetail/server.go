@@ -188,11 +188,11 @@ func (s Server) surveyViewModel(r *http.Request) (surveyViewModel, error) {
 	result := surveyViewModel{
 		lang:   req.lang,
 		code:   code,
+		query:  req.query,
 		survey: searchResponse.Survey,
 		offset: req.offset,
 		isEnd:  searchResponse.EstimatedTotalHits <= req.offset+req.limit,
 		facets: s.Filters.IterFiltersWithFacets(searchResponse.FacetDistribution, r.URL.Query(), req.lang),
-		query:  req.query,
 	}
 	return result, nil
 }

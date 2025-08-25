@@ -45,7 +45,7 @@ you need access to Acheron server to run ELT.
  allow you to issue AJAX requests directly from HTML. Brings SPA like experience
  to the SSR web apps.
  - [Templ](https://templ.guide/) - Compiler for HTML templates to minimize run
- time errors. Because the tooling is not the best we sometimes asking ourselfs
+ time errors. Because the tooling is not the best we sometimes asking ourselves
  if it was a wise choice.
  - [Bootstrap](https://getbootstrap.com/) - Simple way to style web apps.
  - [PostgreSQL](https://postgresql.org/) - Relational database of our choice
@@ -232,7 +232,7 @@ implementing page handlers (e.g.  coursedetail, courses, ...).
 
 We would also like to give you an high level overview of how the ELT process
 works.  We decided to implement it using Go and SQL. The entire process is
-simple and we didn't feel the need to use any sofisticated tools. Most of the
+simple and we didn't feel the need to use any sophisticated tools. Most of the
 logic is implemented in SQL. Go serves mainly as orchestrator of the process.
 Therefore the source code or at least the main file serves as a high level
 overview of the process. We decided to KISS (Keep It Simple, Stupid) and
