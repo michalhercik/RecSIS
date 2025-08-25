@@ -28,6 +28,25 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   "$BASE_URL/indexes/courses/settings/filterable-attributes")
 echo "PUT filterable attributes: $response"
 
+response=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bert": {
+        "source": "rest", 
+        "url": "http://bert:8003/embedding", 
+        "request": {
+            "text": "{{text}}"
+        },
+        "response": {
+            "embedding": "{{embedding}}"
+        },
+        "documentTemplate": "University course with title {{doc.title.en}}"
+    }
+  }' \
+  "$BASE_URL/indexes/courses/settings/embedders")
+echo "PATCH embedders: $response"
+
 # Set searchable attributes
 searchable='[
   "code",
