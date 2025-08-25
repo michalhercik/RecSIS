@@ -17,6 +17,7 @@ import (
 	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
+	"github.com/michalhercik/RecSIS/recommend"
 
 	"github.com/michalhercik/RecSIS/blueprint"
 	"github.com/michalhercik/RecSIS/coursedetail"
@@ -96,7 +97,7 @@ func setupHandler(conf config) http.Handler {
 
 	s := servers{
 		pageTempl:          pageTempl.Router(),
-		homeServer:         homeServer(conf, errorHandler, pageTempl),
+		homeServer:         homeServer(db, conf, errorHandler, pageTempl, meiliClient),
 		blueprintServer:    blueprintServer(db, errorHandler, pageTempl),
 		coursedetailServer: courseDetailServer(db, errorHandler, pageTempl, meiliClient),
 		coursesServer:      coursesServer(db, errorHandler, pageTempl, meiliClient),
@@ -158,12 +159,25 @@ func pageTemplate(errorHandler page.Error, meiliClient meilisearch.ServiceManage
 	return pageTempl
 }
 
-func homeServer(conf config, errorHandler home.Error, pageTempl page.Page) http.Handler {
+func homeServer(db *sqlx.DB, conf config, errorHandler home.Error, pageTempl page.Page, meiliClient meilisearch.ServiceManager) http.Handler {
 	home := home.Server{
-		Auth:        cas.UserIDFromContext{},
-		Error:       errorHandler,
-		Page:        page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
-		Recommender: fmt.Sprintf("http://%s:%d", conf.Recommender.Host, conf.Recommender.Port),
+		Auth:  cas.UserIDFromContext{},
+		Error: errorHandler,
+		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		// Recommender: fmt.Sprintf("http://%s:%d", conf.Recommender.Host, conf.Recommender.Port),
+		ForYou: recommend.MeiliSearchSimilarToBlueprint{
+			Search:      meiliClient,
+			SearchIndex: meilisearch.IndexConfig{Uid: "courses"},
+			QueryPrefix: "Give me recommendations for similar courses like: ",
+			Embedder:    "bert",
+			DB:          db,
+		},
+		Newest: recommend.NewCourses{
+			DB: db,
+		},
+		Data: home.DBManager{
+			DB: db,
+		},
 	}
 	home.Init()
 	return home.Router()
