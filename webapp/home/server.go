@@ -1,9 +1,6 @@
 package home
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -16,11 +13,13 @@ import (
 //================================================================================
 
 type Server struct {
-	Auth        Authentication
-	Error       Error
-	Page        Page
-	Recommender string
-	router      http.Handler
+	Auth   Authentication
+	Error  Error
+	Page   Page
+	ForYou Recommender
+	Newest Recommender
+	Data   DBManager
+	router http.Handler
 }
 
 type Authentication interface {
@@ -36,6 +35,10 @@ type Error interface {
 
 type Page interface {
 	View(main templ.Component, lang language.Language, title string, userID string) templ.Component
+}
+
+type Recommender interface {
+	Recommend(userID string) ([]string, error)
 }
 
 //================================================================================
@@ -64,15 +67,14 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 
 	userID := s.Auth.UserID(r)
 
-	recommended, err := s.fetchCourses("recommended", lang)
+	recommended, err := s.recommended(userID, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
 		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
 		return
 	}
-
-	newest, err := s.fetchCourses("newest", lang)
+	newest, err := s.newest(userID, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -94,47 +96,75 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s Server) fetchCourses(endpoint string, lang language.Language) ([]course, error) {
-	url := fmt.Sprintf("%s/%s?lang=%s", s.Recommender, endpoint, lang)
-	resp, err := http.Get(url)
+func (s Server) recommended(userID string, lang language.Language) ([]course, error) {
+	courses, err := s.ForYou.Recommend(userID)
 	if err != nil {
-		return nil, errorx.NewHTTPErr(
-			errorx.AddContext(err, errorx.P("URL", url)),
-			http.StatusServiceUnavailable,
-			texts[lang].errRecommenderUnavailable,
-		)
+		// TODO: add context
+		return nil, err
 	}
-
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("unexpected status code: %d", resp.StatusCode), errorx.P("URL", url)),
-			resp.StatusCode,
-			texts[lang].errRecommenderUnavailable,
-		)
-	}
-
-	body, err := io.ReadAll(resp.Body)
+	similarCourses, err := s.Data.courses(userID, courses, lang)
 	if err != nil {
-		return nil, errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("failed to read response body: %w", err), errorx.P("URL", url)),
-			http.StatusServiceUnavailable,
-			texts[lang].errCannotLoadCourses,
-		)
+		// TODO: add context
+		return nil, err
 	}
-
-	var courses []course
-	err = json.Unmarshal(body, &courses)
-	if err != nil {
-		return nil, errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("failed to unmarshal response: %w", err), errorx.P("URL", url)),
-			http.StatusInternalServerError,
-			texts[lang].errCannotLoadCourses,
-		)
-	}
-
-	return courses, nil
+	return similarCourses, nil
 }
+
+func (s Server) newest(userID string, lang language.Language) ([]course, error) {
+	courses, err := s.Newest.Recommend(userID)
+	if err != nil {
+		// TODO: add context
+		return nil, err
+	}
+	newestCourses, err := s.Data.courses(userID, courses, lang)
+	if err != nil {
+		// TODO: add context
+		return nil, err
+	}
+	return newestCourses, nil
+}
+
+// func (s Server) fetchCourses(endpoint string, lang language.Language) ([]course, error) {
+// 	url := fmt.Sprintf("%s/%s?lang=%s", s.Recommender, endpoint, lang)
+// 	resp, err := http.Get(url)
+// 	if err != nil {
+// 		return nil, errorx.NewHTTPErr(
+// 			errorx.AddContext(err, errorx.P("URL", url)),
+// 			http.StatusServiceUnavailable,
+// 			texts[lang].errRecommenderUnavailable,
+// 		)
+// 	}
+
+// 	defer resp.Body.Close()
+// 	if resp.StatusCode != http.StatusOK {
+// 		return nil, errorx.NewHTTPErr(
+// 			errorx.AddContext(fmt.Errorf("unexpected status code: %d", resp.StatusCode), errorx.P("URL", url)),
+// 			resp.StatusCode,
+// 			texts[lang].errRecommenderUnavailable,
+// 		)
+// 	}
+
+// 	body, err := io.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return nil, errorx.NewHTTPErr(
+// 			errorx.AddContext(fmt.Errorf("failed to read response body: %w", err), errorx.P("URL", url)),
+// 			http.StatusServiceUnavailable,
+// 			texts[lang].errCannotLoadCourses,
+// 		)
+// 	}
+
+// 	var courses []course
+// 	err = json.Unmarshal(body, &courses)
+// 	if err != nil {
+// 		return nil, errorx.NewHTTPErr(
+// 			errorx.AddContext(fmt.Errorf("failed to unmarshal response: %w", err), errorx.P("URL", url)),
+// 			http.StatusInternalServerError,
+// 			texts[lang].errCannotLoadCourses,
+// 		)
+// 	}
+
+// 	return courses, nil
+// }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())

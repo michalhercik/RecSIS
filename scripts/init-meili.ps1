@@ -21,6 +21,26 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settin
     -Body ($filterable | ConvertTo-Json)
 echo "$($response.StatusCode) $($response.Content)"
 
+$response = Invoke-RestMethod -Uri "http://localhost:7700/indexes/courses/settings/embedders" `
+    -Method Patch `
+    -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
+    -ContentType "application/json" `
+    -Body '{
+        "bert": {
+            "source": "rest", 
+            "url": "http://bert:8003/embedding", 
+            "request": {
+                "text": "{{text}}"
+            },
+            "response": {
+                "embedding": "{{embedding}}"
+            },
+            "documentTemplate": "University course with title {{doc.title.en}}"
+        }
+    }'
+echo $response
+# "documentTemplate": "University course with title {{doc.title.cs}} guaranted by {% for g in doc.guarantors %} {{ g.last_name }} {% endfor %} has following syllabus: {{doc.syllabus[0]}}"
+
 $searchable = @(
     "code",
     "title",
@@ -75,9 +95,9 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/setting
     -Body ($sortable | ConvertTo-Json)
 echo "$($response.StatusCode) $($response.Content)"
 
-$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/degree-plans/documents?primaryKey=id" `
-    -Method Post `
-    -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
-    -ContentType "application/x-ndjson" `
-    -InFile "$PSScriptRoot/../init_search/degree-plans-transformed.json"
-echo "$($response.StatusCode) $($response.Content)"
+# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/degree-plans/documents?primaryKey=id" `
+#     -Method Post `
+#     -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
+#     -ContentType "application/x-ndjson" `
+#     -InFile "$PSScriptRoot/../init_search/degree-plans-transformed.json"
+# echo "$($response.StatusCode) $($response.Content)"
