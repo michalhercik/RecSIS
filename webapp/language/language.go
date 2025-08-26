@@ -23,6 +23,25 @@ func (l Language) LocalizeURL(path string) string {
 	return path
 }
 
+func FromString(lang string) (Language, bool) {
+	switch lang {
+	case string(CS):
+		return CS, true
+	case string(EN):
+		return EN, true
+	default:
+		return "", false
+	}
+}
+
+func FromContext(ctx context.Context) Language {
+	lang, ok := ctx.Value(key{}).(Language)
+	if ok {
+		return lang
+	}
+	return Default
+}
+
 type LangString struct {
 	CS string `json:"cs"`
 	EN string `json:"en"`
@@ -44,25 +63,6 @@ func (ls LangString) String(lang Language) string {
 	default:
 		return ls.String(Default)
 	}
-}
-
-func FromString(lang string) (Language, bool) {
-	switch lang {
-	case string(CS):
-		return CS, true
-	case string(EN):
-		return EN, true
-	default:
-		return "", false
-	}
-}
-
-func FromContext(ctx context.Context) Language {
-	lang, ok := ctx.Value(key{}).(Language)
-	if ok {
-		return lang
-	}
-	return Default
 }
 
 func SetAndStripLanguageHandler(next http.Handler) http.Handler {

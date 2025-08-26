@@ -184,11 +184,9 @@ func courseDetailServer(db *sqlx.DB, errorHandler coursedetail.Error, pageTempl 
 	coursedetail := coursedetail.Server{
 		Auth: cas.UserIDFromContext{},
 		BpBtn: bpbtn.Add{
-			DB:    db,
-			Templ: bpbtn.AddBtn,
-			Options: bpbtn.Options{
-				HxPostBase: courseDetailRoot,
-			},
+			DB:         db,
+			Templ:      bpbtn.AddBtn,
+			HxPostBase: courseDetailRoot,
 		},
 		Data:    coursedetail.DBManager{DB: db},
 		Error:   errorHandler,
@@ -207,11 +205,9 @@ func coursesServer(db *sqlx.DB, errorHandler courses.Error, pageTempl page.Page,
 	courses := courses.Server{
 		Auth: cas.UserIDFromContext{},
 		BpBtn: bpbtn.Add{
-			DB:    db,
-			Templ: bpbtn.AddBtn,
-			Options: bpbtn.Options{
-				HxPostBase: coursesRoot,
-			},
+			DB:         db,
+			Templ:      bpbtn.AddBtn,
+			HxPostBase: coursesRoot,
 		},
 		Data:    courses.DBManager{DB: db},
 		Error:   errorHandler,
@@ -231,11 +227,9 @@ func degreePlanServer(db *sqlx.DB, errorHandler degreeplan.Error, pageTempl page
 		Auth: cas.UserIDFromContext{},
 		BpBtn: bpbtn.AddWithTwoTemplComponents{
 			Add: bpbtn.Add{
-				DB:    db,
-				Templ: bpbtn.PlusSignBtn,
-				Options: bpbtn.Options{
-					HxPostBase: degreePlanRoot,
-				},
+				DB:         db,
+				Templ:      bpbtn.PlusSignBtn,
+				HxPostBase: degreePlanRoot,
 			},
 			TemplSecond: bpbtn.PlusSignBtnChecked,
 		},
