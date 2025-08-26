@@ -49,6 +49,7 @@ type bloc struct {
 	note         string
 	limit        int
 	isCompulsory bool
+	isOptional   bool
 	courses      []course
 }
 
