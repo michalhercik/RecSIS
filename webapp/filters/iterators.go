@@ -8,14 +8,16 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
+type Facets map[string]map[string]int
+
 func (f Filters) IterFiltersWithFacets(facets Facets, query url.Values, lang language.Language) iter.Seq[FacetIterator] {
 	return func(yield func(FacetIterator) bool) {
 		for _, c := range f.categories {
 			f := facets[c.facetID]
 			checked := query[prefix+c.id]
 			result := FacetIterator{
-				title:   c.Title(lang),
-				desc:    c.Desc(lang),
+				title:   c.title.String(lang),
+				desc:    c.desc.String(lang),
 				count:   len(f),
 				filter:  c,
 				facets:  f,
@@ -29,17 +31,13 @@ func (f Filters) IterFiltersWithFacets(facets Facets, query url.Values, lang lan
 	}
 }
 
-func CategoryWithAtLeast(n int, iter iter.Seq[FacetIterator]) iter.Seq[FacetIterator] {
-	return func(yield func(FacetIterator) bool) {
-		for c := range iter {
-			if c.count < n {
-				continue
-			}
-			if !yield(c) {
-				return
-			}
-		}
-	}
+type FacetValue struct {
+	ID      string
+	Title   string
+	Desc    string
+	Count   int
+	Checked bool
+	Prefix  string
 }
 
 func SkipEmptyFacet(iter iter.Seq2[int, FacetValue]) iter.Seq2[int, FacetValue] {
@@ -55,6 +53,31 @@ func SkipEmptyFacet(iter iter.Seq2[int, FacetValue]) iter.Seq2[int, FacetValue] 
 	}
 }
 
+type FacetIterator struct {
+	title   string
+	desc    string
+	count   int
+	filter  category
+	facets  facetCategory
+	lang    language.Language
+	checked []string
+}
+
+type facetCategory map[string]int
+
+func CategoryWithAtLeast(n int, iter iter.Seq[FacetIterator]) iter.Seq[FacetIterator] {
+	return func(yield func(FacetIterator) bool) {
+		for c := range iter {
+			if c.count < n {
+				continue
+			}
+			if !yield(c) {
+				return
+			}
+		}
+	}
+}
+
 func (ci FacetIterator) IterWithFacets() iter.Seq2[int, FacetValue] {
 	return func(yield func(int, FacetValue) bool) {
 		for i, v := range ci.filter.values {
@@ -62,8 +85,8 @@ func (ci FacetIterator) IterWithFacets() iter.Seq2[int, FacetValue] {
 			checked := slices.Contains(ci.checked, v.id)
 			result := FacetValue{
 				ID:      v.id,
-				Title:   v.Title(ci.lang),
-				Desc:    v.Desc(ci.lang),
+				Title:   v.title.String(ci.lang),
+				Desc:    v.desc.String(ci.lang),
 				Count:   count,
 				Checked: checked,
 				Prefix:  prefix,
@@ -77,19 +100,6 @@ func (ci FacetIterator) IterWithFacets() iter.Seq2[int, FacetValue] {
 
 func (ci FacetIterator) Size() int {
 	return len(ci.filter.values)
-}
-
-type Facets map[string]map[string]int
-type FacetCategory map[string]int
-
-type FacetIterator struct {
-	title   string
-	desc    string
-	count   int
-	filter  category
-	facets  FacetCategory
-	lang    language.Language
-	checked []string
 }
 
 func (fi FacetIterator) Count() int {
@@ -121,13 +131,4 @@ func (fi FacetIterator) Active() bool {
 		}
 	}
 	return active
-}
-
-type FacetValue struct {
-	ID      string
-	Title   string
-	Desc    string
-	Count   int
-	Checked bool
-	Prefix  string
 }

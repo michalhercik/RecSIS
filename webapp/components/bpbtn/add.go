@@ -37,7 +37,7 @@ func (b AddWithTwoTemplComponents) PartialComponentSecond(lang language.Language
 		model := ViewModel{
 			course:     course,
 			semesters:  semesters,
-			hxPostBase: b.Options.HxPostBase,
+			hxPostBase: b.HxPostBase,
 			hxSwap:     hxSwap,
 			hxTarget:   hxTarget,
 			hxInclude:  hxInclude,
@@ -47,26 +47,13 @@ func (b AddWithTwoTemplComponents) PartialComponentSecond(lang language.Language
 }
 
 type Add struct {
-	DB      *sqlx.DB
-	Templ   func(ViewModel, text) templ.Component
-	Options Options
+	DB         *sqlx.DB
+	Templ      func(ViewModel, text) templ.Component
+	HxPostBase string
 }
 
 func (b Add) Endpoint() string {
 	return "POST /" + endpointPath
-}
-
-func (b Add) Component(semesters []bool, lang language.Language, course string) templ.Component {
-	t := texts[lang]
-	model := ViewModel{
-		course:     course,
-		semesters:  semesters,
-		hxPostBase: b.Options.HxPostBase,
-		hxSwap:     b.Options.HxSwap,
-		hxTarget:   b.Options.HxTarget,
-		hxInclude:  b.Options.HxInclude,
-	}
-	return b.Templ(model, t)
 }
 
 func (b Add) PartialComponent(lang language.Language) func(string, string, string, []bool, string) templ.Component {
@@ -75,7 +62,7 @@ func (b Add) PartialComponent(lang language.Language) func(string, string, strin
 		model := ViewModel{
 			course:     course,
 			semesters:  semesters,
-			hxPostBase: b.Options.HxPostBase,
+			hxPostBase: b.HxPostBase,
 			hxSwap:     hxSwap,
 			hxTarget:   hxTarget,
 			hxInclude:  hxInclude,
@@ -92,22 +79,22 @@ func (b Add) ParseRequest(r *http.Request, additionalCourses []string) ([]string
 		err      error
 	)
 	t := texts[language.FromContext(r.Context())]
-	courses, err = b.CoursesFromRequest(r, additionalCourses, t)
+	courses, err = b.coursesFromRequest(r, additionalCourses, t)
 	if err != nil {
 		return courses, year, semester, errorx.AddContext(err)
 	}
-	year, err = b.YearFromRequest(r, t)
+	year, err = b.yearFromRequest(r, t)
 	if err != nil {
 		return courses, year, semester, errorx.AddContext(err)
 	}
-	semester, err = b.SemesterFromRequest(r, t)
+	semester, err = b.semesterFromRequest(r, t)
 	if err != nil {
 		return courses, year, semester, errorx.AddContext(err)
 	}
 	return courses, year, semester, nil
 }
 
-func (b Add) CoursesFromRequest(r *http.Request, additionalCourses []string, t text) ([]string, error) {
+func (b Add) coursesFromRequest(r *http.Request, additionalCourses []string, t text) ([]string, error) {
 	courses := additionalCourses
 	course := r.FormValue(courseParam)
 	if course != "" {
@@ -123,7 +110,7 @@ func (b Add) CoursesFromRequest(r *http.Request, additionalCourses []string, t t
 	return courses, nil
 }
 
-func (b Add) YearFromRequest(r *http.Request, t text) (int, error) {
+func (b Add) yearFromRequest(r *http.Request, t text) (int, error) {
 	yearString := r.FormValue(yearParam)
 	if yearString == "" {
 		return 0, errorx.NewHTTPErr(
@@ -143,7 +130,7 @@ func (b Add) YearFromRequest(r *http.Request, t text) (int, error) {
 	return year, nil
 }
 
-func (b Add) SemesterFromRequest(r *http.Request, t text) (int, error) {
+func (b Add) semesterFromRequest(r *http.Request, t text) (int, error) {
 	semesterString := r.FormValue(semesterParam)
 	if semesterString == "" {
 		return 0, errorx.NewHTTPErr(
