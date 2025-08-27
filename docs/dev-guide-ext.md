@@ -308,7 +308,7 @@ This package works as follows:
 4. If the user is not authenticated, they are redirected to the login page. Logging in using (mock-)CAS and logging out (which does not communicate with the CAS server) is done in `cas.go` file. Database interactions are handled in the `database.go` file.
 5.  Once authenticated, servers can call `Auth.UserID(r)` to get the authenticated user ID from the request context.
 
-Logout and login pages (their templated HTML) can be seen in `view.templ` file. This file uses Go templates to render the HTML for these pages. Login uses `loginModel` structure defined in `model.go`. `texts.go` contains multi-language texts used in the HTML and in error messages.
+Logout and login pages (their templated HTML) can be seen in `view.templ` file. This file uses HTML templates to render the HTML for these pages. Login uses `loginModel` structure defined in `model.go`. `texts.go` contains multi-language texts used in the HTML and in error messages.
 
 #### `dbds`
 
