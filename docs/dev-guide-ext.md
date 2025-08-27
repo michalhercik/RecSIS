@@ -755,7 +755,10 @@ documentation](https://apereo.github.io/cas/).
 Simple service that provides BERT embeddings for given texts. It is used by
 MeiliSearch to embed courses. The embeddings are then used for simple
 recommendations. The service implements single endpoint:
-- `GET /embeding`
+- `POST /embedding`
+The endoint expects JSON body with a single field `text` which is a text to be
+embedded. Resopnse than contains single field `embedding` which is an array of
+float32 numbers representing the embedding. 
 
 ### Scripts
 
