@@ -488,8 +488,9 @@ filtering is done using [MeiliSearch](https://www.meilisearch.com/docs/learn/fil
 
 1. Inject filters into a server using `filters.MakeFilters` in `main.go`. As `source`, database with filter categories and their values should be used. `id` should be the `filter_id` of the filter category. That can be found in the database, see the [Data Model](#data-model). As we currently have filters for courses and surveys, you can see in `main.go` that we use `courses` and `course-surveys` as `id`.
 2. In `server.go`, the injected filters must be initialized using `s.Filters.Init()` method. This will fetch the corresponding filter categories and their values from the database.
-3. If you want to show filters on the page, you need to create a request from them which is then taken by `MeiliSearch`, which does a search. That returns a response from which you can create a view-model from the page.
-<!-- TODO: finish this flow and make it more detailed -->
+3. Then you would make search request to MeiliSearch. In the request, you must specify for which fields you want facets to be generated. You can get the list of fields using `s.Filters.Facets()` method. It is also possible to filter the search by parsing URL query parameters using `s.Filters.ParseURLQuery(r.URL.Query(), lang)` method. It will return a filter expression that can be used in MeiliSearch search request.
+4. Part of the MeiliSearch search response are `FacetsDistribution` which is a mapping of Category>Value>Count in other words it is `Facets` type. 
+5. You can then display the filters on the page using `s.Filters.IterFiltersWithFacets()` method. It takes `Facets` from MeiliSearch response, URL values (to know which values are selected), and language (for displaying titles and descriptions in the correct language). The method returns an iterator of `FacetIterator` which represents a filter category with its values. You can then use its methods to get information about the category and iterate over its values.
 
 #### `bpbtn`
 
@@ -1216,11 +1217,49 @@ We have now successfully created a new page. There are many more things you can 
 
 ### Add a filter
 
-<!-- TODO -->
+Let's say we have in Meilisearch index *teachers*. The index contains documents with fields *firstName*, *lastName* and *department*. We would like to add a filter for *department* field which can have values *A*,*B* or *C*. The mapping of A,B,C letters to departments go like this A->KSI, B->UFAL, C->KAM. To do that, we need add a new filter, filter category and filter values to the database. This can be done by modifing ELT transformation responsible for creating filters (`initFilterTables`) or simply executing the following SQL queries in the database but the changes will not survive next ELT run:
+
+```sql
+INSERT INTO filters(id) VALUES ('teachers');
+INSERT INTO filter_categories(id, filter_id, facet_id, title_cs, title_en, description_cs, description_en, displayed_value_limit, position) VALUES 
+  (42, 'teachers', 'department', 'Katedra', 'Department', 'Katedra učitele', 'Teacher department', 3, 1);
+INSERT INTO filter_values(id, category_id, facet_id, title_cs, title_en, description_cs, description_en, position) VALUES 
+  (100, 'department', 'A', 'KSI', 'KSI', 'Katedra KSI', 'Department KSI', 1),
+  (101, 'department', 'B', 'UFAL', 'UFAL', 'Katedra UFAL', 'Department UFAL', 2),
+  (102, 'department', 'C', 'KAM', 'KAM', 'Katedra KAM', 'Department KAM', 3);
+```
+
+Now we can use this filter in our page. Let's say we want to add it to our teachers page. It could look roughly like this: 
+```go
+teacher.Server{
+  Filters: filters.MakeFilters(db, "teachers"),
+  //...
+}
+```
+Lastly we would use the `Filters` as in an other server to make Search requests and display filters.
 
 ### Add a recommender
 
-<!-- TODO -->
+Let's say that the current for you Recommender on home page does not work for you and you would like to change it. Let's say you already implemented advanced search engine as a standalone service with REST API. The API implements `GET /{user_id}` endpoint which returns list of recommended course codes to a given user. Then you only need to create recommendation strategy that would utilize such endpoint and inject the strategy in `ForYou` field in `home.Server` struct. It would look somthing like this:
+
+1. Create strategy in `recommend` package.
+```go
+package recommend
+
+type MyAwesomeRecEngine struct {}
+
+func (m MyAwesomeRecEngine) Recommend(userID string) ([]string, error) {
+  res := m.makeRequestToAdvancedSearchEngineService(userID)
+  return res.ListOfRecommendedCourseCodes
+}
+```
+2. Inject `MyAwesomeRecEngine` into home page defined in `main.go` file.
+```go
+home.Server{
+  ForYou: recommend.MyAwesomeRecEngine{},
+  //...
+}
+```
 
 ### Add error configuration
 
