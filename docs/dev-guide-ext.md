@@ -4,7 +4,17 @@
 - extend list of technologies - explain how and where are they used
 -->
 
+
 # RecSIS Development Guide
+
+- [RecSIS Development Guide](#recsis-development-guide)
+  - [Introduction](#introduction)
+  - [How to run RecSIS](#how-to-run-recsis)
+  - [Code structure](#code-structure)
+  - [Data Model](#data-model)
+  - [Testing](#testing)
+  - [How to extend this application](#how-to-extend-this-application)
+  - [Contact](#contact)
 
 Before diving into the concrete steps of building and running RecSIS, it would
 be beneficial to understand overall structure of the project. If you feel like
@@ -709,6 +719,77 @@ migration of data into search engine. This should be addressed in the future.
 This directory contains various scripts for managing the application. They all have been introduced in the [How to run RecSIS](#how-to-run-recsis) part.
 
 ## Data Model
+
+### Source
+
+The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the the schema is also used by another application with different needs we don't use all the synonyms. Below is a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
+
+ - UCIT - Basic info about teachers.
+ - FAK - Basic info about faculty. 
+ - POVINN - Basic info about course.
+ - PAMELA - Description of course such as annotation or syllabus.
+ - POVINN2JAZYK - POVINN supports storing only one language in which course is taught. POVINN2JAZYK provides additional languages in which course is taught. 
+ - UCIT_ROZVRH - Maps course to teachers for academic year and semester. 
+ - ANKECY - Written survey results with anonymized data about author.
+ - PKLAS - Maps course to classification.
+ - PTRIDA - Maps course to class.
+ - PREQ - Maps course to different types of requisities. The requisities are usually simple course codes. But they can be also something more complicated. For example course NPRG041 has disjunctive prerequisities. In the table it is still represented as single course code N#IA028. N#IA028 also exists in table POVINN. Currently we don't know to translate such requisite correctly. 
+ - JAZYK - Maps language code to label.
+ - KLAS - Maps Classification code to label.
+ - TRIDA - Maps Class code to label and faculty.
+ - DRUH - Maps study type (Bc, Mgr, ...) code to label.
+ - TYPYPOV - Maps course examination type code to label.
+ - SEKCE - Maps	section (informatics/mathematics/...) code to label and faculty.
+ - USTAV - Maps department code to label, faculty and section.
+ - RVCEM - Maps lecture/seminar range unit code to label.
+ - ZSEM - Maps semester code to label.
+ - PVYUC - Maps course state (taught/cancelled/...) to label.
+ - TYPMEM - Maps course description (annotation, ...) type code to label.
+ - OBOR - Basic info about study field. 
+ - STUDPLAN - This is an Oracle database package. By providing degree plan code and academic year it returns degree plan. For example `SELECT * FROM TABLE(study_plan.stud_plan('NISD23N', 2023));`. The RecSIS currently doesn't work with BLOC_GRADE column which indicates recommended year of study. It is possible that in the results are more useful columns that are currently not used. It would be great to investigate it more and implement more features related to degree plan in RecSIS. 
+
+We have also access to two more tables which will be useful in the future for more advanced recommendation engine.
+ - STUDIUM - Anonymized basic info about student study.
+ - ZKOUS - Binary results of student exams.
+
+ For better understanding of the source data model we encourage you to connect to the SIS database and explore the data. The best way is to simply select few rows from a table and see what is inside. More insight can be found by quering table "tabulky" - for example to get info about table POVINN `SELECT * FROM tabulky WHERE tabulka='POVINN'`. Be aware that the result is for a table and not the synonyms - it is possible that not all synonyms are existing tables.
+
+
+### Target
+
+Below is final data model stored locally and used by RecSIS. It's definition can be seen in [30-create-tables.sql](../init_db/30-create-tables.sql). The tables populated by elt are courses, filters, filter_categories, filter_values, degree_plans, degree_plan_list and degree_plan_years. In those tables are stored data about courses and degree plans. Those tables are not expected to be updated by any other part of the system. we tried make those tables as simple as possible since we do not update them and most of the values are only to be viewed by users. Other tables are on the other hand updated only by the webapp. Their purpose is to store application specific data such as courses added to blueprint, course ratings and user sessions.
+
+![](./recsis-data-model.png)
+
+#### Course 
+
+**Relevant tables:** courses  
+All data about courses are stored in a single table. Each language variant (cs, en) is stored on a single row - meaning each course is represented by two rows. Denormalization with PostgreSQL support for storing JSONB data allows us to keep all course-related information in together, making it easier to manage and query. The disadvantage of this approach is that in case of extending the RecSIS by richer support for teachers the data model may need to be re-evaluated to reflect better the usage of the data. 
+
+#### Blueprint
+
+**Relevant tables:** *blueprint_years, blueprint_semesters, blueprint_courses*  
+Blueprint data are properly normalized across these tables. The motivation behind this design is to allow for flexible querying and reporting on the blueprint structure. We also decided to store unassigned courses in this table structure under *blueprint_years.academic_year = 0*. So every user will have at least one record in *blueprint_years* table to represent unassigned blueprint courses. 
+
+#### Degree plan
+
+**Relevant tables:** *degree_plans, degree_plan_list, degree_plan_years*  
+Degree plan is stored also denormalized to allow easier querying. To ensure valid degree plans stored in *studies* plan we created *degree_plan_list* and *degree_plan_years* tables. The first one stores all valid degree plans and the second one stores all valid academic years. This allows us to validate user input when user selects his/her degree plan and academic year.
+
+#### Session
+
+**Relevant tables:** *sessions*  
+To store session key used to authenticate logged users. The token references token used when authenticating user via CAS. To learn more about it see [CAS documentation](https://apereo.github.io/cas/).
+
+#### Studies
+
+**Relevant tables:** *studies*  
+To store studies related information about a user. This includes study plan and year of enrollemnt.
+
+#### Rating
+
+**Relevant tables:** *course_ratings, course_rating_categories_domain, course_rating_categories, course_overall_ratings*  
+Table *course_overall_ratings* stores like/dislike from a user for a specific course. Tables *course_ratings*, *course_rating_categories_domain*, and *course_rating_categories* store rating for a specific category for a course. Table *course_rating_categories_domain* is preparation for supporting different rating ranges for distinct rating categories.
 
 <!-- TODO add Data Model and explain data transformation process and original data sources and model -->
 
