@@ -135,7 +135,7 @@ required images if they are not already present on your system.
 
 **Steps:**
 ```
-docker compose up -d postgres meilisearch elt recommender mockcas adminer
+docker compose up -d postgres meilisearch elt bert mockcas adminer
 ```
 
 Now that Meilisearch is running you need to configurate it using script. The
@@ -190,7 +190,7 @@ git clone git@github.com:michalhercik/RecSIS.git
 scripts\init-env.ps1 [.env file path]
 
 # Build & run containers
-docker compose up -d postgres meilisearch elt recommender mockcas adminer
+docker compose up -d postgres meilisearch elt bert mockcas adminer
 
 # Init Meilisearch
 ./scripts/init_meili.ps1
@@ -213,7 +213,7 @@ source [.env file path]
 export $(cut -d= -f1 [.env file path])
 
 # Build & run containers
-docker compose up -d postgres meilisearch elt recommender mockcas adminer
+docker compose up -d postgres meilisearch elt bert mockcas adminer
 
 # Init Meilisearch
 ./scripts/init_meili.sh
@@ -268,6 +268,21 @@ Functions:
   > Constructor for `LangString` instance with the provided Czech and English strings.
 - `SetAndStripLanguageHandler(http.Handler) http.Handler`
   > Middleware that strips the language from the URL path and sets it in the request context. This function is used in `main.go` for handling language-specific routes. Its counterpart is `FromContext(context.Context)`, which is used to retrieve the language from the request context.
+
+#### `recommend`
+
+This package provides strategies for recommendations. It is used by home page to recommend courses.
+
+Types and methods:
+
+- `MeiliSearchSimilarToBlueprint` 
+  > Recommendation strategy that takes courses from user's blueprint and finds similar courses using MeiliSearch's [hybrid search](https://www.meilisearch.com/docs/reference/api/search#hybrid-search).
+- `(m MeiliSearchSimilarToBlueprint) Recommend(userID string) ([]string, error)`
+  > Does the recommendation and returns course codes of recommended courses.
+- `NewCourses` 
+  > Recommendation strategy that returns courses with newest valid from year.
+- `(m NewCourses) Recommend(userID string) ([]string, error)`
+  > Does the recommendation and returns course codes of recommended courses.
 
 #### `cas`
 
@@ -704,15 +719,26 @@ migration of data into search engine. This should be addressed in the future.
 
 ### Init_db
 
-<!-- TODO -->
+Scripts that are used for initializing the local database. They are run when the
+postgres container is started for the first time. The scripts are run in
+lexicographical order.
 
 ### Mock_cas
 
-<!-- TODO -->
+Very simple service that mimics the Central Authentication Service (CAS) server.
+It naively implements three endpoints:
+- `POST /cas/login`
+- `GET /cas/login`
+- `GET /cas/serviceValidate` 
+To get better understanding of how CAS works please refer to [CAS protocol
+documentation](https://apereo.github.io/cas/).
 
-### Recommender
+### Bert
 
-<!-- TODO -->
+Simple service that provides BERT embeddings for given texts. It is used by
+MeiliSearch to embed courses. The embeddings are then used for simple
+recommendations. The service implements single endpoint:
+- `GET /embeding`
 
 ### Scripts
 
