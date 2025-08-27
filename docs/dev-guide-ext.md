@@ -699,7 +699,14 @@ article](https://klotzandrew.com/blog/postgres-passing-65535-parameter-limit/).
 It also worth noting that before loading course descriptions into database we
 had to remove null bytes as the PostgreSQL doesn't support it. The extract
 and load process for each table is defined in structure (one structure for each
-source table) implementing `operation` interface (see below). 
+source table) implementing `operation` interface (see below). The last tricky
+extraction was related to degree plans. We don't have access to list of degree
+plans (viz [Data Model](#data-model)) with appropriate years and to fetch degree
+plan from SIS database we need degree plan code and year. We did a dirty
+workaround by taking studies in ten year window, drop duplicates and for each
+degree plan code extracted variant for every year. We don't know how good or bad
+the solution is because we don't know much about the degree plans but we believe
+this solution works.
 
 ```go
 type operation interface {
@@ -790,6 +797,7 @@ We have also access to two more tables which will be useful in the future for mo
 
  For better understanding of the source data model we encourage you to connect to the SIS database and explore the data. The best way is to simply select few rows from a table and see what is inside. More insight can be found by quering table "tabulky" - for example to get info about table POVINN `SELECT * FROM tabulky WHERE tabulka='POVINN'`. Be aware that the result is for a table and not the synonyms - it is possible that not all synonyms are existing tables.
 
+ Currently we can't access personal data of a student. This is something that we are working on. Getting access at least to basic info about student such as year of enrollment and degree plan would allow us to simplify degree plan UI and improve degree plan UX. We would also like to get access to complete courses to automatically populate blueprint with correct historical data. 
 
 ### Target
 
