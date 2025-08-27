@@ -65,19 +65,6 @@ type FacetIterator struct {
 
 type facetCategory map[string]int
 
-func CategoryWithAtLeast(n int, iter iter.Seq[FacetIterator]) iter.Seq[FacetIterator] {
-	return func(yield func(FacetIterator) bool) {
-		for c := range iter {
-			if c.count < n {
-				continue
-			}
-			if !yield(c) {
-				return
-			}
-		}
-	}
-}
-
 func (ci FacetIterator) IterWithFacets() iter.Seq2[int, FacetValue] {
 	return func(yield func(int, FacetValue) bool) {
 		for i, v := range ci.filter.values {

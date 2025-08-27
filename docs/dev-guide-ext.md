@@ -420,29 +420,28 @@ Creating a `HTTPError` from an error can happen anywhere on the error's journey 
 
 #### `filters`
 
-<!-- TODO: FINISH THIS -->
 Parse filters for search from user request and convert them into filter query for search engine. To be able to parse user request the package needs to be used also for generating the filtering options so that they use proper IDs. 
 
 Types and methods:
 
 - `Filters`
-  > ...
+  > Object that represents a collection of filter categories and their values. It is used to display filtering options with proper references to search engine.
 - `(*filters) Init() error`
   > Initializes the filters by fetching the corresponding filter categories and their values from the database.
 - `(filters) Facets() []string`
-  > ...
+  > Returns list of fields for which facets should be generated. The fields are used in MeiliSearch search request.
 - `(filters) ParseURLQuery(url.Values, language.Language) (expression, error)`
-  > ...
+  > Parses The URL query parameters to create a filter expression for MeiliSearch. Takes URL values and language as input and returns a filter expression and an error if parsing fails.
 - `(Filters) IterFiltersWithFacets(Facets, url.Values, language.Language) iter.Seq[FacetIterator]`
-  > ...
+  > Iterates over the filter categories, returning an iterator of `FacetIterator` for each category. Takes facets returned by MeiliSearch, URL values, and language as input.
 - `Facets`
-  > alias for `map[string]map[string]int`
-- `FacesValue`
-  > ...
+  > alias for `map[string]map[string]int`. Represents Category>Value>Count mapping of facets returned by MeiliSearch.
+- `FacetValue`
+  > Structure representing a single value in a filter category, including its ID, title, description, count of items matching this value, and whether it is currently selected.
 - `FacetIterator`
   > Structure for filter category with info about it. For detail its see methods and usage.
 - `(FacetIterator) IterWithFacets() iter.Seq2[int, FacetValue]`
-  > ...
+  > Returns an iterator over the values in the filter category, yielding index and `FacetValue` for each value.
 - `(FacetIterator) Size() int`
   > Returns the number of all possible values in the filter category.
 - `(FacetIterator) Count() int`
@@ -457,17 +456,27 @@ Types and methods:
   > Returns the count of values that should be displayed.
 - `(FacetIterator) Active() bool`
   > Returns whether the filter category is active. That means that at least one value is selected.
+- `expression`
+  > Alias for `[]condition`. Represents a filter expression for MeiliSearch.
+- `(*expression) Append(param string, values ...string)`
+  > Appends a new condition to the expression based on the provided parameter and values. 
+- `(expression) String() string`
+  > Converts the expression to a string representation suitable for MeiliSearch filter expressions.
+- `(expression) ConditionsCount() int`
+  > Returns the number of conditions in the expression.
+- `(expression) Except() func(func(string, string) bool)`
+  > Return iterator which returns all variants of the expression without one condition. It is used for Meilisearch multi-search request to get disjunctive facets ([see discussion](https://github.com/orgs/meilisearch/discussions/187)) - used in courses package.
+- `condition`
+  > Represents category condition. It stores category ID and selected values IDs.
+- `(condition) String() string`
+  > Converts the condition to a string representation suitable for MeiliSearch filter expressions.
 
 Functions:
 
 - `MakeFilters(*sqlx.DB, string) Filters`
   > Constructor for `Filters` that initializes it with the provided database connection and filter ID.
 - `SkipEmptyFacet(iter.Seq2[int, FacetValue]) iter.Seq2[int, FacetValue]`
-  > ...
-- `CategoryWithAtLeast(int, iter.Seq[FacetIterator]) iter.Seq[FacetIterator]`
-  > ...
-
-<!-- TODO add expressions -->
+  > If the value has zero count given the search query, it is skipped. Used for displaying survey filters.
 
 <!-- my notes - delete -->
 in DB there are filter categories and their values
@@ -644,7 +653,7 @@ SQL queries needed for database called are usually stored in `internal/sqlquery`
 
 Some packages have some extra files, specific for their functionality:
 - `sanitizer.go` - sanitize and transform texts seen on the course detail page. For more information, please refer to the file itself.
-- `search.go` - <!-- TODO -->
+- `search.go` - implements search functionality using Meilisearch client. For more information, please refer to the file itself or [Meilisearch API documentation](https://www.meilisearch.com/docs/reference/api).
 
 If you want to learn how to pages and servers work in greater detail, please read the [Add new page](#add-new-page) part.
 
@@ -816,8 +825,6 @@ To store studies related information about a user. This includes study plan and 
 
 **Relevant tables:** *course_ratings, course_rating_categories_domain, course_rating_categories, course_overall_ratings*  
 Table *course_overall_ratings* stores like/dislike from a user for a specific course. Tables *course_ratings*, *course_rating_categories_domain*, and *course_rating_categories* store rating for a specific category for a course. Table *course_rating_categories_domain* is preparation for supporting different rating ranges for distinct rating categories.
-
-<!-- TODO add Data Model and explain data transformation process and original data sources and model -->
 
 ## Testing
 
