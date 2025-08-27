@@ -276,7 +276,7 @@ This package provides strategies for recommendations. It is used by home page to
 Types and methods:
 
 - `MeiliSearchSimilarToBlueprint` 
-  > Recommendation strategy that takes courses from user's blueprint and finds similar courses using MeiliSearch's [hybrid search](https://www.meilisearch.com/docs/reference/api/search#hybrid-search).
+  > Recommendation strategy that takes courses from user's blueprint and finds similar courses using MeiliSearch's [hybrid search](https://www.meilisearch.com/docs/reference/api/search#hybrid-search) which is configured to uses bert service for embeddings. It also filters results to only include informatics courses.
 - `(m MeiliSearchSimilarToBlueprint) Recommend(userID string) ([]string, error)`
   > Does the recommendation and returns course codes of recommended courses.
 - `NewCourses` 
