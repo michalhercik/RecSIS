@@ -6,6 +6,7 @@ BASE_URL="http://localhost:7700"
 
 # Set filterable attributes
 filterable='[
+  "code",
   "start_semester",
   "semester_count",
   "lecture_range",
