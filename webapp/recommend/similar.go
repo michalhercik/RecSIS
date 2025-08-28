@@ -17,13 +17,13 @@ type MeiliSearchSimilarToBlueprint struct {
 }
 
 func (m MeiliSearchSimilarToBlueprint) Recommend(userID string) ([]string, error) {
-	blueprintCourses, err := m.blueprintCourses(userID)
+	codes, descriptions, err := m.blueprintCourses(userID)
 	if err != nil {
 		// TODO: add context
 		return nil, err
 	}
-	query := m.buildQuery(blueprintCourses)
-	filter := m.buildFilter(blueprintCourses)
+	query := m.buildQuery(descriptions)
+	filter := m.buildFilter(codes)
 	similarCourses, err := m.similarCourses(query, filter, 30)
 	if err != nil {
 		// TODO: add context
@@ -33,10 +33,13 @@ func (m MeiliSearchSimilarToBlueprint) Recommend(userID string) ([]string, error
 	return selected, nil
 }
 
-func (m MeiliSearchSimilarToBlueprint) blueprintCourses(userID string) ([]string, error) {
-	var courses []string
+func (m MeiliSearchSimilarToBlueprint) blueprintCourses(userID string) ([]string, []string, error) {
+	var courses []struct {
+		Code        string `db:"code"`
+		Description string `db:"description"`
+	}
 	query := `--sql
-		SELECT c.title FROM blueprint_years by
+		SELECT c.code, CONCAT(c.title, ' - ', c.annotation->'content') description FROM blueprint_years by
 		INNER JOIN blueprint_semesters bs ON by.id = bs.blueprint_year_id
 		INNER JOIN blueprint_courses bc ON bs.id = bc.blueprint_semester_id
 		INNER JOIN courses c ON bc.course_code = c.code 
@@ -46,9 +49,15 @@ func (m MeiliSearchSimilarToBlueprint) blueprintCourses(userID string) ([]string
 	err := m.DB.Select(&courses, query, userID)
 	if err != nil {
 		// TODO: add context
-		return nil, err
+		return nil, nil, err
 	}
-	return courses, nil
+	codes := make([]string, len(courses))
+	descriptions := make([]string, len(courses))
+	for i, course := range courses {
+		codes[i] = course.Code
+		descriptions[i] = course.Description
+	}
+	return codes, descriptions, nil
 }
 
 func (m MeiliSearchSimilarToBlueprint) buildQuery(blueprintCourses []string) string {

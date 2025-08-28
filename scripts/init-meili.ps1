@@ -1,4 +1,5 @@
 $filterable = @(
+    "code",
     "start_semester",
     "semester_count",
     "lecture_range",
@@ -35,7 +36,7 @@ $response = Invoke-RestMethod -Uri "http://localhost:7700/indexes/courses/settin
             "response": {
                 "embedding": "{{embedding}}"
             },
-            "documentTemplate": "University course with title {{doc.title.en}}"
+            "documentTemplate": "University course with title {{doc.title.en}} {% if doc.annotation != nil %} {{doc.annotation[0]}} {% endif %}"
         }
     }'
 echo $response
