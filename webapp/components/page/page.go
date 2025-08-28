@@ -1,5 +1,15 @@
 package page
 
+/** PACKAGE DESCRIPTION
+
+The page package provides a reusable framework for rendering consistent page layouts across the application, including navigation, search, error handling, and main content injection. Its main purpose is to standardize how pages are constructed and displayed, ensuring a uniform user experience and simplifying the integration of features like quick search, navigation bar, and error reporting.
+
+Typical usage involves creating a Page instance (as in main.go) and configuring it with navigation items, search parameters, endpoints, and error handling. Typically, you would need only one such instance in the application. The View method is used to render a page by injecting the main content component, language, title, potentially search query, and user ID. This method automatically adds headers, navigation, and optionally search/filter controls. For pages that should not display filters or should forget the search query on refresh, the PageWithNoFiltersAndForgetsSearchQueryOnRefresh struct can be used.
+
+The package also provides routing for quick search functionality (quickSearch handler), which allows users to search for courses directly from the navigation bar. Error handling is integrated via the Error interface, ensuring that any rendering or data-fetching issues are reported to the user in a consistent, localized manner. Developers should use the Page type to wrap their main content and rely on its methods to handle layout, navigation, and search, making it easy to maintain and extend the application's UI.
+
+*/
+
 import (
 	"net/http"
 
@@ -67,7 +77,7 @@ func (p Page) quickSearch(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	query := r.FormValue(p.Param)
-	courses, err := p.Search.QuickSearchResult(query, lang)
+	courses, err := p.Search.quickSearchResult(query, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		p.Error.Log(errorx.AddContext(err))
@@ -88,8 +98,13 @@ func (p Page) quickSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 type Error interface {
+	// Logs the provided error.
 	Log(err error)
+
+	// Renders an error message to the user as a floating window, with a status code and localized message.
 	Render(w http.ResponseWriter, r *http.Request, code int, userMsg string, lang language.Language)
+
+	// Renders a floating window with error when any component cannot be rendered due to an error.
 	CannotRenderComponent(w http.ResponseWriter, r *http.Request, err error, lang language.Language)
 }
 

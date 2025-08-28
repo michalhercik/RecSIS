@@ -1,5 +1,15 @@
 package errorx
 
+/** PACKAGE DESCRIPTION
+
+The errorx package provides a centralized and extensible error handling solution for this application, with a focus on HTTP error reporting, user-friendly messaging, and localization. Its main purpose is to standardize how errors are logged, rendered to users, and propagated through the application, making it easier for developers to maintain consistent error handling across different components.
+
+Typical usage involves creating an ErrorHandler instance (as done in main.go), which can log errors, render error messages as floating windows or full pages, and handle fallback scenarios when rendering fails. For now, error messages must be correctly localized. It also provides utilities for wrapping errors with contextual information (such as method names and parameters), unwrapping custom error types to extract HTTP status codes and user messages, and converting slices for display purposes.
+
+To use errorx, inject an ErrorHandler into your server or handler structs, and call its methods (Log, Render, RenderPage, etc.) whenever you need to handle errors—whether it's a minor UI component failure or a major page-level issue. The package is designed to work seamlessly with custom error types (now only HTTPError, but that can be easily extended) and integrates with templating for rendering error components.
+
+*/
+
 import (
 	"errors"
 	"fmt"
@@ -116,7 +126,7 @@ func (he HTTPError) UserMessage() string {
 	return he.UserMsg
 }
 
-type AppError interface {
+type appError interface {
 	error
 	StatusCode() int
 	UserMessage() string
@@ -155,26 +165,17 @@ func AddContext(err error, params ...Param) error {
 }
 
 // tries to unwraps user message and HTTP status code from an error
-// if it is not an AppError, it returns http.StatusInternalServerError and a generic user message
+// if it is not an appError, it returns http.StatusInternalServerError and a generic user message
 func UnwrapError(err error, lang language.Language) (int, string) {
 	if err == nil {
 		return http.StatusOK, texts[lang].errOk
 	}
 
-	var appErr AppError
+	var appErr appError
 	if errors.As(err, &appErr) {
 		return appErr.StatusCode(), appErr.UserMessage()
 	}
 
 	// if not an AppError, return generic error message
 	return http.StatusInternalServerError, texts[lang].errGeneric
-}
-
-// transform int slice to string slice
-func ItoaSlice(ints []int) []string {
-	strs := make([]string, len(ints))
-	for i, v := range ints {
-		strs[i] = fmt.Sprintf("%d", v)
-	}
-	return strs
 }

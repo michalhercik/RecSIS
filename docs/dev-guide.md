@@ -16,7 +16,7 @@ development. The second undockerized application (Mock CAS) is a not used in
 production at all and the real instance of [CAS](https://cas.cuni.cz/cas/login)
 is used instead.
 
-![](../out/docs/services/dev_services.svg)
+![](./dev_services.svg)
 
 
 ### Search Engine
@@ -45,7 +45,7 @@ you need access to Acheron server to run ELT.
  allow you to issue AJAX requests directly from HTML. Brings SPA like experience
  to the SSR web apps.
  - [Templ](https://templ.guide/) - Compiler for HTML templates to minimize run
- time errors. Because the tooling is not the best we sometimes asking ourselfs
+ time errors. Because the tooling is not the best we sometimes asking ourselves
  if it was a wise choice.
  - [Bootstrap](https://getbootstrap.com/) - Simple way to style web apps.
  - [PostgreSQL](https://postgresql.org/) - Relational database of our choice
@@ -93,6 +93,12 @@ be afraid of password exposure. Variables needed to be set can be found in
 Alternatively if you run the command `docker compose` it will warn you about
 missing variables.
 
+All environment variables with `_PASS` suffix (except `SIS_DB_PASS`) can be set
+to any string you want. The string will be used as a password for the corresponding
+service. Same goes for `POSTGRES_USER` and `POSTGRES_PASSWORD`. `SIS_DB_USER`,
+`SIS_DB_PASS` and `ACHERON_USER` must be set correctly and if you need them, please
+contact us at [recsis@email.cz](mailto:recsis@email.cz).
+
 You can then load it in your terminal with the following command:
 
 For **Windows**:
@@ -134,11 +140,13 @@ For **Linux**
 ```
 
 Before running the webapp you need to install [templ](https://templ.guide/) tool
-which is responsible for generating HTML templates from `.templ` files.
+which is responsible for generating HTML templates from `.templ` files
+and [wgo](https://github.com/bokwoon95/wgo) which watches live changes in the source files and rebuilds the webapp.
 
 **Steps:**
 ```
 go install github.com/a-h/templ/cmd/templ@v0.2.793
+go install github.com/bokwoon95/wgo@latest
 ```
 
 Lastly you can run the webapp. The best way to do it is using watch script. The
@@ -224,7 +232,7 @@ implementing page handlers (e.g.  coursedetail, courses, ...).
 
 We would also like to give you an high level overview of how the ELT process
 works.  We decided to implement it using Go and SQL. The entire process is
-simple and we didn't feel the need to use any sofisticated tools. Most of the
+simple and we didn't feel the need to use any sophisticated tools. Most of the
 logic is implemented in SQL. Go serves mainly as orchestrator of the process.
 Therefore the source code or at least the main file serves as a high level
 overview of the process. We decided to KISS (Keep It Simple, Stupid) and
@@ -276,3 +284,8 @@ Other services are much simpler and if needed you should be able to understand
 them pretty quickly just by reading the code. 
 
 Happy developing!
+
+## Contact
+
+If you have any questions, suggestions, or issues with RecSIS, please feel free to contact us at
+[recsis@email.cz](mailto:recsis@email.cz).

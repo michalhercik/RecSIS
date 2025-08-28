@@ -1,5 +1,16 @@
 package bpbtn
 
+/** PACKAGE DESCRIPTION
+
+The bpbtn package provides reusable components and logic for adding courses to a user's blueprint (own study plan) in the application. Its main purpose is to encapsulate the UI and backend logic for the "add to blueprint" button, including request parsing, validation, error handling, and database operations. This package is designed to be injected into servers (such as courses or degree plan) so that the add button can be rendered and its actions handled consistently across different parts of the app.
+
+Typical usage:
+You create an instance of Add (or AddWithTwoTemplComponents for more complex UI needs), configure it with a database connection, a templating function for rendering the button, and options for HTMX integration. The server calls PartialComponent() to get a function that renders the add button, passing in flag slice with available semesters to assign to and course code. When a user clicks the button, the server uses ParseRequest to extract the course(s), year, and semester to assign to from the HTTP request, then calls Action to add the course(s) to the blueprint in the database. The package handles errors (such as duplicates or missing data) and returns localized messages using the errorx package.
+
+This approach allows developers to easily add blueprint functionality to any course listing or detail page, keeping the UI and backend logic consistent and maintainable.
+
+*/
+
 import (
 	"fmt"
 	"iter"
@@ -26,7 +37,7 @@ func (b AddWithTwoTemplComponents) PartialComponentSecond(lang language.Language
 		model := ViewModel{
 			course:     course,
 			semesters:  semesters,
-			hxPostBase: b.Options.HxPostBase,
+			hxPostBase: b.HxPostBase,
 			hxSwap:     hxSwap,
 			hxTarget:   hxTarget,
 			hxInclude:  hxInclude,
@@ -36,26 +47,13 @@ func (b AddWithTwoTemplComponents) PartialComponentSecond(lang language.Language
 }
 
 type Add struct {
-	DB      *sqlx.DB
-	Templ   func(ViewModel, text) templ.Component
-	Options Options
+	DB         *sqlx.DB
+	Templ      func(ViewModel, text) templ.Component
+	HxPostBase string
 }
 
 func (b Add) Endpoint() string {
 	return "POST /" + endpointPath
-}
-
-func (b Add) Component(semesters []bool, lang language.Language, course string) templ.Component {
-	t := texts[lang]
-	model := ViewModel{
-		course:     course,
-		semesters:  semesters,
-		hxPostBase: b.Options.HxPostBase,
-		hxSwap:     b.Options.HxSwap,
-		hxTarget:   b.Options.HxTarget,
-		hxInclude:  b.Options.HxInclude,
-	}
-	return b.Templ(model, t)
 }
 
 func (b Add) PartialComponent(lang language.Language) func(string, string, string, []bool, string) templ.Component {
@@ -64,7 +62,7 @@ func (b Add) PartialComponent(lang language.Language) func(string, string, strin
 		model := ViewModel{
 			course:     course,
 			semesters:  semesters,
-			hxPostBase: b.Options.HxPostBase,
+			hxPostBase: b.HxPostBase,
 			hxSwap:     hxSwap,
 			hxTarget:   hxTarget,
 			hxInclude:  hxInclude,
@@ -81,22 +79,22 @@ func (b Add) ParseRequest(r *http.Request, additionalCourses []string) ([]string
 		err      error
 	)
 	t := texts[language.FromContext(r.Context())]
-	courses, err = b.CoursesFromRequest(r, additionalCourses, t)
+	courses, err = b.coursesFromRequest(r, additionalCourses, t)
 	if err != nil {
 		return courses, year, semester, errorx.AddContext(err)
 	}
-	year, err = b.YearFromRequest(r, t)
+	year, err = b.yearFromRequest(r, t)
 	if err != nil {
 		return courses, year, semester, errorx.AddContext(err)
 	}
-	semester, err = b.SemesterFromRequest(r, t)
+	semester, err = b.semesterFromRequest(r, t)
 	if err != nil {
 		return courses, year, semester, errorx.AddContext(err)
 	}
 	return courses, year, semester, nil
 }
 
-func (b Add) CoursesFromRequest(r *http.Request, additionalCourses []string, t text) ([]string, error) {
+func (b Add) coursesFromRequest(r *http.Request, additionalCourses []string, t text) ([]string, error) {
 	courses := additionalCourses
 	course := r.FormValue(courseParam)
 	if course != "" {
@@ -112,7 +110,7 @@ func (b Add) CoursesFromRequest(r *http.Request, additionalCourses []string, t t
 	return courses, nil
 }
 
-func (b Add) YearFromRequest(r *http.Request, t text) (int, error) {
+func (b Add) yearFromRequest(r *http.Request, t text) (int, error) {
 	yearString := r.FormValue(yearParam)
 	if yearString == "" {
 		return 0, errorx.NewHTTPErr(
@@ -132,7 +130,7 @@ func (b Add) YearFromRequest(r *http.Request, t text) (int, error) {
 	return year, nil
 }
 
-func (b Add) SemesterFromRequest(r *http.Request, t text) (int, error) {
+func (b Add) semesterFromRequest(r *http.Request, t text) (int, error) {
 	semesterString := r.FormValue(semesterParam)
 	if semesterString == "" {
 		return 0, errorx.NewHTTPErr(

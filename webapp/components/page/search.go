@@ -16,7 +16,7 @@ type MeiliSearch struct {
 	Limit  int64
 }
 
-func (m MeiliSearch) QuickSearchResult(query string, lang language.Language) ([]quickCourse, error) {
+func (m MeiliSearch) quickSearchResult(query string, lang language.Language) ([]quickCourse, error) {
 	var result quickResponse
 	t := texts[lang]
 	index := m.Client.Index(m.Index)

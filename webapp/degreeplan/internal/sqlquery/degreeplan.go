@@ -34,6 +34,7 @@ SELECT
 	COALESCE(dp.bloc_name, '') bloc_name,
 	COALESCE(dp.bloc_note, '') bloc_note,
 	COALESCE(dp.note, '') note,
+	dp.bloc_type,
 	c.code,
 	c.title,
 	c.credits,
@@ -44,11 +45,7 @@ SELECT
 	c.seminar_range_summer,
 	c.exam,
 	c.guarantors,
-	ubs.semesters,
-	CASE
-		WHEN dp.bloc_type = 'A' THEN TRUE
-		WHEN dp.bloc_type = 'B' THEN FALSE
-	END AS is_compulsory
+	ubs.semesters
 FROM studies s
 INNER JOIN user_start_year my
 	ON s.start_year = my.year
@@ -100,6 +97,7 @@ SELECT
 	COALESCE(dp.bloc_name, '') bloc_name,
 	COALESCE(dp.bloc_note, '') bloc_note,
 	COALESCE(dp.note, '') note,
+	dp.bloc_type,
 	c.code,
 	c.title,
 	c.credits,
@@ -110,11 +108,7 @@ SELECT
 	c.seminar_range_summer,
 	c.exam,
 	c.guarantors,
-	ubs.semesters,
-	CASE
-		WHEN dp.bloc_type = 'A' THEN TRUE
-		WHEN dp.bloc_type = 'B' THEN FALSE
-	END AS is_compulsory
+	ubs.semesters
 FROM degree_plans dp
 LEFT JOIN courses c
 	ON dp.course_code = c.code

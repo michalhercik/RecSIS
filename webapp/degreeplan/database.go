@@ -18,14 +18,14 @@ type DBManager struct {
 }
 
 type dbDegreePlanRecord struct {
-	DegreePlanCode   string `db:"degree_plan_code"`
-	DegreePlanYear   int    `db:"start_year"`
-	BlocCode         string `db:"bloc_subject_code"`
-	BlocLimit        int    `db:"bloc_limit"`
-	BlocName         string `db:"bloc_name"`
-	BlocNote         string `db:"bloc_note"`
-	IsBlocCompulsory bool   `db:"is_compulsory"`
-	Note             string `db:"note"`
+	DegreePlanCode string `db:"degree_plan_code"`
+	DegreePlanYear int    `db:"start_year"`
+	BlocCode       string `db:"bloc_subject_code"`
+	BlocLimit      int    `db:"bloc_limit"`
+	BlocName       string `db:"bloc_name"`
+	BlocNote       string `db:"bloc_note"`
+	BlocType       string `db:"bloc_type"`
+	Note           string `db:"note"`
 	dbds.Course
 	BlueprintSemesters pq.BoolArray `db:"semesters"`
 }
@@ -53,6 +53,7 @@ func (m DBManager) userDegreePlan(uid string, lang language.Language) (*degreePl
 	for _, record := range records {
 		add(&dp, record)
 	}
+	fixLimits(&dp)
 	return &dp, nil
 }
 
@@ -79,6 +80,7 @@ func (m DBManager) degreePlan(uid, dpCode string, dpYear int, lang language.Lang
 	for _, record := range records {
 		add(&dp, record)
 	}
+	fixLimits(&dp)
 	return &dp, nil
 }
 
@@ -108,7 +110,8 @@ func add(dp *degreePlanPage, record dbDegreePlanRecord) {
 			code:         record.BlocCode,
 			note:         record.BlocNote,
 			limit:        record.BlocLimit,
-			isCompulsory: record.IsBlocCompulsory,
+			isCompulsory: record.BlocType == "A",
+			isOptional:   record.BlocType == "C",
 		})
 		blocIndex = len(dp.blocs) - 1
 	}
@@ -144,4 +147,18 @@ func intoTeacherSlice(from []dbds.Teacher) []teacher {
 		}
 	}
 	return teachers
+}
+
+func fixLimits(dp *degreePlanPage) {
+	for i := range dp.blocs {
+		if dp.blocs[i].isCompulsory {
+			creditSum := 0
+			for _, c := range dp.blocs[i].courses {
+				creditSum += c.credits
+			}
+			dp.blocs[i].limit = creditSum
+		} else if dp.blocs[i].isOptional {
+			dp.blocs[i].limit = 0
+		}
+	}
 }
