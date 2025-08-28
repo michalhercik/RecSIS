@@ -1,3 +1,32 @@
+- [RecSIS Development Guide](#recsis-development-guide)
+  - [Introduction](#introduction)
+    - [Search Engine](#search-engine)
+    - [ELT](#elt)
+    - [List of technologies](#list-of-technologies)
+  - [How to run RecSIS](#how-to-run-recsis)
+    - [Clone repository](#clone-repository)
+    - [Run](#run)
+    - [Summary](#summary)
+  - [Repo structure](#repo-structure)
+    - [Webapp](#webapp)
+    - [Cert](#cert)
+    - [Docs](#docs)
+    - [ELT](#elt-1)
+    - [Init\_db](#init_db)
+    - [Mock\_cas](#mock_cas)
+    - [Bert](#bert)
+    - [Scripts](#scripts)
+  - [Data Model](#data-model)
+    - [Source](#source)
+    - [Target](#target)
+  - [Testing](#testing)
+  - [How to extend this application](#how-to-extend-this-application)
+    - [Add new page](#add-new-page)
+    - [Add a filter](#add-a-filter)
+    - [Add a recommender](#add-a-recommender)
+    - [Add error configuration](#add-error-configuration)
+    - [Use `LangString`s](#use-langstrings)
+  - [Contact](#contact)
 <!-- TODO:
 - document where insufficient data limit UX and UI
 - add contact to Yaghob for access to Acheron servers for ELT process, or explain how to go around it
@@ -9,11 +38,32 @@
 
 - [RecSIS Development Guide](#recsis-development-guide)
   - [Introduction](#introduction)
+    - [Search Engine](#search-engine)
+    - [ELT](#elt)
+    - [List of technologies](#list-of-technologies)
   - [How to run RecSIS](#how-to-run-recsis)
-  - [Code structure](#code-structure)
+    - [Clone repository](#clone-repository)
+    - [Run](#run)
+    - [Summary](#summary)
+  - [Repo structure](#repo-structure)
+    - [Webapp](#webapp)
+    - [Cert](#cert)
+    - [Docs](#docs)
+    - [ELT](#elt-1)
+    - [Init\_db](#init_db)
+    - [Mock\_cas](#mock_cas)
+    - [Bert](#bert)
+    - [Scripts](#scripts)
   - [Data Model](#data-model)
+    - [Source](#source)
+    - [Target](#target)
   - [Testing](#testing)
   - [How to extend this application](#how-to-extend-this-application)
+    - [Add new page](#add-new-page)
+    - [Add a filter](#add-a-filter)
+    - [Add a recommender](#add-a-recommender)
+    - [Add error configuration](#add-error-configuration)
+    - [Use `LangString`s](#use-langstrings)
   - [Contact](#contact)
 
 Before diving into the concrete steps of building and running RecSIS, it would
@@ -225,7 +275,7 @@ go install github.com/a-h/templ/cmd/templ@v0.2.793
 ./scripts/watch.sh
 ```
 
-## Code structure
+## Repo structure
 
 Now that you have RecSIS up and running, it's time to explain a bit about the
 architecture.
