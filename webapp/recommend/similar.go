@@ -23,17 +23,18 @@ func (m MeiliSearchSimilarToBlueprint) Recommend(userID string) ([]string, error
 		return nil, err
 	}
 	query := m.buildQuery(blueprintCourses)
-	similarCourses, err := m.similarCourses(query)
+	filter := m.buildFilter(blueprintCourses)
+	similarCourses, err := m.similarCourses(query, filter, 30)
 	if err != nil {
 		// TODO: add context
 		return nil, err
 	}
-	return similarCourses, nil
+	selected := chooseRandom(similarCourses, 10)
+	return selected, nil
 }
 
 func (m MeiliSearchSimilarToBlueprint) blueprintCourses(userID string) ([]string, error) {
 	var courses []string
-	// TODO:
 	query := `--sql
 		SELECT c.title FROM blueprint_years by
 		INNER JOIN blueprint_semesters bs ON by.id = bs.blueprint_year_id
@@ -55,7 +56,13 @@ func (m MeiliSearchSimilarToBlueprint) buildQuery(blueprintCourses []string) str
 	return query
 }
 
-func (m MeiliSearchSimilarToBlueprint) similarCourses(query string) ([]string, error) {
+func (m MeiliSearchSimilarToBlueprint) buildFilter(blueprintCourses []string) string {
+	filter := "code NOT IN ['" + strings.Join(blueprintCourses, "','") + "']"
+	filter += " AND section=NI"
+	return filter
+}
+
+func (m MeiliSearchSimilarToBlueprint) similarCourses(query, filter string, limit int64) ([]string, error) {
 	const SemanticOnlyRatio = 1.0
 	req := &meilisearch.SearchRequest{
 		Hybrid: &meilisearch.SearchRequestHybrid{
@@ -63,8 +70,8 @@ func (m MeiliSearchSimilarToBlueprint) similarCourses(query string) ([]string, e
 			Embedder:      m.Embedder,
 		},
 		AttributesToRetrieve: []string{"code"},
-		Limit:                10,
-		Filter:               "section=NI",
+		Limit:                limit,
+		Filter:               filter,
 	}
 	rawRes, err := m.Search.Index(m.SearchIndex.Uid).SearchRaw(query, req)
 	if err != nil {
