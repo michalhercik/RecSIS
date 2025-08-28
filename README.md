@@ -38,3 +38,8 @@ development and research.
   You can find it in our repository on [GitHub](docs/dev-guide.md).
 
 - **Source Code**: The source code is available on [GitHub](https://github.com/michalhercik/RecSIS/).
+
+## Contact
+
+If you have any questions, suggestions, or issues with RecSIS, please feel free to contact us at
+[recsis@email.cz](mailto:recsis@email.cz).

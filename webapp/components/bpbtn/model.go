@@ -22,22 +22,6 @@ type ViewModel struct {
 	hxInclude  string
 }
 
-type Options struct {
-	HxPostBase string
-	HxSwap     string
-	HxTarget   string
-	HxInclude  string
-}
-
-func (o Options) With(hxSwap, hxTarget, hxInclude string) Options {
-	return Options{
-		HxPostBase: o.HxPostBase,
-		HxSwap:     hxSwap,
-		HxTarget:   hxTarget,
-		HxInclude:  hxInclude,
-	}
-}
-
 type overYearsIterator struct {
 	disableWinter bool
 	disableSummer bool

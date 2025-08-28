@@ -41,16 +41,14 @@ type text struct {
 	ttAssign           string
 	ttRemove           string
 	ttMove             string
-	ttUnassignYear1    string
-	ttUnassignYear2    string
-	ttRemoveYear1      string
-	ttRemoveYear2      string
 	ttUnassignWinter   string
 	ttRemoveWinter     string
 	ttUnassign         string
 	ttReassign         string
 	ttUnassignSummer   string
 	ttRemoveSummer     string
+	ttAssignedCredits  string
+	ttBlueprintCredits string
 	// stats
 	ttNumberOfCredits string
 	ttSemesterCredits string
@@ -142,16 +140,14 @@ var texts = map[language.Language]text{
 		ttAssign:           "Zařadit předmět",
 		ttRemove:           "Odstranit předmět",
 		ttMove:             "Přesunout předmět pomocí drag-and-drop",
-		ttUnassignYear1:    "Přesunout všechny předměty z ",
-		ttUnassignYear2:    ". ročníku do nezařazených",
-		ttRemoveYear1:      "Odstranit všechny předměty z ",
-		ttRemoveYear2:      ". ročníku",
 		ttUnassignWinter:   "Přesunout všechny předměty z tohoto zimního semestru do nezařazených",
 		ttRemoveWinter:     "Odstranit všechny předměty z tohoto zimního semestru",
 		ttUnassign:         "Přesunout předmět do nezařazených",
 		ttReassign:         "Přesunout předmět",
 		ttUnassignSummer:   "Přesunout všechny předměty z tohoto letního semestru do nezařazených",
 		ttRemoveSummer:     "Odstranit všechny předměty z tohoto letního semestru",
+		ttAssignedCredits:  "Počet kreditů přiřazených do ročníků",
+		ttBlueprintCredits: "Počet kreditů v blueprintu",
 		// stats
 		ttNumberOfCredits: "Počet kreditů",
 		ttSemesterCredits: "V tomto semestru",
@@ -231,16 +227,14 @@ var texts = map[language.Language]text{
 		ttAssign:           "Assign course",
 		ttRemove:           "Remove course",
 		ttMove:             "Drag and drop to sort",
-		ttUnassignYear1:    "Unassign all courses from Year ",
-		ttUnassignYear2:    "",
-		ttRemoveYear1:      "Remove all courses in Year ",
-		ttRemoveYear2:      "",
 		ttUnassignWinter:   "Unassign all courses from this winter semester",
 		ttRemoveWinter:     "Remove all courses from this winter semester",
 		ttUnassign:         "Unassign course",
 		ttReassign:         "Reassign course",
 		ttUnassignSummer:   "Unassign all courses from this summer semester",
 		ttRemoveSummer:     "Remove all courses from this summer semester",
+		ttAssignedCredits:  "Number of credits assigned to years",
+		ttBlueprintCredits: "Number of credits in the blueprint",
 		// stats
 		ttNumberOfCredits: "Number of credits",
 		ttSemesterCredits: "In this semester",

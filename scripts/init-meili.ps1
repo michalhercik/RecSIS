@@ -95,10 +95,3 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/setting
     -ContentType "application/json" `
     -Body ($sortable | ConvertTo-Json)
 echo "$($response.StatusCode) $($response.Content)"
-
-# $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/degree-plans/documents?primaryKey=id" `
-#     -Method Post `
-#     -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
-#     -ContentType "application/x-ndjson" `
-#     -InFile "$PSScriptRoot/../init_search/degree-plans-transformed.json"
-# echo "$($response.StatusCode) $($response.Content)"
