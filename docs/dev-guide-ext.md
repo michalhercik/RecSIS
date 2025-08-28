@@ -804,7 +804,126 @@ We have also access to two more tables which will be useful in the future for mo
 
 ### Target
 
-Below is final data model stored locally and used by RecSIS. It's definition can be seen in [30-create-tables.sql](../init_db/30-create-tables.sql). The tables populated by elt are courses, filters, filter_categories, filter_values, degree_plans, degree_plan_list and degree_plan_years. In those tables are stored data about courses and degree plans. Those tables are not expected to be updated by any other part of the system. we tried make those tables as simple as possible since we do not update them and most of the values are only to be viewed by users. Other tables are on the other hand updated only by the webapp. Their purpose is to store application specific data such as courses added to blueprint, course ratings and user sessions.
+There are two target models. One is stored in PostgreSQL and the second one in MeiliSearch. The later is used only for searching courses, degree plans and surveys. There is no synchronization between the two models. The data in MeiliSearch cannost be changed by webapp and are only updated by ELT process. The MeiliSearch data model consists of three indixes - courses, degree_plans and surveys. The courses index is used to search in courses and only to retrieve relevant course codes. Rest of the data is then fetched from PostgreSQL - call to PostgreSQL would have to been made anyway since blueprint is stored there and by this we don't have to combine results from the two sources. The degree_plans index is used to search in degree plans. The surveys index is used to search in surveys. Both degree_plans and surveys indexes has all the data needed to display search results. Exact configurtation (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1). Below are examples of documents stored in each index.
+
+**degree_plans**  
+```json
+{
+  "id": "number - unique identifier",
+  "code": "string - degree plan code",
+  "study_type": "string - Bc, NMgr, ...",
+  "title": "string - title of of associated study field",
+}
+```
+
+**survey**  
+```json
+{
+  "id": "number - unique identifier",
+  "course_code": "string - course code",
+  "academic_year": "number - academic year when the survey was filled",
+  "study_year": "number - year of study of the author",
+  "target_type": "string - lecture/seminar/...",
+  "content": "string - content of the survey",
+  "study_field": {
+    "id": "string - study field code",
+    "name": {
+      "cs": "string - study field name in czech",
+      "en": "string - study field name in english"
+    }
+  },
+  "study_type": {
+    "id": "string - study type code",
+    "abbr": {
+      "cs": "string - study type abbreviation in czech",
+      "en": "string - study type abbreviation in english"
+    },
+    "name": {
+      "cs": "string - study type name in czech",
+      "en": "string - study type name in english"
+  },
+  "teacher": {
+    "id": "number - SIS id",
+    "first_name": "string - teacher first name",
+    "last_name": "string - teacher last name",
+    "title_before": "string - teacher title before name",
+    "title_after": "string - teacher title after name"
+  }
+}
+```
+
+**courses**  
+```json
+{
+  "id": "number - SIS id",
+  "code": "string - course code",
+  "credits": "number - course credits",
+  "start_semester": "string - semester code when the course starts",
+  "semester_count": "number - duration of the course in semesters",
+  "taught_state": "string - course state code (represents taught/cancelled/...)",
+  "exam": [
+    "string - exam type code for winter semester",
+    "string - exam type code for summer semester",
+  ],
+  "range_unit": "string - lecture/seminar range unit code (HT/...)",
+  "faculty": "string - faculty code",
+  "department": "string - department code (32-KSI/...)",
+  "section": "string - section code (represents informatics/mathematics/...)",
+  "taught_lang": [
+    "string - language code in which the course is taught"
+  ],
+  "lecture_range": [
+    "number - lecture range for winter semester",
+    "number - lecture range for summer semester",
+  ],
+  "seminar_range": [
+    "number - seminar range for winter semester",
+    "number - seminar range for summer semester",
+  ], 
+  "guarantors": [
+    {
+      "first_name": "string - teacher first name",
+      "last_name": "string - teacher last name",
+    }
+  ],
+  "teachers": [
+    {
+      "first_name": "string - teacher first name",
+      "last_name": "string - teacher last name",
+    }
+  ],
+  "title": {
+    "cs": "string - course title in czech",
+    "en": "string - course title in english"
+  },
+  "annotation": [
+    "string - course annotation in czech",
+    "string - course annotation in english"
+  ],
+  "syllabus": [
+    "string - course syllabus in czech",
+    "string - course syllabus in english"
+  ],
+  "terms_of_passing": [
+    "string - course terms of passing in czech",
+    "string - course terms of passing in english"
+  ],
+  "literature": [
+    "string - course literature in czech",
+    "string - course literature in english"
+  ],
+  "requirements_of_assesment": [
+    "string - course requirements of assesment in czech",
+    "string - course requirements of assesment in english"
+  ],
+  "aim": [
+    "string - course aim in czech",
+    "string - course aim in english"
+  ],
+}
+```
+
+Data model of PostgreSQL is bit more complex but still fairly simple as can be seen in the diagram below. It's definition can be seen in [30-create-tables.sql](../init_db/30-create-tables.sql). The tables populated by elt are courses, filters, filter_categories, filter_values, degree_plans, degree_plan_list and degree_plan_years. In those tables are stored data about courses and degree plans. Those tables are not expected to be updated by any other part of the system. we tried make those tables as simple as possible since we do not update them and most of the values are only to be viewed by users. Other tables are on the other hand updated only by the webapp. Their purpose is to store application specific data such as courses added to blueprint, course ratings and user sessions.
 
 ![](./recsis-data-model.png)
 
