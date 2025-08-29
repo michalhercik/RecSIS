@@ -326,11 +326,11 @@ This package provides strategies for recommendations. It is used by home page to
 Types and methods:
 
 - `MeiliSearchSimilarToBlueprint` 
-  > Recommendation strategy that takes courses from user's blueprint and finds similar courses using MeiliSearch's [hybrid search](https://www.meilisearch.com/docs/reference/api/search#hybrid-search) which is configured to uses bert service for embeddings. It also filters results to only include informatics courses.
+  > Recommendation strategy that takes courses from user's blueprint and finds similar courses using MeiliSearch's [hybrid search](https://www.meilisearch.com/docs/reference/api/search#hybrid-search) which is configured to uses bert service for embeddings. It also filters results to only include informatics courses, filters out courses that are already in user's blueprint and picks 10 random courses from top 30 results.
 - `(m MeiliSearchSimilarToBlueprint) Recommend(userID string) ([]string, error)`
   > Does the recommendation and returns course codes of recommended courses.
 - `NewCourses` 
-  > Recommendation strategy that returns courses with newest valid from year.
+  > Recommendation strategy that returns courses with newest *valid_from* year. It also filters out courses that are in user's blueprint and courses that are not informatics courses. Lastly it picks 10 random courses from the top 30 courses.
 - `(m NewCourses) Recommend(userID string) ([]string, error)`
   > Does the recommendation and returns course codes of recommended courses.
 
@@ -1433,7 +1433,7 @@ func (m MyAwesomeRecEngine) Recommend(userID string) ([]string, error) {
   return res.ListOfRecommendedCourseCodes
 }
 ```
-2. Inject `MyAwesomeRecEngine` into home page defined in `main.go` file.
+2. Inject `MyAwesomeRecEngine` into home page defined in `main.go` file. The expected type for `home.Server.ForYou` is type that implements interface with only single method `Recommend(userID string) ([]string, error)`. Our type `recommend.MyAwesomeRecEngine` implements the interface. and we can simply replace used type for home page. It should look somthing like this:
 ```go
 home.Server{
   ForYou: recommend.MyAwesomeRecEngine{},

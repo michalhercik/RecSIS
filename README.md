@@ -27,17 +27,14 @@ development and research.
 
 ## Resources
 
-- **Demo**: The best way to understand RecSIS is to try it yourself.  
-  RecSIS is deployed at [acheron.ms.mff.cuni.cz:42050](https://acheron.ms.mff.cuni.cz:42050/).
-
-- **User Guide**: If you don't like to explore RecSIS on your own or want to find not-so-obvious features, take a look at the  
-  [User Guide](https://acheron.ms.mff.cuni.cz:42050/cs/help/cs.html).
-
-- **Dev Guide**: The Dev Guide is a great place to learn how RecSIS works under the hood.  
-  It helps you get RecSIS up and running in your local environment and explains the system's high-level architecture.  
-  You can find it in our repository on [GitHub](docs/dev-guide.md).
-
-- **Source Code**: The source code is available on [GitHub](https://github.com/michalhercik/RecSIS/).
+- [**Demo**](https://acheron.ms.mff.cuni.cz:42050/): The best way to understand RecSIS is to try it yourself.  
+- [**User Guide**](https://acheron.ms.mff.cuni.cz:42050/cs/help/cs.html): If you don't like to explore RecSIS on your own or want to find not-so-obvious features.
+- [**System Overview**](docs/service-overview.md): High level overview of services and used technologies.
+- [**How To Run**](docs/how-to-run.md): Steps for running RecSIS locally.
+- [**Data Model**](docs/data-model.md): Description of source and used data model.
+- [**Repo and Code structure**](docs/repo-code-structure.md): Description RecSIS repository and code structure.
+- [**Testing**](docs/testing.md): Few words about testing.
+- [**How To Extend**](docs/how-to-extend.md): Examples of how to add new page, ... 
 
 ## Contact
 
