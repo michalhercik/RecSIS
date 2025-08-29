@@ -1,5 +1,10 @@
 # How to run RecSIS
 
+- [How to run RecSIS](#how-to-run-recsis)
+  - [Clone repository](#clone-repository)
+  - [Run](#run)
+  - [Summary](#summary)
+
 ## Clone repository
 
 **Prerequisities:**

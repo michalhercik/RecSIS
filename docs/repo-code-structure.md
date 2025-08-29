@@ -1,7 +1,14 @@
 # Repo structure
 
-Now that you have RecSIS up and running, it's time to explain a bit about the
-architecture.
+- [Repo structure](#repo-structure)
+  - [Webapp](#webapp)
+  - [Cert](#cert)
+  - [Docs](#docs)
+  - [ELT](#elt)
+  - [Init\_db](#init_db)
+  - [Mock\_cas](#mock_cas)
+  - [Bert](#bert)
+  - [Scripts](#scripts)
 
 ## Webapp
 
