@@ -1,5 +1,20 @@
 # Data Model
 
+- [Data Model](#data-model)
+  - [Source](#source)
+  - [Target](#target)
+    - [MeiliSearch](#meilisearch)
+      - [degree\_plans](#degree_plans)
+      - [survey](#survey)
+      - [courses](#courses)
+    - [PostgreSQL](#postgresql)
+      - [Course](#course)
+      - [Blueprint](#blueprint)
+      - [Degree plan](#degree-plan)
+      - [Session](#session)
+      - [Studies](#studies)
+      - [Rating](#rating)
+
 ## Source
 
 The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the the schema is also used by another application with different needs we don't use all the synonyms. Below is a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
