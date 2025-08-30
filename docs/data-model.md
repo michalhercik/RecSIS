@@ -28,7 +28,7 @@ The source data model is already partially preprocessed SIS data model. It is pr
  - ANKECY - Written survey results with anonymized data about author.
  - PKLAS - Maps course to classification.
  - PTRIDA - Maps course to class.
- - PREQ - Maps course to different types of requisities. The requisities are usually simple course codes. But they can be also something more complicated. For example course NPRG041 has disjunctive prerequisities. In the table it is still represented as single course code N#IA028. N#IA028 also exists in table POVINN. Currently we don't know to translate such requisite correctly. 
+ - PREQ - Maps course to different types of requisites. The requisites are usually simple course codes. But they can be also something more complicated. For example course NPRG041 has disjunctive prerequisites. In the table it is still represented as single course code N#IA028. N#IA028 also exists in table POVINN. Currently we don't know to translate such requisite correctly. 
  - JAZYK - Maps language code to label.
  - KLAS - Maps Classification code to label.
  - TRIDA - Maps Class code to label and faculty.
@@ -47,17 +47,17 @@ We have also access to two more tables which will be useful in the future for mo
  - STUDIUM - Anonymized basic info about student study.
  - ZKOUS - Binary results of student exams.
 
- For better understanding of the source data model we encourage you to connect to the SIS database and explore the data. The best way is to simply select few rows from a table and see what is inside. More insight can be found by quering table "tabulky" - for example to get info about table POVINN `SELECT * FROM tabulky WHERE tabulka='POVINN'`. Be aware that the result is for a table and not the synonyms - it is possible that not all synonyms are existing tables.
+ For better understanding of the source data model we encourage you to connect to the SIS database and explore the data. The best way is to simply select few rows from a table and see what is inside. More insight can be found by querying table "tabulky" - for example to get info about table POVINN `SELECT * FROM tabulky WHERE tabulka='POVINN'`. Be aware that the result is for a table and not the synonyms - it is possible that not all synonyms are existing tables.
 
  Currently we can't access personal data of a student. This is something that we are working on. Getting access at least to basic info about student such as year of enrollment and degree plan would allow us to simplify degree plan UI and improve degree plan UX. We would also like to get access to complete courses to automatically populate blueprint with correct historical data. 
 
 ## Target
 
-There are two target models. One is stored in PostgreSQL and the second one in MeiliSearch. The later is used only for searching courses, degree plans and surveys. There is no synchronization between the two models. The data in MeiliSearch cannost be changed by webapp and are only updated by ELT process. The MeiliSearch data model consists of three indixes - courses, degree_plans and surveys. The courses index is used to search in courses and only to retrieve relevant course codes. Rest of the data is then fetched from PostgreSQL - call to PostgreSQL would have to been made anyway since blueprint is stored there and by this we don't have to combine results from the two sources. 
+There are two target models. One is stored in PostgreSQL and the second one in MeiliSearch. The later is used only for searching courses, degree plans and surveys. There is no synchronization between the two models. The data in MeiliSearch cannot be changed by webapp and are only updated by ELT process. The MeiliSearch data model consists of three indices - courses, degree_plans and surveys. The courses index is used to search in courses and only to retrieve relevant course codes. Rest of the data is then fetched from PostgreSQL - call to PostgreSQL would have to been made anyway since blueprint is stored there and by this we don't have to combine results from the two sources. 
 
 ### MeiliSearch
 
-The degree_plans index is used to search in degree plans. The surveys index is used to search in surveys. Both degree_plans and surveys indexes has all the data needed to display search results. Exact configurtation (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1). Below are examples of documents stored in each index.
+The degree_plans index is used to search in degree plans. The surveys index is used to search in surveys. Both degree_plans and surveys indexes has all the data needed to display search results. Exact configuration (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1). Below are examples of documents stored in each index.
 
 #### degree_plans 
 ```json
@@ -205,7 +205,7 @@ To store session key used to authenticate logged users. The token references tok
 #### Studies
 
 **Relevant tables:** *studies*  
-To store studies related information about a user. This includes study plan and year of enrollemnt.
+To store studies related information about a user. This includes study plan and year of enrollment.
 
 #### Rating
 

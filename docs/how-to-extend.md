@@ -352,7 +352,7 @@ func intoTeacher(from dbds.Teacher) teacher {
 	}
 }
 ```
-We use `dbds` package for database models and as the teacher is defined there, we can reuse it. Do not forget to include it. SQL queries can get ugly, so they should be stored in separate files in `teachers/internal/sqlquery` directory in `sqlquery` package. Then you would have to include the appropriate SQL file in your `database.go` file and use it in your query. If you would like to use different data, refer to [Data Model](#data-model) section. It is of course possible to make some transformations, add new tables and views and use those. This is just for demonstration.
+We use `dbds` package for database models and as the teacher is defined there, we can reuse it. Do not forget to include it. SQL queries can get ugly, so they should be stored in separate files in `teachers/internal/sqlquery` directory in `sqlquery` package. Then you would have to include the appropriate SQL file in your `database.go` file and use it in your query. If you would like to use different data, refer to [Data Model](./data-model) section. It is of course possible to make some transformations, add new tables and views and use those. This is just for demonstration.
 
 Third, we return to `server.go` file and out `page()` method. We no longer use some mysterious function but our `DBManager` method:
 ```go
@@ -375,7 +375,7 @@ We have now successfully created a new page. There are many more things you can 
 
 ## Add a filter
 
-Let's say we have in Meilisearch index *teachers*. The index contains documents with fields *firstName*, *lastName* and *department*. We would like to add a filter for *department* field which can have values *A*,*B* or *C*. The mapping of A,B,C letters to departments go like this A->KSI, B->UFAL, C->KAM. To do that, we need add a new filter, filter category and filter values to the database. This can be done by modifing ELT transformation responsible for creating filters (`initFilterTables`) or simply executing the following SQL queries in the database but the changes will not survive next ELT run:
+Let's say we have in Meilisearch index *teachers*. The index contains documents with fields *firstName*, *lastName* and *department*. We would like to add a filter for *department* field which can have values *A*,*B* or *C*. The mapping of A,B,C letters to departments go like this A->KSI, B->UFAL, C->KAM. To do that, we need add a new filter, filter category and filter values to the database. This can be done by modifying ELT transformation responsible for creating filters (`initFilterTables`) or simply executing the following SQL queries in the database but the changes will not survive next ELT run:
 
 ```sql
 INSERT INTO filters(id) VALUES ('teachers');
@@ -398,7 +398,7 @@ Lastly we would use the `Filters` as in an other server to make Search requests 
 
 ## Add a recommender
 
-Let's say that the current for you Recommender on home page does not work for you and you would like to change it. Let's say you already implemented advanced search engine as a standalone service with REST API. The API implements `GET /{user_id}` endpoint which returns list of recommended course codes to a given user. Then you only need to create recommendation strategy that would utilize such endpoint and inject the strategy in `ForYou` field in `home.Server` struct. It would look somthing like this:
+Let's say that the current for you Recommender on home page does not work for you and you would like to change it. Let's say you already implemented advanced search engine as a standalone service with REST API. The API implements `GET /{user_id}` endpoint which returns list of recommended course codes to a given user. Then you only need to create recommendation strategy that would utilize such endpoint and inject the strategy in `ForYou` field in `home.Server` struct. It would look something like this:
 
 1. Create strategy in `recommend` package.
 ```go
@@ -411,7 +411,7 @@ func (m MyAwesomeRecEngine) Recommend(userID string) ([]string, error) {
   return res.ListOfRecommendedCourseCodes
 }
 ```
-2. Inject `MyAwesomeRecEngine` into home page defined in `main.go` file. The expected type for `home.Server.ForYou` is type that implements interface with only single method `Recommend(userID string) ([]string, error)`. Our type `recommend.MyAwesomeRecEngine` implements the interface. and we can simply replace used type for home page. It should look somthing like this:
+2. Inject `MyAwesomeRecEngine` into home page defined in `main.go` file. The expected type for `home.Server.ForYou` is type that implements interface with only single method `Recommend(userID string) ([]string, error)`. Our type `recommend.MyAwesomeRecEngine` implements the interface. and we can simply replace used type for home page. It should look something like this:
 ```go
 home.Server{
   ForYou: recommend.MyAwesomeRecEngine{},
@@ -431,7 +431,7 @@ errorHandler := errorx.ErrorHandler{
   // place for error handling configuration
 }
 ```
-Also, you would have to update the `ErrorHanlder` struct in `error.go` file.
+Also, you would have to update the `ErrorHandler` struct in `error.go` file.
 ```go
 type ErrorHandler struct {
 	Page Page

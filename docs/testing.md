@@ -11,7 +11,7 @@ One important note is that you need to define environment variables for the test
 },
 ```
 
-If you run tests from command line, you need to set the environment variables in your shell before running the tests. This step was covered in [Run](#run) section. Then you need to execute the following command in the `webapp` directory:
+If you run tests from command line, you need to set the environment variables in your shell before running the tests. This step was covered in [Run](./how-to-run.md#run) section. Then you need to execute the following command in the `webapp` directory:
 
 ```shell
 go test -v
