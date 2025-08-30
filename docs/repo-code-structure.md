@@ -258,17 +258,9 @@ Functions:
 - `SkipEmptyFacet(iter.Seq2[int, FacetValue]) iter.Seq2[int, FacetValue]`
   > If the value has zero count given the search query, it is skipped. Used for displaying survey filters.
 
-<!-- my notes - delete -->
-in DB there are filter categories and their values
-
-we currently have filters for courses and surveys
-
-filtering is done using [MeiliSearch](https://www.meilisearch.com/docs/learn/filtering_and_sorting/filter_expression_reference)
-<!--  -->
-
 1. Inject filters into a server using `filters.MakeFilters` in `main.go`. As `source`, database with filter categories and their values should be used. `id` should be the `filter_id` of the filter category. That can be found in the database, see the [Data Model](./data-model.md). As we currently have filters for courses and surveys, you can see in `main.go` that we use `courses` and `course-surveys` as `id`.
 2. In `server.go`, the injected filters must be initialized using `s.Filters.Init()` method. This will fetch the corresponding filter categories and their values from the database.
-3. Then you would make search request to MeiliSearch. In the request, you must specify for which fields you want facets to be generated. You can get the list of fields using `s.Filters.Facets()` method. It is also possible to filter the search by parsing URL query parameters using `s.Filters.ParseURLQuery(r.URL.Query(), lang)` method. It will return a filter expression that can be used in MeiliSearch search request.
+3. Then you would make search request to MeiliSearch (which we use for [filtering](https://www\.meilisearch\.com/docs/learn/filtering_and_sorting/filter_expression_reference)). In the request, you must specify for which fields you want facets to be generated. You can get the list of fields using `s.Filters.Facets()` method. It is also possible to filter the search by parsing URL query parameters using `s.Filters.ParseURLQuery(r.URL.Query(), lang)` method. It will return a filter expression that can be used in MeiliSearch search request.
 4. Part of the MeiliSearch search response are `FacetsDistribution` which is a mapping of Category>Value>Count in other words it is `Facets` type. 
 5. You can then display the filters on the page using `s.Filters.IterFiltersWithFacets()` method. It takes `Facets` from MeiliSearch response, URL values (to know which values are selected), and language (for displaying titles and descriptions in the correct language). The method returns an iterator of `FacetIterator` which represents a filter category with its values. You can then use its methods to get information about the category and iterate over its values.
 
@@ -456,6 +448,7 @@ Simple service that provides BERT embeddings for given texts. It is used by
 MeiliSearch to embed courses. The embeddings are then used for simple
 recommendations. The service implements single endpoint:
 - `POST /embedding`
+
 The endpoint expects JSON body with a single field `text` which is a text to be
 embedded. Response then contains single field `embedding` which is an array of
 float32 numbers representing the embedding.

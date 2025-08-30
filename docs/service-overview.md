@@ -41,6 +41,7 @@ you need access to Acheron server to run ELT.
  time errors. Because the tooling is not the best we sometimes asking ourselves
  if it was a wise choice.
  - [Bootstrap](https://getbootstrap.com/) - Simple way to style web apps.
+ - [Python](https://www.python.org/) - We use Python for creating BERT embeddings for courses. This is used by MeiliSearch for recommendations.
  - [PostgreSQL](https://postgresql.org/) - Relational database of our choice
  with rich support for binary JSON format.
  - [Meilisearch](https://meilisearch.com/) - Simple and powerful search engine.
