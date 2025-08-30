@@ -11,12 +11,12 @@
     - [Summary](#summary)
   - [Repo structure](#repo-structure)
     - [Webapp](#webapp)
+    - [Bert](#bert)
     - [Cert](#cert)
     - [Docs](#docs)
     - [ELT](#elt-1)
     - [Init\_db](#init_db)
     - [Mock\_cas](#mock_cas)
-    - [Bert](#bert)
     - [Scripts](#scripts)
   - [Data Model](#data-model)
     - [Source](#source)
@@ -40,11 +40,11 @@ ignoring it for now, feel free to skip it and jump right into
 The RecSIS consists of several docker containers and two standalone
 applications. The responsibilities can be seen in the diagram below. It's worth
 noting that RecSIS is planned to be deployed in production fully dockerized but
-because rebuilding webapp as a docker container is much slower the webapp as the
-main application is not dockerized as it is rebuild quite frequently in
-development. The second undockerized application (Mock CAS) is a not used in
-production at all and the real instance of [CAS](https://cas.cuni.cz/cas/login)
-is used instead.
+because rebuilding [webapp](#webapp) as a docker container is much slower,
+the webapp is not dockerized as it is the main application and is rebuild quite
+frequently in development. The second undockerized application
+([Mock CAS](#mock_cas)) is a not used in production at all and the real
+instance of [CAS](https://cas.cuni.cz/cas/login) is used instead.
 
 ![](./dev_services.svg)
 
@@ -54,9 +54,9 @@ is used instead.
 Even though we aim to use as little technologies as possible, some are
 necessary to deliver the envisioned UX. Especially since search is a core
 feature of RecSIS. After some experiments with PostgreSQL full text search
-capabilities We decided to use [Meilisearch](https://www.meilisearch.com/)
-because it is easy to set as opposed to for example [Apache
-Solr](https://solr.apache.org/), but still provides necessary features (e.g.:
+capabilities we decided to use [Meilisearch](https://www.meilisearch.com/)
+because it is easy to set as opposed to, for example [Apache
+Solr](https://solr.apache.org/), but still provides necessary features (e.g.
 typo tolerance) as opposed to PostgreSQL. Meilisearch wasn't the only
 possibility. [Typesense](https://typesense.org/) was another candidate but we
 decided to go with younger Meilisearch because it looked more shiny.
@@ -64,7 +64,7 @@ decided to go with younger Meilisearch because it looked more shiny.
 ### ELT
 
 It's worth mentioning that to access SIS DB you need to be inside MFF network.
-Therefore inside the container is set up SSH tunnel to Acheron. This is also why
+Therefore, a SSH tunnel to Acheron is set up inside the container. This is also why
 you need access to Acheron server to run ELT.
 
 ### List of technologies
@@ -78,6 +78,7 @@ you need access to Acheron server to run ELT.
  time errors. Because the tooling is not the best we sometimes asking ourselves
  if it was a wise choice.
  - [Bootstrap](https://getbootstrap.com/) - Simple way to style web apps.
+ - [Python](https://www.python.org/) - We use Python for creating BERT embeddings for courses. This is used by MeiliSearch for recommendations.
  - [PostgreSQL](https://postgresql.org/) - Relational database of our choice
  with rich support for binary JSON format.
  - [Meilisearch](https://meilisearch.com/) - Simple and powerful search engine.
@@ -103,7 +104,7 @@ git clone git@github.com:michalhercik/RecSIS.git
 ### Run
 
 **Prerequisites:**
- - Cloned RecSIS repo (see [Clone](#clone)).
+ - Cloned RecSIS repo (see [Clone](#clone-repository)).
  - Installed Docker (see [Docker docs](https://docs.docker.com/get-docker/)).
  - Installed Go (see [Go docs](https://go.dev/doc/install)).
  - SSH key setup for Acheron (Optional)
@@ -316,7 +317,7 @@ Types and methods:
   > A struct that contains link to the Central Authentication Service (CAS) server and provides internal methods for interaction with the server. Documentation can be found at <https://apereo.github.io/cas/>. Can be set to mock CAS server for development or testing purposes.
 
 This package works as follows:
-1. In `main.go`, an instance of `cas.Authentication` is created and used as middleware for the router. Parameters are set to configure the authentication behavior. `Data` is initialized SQL database, `Error` is an instance of an error handler (package [`errorx`](#errorx)), `CAS` is an instance of a `CAS` structure with URL to the CAS server. For development purposes, we use [`mock_cas`](#mock-cas), but it is replaced with a real CAS server in production.
+1. In `main.go`, an instance of `cas.Authentication` is created and used as middleware for the router. Parameters are set to configure the authentication behavior. `Data` is initialized SQL database, `Error` is an instance of an error handler (package [`errorx`](#errorx)), `CAS` is an instance of a `CAS` structure with URL to the CAS server. For development purposes, we use [`mock_cas`](#mock_cas), but it is replaced with a real CAS server in production.
 2. In `main.go` all servers are configured to use `cas.UserIDFromContext` structure which implements their `Auth` interface.
 3. The middleware checks for a valid session and user ID for each incoming request. This is done in `authentication.go` file.
 4. If the user is not authenticated, they are redirected to the login page. Logging in using (mock-)CAS and logging out (which does not communicate with the CAS server) is done in `cas.go` file. Database interactions are handled in the `database.go` file.
@@ -492,17 +493,11 @@ Functions:
 - `SkipEmptyFacet(iter.Seq2[int, FacetValue]) iter.Seq2[int, FacetValue]`
   > If the value has zero count given the search query, it is skipped. Used for displaying survey filters.
 
-<!-- my notes - delete -->
-in DB there are filter categories and their values
-
-we currently have filters for courses and surveys
-
-filtering is done using [MeiliSearch](https://www.meilisearch.com/docs/learn/filtering_and_sorting/filter_expression_reference)
-<!--  -->
+This package works as follows:
 
 1. Inject filters into a server using `filters.MakeFilters` in `main.go`. As `source`, database with filter categories and their values should be used. `id` should be the `filter_id` of the filter category. That can be found in the database, see the [Data Model](#data-model). As we currently have filters for courses and surveys, you can see in `main.go` that we use `courses` and `course-surveys` as `id`.
 2. In `server.go`, the injected filters must be initialized using `s.Filters.Init()` method. This will fetch the corresponding filter categories and their values from the database.
-3. Then you would make search request to MeiliSearch. In the request, you must specify for which fields you want facets to be generated. You can get the list of fields using `s.Filters.Facets()` method. It is also possible to filter the search by parsing URL query parameters using `s.Filters.ParseURLQuery(r.URL.Query(), lang)` method. It will return a filter expression that can be used in MeiliSearch search request.
+3. Then you would make search request to MeiliSearch (which we use for [filtering](https://www\.meilisearch\.com/docs/learn/filtering_and_sorting/filter_expression_reference)). In the request, you must specify for which fields you want facets to be generated. You can get the list of fields using `s.Filters.Facets()` method. It is also possible to filter the search by parsing URL query parameters using `s.Filters.ParseURLQuery(r.URL.Query(), lang)` method. It will return a filter expression that can be used in MeiliSearch search request.
 4. Part of the MeiliSearch search response are `FacetsDistribution` which is a mapping of Category>Value>Count in other words it is `Facets` type. 
 5. You can then display the filters on the page using `s.Filters.IterFiltersWithFacets()` method. It takes `Facets` from MeiliSearch response, URL values (to know which values are selected), and language (for displaying titles and descriptions in the correct language). The method returns an iterator of `FacetIterator` which represents a filter category with its values. You can then use its methods to get information about the category and iterate over its values.
 
@@ -684,6 +679,18 @@ Apart from packages, the `webapp` directory contains:
 - `main.go` file
 - `main_test.go` file containing integration tests, for more see [Testing](#testing)
 
+### Bert
+
+Simple service that provides BERT embeddings for given texts. It is used by
+MeiliSearch to embed courses. The embeddings are then used for simple
+recommendations. The service implements single endpoint:
+- `POST /embedding`
+
+The endpoint expects JSON body with a single field `text` which is a text to be
+embedded. Response then contains single field `embedding` which is an array of
+float32 numbers representing the embedding.
+
+
 ### Cert
 
 `cert` directory contains `server.crt` and `server.key` files used self-signed SSL certificate for the application.
@@ -715,7 +722,7 @@ had to remove null bytes as the PostgreSQL doesn't support it. The extract
 and load process for each table is defined in structure (one structure for each
 source table) implementing `operation` interface (see below). The last tricky
 extraction was related to degree plans. We don't have access to list of degree
-plans (viz [Data Model](#data-model)) with appropriate years and to fetch degree
+plans (see [Data Model](#data-model)) with appropriate years and to fetch degree
 plan from SIS database we need degree plan code and year. We did a dirty
 workaround by taking studies in ten year window, drop duplicates and for each
 degree plan code extracted variant for every year. We don't know how good or bad
@@ -760,19 +767,10 @@ Very simple service that mimics the Central Authentication Service (CAS) server.
 It naively implements three endpoints:
 - `POST /cas/login`
 - `GET /cas/login`
-- `GET /cas/serviceValidate` 
+- `GET /cas/serviceValidate`
+
 To get better understanding of how CAS works please refer to [CAS protocol
 documentation](https://apereo.github.io/cas/).
-
-### Bert
-
-Simple service that provides BERT embeddings for given texts. It is used by
-MeiliSearch to embed courses. The embeddings are then used for simple
-recommendations. The service implements single endpoint:
-- `POST /embedding`
-The endpoint expects JSON body with a single field `text` which is a text to be
-embedded. Response then contains single field `embedding` which is an array of
-float32 numbers representing the embedding.
 
 ### Scripts
 
@@ -782,7 +780,7 @@ This directory contains various scripts for managing the application. They all h
 
 ### Source
 
-The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the the schema is also used by another application with different needs we don't use all the synonyms. Below is a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
+The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the the schema is also used by another application with different needs we don't use all the synonyms. Below are a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
 
  - UCIT - Basic info about teachers.
  - FAK - Basic info about faculty. 
@@ -818,7 +816,11 @@ We have also access to two more tables which will be useful in the future for mo
 
 ### Target
 
-There are two target models. One is stored in PostgreSQL and the second one in MeiliSearch. The later is used only for searching courses, degree plans and surveys. There is no synchronization between the two models. The data in MeiliSearch cannot be changed by webapp and are only updated by ELT process. The MeiliSearch data model consists of three indices - courses, degree_plans and surveys. The courses index is used to search in courses and only to retrieve relevant course codes. Rest of the data is then fetched from PostgreSQL - call to PostgreSQL would have to been made anyway since blueprint is stored there and by this we don't have to combine results from the two sources. The degree_plans index is used to search in degree plans. The surveys index is used to search in surveys. Both degree_plans and surveys indexes has all the data needed to display search results. Exact configuration (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1). Below are examples of documents stored in each index.
+There are two target models. One is stored in PostgreSQL and the second one in MeiliSearch. The later is used only for searching courses, degree plans and surveys. There is no synchronization between the two models. The data in MeiliSearch cannot be changed by webapp and are only updated by ELT process. The MeiliSearch data model consists of three indices - courses, degree_plans and surveys. The courses index is used to search in courses and only to retrieve relevant course codes. Rest of the data is then fetched from PostgreSQL - call to PostgreSQL would have to been made anyway since blueprint is stored there and by this we don't have to combine results from the two sources.
+
+### MeiliSearch
+
+The degree_plans index is used to search in degree plans. The surveys index is used to search in surveys. Both degree_plans and surveys indices has all the data needed to display search results. Exact configuration (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1). Below are examples of documents stored in each index.
 
 **degree_plans**  
 ```json
@@ -936,6 +938,8 @@ There are two target models. One is stored in PostgreSQL and the second one in M
   ],
 }
 ```
+
+### PostgreSQL
 
 Data model of PostgreSQL is bit more complex but still fairly simple as can be seen in the diagram below. It's definition can be seen in [30-create-tables.sql](../init_db/30-create-tables.sql). The tables populated by elt are courses, filters, filter_categories, filter_values, degree_plans, degree_plan_list and degree_plan_years. In those tables are stored data about courses and degree plans. Those tables are not expected to be updated by any other part of the system. we tried make those tables as simple as possible since we do not update them and most of the values are only to be viewed by users. Other tables are on the other hand updated only by the webapp. Their purpose is to store application specific data such as courses added to blueprint, course ratings and user sessions.
 
@@ -1084,13 +1088,13 @@ func teachersServer(pageTempl page.Page) http.Handler {
 From the server, we only need the router. The router must then be registered in the main application. You can do that in `setupHandler()` function. There, put newly created router into the `servers` struct:
 ```go
 s := servers{
-  ...
+  //...
   teachersServer: teachersServer(pageTempl),
 }
 
 // you need to update the servers struct too
 type servers struct {
-  ...
+  //...
   teachersServer http.Handler
 }
 ```
@@ -1302,7 +1306,7 @@ func teachersServer(db *sqlx.DB, pageTempl page.Page) http.Handler {
 Of course, we need to provide the database connection to the `teachersServer()` function:
 ```go
 s := servers{
-  ...
+  //...
   teachersServer: teachersServer(db, pageTempl),
 }
 ```

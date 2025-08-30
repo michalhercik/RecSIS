@@ -17,7 +17,7 @@
 
 ## Source
 
-The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the the schema is also used by another application with different needs we don't use all the synonyms. Below is a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
+The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the the schema is also used by another application with different needs we don't use all the synonyms. Below are a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
 
  - UCIT - Basic info about teachers.
  - FAK - Basic info about faculty. 
@@ -53,11 +53,11 @@ We have also access to two more tables which will be useful in the future for mo
 
 ## Target
 
-There are two target models. One is stored in PostgreSQL and the second one in MeiliSearch. The later is used only for searching courses, degree plans and surveys. There is no synchronization between the two models. The data in MeiliSearch cannot be changed by webapp and are only updated by ELT process. The MeiliSearch data model consists of three indices - courses, degree_plans and surveys. The courses index is used to search in courses and only to retrieve relevant course codes. Rest of the data is then fetched from PostgreSQL - call to PostgreSQL would have to been made anyway since blueprint is stored there and by this we don't have to combine results from the two sources. 
+There are two target models. One is stored in PostgreSQL and the second one in MeiliSearch. The later is used only for searching courses, degree plans and surveys. There is no synchronization between the two models. The data in MeiliSearch cannot be changed by webapp and are only updated by ELT process. The MeiliSearch data model consists of three indices - courses, degree_plans and surveys. The courses index is used to search in courses and only to retrieve relevant course codes. Rest of the data is then fetched from PostgreSQL - call to PostgreSQL would have to been made anyway since blueprint is stored there and by this we don't have to combine results from the two sources.
 
 ### MeiliSearch
 
-The degree_plans index is used to search in degree plans. The surveys index is used to search in surveys. Both degree_plans and surveys indexes has all the data needed to display search results. Exact configuration (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1). Below are examples of documents stored in each index.
+The degree_plans index is used to search in degree plans. The surveys index is used to search in surveys. Both degree_plans and surveys indices has all the data needed to display search results. Exact configuration (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1). Below are examples of documents stored in each index.
 
 #### degree_plans 
 ```json
@@ -166,8 +166,8 @@ The degree_plans index is used to search in degree plans. The surveys index is u
     "string - course literature in english"
   ],
   "requirements_of_assesment": [
-    "string - course requirements of assesment in czech",
-    "string - course requirements of assesment in english"
+    "string - course requirements of assessment in czech",
+    "string - course requirements of assessment in english"
   ],
   "aim": [
     "string - course aim in czech",
