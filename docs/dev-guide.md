@@ -158,12 +158,12 @@ script will set aliases, filterable, sortable and searchable attributes.
 
 For **Windows**
 ```
-./scripts/init_meili.ps1
+.\scripts\init-meili.ps1
 ```
 
 For **Linux**
 ```
-./scripts/init_meili.sh
+./scripts/init-meili.sh
 ```
 
 Before running the webapp you need to install [templ](https://templ.guide/) tool
@@ -182,7 +182,7 @@ source files. It also always generates HTML templates.
 
 For **Windows**
 ```
-./scripts/watch.ps1
+.\scripts\watch.ps1
 ```
 
 For **Linux**
@@ -208,13 +208,14 @@ scripts\init-env.ps1 [.env file path]
 docker compose up -d postgres meilisearch elt bert mockcas adminer
 
 # Init Meilisearch
-./scripts/init_meili.ps1
+.\scripts\init-meili.ps1
 
-# Install templ
+# Install templ and wgo
 go install github.com/a-h/templ/cmd/templ@v0.2.793
+go install github.com/bokwoon95/wgo@latest
 
 # Run webapp
-./scripts/watch.ps1
+.\scripts\watch.ps1
 ```
 
 For **Linux**:
@@ -231,10 +232,11 @@ export $(cut -d= -f1 [.env file path])
 docker compose up -d postgres meilisearch elt bert mockcas adminer
 
 # Init Meilisearch
-./scripts/init_meili.sh
+./scripts/init-meili.sh
 
-# Install templ
+# Install templ and wgo
 go install github.com/a-h/templ/cmd/templ@v0.2.793
+go install github.com/bokwoon95/wgo@latest
 
 # Run webapp
 ./scripts/watch.sh

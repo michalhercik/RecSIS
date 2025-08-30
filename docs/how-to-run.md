@@ -73,7 +73,7 @@ script will set aliases, filterable, sortable and searchable attributes.
 
 For **Windows**
 ```
-./scripts/init_meili.ps1
+.\scripts\init_meili.ps1
 ```
 
 For **Linux**
@@ -97,7 +97,7 @@ source files. It also always generates HTML templates.
 
 For **Windows**
 ```
-./scripts/watch.ps1
+.\scripts\watch.ps1
 ```
 
 For **Linux**
@@ -123,13 +123,14 @@ scripts\init-env.ps1 [.env file path]
 docker compose up -d postgres meilisearch elt bert mockcas adminer
 
 # Init Meilisearch
-./scripts/init_meili.ps1
+.\scripts\init_meili.ps1
 
-# Install templ
+# Install templ and wgo
 go install github.com/a-h/templ/cmd/templ@v0.2.793
+go install github.com/bokwoon95/wgo@latest
 
 # Run webapp
-./scripts/watch.ps1
+.\scripts\watch.ps1
 ```
 
 For **Linux**:
@@ -148,8 +149,9 @@ docker compose up -d postgres meilisearch elt bert mockcas adminer
 # Init Meilisearch
 ./scripts/init_meili.sh
 
-# Install templ
+# Install templ and wgo
 go install github.com/a-h/templ/cmd/templ@v0.2.793
+go install github.com/bokwoon95/wgo@latest
 
 # Run webapp
 ./scripts/watch.sh
