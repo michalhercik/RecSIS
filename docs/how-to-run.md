@@ -7,9 +7,9 @@
 
 ## Clone repository
 
-**Prerequisities:**
+**Prerequisites:**
  - Member of RecSIS repo.
- - Setuped SSH for GitHub account (see [github docs](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)).
+ - Set up SSH for GitHub account (see [github docs](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)).
 
 **Steps:**
 ```
@@ -19,15 +19,15 @@ git clone git@github.com:michalhercik/RecSIS.git
 ## Run
 
 **Prerequisites:**
- - Cloned RecSIS repo (see [Clone](#clone)).
+ - Cloned RecSIS repo (see [Clone](#clone-repository)).
  - Installed Docker (see [Docker docs](https://docs.docker.com/get-docker/)).
  - Installed Go (see [Go docs](https://go.dev/doc/install)).
  - SSH key setup for Acheron (Optional)
     - Being able to access Acheron via SSH using your SSH key with private key
     located at `~/.ssh/id_rsa`.
-    - This step allows you tu run ELT process which populates RecSIS with data
+    - This step allows you to run ELT process which populates RecSIS with data
     from SIS.
-    - The requirement can be ignored if you don't mind RecSIS witout any SIS
+    - The requirement can be ignored if you don't mind RecSIS without any SIS
     data.
 
 Before running the RecSIS you need to set environment variables required by
@@ -68,7 +68,7 @@ required images if they are not already present on your system.
 docker compose up -d postgres meilisearch elt bert mockcas adminer
 ```
 
-Now that Meilisearch is running you need to configurate it using script. The
+Now that Meilisearch is running you need to configure it using script. The
 script will set aliases, filterable, sortable and searchable attributes.
 
 For **Windows**

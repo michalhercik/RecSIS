@@ -2,12 +2,12 @@
 
 - [Repo structure](#repo-structure)
   - [Webapp](#webapp)
+  - [Bert](#bert)
   - [Cert](#cert)
   - [Docs](#docs)
   - [ELT](#elt)
   - [Init\_db](#init_db)
   - [Mock\_cas](#mock_cas)
-  - [Bert](#bert)
   - [Scripts](#scripts)
 
 ## Webapp
@@ -82,7 +82,7 @@ Types and methods:
   > A struct that contains link to the Central Authentication Service (CAS) server and provides internal methods for interaction with the server. Documentation can be found at <https://apereo.github.io/cas/>. Can be set to mock CAS server for development or testing purposes.
 
 This package works as follows:
-1. In `main.go`, an instance of `cas.Authentication` is created and used as middleware for the router. Parameters are set to configure the authentication behavior. `Data` is initialized SQL database, `Error` is an instance of an error handler (package [`errorx`](#errorx)), `CAS` is an instance of a `CAS` structure with URL to the CAS server. For development purposes, we use [`mock_cas`](#mock-cas), but it is replaced with a real CAS server in production.
+1. In `main.go`, an instance of `cas.Authentication` is created and used as middleware for the router. Parameters are set to configure the authentication behavior. `Data` is initialized SQL database, `Error` is an instance of an error handler (package [`errorx`](#errorx)), `CAS` is an instance of a `CAS` structure with URL to the CAS server. For development purposes, we use [`mock_cas`](#mock_cas), but it is replaced with a real CAS server in production.
 2. In `main.go` all servers are configured to use `cas.UserIDFromContext` structure which implements their `Auth` interface.
 3. The middleware checks for a valid session and user ID for each incoming request. This is done in `authentication.go` file.
 4. If the user is not authenticated, they are redirected to the login page. Logging in using (mock-)CAS and logging out (which does not communicate with the CAS server) is done in `cas.go` file. Database interactions are handled in the `database.go` file.
@@ -450,6 +450,16 @@ Apart from packages, the `webapp` directory contains:
 - `main.go` file
 - `main_test.go` file containing integration tests, for more see [Testing](./testing.md)
 
+## Bert
+
+Simple service that provides BERT embeddings for given texts. It is used by
+MeiliSearch to embed courses. The embeddings are then used for simple
+recommendations. The service implements single endpoint:
+- `POST /embedding`
+The endpoint expects JSON body with a single field `text` which is a text to be
+embedded. Response then contains single field `embedding` which is an array of
+float32 numbers representing the embedding.
+
 ## Cert
 
 `cert` directory contains `server.crt` and `server.key` files used self-signed SSL certificate for the application.
@@ -462,7 +472,7 @@ Apart from packages, the `webapp` directory contains:
 
 We would also like to give you an high level overview of how the ELT process
 works.  We decided to implement it using Go and SQL. The entire process is
-simple and we didn't feel the need to use any sofisticated tools. Most of the
+simple and we didn't feel the need to use any sophisticated tools. Most of the
 logic is implemented in SQL. Go serves mainly as orchestrator of the process.
 Therefore the source code or at least the main file serves as a high level
 overview of the process. We decided to KISS (Keep It Simple, Stupid) and
@@ -481,7 +491,7 @@ had to remove null bytes as the PostgreSQL doesn't support it. The extract
 and load process for each table is defined in structure (one structure for each
 source table) implementing `operation` interface (see below). The last tricky
 extraction was related to degree plans. We don't have access to list of degree
-plans (viz [Data Model](./data-model.md)) with appropriate years and to fetch degree
+plans (see [Data Model](./data-model.md)) with appropriate years and to fetch degree
 plan from SIS database we need degree plan code and year. We did a dirty
 workaround by taking studies in ten year window, drop duplicates and for each
 degree plan code extracted variant for every year. We don't know how good or bad
@@ -511,7 +521,7 @@ type transformation struct {
 After the transformation the forth step (migration) is run. The migration takes
 transformed data and migrates it into the final tables in different schema and
 into search engine. It is possible that the ELT process will result in
-inconsistent state as failer of between tables migration does not rollback
+inconsistent state as failure of between tables migration does not rollback
 migration of data into search engine. This should be addressed in the future.
 
 ## Init_db
@@ -526,19 +536,10 @@ Very simple service that mimics the Central Authentication Service (CAS) server.
 It naively implements three endpoints:
 - `POST /cas/login`
 - `GET /cas/login`
-- `GET /cas/serviceValidate` 
+- `GET /cas/serviceValidate`
+
 To get better understanding of how CAS works please refer to [CAS protocol
 documentation](https://apereo.github.io/cas/).
-
-## Bert
-
-Simple service that provides BERT embeddings for given texts. It is used by
-MeiliSearch to embed courses. The embeddings are then used for simple
-recommendations. The service implements single endpoint:
-- `POST /embedding`
-The endoint expects JSON body with a single field `text` which is a text to be
-embedded. Resopnse than contains single field `embedding` which is an array of
-float32 numbers representing the embedding. 
 
 ## Scripts
 
