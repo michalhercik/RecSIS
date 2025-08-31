@@ -299,7 +299,8 @@ templ warningIcon(course *course, t text) {
 }
 
 templ dragCourseButton(showAlways bool, t text) {
-    <button
+    <div
+        type="button"
         x-cloak
         x-show={ fmt.Sprintf("(hover && !isSorting) || %t", showAlways) }
         @mousedown="bootstrap.Tooltip.getOrCreateInstance($el).dispose();"
@@ -309,7 +310,7 @@ templ dragCourseButton(showAlways bool, t text) {
         data-bs-title={ t.ttMove }
         class="btn btn-sm bi bi-grip-horizontal border-0"
         x-sort:handle>
-    </button>
+    </div>
 }
 
 templ mobileInfoTd(course *course, isCompulsory bool, t text) {
@@ -560,6 +561,10 @@ templ scriptOnMoveCustom() {
     // do not allow drop a course to a semester where it is already assigned
     <script>
         function onMoveCustom(event, originalEvent) {
+            // if not DragEvent then empty table -> always allow
+            if (!(originalEvent instanceof DragEvent)) {
+                return true;
+            }
             originatorID = event.dragged.id;
             originatorCode = getCourseCodeFromId(originatorID);
             targetCodes = Array.from(originalEvent.target.parentElement.parentElement.querySelectorAll("tr"))
