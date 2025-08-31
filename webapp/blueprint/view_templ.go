@@ -1291,14 +1291,14 @@ func dragCourseButton(showAlways bool, t text) templ.Component {
 			templ_7745c5c3_Var53 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<button x-cloak x-show=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div type=\"button\" x-cloak x-show=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("(hover && !isSorting) || %t", showAlways))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 304, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 305, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -1311,7 +1311,7 @@ func dragCourseButton(showAlways bool, t text) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(ttDelay)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 308, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 309, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {
@@ -1324,13 +1324,13 @@ func dragCourseButton(showAlways bool, t text) templ.Component {
 		var templ_7745c5c3_Var56 string
 		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(t.ttMove)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 309, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 310, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" class=\"btn btn-sm bi bi-grip-horizontal border-0\" x-sort:handle></button>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" class=\"btn btn-sm bi bi-grip-horizontal border-0\" x-sort:handle></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1366,7 +1366,7 @@ func mobileInfoTd(course *course, isCompulsory bool, t text) templ.Component {
 		var templ_7745c5c3_Var58 string
 		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(course.code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 319, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 320, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 		if templ_7745c5c3_Err != nil {
@@ -1379,7 +1379,7 @@ func mobileInfoTd(course *course, isCompulsory bool, t text) templ.Component {
 		var templ_7745c5c3_Var59 string
 		templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 322, Col: 108}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 323, Col: 108}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 		if templ_7745c5c3_Err != nil {
@@ -1392,7 +1392,7 @@ func mobileInfoTd(course *course, isCompulsory bool, t text) templ.Component {
 		var templ_7745c5c3_Var60 string
 		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s: %d", t.creditsShort, course.credits))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 325, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 326, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 		if templ_7745c5c3_Err != nil {
@@ -1473,7 +1473,7 @@ func titleCourseLink(code, title string, t text) templ.Component {
 		var templ_7745c5c3_Var65 string
 		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 338, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 339, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 		if templ_7745c5c3_Err != nil {
@@ -1515,7 +1515,7 @@ func noCoursesTableContent(text, xSort string) templ.Component {
 		var templ_7745c5c3_Var67 string
 		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 345, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 346, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 		if templ_7745c5c3_Err != nil {
@@ -1528,7 +1528,7 @@ func noCoursesTableContent(text, xSort string) templ.Component {
 		var templ_7745c5c3_Var68 string
 		templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 346, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 347, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 		if templ_7745c5c3_Err != nil {
@@ -1541,7 +1541,7 @@ func noCoursesTableContent(text, xSort string) templ.Component {
 		var templ_7745c5c3_Var69 string
 		templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(xSort)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 353, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 354, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 		if templ_7745c5c3_Err != nil {
@@ -1583,7 +1583,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 		var templ_7745c5c3_Var71 string
 		templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(t.total)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 363, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 364, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 		if templ_7745c5c3_Err != nil {
@@ -1596,7 +1596,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 		var templ_7745c5c3_Var72 string
 		templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s: ", t.credits))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 366, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 367, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 		if templ_7745c5c3_Err != nil {
@@ -1609,7 +1609,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 		var templ_7745c5c3_Var73 string
 		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(t.ttAssignedCredits)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 370, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 371, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 		if templ_7745c5c3_Err != nil {
@@ -1622,7 +1622,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 		var templ_7745c5c3_Var74 string
 		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", years.assignedCredits()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 371, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 372, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 		if templ_7745c5c3_Err != nil {
@@ -1640,7 +1640,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(t.ttBlueprintCredits)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 378, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 379, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 			if templ_7745c5c3_Err != nil {
@@ -1653,7 +1653,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 			var templ_7745c5c3_Var76 string
 			templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", totalCredits))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 379, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 380, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 			if templ_7745c5c3_Err != nil {
@@ -1671,7 +1671,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 		var templ_7745c5c3_Var77 string
 		templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(t.language.LocalizeURL("/blueprint/year"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 391, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 392, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 		if templ_7745c5c3_Err != nil {
@@ -1684,7 +1684,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 		var templ_7745c5c3_Var78 string
 		templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", len(years)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 395, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 396, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 		if templ_7745c5c3_Err != nil {
@@ -1717,7 +1717,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 			var templ_7745c5c3_Var79 string
 			templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(t.language.LocalizeURL("/blueprint/year"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 407, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 408, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 			if templ_7745c5c3_Err != nil {
@@ -1730,7 +1730,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 			var templ_7745c5c3_Var80 string
 			templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(mergeVals(vUnassign(false)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 408, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 409, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 			if templ_7745c5c3_Err != nil {
@@ -1754,7 +1754,7 @@ func summarizeFooter(years assignedYears, totalCredits int, t text) templ.Compon
 		var templ_7745c5c3_Var81 string
 		templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(t.numOfYears)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 414, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 415, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 		if templ_7745c5c3_Err != nil {
@@ -1800,7 +1800,7 @@ func deleteYearModal(t text) templ.Component {
 		var templ_7745c5c3_Var83 string
 		templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(t.modalTitle)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 427, Col: 95}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 428, Col: 95}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 		if templ_7745c5c3_Err != nil {
@@ -1813,7 +1813,7 @@ func deleteYearModal(t text) templ.Component {
 		var templ_7745c5c3_Var84 string
 		templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(t.modalContent)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 430, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 431, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 		if templ_7745c5c3_Err != nil {
@@ -1826,7 +1826,7 @@ func deleteYearModal(t text) templ.Component {
 		var templ_7745c5c3_Var85 string
 		templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinStringErrs(t.language.LocalizeURL("/blueprint/year"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 435, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 436, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var85))
 		if templ_7745c5c3_Err != nil {
@@ -1839,7 +1839,7 @@ func deleteYearModal(t text) templ.Component {
 		var templ_7745c5c3_Var86 string
 		templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(mergeVals(vUnassign(false)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 436, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 437, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var86))
 		if templ_7745c5c3_Err != nil {
@@ -1852,7 +1852,7 @@ func deleteYearModal(t text) templ.Component {
 		var templ_7745c5c3_Var87 string
 		templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.JoinStringErrs(t.removeCourses)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 439, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 440, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var87))
 		if templ_7745c5c3_Err != nil {
@@ -1865,7 +1865,7 @@ func deleteYearModal(t text) templ.Component {
 		var templ_7745c5c3_Var88 string
 		templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.JoinStringErrs(t.language.LocalizeURL("/blueprint/year"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 444, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 445, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
 		if templ_7745c5c3_Err != nil {
@@ -1878,7 +1878,7 @@ func deleteYearModal(t text) templ.Component {
 		var templ_7745c5c3_Var89 string
 		templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(mergeVals(vUnassign(true)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 445, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 446, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 		if templ_7745c5c3_Err != nil {
@@ -1891,7 +1891,7 @@ func deleteYearModal(t text) templ.Component {
 		var templ_7745c5c3_Var90 string
 		templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.JoinStringErrs(t.unassignCourses)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 448, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 449, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var90))
 		if templ_7745c5c3_Err != nil {
@@ -1904,7 +1904,7 @@ func deleteYearModal(t text) templ.Component {
 		var templ_7745c5c3_Var91 string
 		templ_7745c5c3_Var91, templ_7745c5c3_Err = templ.JoinStringErrs(t.cancel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 450, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 451, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var91))
 		if templ_7745c5c3_Err != nil {
@@ -2019,7 +2019,7 @@ func assignCourseButtonInternal(tooltip, showCondButton, patch, vals, include st
 				var templ_7745c5c3_Var96 string
 				templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs(showCondButton)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 473, Col: 43}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 474, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
 				if templ_7745c5c3_Err != nil {
@@ -2072,7 +2072,7 @@ func assignCourseButtonInternal(tooltip, showCondButton, patch, vals, include st
 			var templ_7745c5c3_Var100 string
 			templ_7745c5c3_Var100, templ_7745c5c3_Err = templ.JoinStringErrs(ttDelay)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 484, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 485, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var100))
 			if templ_7745c5c3_Err != nil {
@@ -2085,7 +2085,7 @@ func assignCourseButtonInternal(tooltip, showCondButton, patch, vals, include st
 			var templ_7745c5c3_Var101 string
 			templ_7745c5c3_Var101, templ_7745c5c3_Err = templ.JoinStringErrs(tooltip)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 485, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 486, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
 			if templ_7745c5c3_Err != nil {
@@ -2183,7 +2183,7 @@ func assignSemesterButton(year, semester int, patch, vals, include, semesterText
 		var templ_7745c5c3_Var104 string
 		templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.JoinStringErrs(patch)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 507, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 508, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 		if templ_7745c5c3_Err != nil {
@@ -2196,7 +2196,7 @@ func assignSemesterButton(year, semester int, patch, vals, include, semesterText
 		var templ_7745c5c3_Var105 string
 		templ_7745c5c3_Var105, templ_7745c5c3_Err = templ.JoinStringErrs(mergeVals(vYear(year), vSem(semester), vPos()) + vals)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 508, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 509, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var105))
 		if templ_7745c5c3_Err != nil {
@@ -2214,7 +2214,7 @@ func assignSemesterButton(year, semester int, patch, vals, include, semesterText
 			var templ_7745c5c3_Var106 string
 			templ_7745c5c3_Var106, templ_7745c5c3_Err = templ.JoinStringErrs(include)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 510, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 511, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var106))
 			if templ_7745c5c3_Err != nil {
@@ -2232,7 +2232,7 @@ func assignSemesterButton(year, semester int, patch, vals, include, semesterText
 		var templ_7745c5c3_Var107 string
 		templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(t.yearStr(year) + " " + semesterText)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 514, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 515, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
 		if templ_7745c5c3_Err != nil {
@@ -2400,7 +2400,7 @@ func adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, m
 			var templ_7745c5c3_Var114 string
 			templ_7745c5c3_Var114, templ_7745c5c3_Err = templ.JoinStringErrs(xShow)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 539, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 540, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var114))
 			if templ_7745c5c3_Err != nil {
@@ -2418,7 +2418,7 @@ func adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, m
 		var templ_7745c5c3_Var115 string
 		templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.JoinStringErrs(ttDelay)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 543, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 544, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var115))
 		if templ_7745c5c3_Err != nil {
@@ -2431,7 +2431,7 @@ func adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, m
 		var templ_7745c5c3_Var116 string
 		templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs(tooltip)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 544, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 545, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 		if templ_7745c5c3_Err != nil {
@@ -2466,7 +2466,7 @@ func adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, m
 			var templ_7745c5c3_Var118 string
 			templ_7745c5c3_Var118, templ_7745c5c3_Err = templ.JoinStringErrs(vals)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 549, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 550, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var118))
 			if templ_7745c5c3_Err != nil {
@@ -2485,7 +2485,7 @@ func adjustCoursesButton(icon, xShow, tooltip, vals, include string, big bool, m
 			var templ_7745c5c3_Var119 string
 			templ_7745c5c3_Var119, templ_7745c5c3_Err = templ.JoinStringErrs(include)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 552, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `blueprint/view.templ`, Line: 553, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var119))
 			if templ_7745c5c3_Err != nil {
@@ -2525,7 +2525,7 @@ func scriptOnMoveCustom() templ.Component {
 			templ_7745c5c3_Var120 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script>\n        function onMoveCustom(event, originalEvent) {\n            originatorID = event.dragged.id;\n            originatorCode = getCourseCodeFromId(originatorID);\n            targetCodes = Array.from(originalEvent.target.parentElement.parentElement.querySelectorAll(\"tr\"))\n                .filter(tr => tr.id !== originatorID)\n                .map(tr => getCourseCodeFromId(tr.id));\n\n            duplicate = targetCodes.includes(originatorCode);\n            return !duplicate\n        }\n\n        function getCourseCodeFromId(id) {\n            const parts = id.split(\"-\");\n            return parts[parts.length - 1];\n        }\n    </script>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script>\n        function onMoveCustom(event, originalEvent) {\n            // if not DragEvent then empty table -> always allow\n            if (!(originalEvent instanceof DragEvent)) {\n                return true;\n            }\n            originatorID = event.dragged.id;\n            originatorCode = getCourseCodeFromId(originatorID);\n            targetCodes = Array.from(originalEvent.target.parentElement.parentElement.querySelectorAll(\"tr\"))\n                .filter(tr => tr.id !== originatorID)\n                .map(tr => getCourseCodeFromId(tr.id));\n\n            duplicate = targetCodes.includes(originatorCode);\n            return !duplicate\n        }\n\n        function getCourseCodeFromId(id) {\n            const parts = id.split(\"-\");\n            return parts[parts.length - 1];\n        }\n    </script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
