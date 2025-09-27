@@ -2,5 +2,5 @@ CREATE DATABASE recsis;
 
 \c recsis
 CREATE SCHEMA elt AUTHORIZATION elt;
-
 CREATE SCHEMA webapp AUTHORIZATION webapp;
+CREATE SCHEMA recommender AUTHORIZATION recommender;

@@ -1,5 +1,6 @@
 venv
 meili_data
+postgres_data
 *.exe
 webapp/recsis
 *.env
