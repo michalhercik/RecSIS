@@ -164,7 +164,6 @@ func homeServer(db *sqlx.DB, conf config, errorHandler home.Error, pageTempl pag
 		Auth:  cas.UserIDFromContext{},
 		Error: errorHandler,
 		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
-		// Recommender: fmt.Sprintf("http://%s:%d", conf.Recommender.Host, conf.Recommender.Port),
 		ForYou: recommend.MeiliSearchSimilarToBlueprint{
 			Search:      meiliClient,
 			SearchIndex: meilisearch.IndexConfig{Uid: "courses"},
@@ -174,6 +173,12 @@ func homeServer(db *sqlx.DB, conf config, errorHandler home.Error, pageTempl pag
 		},
 		Newest: recommend.NewCourses{
 			DB: db,
+		},
+		Experiment: recommend.RestCallWithAlgoSwitch{
+			Client:       &http.Client{},
+			DB:           db,
+			Endpoint:     fmt.Sprintf("http://%s:%d/recommended", conf.Recommender.Host, conf.Recommender.Port),
+			AlgoEndpoint: fmt.Sprintf("http://%s:%d/algorithms", conf.Recommender.Host, conf.Recommender.Port),
 		},
 		Data: home.DBManager{
 			DB: db,

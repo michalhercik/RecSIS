@@ -8,9 +8,16 @@ import (
 	"unicode/utf8"
 )
 
+type recommendedModel struct {
+	courses         []course
+	algo            string
+	algoSuggestions []string
+}
+
 type homePage struct {
 	recommendedCourses []course
 	newCourses         []course
+	experimentCourses  []course
 }
 
 type course struct {

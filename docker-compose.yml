@@ -1,4 +1,14 @@
 services:
+  recommender:
+    container_name: recsis-recommender
+    build:
+      dockerfile: Dockerfile
+      context: ./recommender/
+    ports:
+      - 8002:8002
+    environment:
+      RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
+      MEILI_MASTER_KEY: MASTER_KEY
   elt:
     container_name: recsis-elt
     build:
@@ -21,7 +31,7 @@ services:
     networks:
       - recsis-network
     volumes:
-      - ~/.ssh/id_ed25519:/root/.ssh/id_rsa
+      - ~/.ssh/id_rsa:/root/.ssh/id_rsa
   webapp:
     container_name: recsis-webapp
     build:
@@ -56,6 +66,7 @@ services:
       PGDATA: /data/postgres
     volumes:
        - ./init_db:/docker-entrypoint-initdb.d
+       - ./postgres_data:/data/postgres
     ports:
       - "5432:5432"
     networks:
