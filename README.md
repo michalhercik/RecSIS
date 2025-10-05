@@ -35,6 +35,7 @@ development and research.
 - [**Repo and Code structure**](docs/repo-code-structure.md): Description RecSIS repository and code structure.
 - [**Testing**](docs/testing.md): Few words about testing.
 - [**How To Extend**](docs/how-to-extend.md): Examples of how to add new page, ... 
+- [**NDBI021**](docs/ndbi021.md): Notes and instructions for NDBI021 course.
 
 ## Contact
 

@@ -2,6 +2,7 @@ package home
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/errorx"
@@ -53,7 +54,7 @@ type Recommender interface {
 }
 
 type RecommenderWithAlgoSwitch interface {
-	Recommend(userID string, algoName string) ([]string, error)
+	Recommend(userID string, algoName string, limit int) ([]string, error)
 	Algorithms() ([]string, error)
 }
 
@@ -98,20 +99,9 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
 		return
 	}
-	//TODO: use constants
-	algo := r.URL.Query().Get("algo")
-	experiment, err := s.experiment(userID, algo, lang)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
-		return
-	}
-
 	content := homePage{
 		recommendedCourses: recommended,
 		newCourses:         newest,
-		experimentCourses:  experiment,
 	}
 
 	main := Content(&content, t)
@@ -129,7 +119,11 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 
 	userID := s.Auth.UserID(r)
 	algo := r.URL.Query().Get("algo")
-	experiment, err := s.experiment(userID, algo, lang)
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil || limit <= 0 || limit > 50 {
+		//TODO: handle error
+	}
+	experiment, err := s.experiment(userID, algo, limit, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -147,6 +141,7 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 		courses:         experiment,
 		algo:            algo,
 		algoSuggestions: algoSuggestions,
+		limit:           limit,
 	}
 	main := Recommended(model, t)
 	page := s.Page.View(main, lang, t.pageTitle, userID)
@@ -185,8 +180,8 @@ func (s Server) newest(userID string, lang language.Language) ([]course, error) 
 	return newestCourses, nil
 }
 
-func (s Server) experiment(userID string, algoName string, lang language.Language) ([]course, error) {
-	courses, err := s.Experiment.Recommend(userID, algoName)
+func (s Server) experiment(userID string, algoName string, limit int, lang language.Language) ([]course, error) {
+	courses, err := s.Experiment.Recommend(userID, algoName, limit)
 	if err != nil {
 		// TODO: add context
 		return nil, err

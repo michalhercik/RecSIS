@@ -1,14 +1,36 @@
 package recommend
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
+
+type recRequest struct {
+	Algo           string
+	Limit          int
+	UserID         string
+	DegreePlan     string
+	EnrollmentYear int
+	Blueprint      string
+}
+
+func (r recRequest) MarshalJSON() ([]byte, error) {
+	body := `{
+		"algo": 	"%s",
+		"limit":      %d,
+		"user_id":    "%s",
+		"blueprint":  %s,
+		"degree_plan": "%s",
+		"enrollment_year": %d
+	}`
+	body = fmt.Sprintf(body, r.Algo, r.Limit, r.UserID, r.Blueprint, r.DegreePlan, r.EnrollmentYear)
+	return []byte(body), nil
+}
 
 type RestCallWithAlgoSwitch struct {
 	DB           *sqlx.DB
@@ -34,16 +56,22 @@ func (c RestCallWithAlgoSwitch) Algorithms() ([]string, error) {
 	return body.Algorithms, nil
 }
 
-func (c RestCallWithAlgoSwitch) Recommend(userID, algo string) ([]string, error) {
-	blueprint, err := c.blueprint(userID)
+func (c RestCallWithAlgoSwitch) Recommend(userID, algo string, limit int) ([]string, error) {
+	req := recRequest{
+		Algo:   algo,
+		Limit:  limit,
+		UserID: userID,
+	}
+	var err error
+	req.Blueprint, err = c.blueprint(userID)
 	if err != nil {
 		return nil, err
 	}
-	studyInfo, err := c.studyInfo(userID)
+	req.DegreePlan, req.EnrollmentYear, err = c.studyInfo(userID)
 	if err != nil {
 		return nil, err
 	}
-	result, err := c.call(algo, userID, blueprint, studyInfo)
+	result, err := c.call(req)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +97,12 @@ func (c RestCallWithAlgoSwitch) blueprint(userID string) (string, error) {
 			SELECT
 				academic_year,
 				jsonb_object_agg(
-					semester,
+					CASE
+						WHEN semester = 0 THEN 'unassigned'
+						WHEN semester = 1 THEN 'winter'
+						WHEN semester = 2 THEN 'summer'
+						ELSE semester::text
+					END,
 					COALESCE(
 						NULLIF(courses, '[null]'::jsonb),  -- treat [null] as empty
 						'[]'::jsonb
@@ -94,26 +127,24 @@ func (c RestCallWithAlgoSwitch) blueprint(userID string) (string, error) {
 	return bp, nil
 }
 
-func (c RestCallWithAlgoSwitch) studyInfo(userID string) (string, error) {
+func (c RestCallWithAlgoSwitch) studyInfo(userID string) (string, int, error) {
 	query := `--sql
 		SELECT 
-			jsonb_build_object(
-				'degree_plan_code', degree_plan_code, 
-				'start_year', start_year
-			) 
+			degree_plan_code, start_year
 		FROM studies
 		WHERE user_id = $1
 	`
-	var dpCodeYear string
-	err := c.DB.QueryRow(query, userID).Scan(&dpCodeYear)
+	var degreePlan string
+	var enrollmentYear int
+	err := c.DB.QueryRow(query, userID).Scan(&degreePlan, &enrollmentYear)
 	if err != nil {
-		return dpCodeYear, err
+		return degreePlan, enrollmentYear, err
 	}
-	return dpCodeYear, nil
+	return degreePlan, enrollmentYear, nil
 }
 
-func (c RestCallWithAlgoSwitch) call(algo, userID string, blueprint, studyInfo string) ([]string, error) {
-	req, err := c.buildRequest(algo, userID, blueprint, studyInfo)
+func (c RestCallWithAlgoSwitch) call(reqParams recRequest) ([]string, error) {
+	req, err := c.buildRequest(reqParams)
 	if err != nil {
 		return nil, err
 	}
@@ -133,15 +164,12 @@ func (c RestCallWithAlgoSwitch) call(algo, userID string, blueprint, studyInfo s
 	return body.Recommended, nil
 }
 
-func (c RestCallWithAlgoSwitch) buildRequest(algo, userID, blueprint, studyInfo string) (*http.Request, error) {
-	body := `{
-		"algo": 	"%s",
-		"user_id":    "%s",
-		"blueprint":  %s,
-		"study_info": %s
-	}`
-	body = fmt.Sprintf(body, algo, userID, blueprint, studyInfo)
-	req, err := http.NewRequest(http.MethodPost, c.Endpoint, strings.NewReader(body))
+func (c RestCallWithAlgoSwitch) buildRequest(reqParams recRequest) (*http.Request, error) {
+	payload, err := reqParams.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest(http.MethodPost, c.Endpoint, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, err
 	}

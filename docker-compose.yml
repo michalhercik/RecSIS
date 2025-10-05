@@ -6,9 +6,11 @@ services:
       context: ./recommender/
     ports:
       - 8002:8002
-    environment:
-      RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
-      MEILI_MASTER_KEY: MASTER_KEY
+    env_file:
+      - path: ./dev_env/recommender-postgres.env
+    # environment:
+    #   RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
+    #   MEILI_MASTER_KEY: MASTER_KEY
   elt:
     container_name: recsis-elt
     build:
@@ -22,12 +24,15 @@ services:
       meilisearch:
         condition: service_healthy
         restart: true
-    environment:
-      - ACHERON_USER=${ACHERON_USER:-}
-      - SIS_DB_USER=${SIS_DB_USER}
-      - SIS_DB_PASS=${SIS_DB_PASS}
-      - RECSIS_ELT_DB_PASS=${RECSIS_ELT_DB_PASS}
-      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+    env_file:
+      - path: ./dev_env/elt-postgres.env
+      - path: ./dev_env/elt.env
+    # environment:
+    #   - ACHERON_USER=${ACHERON_USER:-}
+    #   - SIS_DB_USER=${SIS_DB_USER}
+    #   - SIS_DB_PASS=${SIS_DB_PASS}
+    #   - RECSIS_ELT_DB_PASS=${RECSIS_ELT_DB_PASS}
+    #   - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
     networks:
       - recsis-network
     volumes:
@@ -48,9 +53,12 @@ services:
         condition: service_completed_successfully
     ports:
       - 443:8000
-    environment:
-      - RECSIS_WEBAPP_DB_PASS=${RECSIS_WEBAPP_DB_PASS}
-      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+    env_file:
+      - path: ./dev_env/webapp-postgres.env
+      - path: ./dev_env/meili-master-key.env
+    # environment:
+    #   - RECSIS_WEBAPP_DB_PASS=${RECSIS_WEBAPP_DB_PASS}
+    #   - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
     networks:
       - recsis-network
     volumes:
@@ -58,12 +66,18 @@ services:
   postgres:
     container_name: recsis-postgres
     image: postgres
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      RECSIS_ELT_DB_PASS: ${RECSIS_ELT_DB_PASS}
-      RECSIS_WEBAPP_DB_PASS: ${RECSIS_WEBAPP_DB_PASS}
-      RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
-      PGDATA: /data/postgres
+    env_file:
+      - path: ./dev_env/postgres.env
+      - path: ./dev_env/elt-postgres.env
+      - path: ./dev_env/webapp-postgres.env
+      - path: ./dev_env/recommender-postgres.env
+    # environment:
+    #   POSTGRES_DB: ${POSTGRES_DB}
+    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    #   RECSIS_ELT_DB_PASS: ${RECSIS_ELT_DB_PASS}
+    #   RECSIS_WEBAPP_DB_PASS: ${RECSIS_WEBAPP_DB_PASS}
+    #   RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
+    #   PGDATA: /data/postgres
     volumes:
        - ./init_db:/docker-entrypoint-initdb.d
        - ./postgres_data:/data/postgres
@@ -93,9 +107,16 @@ services:
   meilisearch:
     container_name: recsis-meilisearch
     image: getmeili/meilisearch:v1.16
-    environment:
-      MEILI_MASTER_KEY: MASTER_KEY
-      MEILI_HTTP_PAYLOAD_SIZE_LIMIT: "200MB"
+    env_file:
+      - path: ./dev_env/meili-master-key.env
+      - path: ./dev_env/meilisearch.env
+    # environment:
+    #   MEILI_MASTER_KEY: MASTER_KEY
+    #   MEILI_HTTP_PAYLOAD_SIZE_LIMIT: "200MB"
+    #   SNAPSHOT_DIR: /meili_data/snapshots
+    #   MEILI_IMPORT_SNAPSHOT: /meili_data/snapshots/data.ms.snapshot
+    #   MEILI_IGNORE_SNAPSHOT_IF_DB_EXISTS: "true"
+    #   MEILI_IGNORE_MISSING_SNAPSHOT: "true"
     volumes:
       - ./meili_data:/meili_data
     ports:

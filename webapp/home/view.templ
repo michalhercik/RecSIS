@@ -17,16 +17,9 @@ templ Content(hp *homePage, t text) {
 			@courseCardsRow("rec", hp.recommendedCourses, t)
 		</div>
 		<div class="pb-4">
-			<div class="d-flex align-items-center gap-2 mb-2">
-				<h4 class="mb-0"><a href={ templ.SafeURL(t.language.LocalizeURL("/recommended")) }>{ t.experimentCourses }</a></h4>
-				<input type="text" class="form-control" style="max-width: 250px;" placeholder="Enter algorithm name">
-			</div>
-			@courseCardsRow("rec", hp.experimentCourses, t)
+			<h4>{ t.newCourses }</h4>
+			@courseCardsRow("new", hp.newCourses, t)
 		</div>
-		// <div class="pb-4">
-		// 	<h4>{ t.newCourses }</h4>
-		// 	@courseCardsRow("new", hp.newCourses, t)
-		// </div>
 		@scripts()
 	</div>
 }
@@ -38,6 +31,7 @@ templ Recommended(model recommendedModel, t text) {
 		<div class="d-flex align-items-center gap-2 mb-2">
 			<h3 class="mb-0">Recommended by: </h3>
 			<form x-ref="algoForm" method="get" action={ templ.SafeURL(t.language.LocalizeURL("/recommended")) }
+					hx-trigger="change from:input"
 					x-data={ fmt.Sprintf(`{
 						search: '%s',
 						suggestions: ['%s'],
@@ -50,39 +44,52 @@ templ Recommended(model recommendedModel, t text) {
 						}
 					}`, model.algo, strings.Join(model.algoSuggestions, "','")) }
 			>
-				<div 
-					class="dropdown"
-				>
-					<input 
-						id="algo"
-						x-model="search"
-						name="algo" 
-						type="text" 
-						class="form-control" 
-						style="max-width: 250px;" 
-						placeholder="Enter algorithm name" 
-						autocomplete="off"
-						value={ model.algo }
-						@focus="showSuggestions = true"
-						@blur="setTimeout(() => showSuggestions = false, 100)"
-					>
+				<div class="d-flex align-items-center gap-2 mb-2">
 					<div 
-						class="dropdown-menu show"
-						x-show="showSuggestions && filteredSuggestions.length > 0"
-						x-cloak
+						class="dropdown"
 					>
-						<template x-for="suggestion in filteredSuggestions" :key="suggestion">
-							<div 
-								class="dropdown-item"
-								@click="
-									search = suggestion;
-									setTimeout(() => $refs.algoForm.submit(), 100);
-								"
-								x-text="suggestion"
-							>
-							</div>
-						</template>	
+						<input 
+							id="algo"
+							x-model="search"
+							name="algo" 
+							type="text" 
+							class="form-control" 
+							style="min-width: 200px;" 
+							style="max-width: 250px;" 
+							placeholder="Enter algorithm name" 
+							autocomplete="off"
+							value={ model.algo }
+							@focus="showSuggestions = true"
+							@blur="setTimeout(() => showSuggestions = false, 100)"
+						>
+						<div 
+							class="dropdown-menu show"
+							x-show="showSuggestions && filteredSuggestions.length > 0"
+							x-cloak
+						>
+							<template x-for="suggestion in filteredSuggestions" :key="suggestion">
+								<div 
+									class="dropdown-item"
+									@click="
+										search = suggestion;
+										setTimeout(() => $refs.algoForm.submit(), 100);
+									"
+									x-text="suggestion"
+								>
+								</div>
+							</template>	
+						</div>
 					</div>
+					<label for="limit" class="form-label mb-0 ms-2">Limit:</label>
+					<input 
+						name="limit" 
+						type="number" 
+						min="5"
+						max="30"
+						step="5"
+						value={ fmt.Sprintf("%d", model.limit) }
+						class="form-control" 
+					>
 				</div>
 			</form>
 		</div>

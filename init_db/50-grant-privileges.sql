@@ -1,5 +1,3 @@
-\c recsis
-
 GRANT USAGE ON SCHEMA webapp TO webapp;
 GRANT SELECT, INSERT, DELETE, UPDATE ON ALL TABLES IN SCHEMA webapp TO webapp;
 
@@ -28,5 +26,5 @@ ON
     recommender.povinn,
     recommender.studium,
     recommender.zkous,
-    recommender.obor,
+    recommender.stud_plan
 TO elt;

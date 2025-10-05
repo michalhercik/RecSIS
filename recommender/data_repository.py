@@ -1,22 +1,20 @@
 import pandas as pd
 from sqlalchemy import create_engine
 
-
 class DataRepository:
     def __init__(self):
-        pass
+        self.__engine = create_engine("postgresql://recommender:recommender@localhost:5432/recsis")
+        self.povinn = self.__fetch_table("povinn")
+        self.zkous = self.__fetch_table("zkous")
+        self.studium = self.__fetch_table("studium")
+        self.stud_plan = self.__fetch_table("stud_plan")
+    
+    def sql_query(self, query: str):
+        with self.__engine.connect() as conn:
+            result = pd.read_sql_query(query, conn)
+        return result
 
-    def get_degree_plan(self, code: str, year: int):
-        engine = create_engine("postgresql://recommender:recommender@localhost:5432/recsis")
-        with engine.connect() as conn:
-            dp = pd.read_sql_query(
-                f"SELECT * FROM webapp.degree_plans WHERE plan_code = '{code}' AND plan_year = {year}", 
-                conn
-            )
-        return dp
-
-    def get_courses(self):
-        engine = create_engine("postgresql://recommender:recommender@localhost:5432/recsis")
-        with engine.connect() as conn:
-            courses = pd.read_sql_query("SELECT * FROM webapp.courses", conn)
-        return courses
+    def __fetch_table(self, table_name: str):
+        with self.__engine.connect() as conn:
+            table = pd.read_sql_table(table_name, conn)
+        return table

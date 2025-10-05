@@ -1,4 +1,3 @@
-\c recsis
 SET search_path TO webapp;
 
 CREATE TABLE courses(
@@ -219,7 +218,7 @@ CREATE TABLE filter_values (
     position INT NOT NULL
 );
 
-SET search_path TO webapp;
+SET search_path TO recommender;
 
 CREATE TABLE povinn (
     povinn     VARCHAR(10),
@@ -242,7 +241,7 @@ CREATE TABLE povinn (
     vebody     INT,
     vucit1     VARCHAR(10),
     vucit2     VARCHAR(10),
-    vucit3     VARCHAR(10),
+    vucit3     VARCHAR(10)
 );
 
 CREATE TABLE studium (
@@ -269,3 +268,16 @@ CREATE TABLE zkous (
     zbody INT,
     zsplcelk VARCHAR(1)
 );
+
+CREATE TABLE stud_plan (
+    code VARCHAR(10),
+    interchangeability VARCHAR(10),
+    bloc_subject_code VARCHAR(20),
+    bloc_type VARCHAR(1),
+    bloc_grade VARCHAR(50),
+    bloc_limit INT,
+    bloc_name_cz VARCHAR(250),
+    bloc_name_en VARCHAR(250),
+    plan_code VARCHAR(15),
+    plan_year INT
+)

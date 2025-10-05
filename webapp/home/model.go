@@ -12,6 +12,7 @@ type recommendedModel struct {
 	courses         []course
 	algo            string
 	algoSuggestions []string
+	limit           int
 }
 
 type homePage struct {

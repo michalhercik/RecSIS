@@ -100,6 +100,14 @@ func migrate(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
+	err = migratePovinn(tx)
+	if err != nil {
+		return err
+	}
+	err = migrateStudPlan(tx)
+	if err != nil {
+		return err
+	}
 	if err = tx.Commit(); err != nil {
 		return err
 	}
