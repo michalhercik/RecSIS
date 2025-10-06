@@ -1,0 +1,26 @@
+environment = "development"
+
+[server]
+
+[server.https]
+port = 8000
+
+[postgres]
+host     = "postgres"
+port     = 5432
+user     = "webapp"
+dbname   = "recsis"
+
+[meilisearch]
+host = "http://meilisearch:7700"
+
+[recommender]
+host = "recommender"
+port = 8002
+
+[cas]
+host = "mockcas:8001"
+
+[ssl]
+certificate = "recsis-cert/server.crt"
+key 	    = "recsis-cert/server.key"

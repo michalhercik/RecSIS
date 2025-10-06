@@ -1,9 +1,11 @@
+import os
 import pandas as pd
 from sqlalchemy import create_engine
 
 class DataRepository:
     def __init__(self):
-        self.__engine = create_engine("postgresql://recommender:recommender@localhost:5432/recsis")
+        host = os.environ.get("POSTGRES_HOST", "localhost")
+        self.__engine = create_engine(f"postgresql://recommender:recommender@{host}:5432/recsis")
         self.povinn = self.__fetch_table("povinn")
         self.zkous = self.__fetch_table("zkous")
         self.studium = self.__fetch_table("studium")

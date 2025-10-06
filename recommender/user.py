@@ -25,4 +25,4 @@ class User:
                 if semester in yearRecord:
                     for course in yearRecord[semester]:
                         records.append({"year": yearRecord["year"], "semester": semester, "course": course})
-        return pd.DataFrame(records)
+        return pd.DataFrame(records, columns=["year", "semester", "course"])

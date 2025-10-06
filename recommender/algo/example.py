@@ -48,11 +48,8 @@ class knn(Algorithm):
         candidates = neighbors.any(axis=0)
         candidates[bp_df["course"]] = False
         candidates = candidates[candidates == True]
-        print(limit)
-        print(candidates)
         if candidates.shape[0] < limit:
             limit = candidates.shape[0]
-            print(limit)
         result = candidates.sample(limit)
 
         return result.index.tolist()
