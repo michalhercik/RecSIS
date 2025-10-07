@@ -42,7 +42,7 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
         "response": {
             "embedding": "{{embedding}}"
         },
-        "documentTemplate": "University course with title {{doc.title.en}} {% if doc.annotation != nil %} {{doc.annotation[0]}} {% endif %}"
+        "documentTemplate": "University course with title {{doc.title.en}}"
     }
   }' \
   "$BASE_URL/indexes/courses/settings/embedders")

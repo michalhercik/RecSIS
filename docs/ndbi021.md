@@ -9,7 +9,7 @@
     1. Download data from [OneDrive]()
     2. Unzip in the root of the repository
     3. Move `70-load-data.sql` to `RecSIS/init_db`
-4. Initialize env variables and run services
+4. Initialize environment variables
     - Windows
         - `scripts/init-env.ps1 docker.env`
     - Linux
@@ -19,7 +19,7 @@
     - Windows
         - `.\scripts\setup-hosts.ps1`
     - Linux
-        - TODO
+        - `.\scripts\setup-hosts.sh`
 5. Build & run containers
     - `docker compose up -d webapp recommender postgres meilisearch bert mockcas adminer`
 6. Setup Meilisearch (search engine)
@@ -43,7 +43,7 @@
 
 ## Test it
 
-1. Go to [localhost:8000/recommended](localhost:8000/recommended)
+1. Go to [localhost:8000/recommended](https://localhost:8000/recommended)
 2. Select your algorithm
 3. For debugging use `print` statements and check the logs
     - The logs are accessible in terminal where you are running the recommender
@@ -51,15 +51,15 @@
 
 
 ##  Resources
-- meilisearch: [localhost:7700](localhost:7700)
+- meilisearch: [localhost:7700](http://localhost:7700)
     - master key: MASTER_KEY
-- adminer: [localhost:8080](localhost:8080)
+- adminer: [localhost:8080](http://localhost:8080)
     - db: PostgreSQL
     - server: postgres
     - user: recommender
     - password: recommender
     - db: recsis
-- recommender api docs: [localhost:8002/docs](localhost:8002/docs)
+- recommender api docs: [localhost:8002/docs](http://localhost:8002/docs)
     
 ## Schema
 
