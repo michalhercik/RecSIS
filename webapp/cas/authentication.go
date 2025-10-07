@@ -164,7 +164,9 @@ func (a Authentication) sessionCookie() http.Cookie {
 		Name:     sessionCookieName,
 		Path:     "/",
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		HttpOnly: true,
+		// TODO: define subdomains in docker and then use http.SameSiteStrictMode
+		SameSite: http.SameSiteLaxMode,
 	}
 	return cookie
 }

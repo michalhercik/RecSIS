@@ -92,6 +92,22 @@ func migrate(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
+	err = migrateStudium(tx)
+	if err != nil {
+		return err
+	}
+	err = migrateZkous(tx)
+	if err != nil {
+		return err
+	}
+	err = migratePovinn(tx)
+	if err != nil {
+		return err
+	}
+	err = migrateStudPlan(tx)
+	if err != nil {
+		return err
+	}
 	if err = tx.Commit(); err != nil {
 		return err
 	}
@@ -186,6 +202,8 @@ func extract(sis, recsis *sqlx.DB) error {
 	extract.add(&Ciselnik{Table: "typmem"})
 	extract.add(&Ciselnik{Table: "obor", KodSize: 12, NazevSize: 250})
 	extract.add(&extractStudPlan{})
+	extract.add(&extractStudium{})
+	extract.add(&extractZkous{})
 
 	err := extract.run()
 	return err

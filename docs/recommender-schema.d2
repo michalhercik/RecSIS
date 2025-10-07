@@ -1,0 +1,85 @@
+vars: {
+  d2-config: {
+    layout-engine: elk
+  }
+}
+
+title: |md
+    # Recommender Database/DataFrame Tables
+| {near: top-center}
+
+grid-columns: 1
+
+povinn: {
+  shape: sql_table
+  povinn: course code
+  pnazev: course name 	
+  panazev:	course name in english 	
+  vplatiod:	valid from (academic year) 	
+  vplatido:	valid to (academic year) 	
+  pfakulta:	faculty code (MFF = 11320)
+  pgarant: department code (32-KSI, ...) 	
+  pvyucovan: V = taught, N = not taught, Z = cancelled 	
+  vsemzac: 1 = winter, 2 = summer, 3 = both semesters 	
+  vsempoc: number of semesters the course is taught 	
+  pvyjazyk: TODO	  
+  vrozsahpr1: lecture range in winter	
+  vrozsahcv1:	seminar range in winter	
+  vrozsahpr2:	lecture range in summer
+  vrozsahcv2:	seminar range in summer
+  vrvcem: lecture/seminar range unit 	
+  vtyp: examination type (code)	
+  vebody: credits 	
+  vucit1:	gurantor 1 (code) 	
+  vucit2:	guarantor 2 (code) 	
+  vucit3:	guarantor 3 (code)
+}
+
+zkous: {
+  shape: sql_table
+  zident: study ID {constraint: foreign_key}	
+  zskr:	year	
+  zsem:	semester	
+  zpovinn: course code {constraint: foreign_key}		
+  zmarx: order number	
+  zroc:	year of study	
+  zbody: credits	
+  zsplcelk:	result (S = passed, N = not passed)
+}
+
+studium: {
+  shape: sql_table
+  soident: student ID	
+  sident:	study ID {constraint: unique}
+  sfak: faculty code	
+  sfak2: secondary faculty code
+  sdruh: type of study (Bc, Mgr, PhD, ...)
+  sfst
+  sobor: study program code
+  srokp: year of enrollment
+  sstav: study status 
+  sroc: current year of study
+  splan: degree plan code {constraint: foreign_key}
+}
+
+stud_plan: {
+  shape: sql_table
+  code: course code {constraint: foreign_key}
+  interchangeability: course code {constraint: foreign_key}
+  bloc_subject_code 
+  bloc_type: A = compulsory, B = compulsory elective, C = elective
+  bloc_grade: recommended year of study
+  bloc_limit: number of credits to complete in the block
+  bloc_name_cz: block name in Czech
+  bloc_name_en: block name in English
+  plan_code: degree plan code
+  plan_year: valid for year
+}
+
+
+
+# zkous.zpovinn -> povinn.povinn
+# zkous.zident -> studium.id
+# studium.splan -> stud_plan.plan_code
+# stud_plan.code -> povinn.povinn
+# stud_plan.interchangeability -> povinn.povinn

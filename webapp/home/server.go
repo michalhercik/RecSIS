@@ -1,7 +1,9 @@
 package home
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/errorx"
@@ -13,13 +15,14 @@ import (
 //================================================================================
 
 type Server struct {
-	Auth   Authentication
-	Error  Error
-	Page   Page
-	ForYou Recommender
-	Newest Recommender
-	Data   DBManager
-	router http.Handler
+	Auth       Authentication
+	Error      Error
+	Page       Page
+	Experiment RecommenderWithAlgoSwitch
+	ForYou     Recommender
+	Newest     Recommender
+	Data       DBManager
+	router     http.Handler
 }
 
 type Authentication interface {
@@ -51,6 +54,11 @@ type Recommender interface {
 	Recommend(userID string) ([]string, error)
 }
 
+type RecommenderWithAlgoSwitch interface {
+	Recommend(userID string, algoName string, limit int) ([]string, error)
+	Algorithms() ([]string, error)
+}
+
 //================================================================================
 // Routing
 //================================================================================
@@ -64,6 +72,7 @@ func (s *Server) Init() {
 	router.HandleFunc("GET /{$}", s.page)
 	router.HandleFunc("GET /home/{$}", s.page)
 	router.HandleFunc("/", s.pageNotFound)
+	router.HandleFunc("GET /recommended", s.recommendedPage)
 	s.router = router
 }
 
@@ -91,13 +100,58 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
 		return
 	}
-
 	content := homePage{
 		recommendedCourses: recommended,
 		newCourses:         newest,
 	}
 
 	main := Content(&content, t)
+	page := s.Page.View(main, lang, t.pageTitle, userID)
+	err = page.Render(r.Context(), w)
+
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
+}
+
+func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+
+	userID := s.Auth.UserID(r)
+	algo := r.URL.Query().Get("algo")
+	limit := 10
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		var err error
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil || limit <= 0 || limit > 50 {
+			s.Error.Log(errorx.AddContext(err))
+			s.Error.RenderPage(w, r, http.StatusBadRequest, "limit must be between 5 and 50", t.pageTitle, userID, lang)
+			return
+		}
+	}
+	experiment, err := s.experiment(userID, algo, limit, lang)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
+		return
+	}
+	algoSuggestions, err := s.Experiment.Algorithms()
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
+		return
+	}
+	model := recommendedModel{
+		courses:         experiment,
+		algo:            algo,
+		algoSuggestions: algoSuggestions,
+		limit:           limit,
+	}
+	fmt.Println(model.limit)
+	main := Recommended(model, t)
 	page := s.Page.View(main, lang, t.pageTitle, userID)
 	err = page.Render(r.Context(), w)
 
@@ -122,6 +176,20 @@ func (s Server) recommended(userID string, lang language.Language) ([]course, er
 
 func (s Server) newest(userID string, lang language.Language) ([]course, error) {
 	courses, err := s.Newest.Recommend(userID)
+	if err != nil {
+		// TODO: add context
+		return nil, err
+	}
+	newestCourses, err := s.Data.courses(userID, courses, lang)
+	if err != nil {
+		// TODO: add context
+		return nil, err
+	}
+	return newestCourses, nil
+}
+
+func (s Server) experiment(userID string, algoName string, limit int, lang language.Language) ([]course, error) {
+	courses, err := s.Experiment.Recommend(userID, algoName, limit)
 	if err != nil {
 		// TODO: add context
 		return nil, err

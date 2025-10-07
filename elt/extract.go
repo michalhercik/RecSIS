@@ -1480,6 +1480,151 @@ func (ep *extractStudPlan) insertStudPlan(to *sqlx.DB) error {
 	return nil
 }
 
+type extractStudium struct {
+	data []struct {
+		SOIDENT int            `db:"SOIDENT"`
+		SIDENT  int            `db:"SIDENT"`
+		SFAK    string         `db:"SFAK"`
+		SFAK2   sql.NullString `db:"SFAK2"`
+		SDRUH   string         `db:"SDRUH"`
+		SFST    string         `db:"SFST"`
+		SOBOR   string         `db:"SOBOR"`
+		SROKP   string         `db:"SROKP"`
+		SSTAV   string         `db:"SSTAV"`
+		SROC    int            `db:"SROC"`
+		SPLAN   string         `db:"SPLAN"`
+	}
+}
+
+func (ep *extractStudium) name() string {
+	return "STUDIUM"
+}
+
+func (ep *extractStudium) selectData(from *sqlx.DB, to *sqlx.DB) error {
+	var query string
+	var err error
+	query = `
+		SELECT
+			SOIDENT, SIDENT, SFAK, SFAK2,
+			SDRUH, SFST, SOBOR,
+			SROKP, SSTAV, SROC, SPLAN
+		FROM STUDIUM
+		WHERE SPLAN IS NOT NULL
+		AND SSTAV IS NOT NULL
+	`
+	err = from.Select(&ep.data, query)
+	if err != nil {
+		return fmt.Errorf("selectData: %w", err)
+	}
+	return err
+}
+
+func (ep *extractStudium) insertData(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS studium
+	`
+	create := `
+		CREATE TABLE studium (
+			SOIDENT INT,
+			SIDENT INT,
+			SFAK VARCHAR(5),
+			SFAK2 VARCHAR(5),
+			SDRUH VARCHAR(2),
+			SFST VARCHAR(2),
+			SOBOR VARCHAR(12),
+			SROKP VARCHAR(4),
+			SSTAV VARCHAR(6),
+			SROC INT,
+			SPLAN VARCHAR(15)
+		)
+	`
+	insert := `
+		INSERT INTO studium (
+			SOIDENT, SIDENT, SFAK, SFAK2,
+			SDRUH, SFST, SOBOR,
+			SROKP, SSTAV, SROC, SPLAN
+		) SELECT * FROM unnest(
+			$1::int[], $2::int[], $3::text[], $4::text[],
+			$5::text[], $6::text[], $7::text[],
+			$8::text[], $9::text[], $10::int[], $11::text[]
+		)
+	`
+	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
+	if err != nil {
+		return fmt.Errorf("insertData: %w", err)
+	}
+	return nil
+}
+
+type extractZkous struct {
+	data []struct {
+		ZIDENT   int    `db:"ZIDENT"`
+		ZSKR     string `db:"ZSKR"`
+		ZSEM     string `db:"ZSEM"`
+		ZPOVINN  string `db:"ZPOVINN"`
+		ZMARX    string `db:"ZMARX"`
+		ZROC     int    `db:"ZROC"`
+		ZBODY    int    `db:"ZBODY"`
+		ZSPLCELK string `db:"ZSPLCELK"`
+	}
+}
+
+func (ep *extractZkous) name() string {
+	return "ZKOUS"
+}
+
+func (ep *extractZkous) selectData(from *sqlx.DB, to *sqlx.DB) error {
+	var query string
+	var err error
+	query = `
+		SELECT
+			ZIDENT, ZSKR, ZSEM, ZPOVINN,
+			ZMARX, ZROC, ZBODY, ZSPLCELK	
+		FROM STUDIUM
+		LEFT JOIN ZKOUS ON ZIDENT = SIDENT
+		WHERE SPLAN IS NOT NULL
+		AND SSTAV IS NOT NULL
+		AND ZIDENT IS NOT NULL
+	`
+	err = from.Select(&ep.data, query)
+	if err != nil {
+		return fmt.Errorf("selectData: %w", err)
+	}
+	return err
+}
+
+func (ep *extractZkous) insertData(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS zkous
+	`
+	create := `
+		CREATE TABLE zkous (
+			ZIDENT INT,
+			ZSKR VARCHAR(4),
+			ZSEM VARCHAR(1),
+			ZPOVINN VARCHAR(10),
+			ZMARX VARCHAR(5),
+			ZROC INT,
+			ZBODY INT,
+			ZSPLCELK VARCHAR(1)
+		)
+	`
+	insert := `
+		INSERT INTO zkous (
+			ZIDENT, ZSKR, ZSEM, ZPOVINN,
+			ZMARX, ZROC, ZBODY, ZSPLCELK
+		) SELECT * FROM unnest(
+			$1::int[], $2::text[], $3::text[], $4::text[],
+			$5::text[], $6::int[], $7::int[], $8::text[]
+		)
+	`
+	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
+	if err != nil {
+		return fmt.Errorf("insertData: %w", err)
+	}
+	return nil
+}
+
 // Helpers
 // ============================================================================================================
 

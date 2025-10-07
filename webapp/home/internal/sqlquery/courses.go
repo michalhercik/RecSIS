@@ -17,7 +17,7 @@ const Courses = `--sql
 		c.code,
 		c.title,
 		c.annotation,
-		COALESCE(c.start_semester, '') start_semester,
+		COALESCE(c.start_semester, '-1')::int start_semester,
 		c.lecture_range_winter,
 		c.seminar_range_winter,
 		c.lecture_range_summer,

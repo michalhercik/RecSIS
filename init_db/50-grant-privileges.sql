@@ -1,7 +1,8 @@
-\c recsis
-
 GRANT USAGE ON SCHEMA webapp TO webapp;
 GRANT SELECT, INSERT, DELETE, UPDATE ON ALL TABLES IN SCHEMA webapp TO webapp;
+
+GRANT USAGE ON SCHEMA recommender TO recommender;
+GRANT SELECT, INSERT, DELETE, UPDATE ON ALL TABLES IN SCHEMA recommender TO recommender;
 
 GRANT USAGE ON SCHEMA webapp TO elt;
 GRANT
@@ -17,5 +18,13 @@ ON
     webapp.filter_values
 TO elt;
 
-GRANT USAGE ON SCHEMA webapp TO recommender;
-GRANT SELECT ON ALL TABLES IN SCHEMA webapp TO recommender;
+GRANT USAGE ON SCHEMA recommender TO elt;
+GRANT
+    DELETE,
+    INSERT
+ON
+    recommender.povinn,
+    recommender.studium,
+    recommender.zkous,
+    recommender.stud_plan
+TO elt;
