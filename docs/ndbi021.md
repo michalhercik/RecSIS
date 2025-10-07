@@ -6,9 +6,10 @@
 2. Clone the repository branch
     - `git clone -b ndbi021/main git@github.com:michalhercik/RecSIS.git`
 3. Download data
-    1. Download data from [OneDrive]()
-    2. Unzip in the root of the repository
-    3. Move `70-load-data.sql` to `RecSIS/init_db`
+    1. Download data from [OneDrive](https://cunicz-my.sharepoint.com/:u:/g/personal/81411247_cuni_cz/EUcaiCT79tZBj0qEcC9lRTQBTtv8AN3Iz2gBrIMFZwIt1A?e=WWL5hl)
+    2. Unzip it
+    3. Move the content inside the root of the repository 
+    4. Move `70-load-data.sql` to `RecSIS/init_db`
 4. Initialize environment variables
     - Windows
         - `scripts/init-env.ps1 docker.env`
@@ -20,14 +21,14 @@
         - `.\scripts\setup-hosts.ps1`
     - Linux
         - `.\scripts\setup-hosts.sh`
-5. Build & run containers
-    - `docker compose up -d webapp recommender postgres meilisearch bert mockcas adminer`
-6. Setup Meilisearch (search engine)
-    - Windows
-        - `.\scripts\init-meili.ps1`
-    - Linux
-        - `./scripts/init-meili.sh`
-
+6. Build & run containers
+    1. `docker compose build -d webapp recommender postgres meilisearch bert mockcas adminer`
+    2. `docker compose up -d webapp recommender postgres meilisearch bert mockcas adminer`
+7. Check if it works
+    - Go to [localhost:8000](https://localhost:8000)
+    - Log in
+    - Go to [localhost:8000/recommended](https://localhost:8000/recommended)
+    - Select algorithm and see recommendations
 
 ## Create new algorithm
 

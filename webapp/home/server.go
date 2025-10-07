@@ -1,6 +1,7 @@
 package home
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -119,9 +120,15 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 
 	userID := s.Auth.UserID(r)
 	algo := r.URL.Query().Get("algo")
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-	if err != nil || limit <= 0 || limit > 50 {
-		//TODO: handle error
+	limit := 10
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		var err error
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil || limit <= 0 || limit > 50 {
+			s.Error.Log(errorx.AddContext(err))
+			s.Error.RenderPage(w, r, http.StatusBadRequest, "limit must be between 5 and 50", t.pageTitle, userID, lang)
+			return
+		}
 	}
 	experiment, err := s.experiment(userID, algo, limit, lang)
 	if err != nil {
@@ -143,6 +150,7 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 		algoSuggestions: algoSuggestions,
 		limit:           limit,
 	}
+	fmt.Println(model.limit)
 	main := Recommended(model, t)
 	page := s.Page.View(main, lang, t.pageTitle, userID)
 	err = page.Render(r.Context(), w)
