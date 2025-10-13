@@ -1,7 +1,6 @@
 package home
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -72,6 +71,7 @@ func (s *Server) Init() {
 	router.HandleFunc("GET /{$}", s.page)
 	router.HandleFunc("GET /home/{$}", s.page)
 	router.HandleFunc("/", s.pageNotFound)
+	router.HandleFunc("GET /recommended/{userID}", s.recommendedPage)
 	router.HandleFunc("GET /recommended", s.recommendedPage)
 	s.router = router
 }
@@ -86,13 +86,14 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 
 	userID := s.Auth.UserID(r)
 
-	recommended, err := s.recommended(userID, lang)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
-		return
-	}
+	var recommended []course
+	// recommended, err := s.recommended(userID, lang)
+	// if err != nil {
+	// 	code, userMsg := errorx.UnwrapError(err, lang)
+	// 	s.Error.Log(errorx.AddContext(err))
+	// 	s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
+	// 	return
+	// }
 	newest, err := s.newest(userID, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
@@ -119,6 +120,13 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 	t := texts[lang]
 
 	userID := s.Auth.UserID(r)
+	if testAccount := r.PathValue("userID"); testAccount != "" {
+		if testAccount[:5] != "test-" {
+			s.Error.RenderPage(w, r, http.StatusBadRequest, "userID must start with 'test-'", t.pageTitle, userID, lang)
+			return
+		}
+		userID = r.PathValue("userID")
+	}
 	algo := r.URL.Query().Get("algo")
 	limit := 10
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
@@ -130,14 +138,25 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	experiment, err := s.experiment(userID, algo, limit, lang)
+	var experiment []course
+	if len(algo) > 0 {
+		var err error
+		experiment, err = s.experiment(userID, algo, limit, lang)
+		if err != nil {
+			code, userMsg := errorx.UnwrapError(err, lang)
+			s.Error.Log(errorx.AddContext(err))
+			s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
+			return
+		}
+	}
+	algoSuggestions, err := s.Experiment.Algorithms()
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
 		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
 		return
 	}
-	algoSuggestions, err := s.Experiment.Algorithms()
+	testAccounts, err := s.Data.testAccounts()
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -149,8 +168,8 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 		algo:            algo,
 		algoSuggestions: algoSuggestions,
 		limit:           limit,
+		testAccounts:    testAccounts,
 	}
-	fmt.Println(model.limit)
 	main := Recommended(model, t)
 	page := s.Page.View(main, lang, t.pageTitle, userID)
 	err = page.Render(r.Context(), w)
@@ -194,55 +213,16 @@ func (s Server) experiment(userID string, algoName string, limit int, lang langu
 		// TODO: add context
 		return nil, err
 	}
-	newestCourses, err := s.Data.courses(userID, courses, lang)
+	var newestCourses []course
+	// if len(courses) > 0 {
+	newestCourses, err = s.Data.courses(userID, courses, lang)
 	if err != nil {
 		// TODO: add context
 		return nil, err
 	}
+	// }
 	return newestCourses, nil
 }
-
-// func (s Server) fetchCourses(endpoint string, lang language.Language) ([]course, error) {
-// 	url := fmt.Sprintf("%s/%s?lang=%s", s.Recommender, endpoint, lang)
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		return nil, errorx.NewHTTPErr(
-// 			errorx.AddContext(err, errorx.P("URL", url)),
-// 			http.StatusServiceUnavailable,
-// 			texts[lang].errRecommenderUnavailable,
-// 		)
-// 	}
-
-// 	defer resp.Body.Close()
-// 	if resp.StatusCode != http.StatusOK {
-// 		return nil, errorx.NewHTTPErr(
-// 			errorx.AddContext(fmt.Errorf("unexpected status code: %d", resp.StatusCode), errorx.P("URL", url)),
-// 			resp.StatusCode,
-// 			texts[lang].errRecommenderUnavailable,
-// 		)
-// 	}
-
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		return nil, errorx.NewHTTPErr(
-// 			errorx.AddContext(fmt.Errorf("failed to read response body: %w", err), errorx.P("URL", url)),
-// 			http.StatusServiceUnavailable,
-// 			texts[lang].errCannotLoadCourses,
-// 		)
-// 	}
-
-// 	var courses []course
-// 	err = json.Unmarshal(body, &courses)
-// 	if err != nil {
-// 		return nil, errorx.NewHTTPErr(
-// 			errorx.AddContext(fmt.Errorf("failed to unmarshal response: %w", err), errorx.P("URL", url)),
-// 			http.StatusInternalServerError,
-// 			texts[lang].errCannotLoadCourses,
-// 		)
-// 	}
-
-// 	return courses, nil
-// }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())

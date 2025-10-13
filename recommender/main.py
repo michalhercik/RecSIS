@@ -58,6 +58,27 @@ class RecommendRequest(BaseModel):
     degree_plan: Optional[Any] = None
     enrollment_year: Optional[Any] = None
     blueprint: Optional[Any] = None
+    # model_config = {
+    #     "json_schema_extra": {
+    #         "examples": [
+    #             {
+    #                 "algo": "knn", 
+    #                 "limit": 10,
+    #                 "user_id": "1234",
+    #                 "degree_plan": "NIPVS19B",
+    #                 "enrollment_year": 2020,
+    #                 "blueprint": [
+    #                     {"year": 0, "unassigned": []}, 
+    #                     {"year": 1, 
+    #                         "summer": ["NSWI170", "NMAI054", "NMAI058", "NPRG031", "NSWI177", "NTIN060", "NTVY015"], 
+    #                         "winter": ["NPRG062", "NSWI120", "NMAI069", "NTVY014", "NSWI141", "NDMI050", "NDMI002", "NMAI057", "NPRG030"]}, 
+    #                     {"year": 2, "summer": [], "winter": []}, 
+    #                     {"year": 3, "summer": [], "winter": []}
+    #                 ]
+    #             }
+    #         ]
+    #     }
+    # }
 
 @app.post("/recommended")
 async def recommended(req: RecommendRequest):

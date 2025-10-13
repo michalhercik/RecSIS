@@ -5,3 +5,4 @@ postgres_data
 webapp/recsis
 *.env
 webapp/config.prod.toml
+70-load-data.sql

@@ -10,7 +10,7 @@ func migratePovinn(tx *sqlx.Tx) error {
 			povinn,pnazev,panazev,
 			vplatiod,vplatido,
 			pfakulta,pgarant,
-			pvyucovan,vsemzac,vsempoc,pvyjazyk,
+			pvyucovan,vsemzac,vsempoc,
 			vrozsahpr1,vrozsahcv1,vrozsahpr2,vrozsahcv2,
 			vrvcem,vtyp,vebody,
 			vucit1,vucit2,vucit3
@@ -18,7 +18,7 @@ func migratePovinn(tx *sqlx.Tx) error {
 			povinn,pnazev,panazev,
 			vplatiod,vplatido,
 			pfakulta,pgarant,
-			pvyucovan,vsemzac,vsempoc,pvyjazyk,
+			pvyucovan,vsemzac,vsempoc,
 			vrozsahpr1,vrozsahcv1,vrozsahpr2,vrozsahcv2,
 			vrvcem,vtyp,vebody,
 			vucit1,vucit2,vucit3
@@ -36,11 +36,11 @@ func migrateStudium(tx *sqlx.Tx) error {
 		DELETE FROM recommender.studium WHERE TRUE;
 		INSERT INTO recommender.studium (
 			soident, sident, sfak, sfak2,
-			sdruh, sfst, sobor, srokp, 
+			sdruh, sobor, srokp, 
 			sstav, sroc, splan
 		) SELECT
 			soident, sident, sfak, sfak2,
-			sdruh, sfst, sobor, srokp, 
+			sdruh, sobor, srokp, 
 			sstav, sroc, splan 
 		FROM studium
 	`)
