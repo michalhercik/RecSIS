@@ -1,5 +1,9 @@
 package sqlquery
 
+const TestAccounts = `--sql
+	SELECT id from users WHERE id LIKE 'test-%';
+`
+
 const Courses = `--sql
 	WITH degree_plan AS (
 		SELECT

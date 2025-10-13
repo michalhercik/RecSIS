@@ -13,6 +13,7 @@ type recommendedModel struct {
 	algo            string
 	algoSuggestions []string
 	limit           int
+	testAccounts    []string
 }
 
 type homePage struct {

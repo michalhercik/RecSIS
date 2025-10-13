@@ -35,6 +35,18 @@ func (m DBManager) courses(userID string, courseCodes []string, lang language.La
 	return courses, nil
 }
 
+func (m DBManager) testAccounts() ([]string, error) {
+	var result []string
+	if err := m.DB.Select(&result, sqlquery.TestAccounts); err != nil {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.TestAccounts: %w", err)),
+			http.StatusInternalServerError,
+			"Cannot load test accounts",
+		)
+	}
+	return result, nil
+}
+
 func intoCourses(from courses) []course {
 	result := make([]course, len(from))
 	for i, course := range from {

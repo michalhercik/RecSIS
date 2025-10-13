@@ -14,7 +14,15 @@ class random(Algorithm):
         return self.data.povinn.sample(limit)["povinn"].tolist()
 
 #=========================================================================================
-# Example #2: kNN
+# Example #2: Blueprint
+#=========================================================================================
+
+class blueprint(Algorithm):
+    def recommend(self, user: User, limit: int) -> list[str]:
+        return user.blueprint_to_df()["course"].tolist()[:limit]
+
+#=========================================================================================
+# Example #3: kNN
 #=========================================================================================
     
 class knn(Algorithm):
@@ -51,6 +59,7 @@ class knn(Algorithm):
         if candidates.shape[0] < limit:
             limit = candidates.shape[0]
         result = candidates.sample(limit)
+        result = candidates[:limit]
 
         return result.index.tolist()
     
