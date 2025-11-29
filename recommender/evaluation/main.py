@@ -69,7 +69,7 @@ def do(experiment, eval_data):
 
     results = []
     for i, sample in eval_data.iterrows():
-        if i % 5 == 0 or if i == eval_data.shape[0]:
+        if i % 5 == 0 or i == eval_data.shape[0]:
             print_progress_bar(
                 i, eval_data.shape[0], prefix="Progress:", suffix="", length=25
             )
