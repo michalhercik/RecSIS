@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -31,34 +30,34 @@ func main() {
 	}
 	defer meili.Close()
 
-	var report Report
-	var start time.Time
-	var elapsed time.Duration
+	// var report Report
+	// var start time.Time
+	// var elapsed time.Duration
 	// Extract
-	start = time.Now()
-	err = extract(sis, recsis)
-	elapsed = time.Since(start)
-	report = makeReport(err, elapsed)
-	log.Println("--------------------------------------------------")
-	log.Println(report)
+	// start = time.Now()
+	// err = extract(sis, recsis)
+	// elapsed = time.Since(start)
+	// report = makeReport(err, elapsed)
+	// log.Println("--------------------------------------------------")
+	// log.Println(report)
 	// Transform
-	start = time.Now()
-	err = transform(recsis)
-	elapsed = time.Since(start)
-	report = makeReport(err, elapsed)
-	log.Println("--------------------------------------------------")
-	log.Println(report)
+	// start = time.Now()
+	// err = transform(recsis)
+	// elapsed = time.Since(start)
+	// report = makeReport(err, elapsed)
+	// log.Println("--------------------------------------------------")
+	// log.Println(report)
 	// Meilisearch
-	start = time.Now()
-	err = uploadToMeili(recsis, meili, []meiliUpload{
-		{table: "povinn2searchable", index: "courses"},
-		{table: "ankecy2searchable", index: "survey"},
-		{table: "studplanlist2searchable", index: "degree-plans"},
-	})
-	elapsed = time.Since(start)
-	report = makeReport(err, elapsed)
-	log.Println("--------------------------------------------------")
-	log.Println(report)
+	// start = time.Now()
+	// err = uploadToMeili(recsis, meili, []meiliUpload{
+	// 	{table: "povinn2searchable", index: "courses"},
+	// 	{table: "ankecy2searchable", index: "survey"},
+	// 	{table: "studplanlist2searchable", index: "degree-plans"},
+	// })
+	// elapsed = time.Since(start)
+	// report = makeReport(err, elapsed)
+	// log.Println("--------------------------------------------------")
+	// log.Println(report)
 	// Migration
 	err = migrate(recsis)
 	if err != nil {
@@ -101,6 +100,18 @@ func migrate(db *sqlx.DB) error {
 		return err
 	}
 	err = migratePovinn(tx)
+	if err != nil {
+		return err
+	}
+	err = migrateSearchablePovinn(tx)
+	if err != nil {
+		return err
+	}
+	err = migratePreq(tx)
+	if err != nil {
+		return err
+	}
+	err = migratePamela(tx)
 	if err != nil {
 		return err
 	}

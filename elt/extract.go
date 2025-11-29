@@ -1325,8 +1325,8 @@ func (ep *extractStudPlan) name() string {
 func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
 	var err error
 	selectListQuery := `
-		SELECT DISTINCT 
-			STUDIUM.SPLAN, OBOR.NAZEV, OBOR.KOD, DRUH.ZKRATKA 
+		SELECT DISTINCT
+			STUDIUM.SPLAN, OBOR.NAZEV, OBOR.KOD, DRUH.ZKRATKA
 		FROM STUDIUM
 		LEFT JOIN OBOR ON OBOR.KOD = STUDIUM.SOBOR
 		LEFT JOIN DRUH ON DRUH.KOD = STUDIUM.SDRUH
@@ -1334,7 +1334,7 @@ func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
 		AND SPLAN IS NOT NULL
 	`
 	selectPlanQuery := `
-		SELECT 
+		SELECT
 			CODE,
 			NAME_CZ,
 			NAME_EN,
@@ -1405,7 +1405,7 @@ func (ep *extractStudPlan) insertStudPlanList(to *sqlx.DB) error {
 	`
 	insert := `
 		INSERT INTO stud_plan_list (
-			splan, nazev, kod, zkratka	
+			splan, nazev, kod, zkratka
 		) VALUES (
 			:SPLAN, :NAZEV, :KOD, :ZKRATKA
 		)
@@ -1455,7 +1455,7 @@ func (ep *extractStudPlan) insertStudPlan(to *sqlx.DB) error {
 			code, name_cz, name_en, subject_status,
 			department, faculty,
 			semester_primary, semester_count, subject_type,
-			workload_primary1, workload_secondary1, workload_primary2, workload_secondary2, 
+			workload_primary1, workload_secondary1, workload_primary2, workload_secondary2,
 			workload_time_unit, credits,
 			interchangeability,
 			bloc_subject_code, bloc_type, bloc_grade, bloc_limit, bloc_name_cz, bloc_name_en,
@@ -1579,7 +1579,7 @@ func (ep *extractZkous) selectData(from *sqlx.DB, to *sqlx.DB) error {
 	query = `
 		SELECT
 			ZIDENT, ZSKR, ZSEM, ZPOVINN,
-			ZMARX, ZROC, ZBODY, ZSPLCELK	
+			ZMARX, ZROC, ZBODY, ZSPLCELK
 		FROM STUDIUM
 		LEFT JOIN ZKOUS ON ZIDENT = SIDENT
 		WHERE SPLAN IS NOT NULL

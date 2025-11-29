@@ -26,5 +26,8 @@ ON
     recommender.povinn,
     recommender.studium,
     recommender.zkous,
-    recommender.stud_plan
+    recommender.stud_plan,
+    recommender.searchable_povinn,
+    recommender.preq,
+    recommender.pamela
 TO elt;

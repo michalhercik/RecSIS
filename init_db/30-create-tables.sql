@@ -243,6 +243,23 @@ CREATE TABLE povinn (
     vucit3     VARCHAR(10)
 );
 
+CREATE TABLE searchable_povinn (
+    povinn     VARCHAR(10)
+);
+
+CREATE TABLE preq (
+	POVINN VARCHAR(10),
+	REQTYP VARCHAR(1),
+	REQPOVINN VARCHAR(10)
+);
+
+CREATE TABLE pamela (
+	POVINN VARCHAR(10),
+	TYP VARCHAR(1),
+	JAZYK VARCHAR(6),
+	MEMO TEXT
+);
+
 CREATE TABLE studium (
     soident INT,
     sident INT,

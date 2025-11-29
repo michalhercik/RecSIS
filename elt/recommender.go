@@ -2,6 +2,64 @@ package main
 
 import "github.com/jmoiron/sqlx"
 
+func migratePreq(tx *sqlx.Tx) error {
+	var err error
+	_, err = tx.Exec(`--sql
+		DELETE FROM recommender.preq WHERE TRUE;
+		INSERT INTO recommender.preq (
+			povinn,
+			reqtyp,
+			reqpovinn
+		) SELECT
+			povinn,
+			reqtyp,
+			reqpovinn
+		FROM preq
+	`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func migratePamela(tx *sqlx.Tx) error {
+	var err error
+	_, err = tx.Exec(`--sql
+		DELETE FROM recommender.pamela WHERE TRUE;
+		INSERT INTO recommender.pamela (
+			povinn,
+			typ,
+			jazyk,
+			memo
+		) SELECT
+			povinn,
+			typ,
+			jazyk,
+			memo
+		FROM pamela
+	`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func migrateSearchablePovinn(tx *sqlx.Tx) error {
+	var err error
+	_, err = tx.Exec(`--sql
+		DELETE FROM recommender.searchable_povinn WHERE TRUE;
+		INSERT INTO recommender.searchable_povinn (
+			povinn
+		) SELECT
+			code
+		FROM povinn2searchable
+	`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func migratePovinn(tx *sqlx.Tx) error {
 	var err error
 	_, err = tx.Exec(`--sql
@@ -36,12 +94,12 @@ func migrateStudium(tx *sqlx.Tx) error {
 		DELETE FROM recommender.studium WHERE TRUE;
 		INSERT INTO recommender.studium (
 			soident, sident, sfak, sfak2,
-			sdruh, sobor, srokp, 
+			sdruh, sobor, srokp,
 			sstav, sroc, splan
 		) SELECT
 			soident, sident, sfak, sfak2,
-			sdruh, sobor, srokp, 
-			sstav, sroc, splan 
+			sdruh, sobor, srokp,
+			sstav, sroc, splan
 		FROM studium
 	`)
 	if err != nil {
@@ -56,10 +114,10 @@ func migrateZkous(tx *sqlx.Tx) error {
 		DELETE FROM recommender.zkous WHERE TRUE;
 		INSERT INTO recommender.zkous (
 			zident, zskr, zsem, zpovinn,
-			zmarx, zroc, zbody, zsplcelk	
+			zmarx, zroc, zbody, zsplcelk
 		) SELECT
 			zident, zskr, zsem, zpovinn,
-			zmarx, zroc, zbody, zsplcelk	
+			zmarx, zroc, zbody, zsplcelk
 		FROM zkous
 	`)
 	if err != nil {
