@@ -38,11 +38,18 @@ func main() {
 	log.Println("Server starting ...")
 	log.Printf("port: %d", conf.Server.HTTPS.Port)
 
+	kpr, err := NewKeypairReloader(conf.SSL.Certificate, conf.SSL.Key)
+	if err != nil {
+		log.Fatal(err)
+	}
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%d", conf.Server.HTTPS.Port),
 		Handler: handler,
+		TLSConfig: &tls.Config{
+			GetCertificate: kpr.GetCertificateFunc(),
+		},
 	}
-	err := server.ListenAndServeTLS(conf.SSL.Certificate, conf.SSL.Key)
+	err = server.ListenAndServeTLS("", "")
 	if err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
