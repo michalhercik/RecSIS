@@ -34,7 +34,6 @@ INNER JOIN blueprint_courses bc
 	ON bs.id=bc.blueprint_semester_id
 LEFT JOIN courses c
 	ON bc.course_code=c.code
-	AND bc.course_valid_from = c.valid_from
 WHERE y.user_id = $1
 	AND (c.lang = $2 OR c.lang IS NULL)
 ORDER BY y.academic_year, bs.semester, bc.position;
