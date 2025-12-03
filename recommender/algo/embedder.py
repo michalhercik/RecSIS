@@ -3,7 +3,6 @@ import os
 import meilisearch
 import numpy as np
 import pandas as pd
-
 from algo.base import Algorithm
 from user import User
 
@@ -22,12 +21,16 @@ class Embedder(Algorithm):
         similar = self.fetch_similar(query, filter, limit)
         return similar
 
-    def build_query(self, blueprint_courses):
+    def build_query(
+        self,
+        blueprint_courses,
+        prefix="Give me recommendations for similar courses like:",
+    ):
         povinn = self.data.povinn.loc[
             self.data.povinn["povinn"].isin(blueprint_courses)
         ]
         povinn_str = ",".join(povinn["panazev"])
-        query = "Give me recommendations for similar courses like:" + povinn_str
+        query = prefix + povinn_str
         return query
 
     def build_filter(self, course_codes):
@@ -47,3 +50,43 @@ class Embedder(Algorithm):
         )
         codes = map(lambda x: x["code"], result["hits"])
         return list(codes)
+
+
+class EmbedderAnnotation(Embedder):
+    def build_query(
+        self,
+        blueprint_courses,
+        prefix="Give me recommendations for similar courses like:",
+    ):
+        t = self.data.pamela
+        annot = t[
+            t["povinn"].isin(blueprint_courses)
+            & (t["jazyk"] == "ENG")
+            & (t["typ"] == "A")
+        ]
+        query = pd.merge(annot, self.data.povinn, how="left", on="povinn")
+        query["panazev"] = query["panazev"].fillna("")
+        query["memo"] = query["memo"].fillna("")
+        query = query["panazev"] + ", " + query["memo"]
+        query = "\n".join(query)
+        return query
+
+
+class EmbedderSyllabus(Embedder):
+    def build_query(
+        self,
+        blueprint_courses,
+        prefix="Give me recommendations for similar courses like:",
+    ):
+        t = self.data.pamela
+        annot = t[
+            t["povinn"].isin(blueprint_courses)
+            & (t["jazyk"] == "ENG")
+            & (t["typ"] == "S")
+        ]
+        query = pd.merge(annot, self.data.povinn, how="left", on="povinn")
+        query["panazev"] = query["panazev"].fillna("")
+        query["memo"] = query["memo"].fillna("")
+        query = query["panazev"] + ", " + query["memo"]
+        query = "\n".join(query)
+        return query

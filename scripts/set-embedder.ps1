@@ -4,15 +4,15 @@ $response = Invoke-RestMethod -Uri "http://localhost:7700/indexes/courses/settin
     -ContentType "application/json" `
     -Body '{
         "bert": {
-            "source": "rest", 
-            "url": "http://bert:8003/embedding", 
+            "source": "rest",
+            "url": "http://bert:8003/embedding",
             "request": {
                 "text": "{{text}}"
             },
             "response": {
                 "embedding": "{{embedding}}"
             },
-            "documentTemplate": "University course with title {{doc.title.en}} "
+            "documentTemplate": "{{doc.embed_input}} "
         }
     }'
 echo $response

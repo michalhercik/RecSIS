@@ -834,7 +834,8 @@ var povinn2searchable = transformation{
 			terms_of_passing JSONB,
 			literature JSONB,
 			requirements_of_assesment JSONB,
-			aim JSONB
+			aim JSONB,
+			embed_input TEXT
 		);
 			WITH guarantors as (
 			SELECT DISTINCT
@@ -875,6 +876,10 @@ var povinn2searchable = transformation{
 				jsonb_agg(aim->'content') aim
 			FROM povinn2courses
 			GROUP BY code
+		), embed_input AS (
+			SELECT p.povinn course_code, (panazev || ', ' || memo) input
+			FROM povinn p
+			LEFT JOIN pamela ON p.povinn = pamela.povinn AND pamela.typ = 'S' AND pamela.jazyk = 'ENG'
 		)
 		INSERT INTO povinn2searchable
 		SELECT
@@ -900,7 +905,8 @@ var povinn2searchable = transformation{
 			d.terms_of_passing,
 			d.literature,
 			d.requirements_of_assesment,
-			d.aim
+			d.aim,
+			ei.input embed_input
 		FROM povinn2courses pc
 		LEFT JOIN povinn p ON p.povinn = pc.code
 		LEFT JOIN povinn2jazyk_agg pja ON pc.code = pja.course_code AND pc.lang = pja.lang
@@ -911,6 +917,7 @@ var povinn2searchable = transformation{
 		LEFT JOIN povinn pvn on pvn.povinn = pc.code
 		LEFT JOIN descriptions d on pc.code = d.code
 		LEFT JOIN ustav u ON pvn.pgarant = u.kod
+		LEFT JOIN embed_input ei ON ei.course_code = pc.code
 		WHERE pc.lang='cs'
 		AND credits > 0
 		AND (taught_state = 'V' OR taught_state = 'N')

@@ -1,8 +1,6 @@
-import multiprocessing
 import sys
 import time
 from ast import literal_eval
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -10,62 +8,55 @@ from scores import avg_prec_at_k, precision_at_k, recall_at_k
 from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, "..")
-from algo.embedder import Embedder
 from data_repository import DataRepository
+from embedder import (
+    EmbedderAnnotationExp,
+    EmbedderExp1,
+    EmbedderExp2,
+    EmbedderExp3,
+    EmbedderSyllabusExp,
+)
 
-# Format: [name]_[dataset]-[y_true]
-OUT_FILE_NAME_TAG = "searchable-interchange-d1-relevant"
-OUT_FILE_NAME = datetime.now().strftime("%y%m%d-%H%M%S") + "-" + OUT_FILE_NAME_TAG
-OUT_FILE = "eval/" + OUT_FILE_NAME + ".csv"
-DESC_OUT_FILE = "desc/" + OUT_FILE_NAME + ".csv"
 DATASET_FILE = "dataset.csv"
-LIMIT = 50
+OUT_PATH = "eval"
+RND_STATE = 29980
+TEST_SIZE = 0.2
+RETRIEVE_LIMIT = 50
 
 
 def main():
-    # y_true = ["1", "2", "3", "4", "9", "9", "9", "9"]
-    # y_pred = ["5", "6", "7", "1", "2", "3"]
-    # y_true = ["1", "2", "3"]
-    # y_pred = ["1", "5", "2", "6", "3", "7", "4"]
-    # k = 7
-    # print(precision_at_k(y_true, y_pred, k))
-    # print(recall_at_k(y_true, y_pred, k))
-    # print(avg_prec_at_k(y_true, y_pred, k))
-    # print(avg_prec_at_k(y_true, y_pred, k, normalize=True))
-    # exit()
     df = pd.read_csv(
         DATASET_FILE,
         converters={
             "finished": literal_eval,
             "next_semester": lambda x: [] if len(x) == 0 else literal_eval(x),
             "relevant": lambda x: [] if len(x) == 0 else literal_eval(x),
+            "interchange_for": lambda x: [] if len(x) == 0 else literal_eval(x),
+            "incompatible_with": lambda x: [] if len(x) == 0 else literal_eval(x),
         },
     )
+    data_repository = DataRepository()
+    experiments = [
+        # EmbedderExp1(data_repository),
+        # EmbedderExp2(data_repository),
+        # EmbedderExp3(data_repository),
+        # EmbedderAnnotationExp(data_repository),
+        EmbedderSyllabusExp(data_repository),
+    ]
     train, test = train_test_split(
-        df["soident"].unique(), test_size=0.2, random_state=29980
+        df["soident"].unique(), test_size=TEST_SIZE, random_state=RND_STATE
     )
-    do(exp(), df[df["soident"].isin(test)].reset_index(drop=True))
-    # y_next_semester = sample["next_semester"]
-
-
-class exp:
-    def init(self):
-        self.model = Embedder(DataRepository())
-        self.model.fit()
-
-    def get(self, X):
-        # replace non searchable for searchable zamennosti
-        query = self.model.build_query(X)
-        # filter out zamennosti
-        # filter out neslucitelnosti
-        filter = self.model.build_filter(X)
-        y_pred = self.model.fetch_similar(query, filter, LIMIT)
-        return y_pred
+    test_data = df[df["soident"].isin(test)].reset_index(drop=True)  # .iloc[:5]
+    for exp in experiments:
+        print()
+        print(50 * "=")
+        print(exp.__class__.__name__)
+        print(50 * "-")
+        do(exp, test_data)
 
 
 def do(experiment, eval_data):
     start = time.time()
-    experiment.init()
 
     results = []
     for i, sample in eval_data.iterrows():
@@ -77,7 +68,9 @@ def do(experiment, eval_data):
         relevant_true = sample["relevant"]
         next_true = sample["next_semester"]
         id = sample["soident"]
-        y_pred = experiment.get(X)
+        y_pred = experiment.get(
+            X, sample["incompatible_with"], sample["interchange_for"], RETRIEVE_LIMIT
+        )
         for k in [10, 20, 50]:
             results.append(
                 [
@@ -116,7 +109,7 @@ def do(experiment, eval_data):
             "recommended",
         ],
     )
-    out.to_csv(OUT_FILE, index=False)
+    out.to_csv(out_file_path(experiment.name), index=False)
     print()
     desc = (
         out.groupby("k")
@@ -138,8 +131,12 @@ def do(experiment, eval_data):
         ]
         .round(4)
     )
-    desc.to_csv(DESC_OUT_FILE)
     print(desc)
+
+
+def out_file_path(name):
+    datetime_tag = datetime.now().strftime("%y%m%d-%H%M%S")
+    return f"{OUT_PATH}/{name}-{datetime_tag}.csv"
 
 
 # Print iterations progress
@@ -176,18 +173,3 @@ def print_progress_bar(
 
 if __name__ == "__main__":
     main()
-
-# Equivalent courses
-#
-# select DISTINCT  p1.pnazev, p1.povinn, p1.pvyucovan, p2.pvyucovan, p2.povinn, p2.pnazev, preq1.reqtyp
-# from preq preq1
-# inner join preq preq2 on preq1.povinn = preq2.reqpovinn AND preq1.reqpovinn = preq2.povinn and preq1.reqtyp = preq2.reqtyp
-# left join povinn p1 on preq1.povinn = p1.povinn
-# left join povinn p2 on preq2.povinn = p2.povinn
-# --left join povinn2searchable ps1 on p1.povinn = ps1.code
-# --left join povinn2searchable ps2 on p2.povinn = ps2.code
-# where preq1.reqtyp = 'Z'
-# AND p2.pvyucovan = 'V'
-# AND p2.pgarant not like '%STUD'
-# --AND ps1.code is null
-# --AND ps2.code is not null
