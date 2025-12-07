@@ -22,8 +22,8 @@
     - Linux
         - `.\scripts\setup-hosts.sh`
 6. Build & run containers
-    1. `docker compose build -d webapp recommender postgres meilisearch bert mockcas adminer`
-    2. `docker compose up -d webapp recommender postgres meilisearch bert mockcas adminer`
+    1. `docker compose build webapp recommender postgres meilisearch bert mockcas adminer`
+    2. `docker compose up webapp recommender postgres meilisearch bert mockcas adminer`
 7. Check if it works
     - Go to [localhost:8000](https://localhost:8000)
     - Log in
