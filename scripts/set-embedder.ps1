@@ -7,6 +7,7 @@ $response = Invoke-RestMethod -Uri "http://localhost:7700/indexes/courses/settin
             "source": "rest",
             "url": "http://bert:8003/embedding",
             "request": {
+                "model": "sbert",
                 "text": "{{text}}"
             },
             "response": {

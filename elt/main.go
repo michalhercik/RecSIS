@@ -42,12 +42,12 @@ func main() {
 	// log.Println("--------------------------------------------------")
 	// log.Println(report)
 	// // Transform
-	start = time.Now()
-	err = transform(recsis)
-	elapsed = time.Since(start)
-	report = makeReport(err, elapsed)
-	log.Println("--------------------------------------------------")
-	log.Println(report)
+	// start = time.Now()
+	// err = transform(recsis)
+	// elapsed = time.Since(start)
+	// report = makeReport(err, elapsed)
+	// log.Println("--------------------------------------------------")
+	// log.Println(report)
 	// Meilisearch
 	start = time.Now()
 	err = uploadToMeili(recsis, meili, []meiliUpload{

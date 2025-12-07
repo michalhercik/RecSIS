@@ -46,7 +46,7 @@ def main():
     train, test = train_test_split(
         df["soident"].unique(), test_size=TEST_SIZE, random_state=RND_STATE
     )
-    test_data = df[df["soident"].isin(test)].reset_index(drop=True)  # .iloc[:5]
+    test_data = df[df["soident"].isin(test)].reset_index(drop=True)  # .iloc[385:]
     for exp in experiments:
         print()
         print(50 * "=")
@@ -68,13 +68,37 @@ def do(experiment, eval_data):
         relevant_true = sample["relevant"]
         next_true = sample["next_semester"]
         id = sample["soident"]
-        y_pred = experiment.get(
-            X, sample["incompatible_with"], sample["interchange_for"], RETRIEVE_LIMIT
+        prefix = "{0}-year student in a {1}’s program in {2}.".format(
+            (
+                "First"
+                if sample["zroc"] == 1
+                else "Second"
+                if sample["zroc"] == 2
+                else "Third"
+            ),
+            ("Bachelor" if sample["sdruh"] == "B" else "Master"),
+            sample["sobor"],
         )
-        for k in [10, 20, 50]:
+        try:
+            y_pred = experiment.get(
+                X,
+                sample["incompatible_with"],
+                sample["interchange_for"],
+                RETRIEVE_LIMIT,
+                prefix=prefix,
+            )
+        except Exception as e:
+            print()
+            print(e)
+            print(i)
+            exit()
+        for k in [3, 10, 20, 50]:
             results.append(
                 [
                     id,
+                    sample["sdruh"],
+                    sample["zroc"],
+                    sample["zsem"],
                     k,
                     len(relevant_true) / k,
                     precision_at_k(relevant_true, y_pred, k),
@@ -85,6 +109,8 @@ def do(experiment, eval_data):
                     recall_at_k(next_true, y_pred, k),
                     avg_prec_at_k(next_true, y_pred, k),
                     X,
+                    relevant_true,
+                    next_true,
                     y_pred,
                 ]
             )
@@ -96,6 +122,9 @@ def do(experiment, eval_data):
         data=results,
         columns=[
             "id",
+            "sdruh",
+            "zroc",
+            "zsem",
             "k",
             "rel_true/k",
             "rel_precision",
@@ -106,30 +135,38 @@ def do(experiment, eval_data):
             "next_recall",
             "next_avg_prec",
             "finished",
-            "recommended",
+            "relevant_true",
+            "next_true",
+            "predicted",
         ],
     )
     out.to_csv(out_file_path(experiment.name), index=False)
     print()
     desc = (
         out.groupby("k")
-        .describe(percentiles=[])[
+        .describe(percentiles=[0.75])[
             [
                 ("rel_precision", "mean"),
                 ("rel_precision", "std"),
+                ("rel_precision", "75%"),
                 ("rel_recall", "mean"),
                 ("rel_recall", "std"),
+                ("rel_recall", "75%"),
                 ("rel_avg_prec", "mean"),
                 ("rel_avg_prec", "std"),
+                ("rel_avg_prec", "75%"),
                 ("next_precision", "mean"),
                 ("next_precision", "std"),
+                ("next_precision", "75%"),
                 ("next_recall", "mean"),
                 ("next_recall", "std"),
+                ("next_recall", "75%"),
                 ("next_avg_prec", "mean"),
                 ("next_avg_prec", "std"),
+                ("next_avg_prec", "75%"),
             ]
         ]
-        .round(4)
+        .round(2)
     )
     print(desc)
 

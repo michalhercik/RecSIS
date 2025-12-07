@@ -1,6 +1,6 @@
 import csv
-import datetime
 import os
+from datetime import datetime
 
 import pandas as pd
 import psycopg2
@@ -69,6 +69,12 @@ def out_file_path(name):
 
 
 class Dataset1:
+    """
+    - relevant: all courses that student will enroll into
+    - next: courses in next semester
+    - replace non-searchable courses for searchable equivalent (interchangable) courses
+    """
+
     def __init__(self):
         self.name = "Dataset1"
         self.with_expr = """
@@ -159,11 +165,12 @@ WITH eqpovinn AS (
 ),
 data AS (
     SELECT
-        soident, zident, sdruh, zroc, zsem, zpovinn,
+        soident, zident, sdruh, zroc, zsem, o.nazev, zpovinn,
         (zroc::INT * 10 + zsem::INT) + (case when sdruh='B' then 100 when sdruh='N' then 200 end) ord
     FROM studium s
     LEFT JOIN zkous z ON s.sident = z.zident
     LEFT JOIN povinn p ON z.zpovinn = p.povinn
+    LEFT JOIN obor o ON o.kod = s.sobor
     WHERE s.sobor like 'I%'
     AND sstav = 'A'
     AND z.zsplcelk = 'S'
@@ -171,12 +178,12 @@ data AS (
 )
 """
 SELECT_TEMPL = """
-SELECT x.soident, sdruh, x.zroc, x.zsem,
+SELECT x.soident, x.sdruh, x.sobor, x.zroc, x.zsem,
 x.finished, next_semester.next_semester, relevant.relevant,
 x.interchange_for, x.incompatible_with
 FROM (
     SELECT
-        soident, max(sdruh) sdruh, substr('{0}', 2, 1)::INT zroc, substr('{0}', 3, 1)::INT zsem,
+        soident, max(sdruh) sdruh, max(nazev) sobor, substr('{0}', 2, 1)::INT zroc, substr('{0}', 3, 1)::INT zsem,
         array_agg(zpovinn) finished,
         array_agg(zpreq.povinn) FILTER (WHERE zpreq.povinn IS NOT NULL) interchange_for,
         array_agg(npreq.povinn) FILTER (WHERE npreq.povinn IS NOT NULL) incompatible_with
