@@ -222,8 +222,8 @@ class EmbedderSyllabusExp:
         self.model = EmbedderSyllabus(data)
         self.model.fit()
 
-    def get(self, X, incompatible, interchangable, limit, prefix=""):
-        query = self.model.build_query(X, prefix=prefix)
+    def get(self, X, incompatible, interchangable, limit):
+        query = self.model.build_query(X, prefix="")
         filter_out = []
         filter_out.extend(X)
         filter_out.extend(incompatible)

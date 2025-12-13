@@ -40,25 +40,34 @@ def main():
 def create_expr():
     expr = WITH_EXPR
     expr += "SELECT * FROM ("
+    # prev = 0
+    ptrs = []
     for type in range(1, 3):
         for year in range(1, 7):
             for semester in range(1, 3):
                 ptr = type * 100 + year * 10 + semester
-                next = 0
-                if semester == 1:
-                    next = ptr + 1
-                elif year < 6:
-                    next = type * 100 + (year + 1) * 10 + 1
-                elif type < 2:
-                    next = (type + 1) * 100 + 10 + 1
-                else:
-                    break
-                expr += SELECT_TEMPL.format(ptr, next)
-                expr += UNION_STMT
+                ptrs.append(ptr)
+                # next = 0
+                # if semester == 1:
+                #     next = ptr + 1
+                # elif year < 6:
+                #     next = type * 100 + (year + 1) * 10 + 1
+                # elif type < 2:
+                #     next = (type + 1) * 100 + 10 + 1
+                # else:
+                #     break
+                # expr += SELECT_TEMPL.format(ptr, next, prev)
+                # prev = ptr
+                # expr += UNION_STMT
+    nexts = ptrs[1:]
+    for ptr, next in zip(ptrs, nexts):
+        expr += SELECT_TEMPL.format(ptr, next)
+        expr += UNION_STMT
+
     expr = expr[: -len(UNION_STMT)]
     expr += ")"
-    expr += "WHERE array_length(relevant, 1) > 0"
-    expr += "\n"
+    expr += "WHERE array_length(relevant, 1) > 0" + "\n"
+    expr += "AND array_length(finished, 1) > 0" + "\n"
     expr += "ORDER BY soident, sdruh, zroc, zsem"
     return expr
 
@@ -179,7 +188,7 @@ data AS (
 """
 SELECT_TEMPL = """
 SELECT x.soident, x.sdruh, x.sobor, x.zroc, x.zsem,
-x.finished, next_semester.next_semester, relevant.relevant,
+x.finished, next_semester.next_semester, relevant.relevant, current.current
 x.interchange_for, x.incompatible_with
 FROM (
     SELECT
@@ -211,6 +220,15 @@ LEFT JOIN (
     AND (ps.povinn IS NOT NULL OR eq.p1 IS NOT NULL)
     GROUP BY soident
 ) relevant ON relevant.soident = x.soident
+LEFT JOIN (
+    SELECT soident, array_agg(CASE WHEN eq.p1 IS NULL THEN zpovinn ELSE eq.p2 END) current
+    FROM data d
+    LEFT JOIN eqpovinn eq ON d.zpovinn = eq.p1
+    LEFT JOIN searchable_povinn ps ON d.zpovinn = ps.povinn
+    WHERE ord = {0}
+    AND (ps.povinn IS NOT NULL OR eq.p1 IS NOT NULL)
+    GROUP BY soident
+) current ON current.soident = x.soident
 """
 
 if __name__ == "__main__":

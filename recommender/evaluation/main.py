@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, "..")
 from data_repository import DataRepository
+from elsaexp import ElsaExp
 from embedder import (
     EmbedderAnnotationExp,
     EmbedderExp1,
@@ -20,7 +21,7 @@ from embedder import (
 DATASET_FILE = "dataset.csv"
 OUT_PATH = "eval"
 RND_STATE = 29980
-TEST_SIZE = 0.2
+TEST_SIZE = 0.1
 RETRIEVE_LIMIT = 50
 
 
@@ -35,24 +36,111 @@ def main():
             "incompatible_with": lambda x: [] if len(x) == 0 else literal_eval(x),
         },
     )
+    train, test = train_test_split(
+        df["soident"].unique(), test_size=TEST_SIZE, random_state=RND_STATE
+    )
+    train, validate = train_test_split(
+        train, test_size=TEST_SIZE, random_state=RND_STATE
+    )
+    # print(train.shape)
+    # print(validate.shape)
+    # print(test.shape)
     data_repository = DataRepository()
-    experiments = [
+    train_data = df[df["soident"].isin(train)].reset_index(drop=True)
+    validate_data = df[df["soident"].isin(validate)].reset_index(drop=True)
+    test_data = df[df["soident"].isin(test)].reset_index(drop=True)
+    print(train_data.shape)
+    print(validate_data.shape)
+    print(test_data.shape)
+    exit()
+    embedder_experiments = [
         # EmbedderExp1(data_repository),
         # EmbedderExp2(data_repository),
         # EmbedderExp3(data_repository),
         # EmbedderAnnotationExp(data_repository),
-        EmbedderSyllabusExp(data_repository),
+        # EmbedderSyllabusExp(data_repository),
     ]
-    train, test = train_test_split(
-        df["soident"].unique(), test_size=TEST_SIZE, random_state=RND_STATE
-    )
-    test_data = df[df["soident"].isin(test)].reset_index(drop=True)  # .iloc[385:]
-    for exp in experiments:
+    elsa_experiments = [ElsaExp(data_repository, train_data, validate_data)]
+    for exp in elsa_experiments:
+        print()
+        print(50 * "=")
+        print(exp.__class__.__name__)
+        print(50 * "-")
+        elsa_do(exp, train_data, safe=False)
+        elsa_do(exp, validate_data, safe=False)
+        elsa_do(exp, test_data)
+    for exp in embedder_experiments:
         print()
         print(50 * "=")
         print(exp.__class__.__name__)
         print(50 * "-")
         do(exp, test_data)
+
+
+def elsa_do(exp, data, safe=True):
+    y_pred = exp.get(data, 50)
+    results = []
+    for i, sample in data.iterrows():
+        pred = y_pred[i]
+        for y_true_label in ["next_semester", "relevant"]:
+            y_true = sample[y_true_label]
+            for k in [3, 10, 20, 50]:
+                results.append(
+                    [
+                        id,
+                        sample["sdruh"],
+                        sample["zroc"],
+                        sample["zsem"],
+                        y_true_label,
+                        k,
+                        len(y_true) / k,
+                        precision_at_k(y_true, pred, k),
+                        recall_at_k(y_true, pred, k),
+                        avg_prec_at_k(y_true, pred, k),
+                        pred,
+                    ]
+                )
+    out = pd.DataFrame(
+        data=results,
+        columns=[
+            "id",
+            "sdruh",
+            "zroc",
+            "zsem",
+            "target",
+            "k",
+            "true/k",
+            "precision",
+            "recall",
+            "avg_prec",
+            "predicted",
+        ],
+    )
+    out.to_csv(out_file_path(exp.name), index=False)
+    desc = (
+        out.groupby(["target", "k"])
+        .describe()[
+            [
+                ("precision", "mean"),
+                ("precision", "std"),
+                ("precision", "25%"),
+                ("precision", "50%"),
+                ("precision", "75%"),
+                ("recall", "mean"),
+                ("recall", "std"),
+                ("recall", "25%"),
+                ("recall", "50%"),
+                ("recall", "75%"),
+                ("avg_prec", "mean"),
+                ("avg_prec", "std"),
+                ("avg_prec", "25%"),
+                ("avg_prec", "50%"),
+                ("avg_prec", "75%"),
+            ]
+        ]
+        .round(2)
+    )
+    print(desc)
 
 
 def do(experiment, eval_data):
@@ -68,24 +156,23 @@ def do(experiment, eval_data):
         relevant_true = sample["relevant"]
         next_true = sample["next_semester"]
         id = sample["soident"]
-        prefix = "{0}-year student in a {1}’s program in {2}.".format(
-            (
-                "First"
-                if sample["zroc"] == 1
-                else "Second"
-                if sample["zroc"] == 2
-                else "Third"
-            ),
-            ("Bachelor" if sample["sdruh"] == "B" else "Master"),
-            sample["sobor"],
-        )
+        # prefix = "{0}-year student in a {1}’s program in {2}.".format(
+        #     (
+        #         "First"
+        #         if sample["zroc"] == 1
+        #         else "Second"
+        #         if sample["zroc"] == 2
+        #         else "Third"
+        #     ),
+        #     ("Bachelor" if sample["sdruh"] == "B" else "Master"),
+        #     sample["sobor"],
+        # )
         try:
             y_pred = experiment.get(
                 X,
                 sample["incompatible_with"],
                 sample["interchange_for"],
                 RETRIEVE_LIMIT,
-                prefix=prefix,
             )
         except Exception as e:
             print()
