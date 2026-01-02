@@ -9,6 +9,7 @@ GRANT
     INSERT
 ON
     webapp.courses,
+    webapp.requisites,
     webapp.degree_plan_list,
     webapp.degree_plan_years,
     webapp.degree_plans,

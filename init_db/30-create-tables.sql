@@ -43,6 +43,14 @@ CREATE TABLE courses(
 
 CREATE INDEX courses_code_lang_idx ON courses(code, lang);
 
+CREATE TABLE requisites(
+    target_course VARCHAR(10) NOT NULL,
+    parent_course VARCHAR(10) NOT NULL,
+    child_course VARCHAR(10) NOT NULL,
+    req_type CHAR(1) NOT NULL,
+    group_type VARCHAR(1)
+);
+
 CREATE TABLE degree_plan_years(
     plan_year INT PRIMARY KEY
 );

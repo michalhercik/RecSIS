@@ -143,7 +143,7 @@ func (ep *extractPovinn) selectData(from *sqlx.DB, to *sqlx.DB) error {
 			PURL
 		FROM POVINN
 		WHERE TO_CHAR(sysdate, 'YYYY') BETWEEN VPLATIOD AND VPLATIDO
-		AND PFAKULTA = '11320'
+			AND PFAKULTA = '11320'
 	`
 	err := from.Select(&ep.data, query)
 	if err != nil {
@@ -772,14 +772,15 @@ func (ep *extractPovinn2Jazyk) insertData(to *sqlx.DB) error {
 	return nil
 }
 
-// POVINN2JAZYK
+// PREQ
 // ============================================================================================================
 
 type extractPreq struct {
 	data []struct {
-		POVINN    string `db:"POVINN"`
-		REQTYP    string `db:"REQTYP"`
-		REQPOVINN string `db:"REQPOVINN"`
+		POVINN    string         `db:"POVINN"`
+		REQTYP    string         `db:"REQTYP"`
+		REQPOVINN string         `db:"REQPOVINN"`
+		PSKUPINA  sql.NullString `db:"PSKUPINA"`
 	}
 }
 
@@ -792,13 +793,17 @@ func (ep *extractPreq) selectData(from *sqlx.DB, to *sqlx.DB) error {
 	var err error
 	query = `
 		SELECT
-			PREQ.POVINN, PREQ.REQTYP, REQPOVINN
+			PREQ.POVINN, PREQ.REQTYP, REQPOVINN,
+			CASE -- TODO: should be 'povinn.pskupina' but we don't have the column yet
+				WHEN PREQ.REQPOVINN LIKE '%#%' THEN 'M'
+				ELSE null
+			END AS PSKUPINA
 		FROM PREQ
 		LEFT JOIN POVINN ON PREQ.POVINN = POVINN.POVINN
+			AND POVINN.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PREQ.POVINN)
+			AND POVINN.PFAKULTA='11320'
+			AND POVINN.PVYUCOVAN <> 'Z' -- exclude non-teaching courses
 		WHERE to_char(sysdate, 'YYYY') BETWEEN PREQ.REQOD AND PREQ.REQDO
-		AND TO_CHAR(sysdate, 'YYYY') BETWEEN POVINN.VPLATIOD AND POVINN.VPLATIDO
-		AND POVINN.PFAKULTA='11320'
-		AND (POVINN.PVYUCOVAN = 'V' OR POVINN.PVYUCOVAN = 'N' OR POVINN.PVYUCOVAN = 'P')
 	`
 	err = from.Select(&ep.data, query)
 	if err != nil {
@@ -815,17 +820,83 @@ func (ep *extractPreq) insertData(to *sqlx.DB) error {
 		CREATE TABLE preq (
 			POVINN VARCHAR(10),
 			REQTYP VARCHAR(1),
-			REQPOVINN VARCHAR(10)
+			REQPOVINN VARCHAR(10),
+			PSKUPINA VARCHAR(1)
 		)
 	`
 	insert := `
 		INSERT INTO preq (
-			POVINN, REQTYP, REQPOVINN
-		) VALUES(
-			:POVINN, :REQTYP, :REQPOVINN
+			POVINN, REQTYP, REQPOVINN, PSKUPINA
+		)
+		( SELECT * FROM unnest(
+	 		$1::text[], $2::text[], $3::text[], $4::text[]
+	 	))
+	`
+	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// PSKUP
+// ============================================================================================================
+
+type extractPskup struct {
+	data []struct {
+		POVINN   string         `db:"POVINN"`
+		PSPOVINN string         `db:"PSPOVINN"`
+		PSKUPINA sql.NullString `db:"PSKUPINA"`
+	}
+}
+
+func (ep *extractPskup) name() string {
+	return "PSKUP"
+}
+
+func (ep *extractPskup) selectData(from *sqlx.DB, to *sqlx.DB) error {
+	var query string
+	var err error
+	query = `
+		SELECT
+			PSKUP.POVINN, PSKUP.PSPOVINN,
+			CASE -- TODO: should be 'povinn.pskupina' but we don't have the column yet
+				WHEN PSKUP.PSPOVINN LIKE '%#%' THEN 'M'
+				ELSE null
+			END AS PSKUPINA
+		FROM PSKUP
+		LEFT JOIN POVINN ON PSKUP.POVINN = POVINN.POVINN
+			AND POVINN.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PSKUP.POVINN)
+			AND POVINN.PFAKULTA='11320'
+		WHERE to_char(sysdate, 'YYYY') BETWEEN PSOD AND PSDO
+	`
+	err = from.Select(&ep.data, query)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (ep *extractPskup) insertData(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS pskup
+	`
+	create := `
+		CREATE TABLE pskup (
+			POVINN VARCHAR(10),
+			PSPOVINN VARCHAR(10),
+			PSKUPINA VARCHAR(1)
 		)
 	`
-	err := simpleInsert(to, drop, create, insert, ep.data)
+	insert := `
+		INSERT INTO pskup (
+			POVINN, PSPOVINN, PSKUPINA
+		)
+		( SELECT * FROM unnest(
+	 		$1::text[], $2::text[], $3::text[]
+	 	))
+	`
+	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
 	if err != nil {
 		return err
 	}

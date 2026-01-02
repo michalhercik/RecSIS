@@ -59,6 +59,9 @@ type text struct {
 	wWrongAssignWinter    string
 	wWrongAssignSummer    string
 	wAssignedMoreThanOnce string
+	wPrerequisiteNotMet   string
+	wCorequisiteNotMet    string
+	wIncompatiblePresent  string
 	// language
 	language language.Language
 	// errors
@@ -158,6 +161,9 @@ var texts = map[language.Language]text{
 		wWrongAssignWinter:    "Předmět je zařazen do zimního semestru, ale měl by být v letním semestru.",
 		wWrongAssignSummer:    "Předmět je zařazen do letního semestru, ale měl by být v zimním semestru.",
 		wAssignedMoreThanOnce: "Předmět je zařazen více než jednou ",
+		wPrerequisiteNotMet:   "Nesplněna prerekvizita pro tento předmět.",
+		wCorequisiteNotMet:    "Nesplněna korekvizita pro tento předmět.",
+		wIncompatiblePresent:  "V blueprintu je přítomen neslučitelný předmět.",
 		// language
 		language: language.CS,
 		// errors
@@ -245,6 +251,9 @@ var texts = map[language.Language]text{
 		wWrongAssignWinter:    "Course is assigned in a winter semester (should be in summer).",
 		wWrongAssignSummer:    "Course is assigned in a summer semester (should be in winter).",
 		wAssignedMoreThanOnce: "Course is assigned more than once ",
+		wPrerequisiteNotMet:   "Prerequisite for this course is not met.",
+		wCorequisiteNotMet:    "Corequisite for this course is not met.",
+		wIncompatiblePresent:  "An incompatible course is present in the blueprint.",
 		// language
 		language: language.EN,
 		// errors

@@ -512,41 +512,47 @@ var ankecy2JSON = transformation{
 /*
 Prerequisites:
   - preq
+  - pskup
 */
-var preq2JSON = transformation{
-	name: "preq2json",
+var preq2requisites = transformation{
+	name: "preq2requisites",
 	query: `--sql
-	DROP TABLE IF EXISTS preq2json;
-	CREATE TABLE preq2json (
-		course_code VARCHAR(10),
-		corequisites jsonb,
-		prequisites jsonb,
-		incompatibilities jsonb,
-		interchangeabilities jsonb
+	DROP TABLE IF EXISTS requisites;
+	CREATE TABLE requisites (
+		target_course VARCHAR(10),
+		parent_course VARCHAR(10),
+		child_course  VARCHAR(10),
+		req_type      VARCHAR(1),
+		group_type    VARCHAR(1)
 	);
-	INSERT INTO preq2json
-	SELECT
-		preq.povinn course_code,
-		jsonb_agg(json_object(
-			ARRAY['course_code', 'state'],
-			ARRAY[reqpovinn, povinn.pvyucovan]))
-			FILTER(WHERE reqtyp='K') corequisites,
-		jsonb_agg(json_object(
-			ARRAY['course_code', 'state'],
-			ARRAY[reqpovinn, povinn.pvyucovan]))
-			FILTER(WHERE reqtyp='P') prequisites,
-		jsonb_agg(json_object(
-			ARRAY['course_code', 'state'],
-			ARRAY[reqpovinn, povinn.pvyucovan]))
-			FILTER(WHERE reqtyp='N') incompatibilities,
-		jsonb_agg(json_object(
-			ARRAY['course_code', 'state'],
-			ARRAY[reqpovinn, povinn.pvyucovan]))
-			FILTER(WHERE reqtyp='Z') interchangeabilities
-	FROM preq
-	LEFT JOIN povinn ON preq.reqpovinn = povinn.povinn
-	WHERE povinn.pvyucovan <> 'Z'
-	GROUP BY preq.povinn
+	WITH RECURSIVE req_tree AS (
+		SELECT
+			p.POVINN       AS target_course,
+			p.POVINN       AS parent_course,
+			p.REQPOVINN    AS child_course,
+			p.REQTYP       AS req_type,
+			p.PSKUPINA     AS group_type
+		FROM preq p
+
+		UNION ALL
+
+		SELECT
+			rt.target_course,
+			rt.child_course AS parent_course,
+			s.PSPOVINN      AS child_course,
+			rt.req_type,
+			s.PSKUPINA      AS group_type
+		FROM req_tree rt
+		JOIN pskup s ON s.POVINN = rt.child_course
+	)
+	INSERT INTO requisites
+	SELECT DISTINCT
+		target_course,
+		parent_course,
+		child_course,
+		req_type,
+		group_type
+	FROM req_tree;
 	`,
 }
 
@@ -611,7 +617,6 @@ Prerequisites:
   - rvcem2json
   - typypov2lang
   - ankecy2json
-  - preq2json
   - pklas2json
   - ptrida2json
 */
@@ -655,10 +660,6 @@ var povinn2courses = transformation{
 		exam_winter VARCHAR(15),
 		exam_summer VARCHAR(15),
 		survey jsonb,
-		corequisities jsonb,
-		prerequisities jsonb,
-		incompatibilities jsonb,
-		interchangeabilities jsonb,
 		classifications jsonb,
 		classes jsonb
 	);
@@ -777,10 +778,6 @@ var povinn2courses = transformation{
 		tl.exam_winter,
 		tl.exam_summer,
 		aj.survey,
-		preq.corequisites,
-		preq.prequisites,
-		preq.incompatibilities,
-		preq.interchangeabilities,
 		pklas.classifications,
 		ptrida.classes
 	FROM course_lang cl
@@ -794,7 +791,6 @@ var povinn2courses = transformation{
 	LEFT JOIN rvcem2json rj ON cg.range_unit = rj.id AND cl.lang = rj.lang
 	LEFT JOIN typypov2lang tl ON cg.exam_type = tl.id AND cl.lang = tl.lang
 	LEFT JOIN ankecy2json aj ON cg.code = aj.course_code AND cl.lang = aj.lang
-	LEFT JOIN preq2json preq ON cg.code = preq.course_code
 	LEFT JOIN pklas2json pklas ON cg.code = pklas.course_code AND cl.lang = pklas.lang
 	LEFT JOIN ptrida2json ptrida ON cg.code = ptrida.course_code
 	`,

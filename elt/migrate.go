@@ -39,13 +39,28 @@ func migrateCourses(tx *sqlx.Tx) error {
 			requirements_of_assesment,
 			entry_requirements,
 			aim,
-			prerequisities,
-			corequisities,
-			incompatibilities,
-			interchangeabilities,
 			classes,
 			classifications
 		FROM povinn2courses;
+	`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func migrateRequisites(tx *sqlx.Tx) error {
+	var err error
+	_, err = tx.Exec(`--sql
+		DELETE FROM webapp.requisites WHERE TRUE;
+		INSERT INTO webapp.requisites
+		SELECT
+			target_course,
+			parent_course,
+			child_course,
+			req_type,
+			group_type
+		FROM requisites;
 	`)
 	if err != nil {
 		return err

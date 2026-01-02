@@ -69,10 +69,6 @@ SELECT
 	ucor.rating,
 	acor.avg_rating,
 	acor.rating_count,
-	c.prerequisities,
-	c.corequisities,
-	c.incompatibilities,
-	c.interchangeabilities,
 	c.classes,
 	c.classifications,
 	ubs.semesters,
@@ -115,6 +111,16 @@ LEFT JOIN user_ratings ur
 LEFT JOIN avg_course_rating avg_cr
 	ON avg_cr.category_code = crc.code
 WHERE crc.lang = $3;
+`
+
+const Requisites = `--sql
+SELECT
+	parent_course,
+	child_course,
+	req_type,
+	group_type
+FROM requisites
+WHERE target_course = $1;
 `
 
 const RateCategory = `

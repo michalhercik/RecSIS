@@ -84,10 +84,10 @@ type course struct {
 	assessmentRequirements nullDescription
 	entryRequirements      nullDescription
 	aim                    nullDescription
-	prerequisites          []requisite
-	corequisites           []requisite
-	incompatible           []requisite
-	interchange            []requisite
+	prerequisitesRoot      *requisiteNode
+	corequisitesRoot       *requisiteNode
+	incompatiblesRoot      *requisiteNode
+	interchangesRoot       *requisiteNode
 	classes                []string
 	classifications        []string
 	blueprintAssignments   assignmentSlice
@@ -163,9 +163,10 @@ type description struct {
 	content string
 }
 
-type requisite struct {
+type requisiteNode struct {
 	courseCode string
-	state      string
+	groupType  sql.NullString
+	children   []*requisiteNode
 }
 
 type assignmentSlice []assignment
@@ -345,9 +346,9 @@ func (c course) hasDescriptions() bool {
 func (c course) hasDetailInfo() bool {
 	return len(c.classes) > 0 ||
 		len(c.classifications) > 0 ||
-		len(c.corequisites) > 0 ||
-		len(c.interchange) > 0 ||
-		len(c.incompatible) > 0 ||
+		c.corequisitesRoot != nil ||
+		c.interchangesRoot != nil ||
+		c.incompatiblesRoot != nil ||
 		len(c.teachers) > 0
 }
 

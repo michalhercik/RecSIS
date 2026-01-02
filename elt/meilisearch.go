@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 
@@ -48,7 +47,7 @@ func (r *record) Scan(val any) error {
 		json.Unmarshal([]byte(v), &r)
 		return nil
 	default:
-		return errors.New(fmt.Sprintf("Unsupported type: %T", v))
+		return fmt.Errorf("Unsupported type: %T", v)
 	}
 }
 

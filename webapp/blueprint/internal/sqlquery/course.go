@@ -39,6 +39,16 @@ WHERE y.user_id = $1
 ORDER BY y.academic_year, bs.semester, bc.position;
 `
 
+const SelectRequisites = `--sql
+SELECT
+	parent_course,
+	child_course,
+	req_type,
+	group_type
+FROM requisites
+WHERE target_course = $1;
+`
+
 const SelectSemestersInfo = `--sql
 SELECT
 	y.academic_year,

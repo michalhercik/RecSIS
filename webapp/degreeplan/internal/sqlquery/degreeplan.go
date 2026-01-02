@@ -6,7 +6,7 @@ WITH user_start_year AS (
 	SELECT MIN(start_year) AS year FROM studies WHERE user_id = $1
 ),
 user_blueprint_semesters AS (
-	SELECT
+	SELECT DISTINCT
 		dp.course_code,
 		array_agg(bc.course_code IS NOT NULL ORDER BY by.academic_year, bs.semester) AS semesters
 	FROM studies s
@@ -65,29 +65,25 @@ ORDER BY dp.bloc_type, dp.seq;
 `
 
 const DegreePlan = `
-WITH user_start_year AS (
-	-- TODO: pick a user selected study plan or max
-	SELECT MIN(start_year) AS year FROM studies WHERE user_id = $1
-),
-user_blueprint_semesters AS (
-	SELECT
+-- WITH user_start_year AS (
+-- 	-- TODO: pick a user selected study plan or max
+-- 	SELECT MIN(start_year) AS year FROM studies WHERE user_id = $1
+-- ),
+WITH user_blueprint_semesters AS (
+	SELECT DISTINCT
 		dp.course_code,
 		array_agg(bc.course_code IS NOT NULL ORDER BY by.academic_year, bs.semester) AS semesters
-	FROM studies s
-	INNER JOIN user_start_year my
-		ON s.start_year = my.year
-	LEFT JOIN degree_plans dp
-		ON s.degree_plan_code = dp.plan_code
-		AND s.start_year = dp.plan_year
+	FROM degree_plans dp
 	LEFT JOIN blueprint_years by
-		ON by.user_id = s.user_id
+		ON by.user_id = $1
 	LEFT JOIN blueprint_semesters bs
 		ON by.id = bs.blueprint_year_id
 	LEFT JOIN blueprint_courses bc
 		ON bs.id = bc.blueprint_semester_id
 		AND bc.course_code = dp.course_code
-	WHERE s.user_id = $1
-		AND dp.lang = $2
+	WHERE dp.plan_code = $2
+		AND dp.plan_year = $3 
+		AND dp.lang = $4
 	GROUP BY dp.course_code, dp.bloc_subject_code
 )
 SELECT

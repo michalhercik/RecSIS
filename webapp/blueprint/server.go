@@ -509,6 +509,7 @@ func atoiSliceCourses(s []string, lang language.Language) ([]int, error) {
 func generateWarnings(bp *blueprintPage, t text) {
 	forCorrectAssignment(bp, t)
 	forDuplicateAssignments(bp, t)
+	forRequisites(bp, t)
 }
 
 func forCorrectAssignment(bp *blueprintPage, t text) {
@@ -526,15 +527,7 @@ func forCorrectAssignment(bp *blueprintPage, t text) {
 }
 
 func forDuplicateAssignments(bp *blueprintPage, t text) {
-	courseCodes := make(map[string][]courseLocation)
-	for c := range bp.courses() {
-		code := c.course.code
-		courseCodes[code] = append(courseCodes[code], courseLocation{
-			year:     c.year,
-			semester: c.semester,
-			course:   c.course,
-		})
-	}
+	courseCodes := buildCourseMap(bp)
 
 	for _, locations := range courseCodes {
 		if len(locations) > 1 {
@@ -560,6 +553,125 @@ func forDuplicateAssignments(bp *blueprintPage, t text) {
 			}
 		}
 	}
+}
+
+type requisiteCondition func(parentLoc, childLoc courseLocation) bool
+
+func forRequisites(bp *blueprintPage, t text) {
+	courseMap := buildCourseMap(bp)
+
+	// Check each course's requisites
+	for courseLoc := range bp.courses() {
+		if courseLoc.year == unassignedYear {
+			continue
+		}
+		course := courseLoc.course
+
+		if course.prerequisitesRoot != nil {
+			var prerequisiteCondition requisiteCondition = func(parentLoc, childLoc courseLocation) bool {
+				// Prerequisite must be assigned before the current course
+				return childLoc.year != unassignedYear &&
+					(childLoc.year < parentLoc.year || (childLoc.year == parentLoc.year && childLoc.semester < parentLoc.semester))
+			}
+			reqIsMet := areAllRequisitesMet(course.prerequisitesRoot, courseLoc, prerequisiteCondition, courseMap)
+			if !reqIsMet {
+				course.warnings = append(course.warnings, t.wPrerequisiteNotMet)
+				// TODO: better warning message with details
+			}
+		}
+
+		if course.corequisitesRoot != nil {
+			var corequisiteCondition requisiteCondition = func(parentLoc, childLoc courseLocation) bool {
+				// Corequisite must be assigned in the same semester or before the current course
+				return childLoc.year != unassignedYear &&
+					(childLoc.year < parentLoc.year || (childLoc.year == parentLoc.year && childLoc.semester <= parentLoc.semester))
+			}
+			reqIsMet := areAllRequisitesMet(course.corequisitesRoot, courseLoc, corequisiteCondition, courseMap)
+			if !reqIsMet {
+				course.warnings = append(course.warnings, t.wCorequisiteNotMet)
+				// TODO: better warning message with details
+			}
+		}
+
+		if course.incompatiblesRoot != nil {
+			var incompatibleCondition requisiteCondition = func(parentLoc, childLoc courseLocation) bool {
+				// Incompatible course must not be assigned anywhere
+				return childLoc.year != unassignedYear
+			}
+			reqIsViolated := !isAnyRequisiteMet(course.incompatiblesRoot, courseLoc, incompatibleCondition, courseMap)
+			if reqIsViolated {
+				course.warnings = append(course.warnings, t.wIncompatiblePresent)
+			}
+		}
+	}
+}
+
+func areAllRequisitesMet(course *requisiteNode, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
+	for _, reqNode := range course.children {
+		if !reqNode.groupType.Valid {
+			if !isCourseRequisiteMet(reqNode, originLoc, condition, courseMap) {
+				return false
+			}
+		} else {
+			switch reqNode.groupType.String {
+			case "M":
+				// At least one child requisite must be met
+				if !isAnyRequisiteMet(reqNode, originLoc, condition, courseMap) {
+					return false
+				}
+			case "V":
+				// All child requisites must be met
+				if !areAllRequisitesMet(reqNode, originLoc, condition, courseMap) {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+func isAnyRequisiteMet(course *requisiteNode, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
+	for _, reqNode := range course.children {
+		if !reqNode.groupType.Valid {
+			if isCourseRequisiteMet(reqNode, originLoc, condition, courseMap) {
+				return true
+			}
+		} else {
+			switch reqNode.groupType.String {
+			case "M":
+				// At least one child requisite must be met
+				if isAnyRequisiteMet(reqNode, originLoc, condition, courseMap) {
+					return true
+				}
+			case "V":
+				// All child requisites must be met
+				if areAllRequisitesMet(reqNode, originLoc, condition, courseMap) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func isCourseRequisiteMet(reqNode *requisiteNode, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
+	if locs, exists := courseMap[reqNode.courseCode]; exists {
+		for _, reqLoc := range locs {
+			if condition(originLoc, reqLoc) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Helper: Build map of course codes to their locations
+func buildCourseMap(bp *blueprintPage) map[string][]courseLocation {
+	courseMap := make(map[string][]courseLocation)
+	for loc := range bp.courses() {
+		courseMap[loc.course.code] = append(courseMap[loc.course.code], loc)
+	}
+	return courseMap
 }
 
 //================================================================================

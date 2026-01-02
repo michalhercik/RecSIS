@@ -129,6 +129,9 @@ type course struct {
 	examType           string
 	credits            int
 	guarantors         teacherSlice
+	prerequisitesRoot  *requisiteNode
+	corequisitesRoot   *requisiteNode
+	incompatiblesRoot  *requisiteNode
 	warnings           []string
 }
 
@@ -144,11 +147,12 @@ func (c *course) winterString() string {
 
 func (c *course) summerString() string {
 	summerText := ""
-	if c.semester == teachingSummerOnly {
+	switch c.semester {
+	case teachingSummerOnly:
 		summerText = fmt.Sprintf("%d/%d, %s", c.lectureRangeSummer.Int64, c.seminarRangeSummer.Int64, c.examType)
-	} else if c.semester == teachingBoth {
+	case teachingBoth:
 		summerText = fmt.Sprintf("%d/%d, %s", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64, c.examType)
-	} else {
+	default:
 		summerText = "---"
 	}
 	return summerText
@@ -215,6 +219,12 @@ type teacher struct {
 func (t teacher) string() string {
 	firstRune, _ := utf8.DecodeRuneInString(t.firstName)
 	return fmt.Sprintf("%c. %s", firstRune, t.lastName)
+}
+
+type requisiteNode struct {
+	courseCode string
+	groupType  sql.NullString
+	children   []*requisiteNode
 }
 
 type semesterAssignment int
