@@ -442,7 +442,7 @@ tr:target td {
 
 /* BP -> warning */
 .bp-warning {
-    right: -6px;
+    right: -8px;
     top: calc(50% - 1px);
     transform: translateY(-50%);
 }

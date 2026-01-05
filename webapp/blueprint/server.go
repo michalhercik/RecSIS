@@ -598,7 +598,7 @@ func forRequisites(bp *blueprintPage, t text) {
 				// Incompatible course must not be assigned anywhere
 				return childLoc.year != unassignedYear
 			}
-			reqIsViolated := !isAnyRequisiteMet(course.incompatiblesRoot, courseLoc, incompatibleCondition, courseMap)
+			reqIsViolated := isAnyRequisiteMet(course.incompatiblesRoot, courseLoc, incompatibleCondition, courseMap)
 			if reqIsViolated {
 				course.warnings = append(course.warnings, t.wIncompatiblePresent)
 			}
