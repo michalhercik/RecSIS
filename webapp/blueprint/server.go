@@ -614,12 +614,12 @@ func areAllRequisitesMet(course *requisiteNode, originLoc courseLocation, condit
 			}
 		} else {
 			switch reqNode.groupType.String {
-			case "M":
+			case orGroup:
 				// At least one child requisite must be met
 				if !isAnyRequisiteMet(reqNode, originLoc, condition, courseMap) {
 					return false
 				}
-			case "V":
+			case andGroup:
 				// All child requisites must be met
 				if !areAllRequisitesMet(reqNode, originLoc, condition, courseMap) {
 					return false
@@ -638,12 +638,12 @@ func isAnyRequisiteMet(course *requisiteNode, originLoc courseLocation, conditio
 			}
 		} else {
 			switch reqNode.groupType.String {
-			case "M":
+			case orGroup:
 				// At least one child requisite must be met
 				if isAnyRequisiteMet(reqNode, originLoc, condition, courseMap) {
 					return true
 				}
-			case "V":
+			case andGroup:
 				// All child requisites must be met
 				if areAllRequisitesMet(reqNode, originLoc, condition, courseMap) {
 					return true

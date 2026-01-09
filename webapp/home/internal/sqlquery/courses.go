@@ -7,9 +7,7 @@ const Courses = `--sql
 		FROM studies bs
 		LEFT JOIN degree_plans dp
 			ON dp.plan_code = bs.degree_plan_code
-			AND dp.plan_year = bs.start_year
 		WHERE bs.user_id = $1
-			AND bs.start_year = (SELECT MIN(start_year) FROM studies WHERE user_id = $1)
 			AND dp.interchangeability IS NULL
 			AND dp.lang = $3
 	)

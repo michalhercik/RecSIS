@@ -1,6 +1,7 @@
-package degreeplan
+package degreeplandetail
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/dbds"
-	"github.com/michalhercik/RecSIS/degreeplan/internal/sqlquery"
+	"github.com/michalhercik/RecSIS/degreeplandetail/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
 )
@@ -19,13 +20,10 @@ type DBManager struct {
 
 type dbDegreePlanRecord struct {
 	DegreePlanCode string `db:"degree_plan_code"`
-	DegreePlanYear int    `db:"start_year"`
 	BlocCode       string `db:"bloc_subject_code"`
 	BlocLimit      int    `db:"bloc_limit"`
 	BlocName       string `db:"bloc_name"`
-	BlocNote       string `db:"bloc_note"`
 	BlocType       string `db:"bloc_type"`
-	Note           string `db:"note"`
 	dbds.Course
 	BlueprintSemesters pq.BoolArray `db:"semesters"`
 }
@@ -46,54 +44,72 @@ func (m DBManager) userDegreePlan(uid string, lang language.Language) (*degreePl
 			texts[lang].errCannotGetUserDP,
 		)
 	}
-	var dp degreePlanPage
-	dp.degreePlanCode = records[0].DegreePlanCode
-	dp.degreePlanYear = records[0].DegreePlanYear
-	dp.canSave = false
-	for _, record := range records {
-		add(&dp, record)
-	}
-	fixLimits(&dp)
+	dp := buildDegreePlanPage(records, true)
 	return &dp, nil
 }
 
-func (m DBManager) degreePlan(uid, dpCode string, dpYear int, lang language.Language) (*degreePlanPage, error) {
+func (m DBManager) degreePlan(uid, dpCode string, lang language.Language) (*degreePlanPage, error) {
 	var records []dbDegreePlanRecord
-	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, dpCode, dpYear, lang); err != nil {
+	if err := m.DB.Select(&records, sqlquery.DegreePlan, uid, dpCode, lang); err != nil {
 		return nil, errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.DegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("dpYear", dpYear), errorx.P("lang", lang)),
+			errorx.AddContext(fmt.Errorf("sqlquery.DegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
 			http.StatusInternalServerError,
 			texts[lang].errCannotGetDP,
 		)
 	}
 	if len(records) == 0 {
 		return nil, errorx.NewHTTPErr(
-			errorx.AddContext(errors.New("no records found"), errorx.P("dpCode", dpCode), errorx.P("dpYear", dpYear), errorx.P("lang", lang)),
+			errorx.AddContext(errors.New("no records found"), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
 			http.StatusNotFound,
 			texts[lang].errDPNotFound,
 		)
 	}
-	var dp degreePlanPage
-	dp.degreePlanCode = records[0].DegreePlanCode
-	dp.degreePlanYear = dpYear
-	dp.canSave = true
-	for _, record := range records {
-		add(&dp, record)
-	}
-	fixLimits(&dp)
+	dp := buildDegreePlanPage(records, false)
 	return &dp, nil
 }
 
-func (m DBManager) saveDegreePlan(uid, dpCode string, dpYear int, lang language.Language) error {
-	_, err := m.DB.Exec(sqlquery.SaveDegreePlan, uid, dpCode, dpYear)
+func (m DBManager) saveDegreePlan(uid, dpCode string, lang language.Language) error {
+	_, err := m.DB.Exec(sqlquery.SaveDegreePlan, uid, dpCode)
 	if err != nil {
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.SaveDegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("dpYear", dpYear), errorx.P("lang", lang)),
+			errorx.AddContext(fmt.Errorf("sqlquery.SaveDegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
 			http.StatusInternalServerError,
 			texts[lang].errCannotSaveDP,
 		)
 	}
 	return nil
+}
+
+func (m DBManager) deleteSavedDegreePlan(uid string, lang language.Language) error {
+	_, err := m.DB.Exec(sqlquery.DeleteSavedDegreePlan, uid)
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.DeleteSavedDegreePlan: %w", err), errorx.P("lang", lang)),
+			http.StatusInternalServerError,
+			texts[lang].errCannotDeleteSavedDP,
+		)
+	}
+	return nil
+}
+
+func (m DBManager) userHasSelectedDegreePlan(uid string) bool {
+	var userPlan sql.NullString
+	err := m.DB.Get(&userPlan, sqlquery.UserDegreePlanCode, uid)
+	if err != nil {
+		return false
+	}
+	return userPlan.Valid
+}
+
+func buildDegreePlanPage(records []dbDegreePlanRecord, isUserPlan bool) degreePlanPage {
+	var dp degreePlanPage
+	dp.degreePlanCode = records[0].DegreePlanCode
+	dp.isUserPlan = isUserPlan
+	for _, record := range records {
+		add(&dp, record)
+	}
+	fixLimits(&dp)
+	return dp
 }
 
 func add(dp *degreePlanPage, record dbDegreePlanRecord) {
@@ -108,7 +124,6 @@ func add(dp *degreePlanPage, record dbDegreePlanRecord) {
 		dp.blocs = append(dp.blocs, bloc{
 			name:         record.BlocName,
 			code:         record.BlocCode,
-			note:         record.BlocNote,
 			limit:        record.BlocLimit,
 			isCompulsory: record.BlocType == "A",
 			isOptional:   record.BlocType == "C",
@@ -130,7 +145,6 @@ func intoCourse(from dbDegreePlanRecord) course {
 		seminarRangeSummer: from.SeminarRangeSummer,
 		examType:           from.ExamType,
 		guarantors:         intoTeacherSlice(from.Guarantors),
-		note:               from.Note,
 		blueprintSemesters: from.BlueprintSemesters,
 	}
 }

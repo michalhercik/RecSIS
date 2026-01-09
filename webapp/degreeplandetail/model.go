@@ -1,4 +1,4 @@
-package degreeplan
+package degreeplandetail
 
 import (
 	"database/sql"
@@ -14,13 +14,8 @@ import (
 const dpCode = "dpCode"
 
 const (
-	searchDegreePlanName = "search-dp-query"
-	searchDegreePlanYear = "search-dp-year"
-	saveDegreePlanYear   = "save-dp-year"
-	checkboxName         = "selected-courses"
+	checkboxName = "selected-courses"
 )
-
-const searchDegreePlanLimit = 5
 
 //================================================================================
 // Data Types and Methods
@@ -28,8 +23,7 @@ const searchDegreePlanLimit = 5
 
 type degreePlanPage struct {
 	degreePlanCode string
-	degreePlanYear int
-	canSave        bool
+	isUserPlan     bool
 	blocs          []bloc
 }
 
@@ -46,7 +40,6 @@ func (dp *degreePlanPage) bpNumberOfSemesters() int {
 type bloc struct {
 	name         string
 	code         string
-	note         string
 	limit        int
 	isCompulsory bool
 	isOptional   bool
@@ -105,7 +98,6 @@ func (b *bloc) blueprintCredits() int {
 type course struct {
 	code               string
 	title              string
-	note               string
 	credits            int
 	semester           teachingSemester
 	guarantors         teacherSlice

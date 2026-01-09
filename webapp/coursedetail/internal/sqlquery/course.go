@@ -18,7 +18,6 @@ degree_plan AS (
 	FROM studies bs
 	LEFT JOIN degree_plans dp
 		ON dp.plan_code = bs.degree_plan_code
-		AND dp.plan_year = bs.start_year
 	WHERE bs.user_id = $1
 		AND dp.course_code = $2
 		AND dp.lang = 'cs'

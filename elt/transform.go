@@ -962,6 +962,7 @@ var initFilterTables = transformation{
 			title_en VARCHAR(50) NOT NULL,
 			description_cs VARCHAR(200),
 			description_en VARCHAR(200),
+			condition VARCHAR(100),
 			displayed_value_limit INT NOT NULL,
 			position INT NOT NULL
 		);
@@ -977,8 +978,9 @@ var initFilterTables = transformation{
 		);
 		INSERT INTO filters(id) VALUES
 		('courses'),
-		('course-survey');
-		INSERT INTO filter_categories(filter_id, facet_id, title_cs, title_en, description_cs, description_en, displayed_value_limit, position)
+		('course-survey'),
+		('degree-plans');
+		INSERT INTO filter_categories(filter_id, facet_id, title_cs, title_en, description_cs, description_en, condition, displayed_value_limit, position)
 		VALUES ` +
 		categoriesToSQL("courses", []category{
 			makeCategory("faculty", "Fakulta", "Faculty", 3),
@@ -1010,6 +1012,14 @@ var initFilterTables = transformation{
 			makeCategory("study_type.id", "Forma studia", "Study form", 5),
 			makeCategory("study_year", "Ročník", "Year of study", 5),
 			makeCategory("target_type", "Přednáška/Cvičení", "Lecture/Seminar", 5),
+		}) + `,` +
+		categoriesToSQL("degree-plans", []category{
+			makeCategory("faculty", "Fakulta", "Faculty", 1),
+			makeCategory("section", "Sekce", "Section", 3),
+			makeCategory("study_type", "Forma studia", "Study form", 3),
+			makeCategory("teaching_lang", "Jazyk výuky", "Teaching language", 2),
+			makeCategory("validity", "Platí v roce", "Valid in year", 30).withCondition("validity.from <= {VAL} AND validity.to >= {VAL}"),
+			makeCategory("field.code", "Obor", "Field", 5),
 		}),
 }
 
@@ -1019,6 +1029,7 @@ type category struct {
 	titleEN             string
 	descriptionCS       string
 	descriptionEN       string
+	condition           string
 	displayedValueLimit int
 }
 
@@ -1037,21 +1048,33 @@ func (c category) withDescription(descriptionCS, descriptionEN string) category 
 	return c
 }
 
+func (c category) withCondition(condition string) category {
+	c.condition = condition
+	return c
+}
+
 func (c category) ToSQL(categoryID string, position int) string {
-	var dcs, den string
+	var dcs string
 	if c.descriptionCS == "" {
 		dcs = "NULL"
 	} else {
 		dcs = fmt.Sprintf("'%s'", c.descriptionCS)
 	}
+	var den string
 	if c.descriptionEN == "" {
 		den = "NULL"
 	} else {
 		den = fmt.Sprintf("'%s'", c.descriptionEN)
 	}
+	var condition string
+	if c.condition == "" {
+		condition = "NULL"
+	} else {
+		condition = fmt.Sprintf("'%s'", c.condition)
+	}
 	return fmt.Sprintf(
-		"('%s', '%s', '%s', '%s', %s, %s, %d, %d)",
-		categoryID, c.facetID, c.titleCS, c.titleEN, dcs, den, c.displayedValueLimit, position,
+		"('%s', '%s', '%s', '%s', %s, %s, %s, %d, %d)",
+		categoryID, c.facetID, c.titleCS, c.titleEN, dcs, den, condition, c.displayedValueLimit, position,
 	)
 }
 
@@ -1152,7 +1175,7 @@ Prerequisites:
 var createFilterValuesForFaculties = transformation{
 	name: "create_filter_values_for_faculties",
 	query: `--sql
-	with category_id AS (
+		with category_id AS (
 			SELECT fc.id FROM filters f
 			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
 			WHERE f.id='courses'
@@ -1535,6 +1558,65 @@ var createFilterValuesForSurveyTeachers = transformation{
 	`,
 }
 
+/*
+Prerequisites:
+  - povinn2searchable
+  - ucit2json
+  - ankecy
+  - obor
+  - druh
+*/
+var ankecy2searchable = transformation{
+	name: "ankecy2searchable",
+	query: `--sql
+		DROP TABLE IF EXISTS ankecy2searchable;
+		CREATE TABLE ankecy2searchable (
+			id INT,
+			course_code VARCHAR(10) NOT NULL,
+			study_year INT,
+			academic_year INT,
+			study_field JSONB,
+			study_type JSONB,
+			teacher JSONB,
+			target_type VARCHAR(30),
+			content TEXT
+		);
+		INSERT INTO ankecy2searchable
+		SELECT
+			ROW_NUMBER() OVER () id,
+			a.povinn course_code,
+			a.sroc study_year,
+			a.sskr academic_year,
+			JSONB_BUILD_OBJECT(
+				'id', o.kod,
+				'name', JSONB_BUILD_OBJECT(
+					'cs', o.nazev,
+					'en', o.anazev
+				)
+			) study_field,
+			JSONB_BUILD_OBJECT(
+				'id', d.kod,
+				'abbr', JSONB_BUILD_OBJECT(
+					'cs', COALESCE(d.zkratka, d.nazev),
+					'en', COALESCE(d.azkratka, d.anazev)
+				),
+				'name', JSONB_BUILD_OBJECT(
+					'cs', d.nazev,
+					'en', d.anazev
+				)
+			) study_type,
+			uj.teacher,
+			a.prdmtyp target_type,
+			a.memo content
+		FROM povinn2searchable ps
+		LEFT JOIN ankecy a ON a.povinn = ps.code
+		LEFT JOIN obor o ON a.sobor = o.kod
+		LEFT JOIN druh d ON a.sdruh = d.kod
+		LEFT JOIN ucit2json uj ON a.ucit = uj.id
+		WHERE a.povinn IS NOT NULL
+	`,
+}
+
 var createFilterValuesForSurveyAcademicYears = transformation{
 	name: "create_filter_values_for_survey_academic_years",
 	query: `--sql
@@ -1706,73 +1788,20 @@ var createFilterValuesForSurveyTargetTypes = transformation{
 
 /*
 Prerequisites:
-  - povinn2searchable
-  - ucit2json
-  - ankecy
-  - obor
-  - druh
+  - stud_plan
 */
-var ankecy2searchable = transformation{
-	name: "ankecy2searchable",
-	query: `--sql
-		DROP TABLE IF EXISTS ankecy2searchable;
-		CREATE TABLE ankecy2searchable (
-			id INT,
-			course_code VARCHAR(10) NOT NULL,
-			study_year INT,
-			academic_year INT,
-			study_field JSONB,
-			study_type JSONB,
-			teacher JSONB,
-			target_type VARCHAR(30),
-			content TEXT
-		);
-		INSERT INTO ankecy2searchable
-		SELECT
-			ROW_NUMBER() OVER () id,
-			a.povinn course_code,
-			a.sroc study_year,
-			a.sskr academic_year,
-			JSONB_BUILD_OBJECT(
-				'id', o.kod,
-				'name', JSONB_BUILD_OBJECT(
-					'cs', o.nazev,
-					'en', o.anazev
-				)
-			) study_field,
-			JSONB_BUILD_OBJECT(
-				'id', d.kod,
-				'abbr', JSONB_BUILD_OBJECT(
-					'cs', COALESCE(d.zkratka, d.nazev),
-					'en', COALESCE(d.azkratka, d.anazev)
-				),
-				'name', JSONB_BUILD_OBJECT(
-					'cs', d.nazev,
-					'en', d.anazev
-				)
-			) study_type,
-			uj.teacher,
-			a.prdmtyp target_type,
-			a.memo content
-		FROM povinn2searchable ps
-		LEFT JOIN ankecy a ON a.povinn = ps.code
-		LEFT JOIN obor o ON a.sobor = o.kod
-		LEFT JOIN druh d ON a.sdruh = d.kod
-		LEFT JOIN ucit2json uj ON a.ucit = uj.id
-		WHERE a.povinn IS NOT NULL
-	`,
-}
-
 var studplan2lang = transformation{
 	name: "studplan2lang",
 	query: `--sql
 		DROP TABLE IF EXISTS studplan2lang;
 		CREATE TABLE studplan2lang (
 			plan_code VARCHAR(15) NOT NULL,
-			plan_year INT NOT NULL,
 			lang VARCHAR(2) NOT NULL,
 			course_code VARCHAR(10) NOT NULL,
 			interchangeability VARCHAR(10),
+			recommended_year_from INT,
+			recommended_year_to INT,
+			recommended_semester INT,
 			bloc_name VARCHAR(250),
 			bloc_subject_code VARCHAR(20),
 			bloc_type VARCHAR(1),
@@ -1782,10 +1811,12 @@ var studplan2lang = transformation{
 		INSERT INTO studplan2lang
 		SELECT
 			plan_code,
-			plan_year,
 			'cs' lang,
 			code course_code,
 			interchangeability,
+			recommended_year_from,
+			recommended_year_to,
+			recommended_semester,
 			bloc_name_cz bloc_name,
 			bloc_subject_code,
 			bloc_type,
@@ -1795,10 +1826,12 @@ var studplan2lang = transformation{
 		UNION
 		SELECT
 			plan_code,
-			plan_year,
 			'en' lang,
 			code course_code,
 			interchangeability,
+			recommended_year_from,
+			recommended_year_to,
+			recommended_semester,
 			bloc_name_en bloc_name,
 			bloc_subject_code,
 			bloc_type,
@@ -1808,36 +1841,331 @@ var studplan2lang = transformation{
 	`,
 }
 
-var studplanlist2searchable = transformation{
-	name: "studplanlist2searchable",
+/*
+Prerequisites:
+  - stud_plan_metadata
+*/
+var studmetadata2lang = transformation{
+	name: "studmetadata2lang",
 	query: `--sql
-		DROP TABLE IF EXISTS studplanlist2searchable;
-		CREATE TABLE studplanlist2searchable (
-			id INT,
-			code VARCHAR(15),
+		DROP TABLE IF EXISTS studmetadata2lang;
+		CREATE TABLE studmetadata2lang (
+			plan_code VARCHAR(15) NOT NULL,
+			lang VARCHAR(2) NOT NULL,
 			title VARCHAR(250),
-			study_type VARCHAR(10)
+			valid_from INT,
+			valid_to INT,
+			faculty VARCHAR(5),
+			section VARCHAR(2),
+			field_code VARCHAR(20),
+			study_type VARCHAR(5)
 		);
-		INSERT INTO studplanlist2searchable
+		INSERT INTO studmetadata2lang
 		SELECT
-			ROW_NUMBER() OVER () id,
-			splan code,
-			nazev title,
-			zkratka study_type
-		FROM stud_plan_list
+			code as plan_code,
+			'cs' lang,
+			name_cz as title,
+			valid_from,
+			valid_to,
+			faculty,
+			section,
+			field_code,
+			druh.zkratka AS study_type
+		FROM stud_plan_metadata
+		JOIN druh ON stud_plan_metadata.study_type = druh.kod
+		UNION
+		SELECT
+			code as plan_code,
+			'en' lang,
+			name_en as title,
+			valid_from,
+			valid_to,
+			faculty,
+			section,
+			field_code,
+			druh.zkratka AS study_type
+		FROM stud_plan_metadata
+		JOIN druh ON stud_plan_metadata.study_type = druh.kod
 	`,
 }
 
-var degreePlanYears = transformation{
-	name: "degree_plan_years",
+/*
+Prerequisites:
+  - stud_plan_obor
+*/
+var studobor2lang = transformation{
+	name: "studobor2lang",
 	query: `--sql
-		DROP TABLE IF EXISTS degree_plan_years;
-		CREATE TABLE degree_plan_years (
-			plan_year INT
+		DROP TABLE IF EXISTS studobor2lang;
+		CREATE TABLE studobor2lang (
+			code VARCHAR(15),
+			lang VARCHAR(2),
+			title VARCHAR(250),
+			teaching_lang CHAR(3),
+			sims_code VARCHAR(20),
+			sims_title VARCHAR(250)
 		);
-		INSERT INTO degree_plan_years
-		SELECT DISTINCT
-			plan_year
-		FROM stud_plan
+		INSERT INTO studobor2lang
+		SELECT
+			code,
+			'cs' lang,
+			name_cz as title,
+			teaching_lang,
+			sims_code,
+			sims_name_cz sims_title
+		FROM stud_plan_obor
+		UNION
+		SELECT
+			code,
+			'en' lang,
+			name_en as title,
+			teaching_lang,
+			sims_code,
+			sims_name_en sims_title
+		FROM stud_plan_obor
+	`,
+}
+
+/*
+Prerequisites:
+  - stud_plan_metadata
+  - stud_plan_obor
+*/
+var studplan2searchable = transformation{
+	name: "studplan2searchable",
+	query: `--sql
+		DROP TABLE IF EXISTS studplan2searchable;
+		CREATE TABLE studplan2searchable (
+			id INT PRIMARY KEY,
+			code VARCHAR(15),
+			title jsonb,
+			faculty VARCHAR(5),
+			section VARCHAR(2),
+			field jsonb,
+			study_type VARCHAR(1),
+			validity jsonb,
+			teaching_lang CHAR(3)
+		);
+		INSERT INTO studplan2searchable
+		SELECT
+			ROW_NUMBER() OVER () id,
+			smd.code,
+			JSONB_BUILD_OBJECT(
+				'cs', smd.name_cz,
+				'en', smd.name_en
+			) as title,
+			smd.faculty,
+			smd.section,
+			JSONB_BUILD_OBJECT(
+				'code', sob.code,
+				'title', JSONB_BUILD_OBJECT(
+					'cs', sob.name_cz,
+					'en', sob.name_en
+				),
+				'sims_code', sob.sims_code,
+				'sims_title', JSONB_BUILD_OBJECT(
+					'cs', sob.sims_name_cz,
+					'en', sob.sims_name_en
+				)
+			) as field,
+			smd.study_type,
+			JSONB_BUILD_OBJECT(
+				'from', smd.valid_from,
+				'to', smd.valid_to
+			) as validity,
+			sob.teaching_lang
+		FROM stud_plan_metadata smd
+		LEFT JOIN stud_plan_obor sob ON smd.field_code = sob.code
+	`,
+}
+
+/*
+Prerequisites:
+  - studplan2searchable
+  - fak
+*/
+var createFilterValuesForDegreePlanFaculties = transformation{
+	name: "create_filter_values_for_degree_plan_faculties",
+	query: `--sql
+		with category_id AS (
+			SELECT fc.id FROM filters f
+			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
+			WHERE f.id='degree-plans'
+			AND fc.facet_id='faculty'
+		)
+		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, description_cs, description_en, position)
+		SELECT DISTINCT ON (faculty)
+			cid.id category_id,
+			kod facet_id,
+			zkratka title_cs,
+			azkratka title_en,
+			nazev description_cs,
+			anazev description_en,
+			ROW_NUMBER() OVER () position
+		FROM studplan2searchable
+		LEFT JOIN fak ON faculty = fak.kod
+		LEFT JOIN category_id cid ON true
+	`,
+}
+
+/*
+Prerequisites:
+  - studplan2searchable
+  - sekce
+*/
+var createFilterValuesForDegreePlanSections = transformation{
+	name: "create_filter_values_for_degree_plan_sections",
+	query: `--sql
+		WITH category_id AS (
+			SELECT fc.id FROM filters f
+			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
+			WHERE f.id='degree-plans'
+			AND fc.facet_id='section'
+		), order_list(section, position) AS (
+			VALUES
+				('NI', 1),
+				('NM', 2),
+				('NF', 3)
+		), distinct_sections AS (
+			SELECT DISTINCT
+				section
+			FROM studplan2searchable
+		)
+		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
+		SELECT
+			cid.id category_id,
+			kod facet_id,
+			nazev title_cs,
+			anazev title_en,
+			ROW_NUMBER() OVER (ORDER BY ol.position) position
+		FROM distinct_sections s
+		LEFT JOIN sekce sec ON s.section = sec.kod
+		LEFT JOIN order_list ol on ol.section = s.section
+		LEFT JOIN category_id cid ON true
+	`,
+}
+
+/*
+Prerequisites:
+  - stud_plan_obor
+*/
+var createFilterValuesForDegreePlanFields = transformation{
+	name: "create_filter_values_for_degree_plan_fields",
+	query: `--sql
+		WITH category_id AS (
+			SELECT fc.id FROM filters f
+			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
+			WHERE f.id='degree-plans'
+			AND fc.facet_id='field.code'
+		)
+		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
+		SELECT
+			cid.id category_id,
+			code facet_id,
+			CONCAT(name_cz, ' (', code, ')') title_cs,
+			CONCAT(name_en, ' (', code, ')') title_en,
+			ROW_NUMBER() OVER (ORDER BY name_cz) position
+		FROM stud_plan_obor
+		LEFT JOIN category_id cid ON true
+	`,
+}
+
+/*
+Prerequisites:
+  - stud_plan_obor
+*/
+var createFilterValuesForDegreePlanLanguages = transformation{
+	name: "create_filter_values_for_degree_plan_languages",
+	query: `--sql
+		WITH category_id AS (
+			SELECT fc.id FROM filters f
+			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
+			WHERE f.id='degree-plans'
+			AND fc.facet_id='teaching_lang'
+		),
+		distint_teachin_lang AS (
+			SELECT DISTINCT
+				teaching_lang
+			FROM stud_plan_obor
+		)
+		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
+		SELECT
+			cid.id category_id,
+			l.teaching_lang facet_id,
+			j.nazev title_cs,
+			COALESCE(j.anazev, j.nazev) title_en,
+			ROW_NUMBER() OVER (ORDER BY teaching_lang) position
+		FROM distint_teachin_lang l
+		LEFT JOIN jazyk j ON l.teaching_lang = j.kod
+		LEFT JOIN category_id cid ON true
+	`,
+}
+
+/*
+Prerequisites:
+  - studplan2searchable
+*/
+var createFilterValuesForDegreePlanValid = transformation{
+	name: "create_filter_values_for_degree_plan_valid",
+	query: `--sql
+		WITH category_id AS (
+			SELECT fc.id FROM filters f
+			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
+			WHERE f.id='degree-plans'
+			AND fc.facet_id='validity'
+		), year_range AS (
+			SELECT generate_series(
+				(SELECT MIN((validity->>'from')::INT) FROM studplan2searchable),
+				EXTRACT(YEAR FROM CURRENT_DATE)::INT
+			) AS year
+		)
+		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
+		SELECT
+			cid.id category_id,
+			yr.year facet_id,
+			yr.year title_cs,
+			yr.year title_en,
+			ROW_NUMBER() OVER (ORDER BY yr.year DESC) position
+		FROM year_range yr
+		LEFT JOIN category_id cid ON true
+	`,
+}
+
+/*
+Prerequisites:
+  - studplan2searchable
+*/
+var createFilterValuesForDegreePlanStudyTypes = transformation{
+	name: "create_filter_values_for_degree_plan_study_types",
+	query: `--sql
+		WITH category_id AS (
+			SELECT fc.id FROM filters f
+			LEFT JOIN filter_categories fc ON f.id = fc.filter_id
+			WHERE f.id='degree-plans'
+			AND fc.facet_id='study_type'
+		), distinct_study_type AS (
+			SELECT DISTINCT
+				study_type
+			FROM studplan2searchable
+		)
+		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
+		SELECT
+			cid.id category_id,
+			d.study_type facet_id,
+			CASE
+				WHEN d.study_type = 'B' THEN 'Bakalářské'
+				WHEN d.study_type = 'N' THEN 'Navazující magisterské'
+				WHEN d.study_type = 'M' THEN 'Magisterské'
+				ELSE d.study_type
+			END title_cs,
+			CASE
+				WHEN d.study_type = 'B' THEN 'Bachelor''s'
+				WHEN d.study_type = 'N' THEN 'Master''s (post-Bachelor)'
+				WHEN d.study_type = 'M' THEN 'Master''s'
+				ELSE d.study_type
+			END title_en,
+			ROW_NUMBER() OVER (ORDER BY d.study_type) position
+		FROM distinct_study_type d
+		LEFT JOIN category_id cid ON true
 	`,
 }

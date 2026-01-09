@@ -1,20 +1,19 @@
 package sqlquery
 
+const UserDegreePlanCode = `--sql
+SELECT degree_plan_code
+FROM studies
+WHERE user_id = $1
+`
+
 const UserDegreePlan = `--sql
-WITH user_start_year AS (
-	-- TODO: pick a user selected study plan or max
-	SELECT MIN(start_year) AS year FROM studies WHERE user_id = $1
-),
-user_blueprint_semesters AS (
+WITH user_blueprint_semesters AS (
 	SELECT DISTINCT
 		dp.course_code,
 		array_agg(bc.course_code IS NOT NULL ORDER BY by.academic_year, bs.semester) AS semesters
 	FROM studies s
-	INNER JOIN user_start_year my
-		ON s.start_year = my.year
 	LEFT JOIN degree_plans dp
 		ON s.degree_plan_code = dp.plan_code
-		AND s.start_year = dp.plan_year
 	LEFT JOIN blueprint_years by
 		ON by.user_id = s.user_id
 	LEFT JOIN blueprint_semesters bs
@@ -28,12 +27,9 @@ user_blueprint_semesters AS (
 )
 SELECT
 	s.degree_plan_code,
-	s.start_year,
 	dp.bloc_subject_code,
 	COALESCE(dp.bloc_limit, -1) bloc_limit,
 	COALESCE(dp.bloc_name, '') bloc_name,
-	COALESCE(dp.bloc_note, '') bloc_note,
-	COALESCE(dp.note, '') note,
 	dp.bloc_type,
 	c.code,
 	c.title,
@@ -47,11 +43,8 @@ SELECT
 	c.guarantors,
 	ubs.semesters
 FROM studies s
-INNER JOIN user_start_year my
-	ON s.start_year = my.year
 LEFT JOIN degree_plans dp
 	ON s.degree_plan_code = dp.plan_code
-	AND s.start_year = dp.plan_year
 LEFT JOIN courses c
 	ON dp.course_code = c.code
 LEFT JOIN user_blueprint_semesters ubs
@@ -60,15 +53,10 @@ WHERE s.user_id = $1
 	AND dp.lang = $2
 	AND c.lang = $2
 	AND interchangeability IS NULL
-	AND s.start_year = my.year
 ORDER BY dp.bloc_type, dp.seq;
 `
 
-const DegreePlan = `
--- WITH user_start_year AS (
--- 	-- TODO: pick a user selected study plan or max
--- 	SELECT MIN(start_year) AS year FROM studies WHERE user_id = $1
--- ),
+const DegreePlan = `--sql
 WITH user_blueprint_semesters AS (
 	SELECT DISTINCT
 		dp.course_code,
@@ -82,8 +70,7 @@ WITH user_blueprint_semesters AS (
 		ON bs.id = bc.blueprint_semester_id
 		AND bc.course_code = dp.course_code
 	WHERE dp.plan_code = $2
-		AND dp.plan_year = $3 
-		AND dp.lang = $4
+		AND dp.lang = $3
 	GROUP BY dp.course_code, dp.bloc_subject_code
 )
 SELECT
@@ -91,8 +78,6 @@ SELECT
 	dp.bloc_subject_code,
 	COALESCE(dp.bloc_limit, -1) bloc_limit,
 	COALESCE(dp.bloc_name, '') bloc_name,
-	COALESCE(dp.bloc_note, '') bloc_note,
-	COALESCE(dp.note, '') note,
 	dp.bloc_type,
 	c.code,
 	c.title,
@@ -111,18 +96,20 @@ LEFT JOIN courses c
 LEFT JOIN user_blueprint_semesters ubs
 	ON dp.course_code = ubs.course_code
 WHERE dp.plan_code = $2
-	AND dp.plan_year = $3
-	AND dp.lang = $4
-	AND c.lang = $4
+	AND dp.lang = $3
+	AND c.lang = $3
 	AND interchangeability IS NULL
--- TODO: pick a user selected study or max
 ORDER BY dp.bloc_type, dp.seq;
 `
 
 const SaveDegreePlan = `--sql
 UPDATE studies
-SET degree_plan_code = $2, start_year = $3
+SET degree_plan_code = $2
 WHERE user_id = $1
--- TODO: pick a user selected study plan or max
-AND start_year = (SELECT MIN(start_year) FROM studies WHERE user_id = $1)
+`
+
+const DeleteSavedDegreePlan = `--sql
+UPDATE studies
+SET degree_plan_code = NULL
+WHERE user_id = $1
 `

@@ -9,13 +9,13 @@ GRANT
     INSERT
 ON
     webapp.courses,
-    webapp.requisites,
     webapp.degree_plan_list,
-    webapp.degree_plan_years,
+    webapp.degree_plan_metadata,
     webapp.degree_plans,
-    webapp.filters,
     webapp.filter_categories,
-    webapp.filter_values
+    webapp.filter_values,
+    webapp.filters,
+    webapp.requisites
 TO elt;
 
 GRANT USAGE ON SCHEMA webapp TO recommender;

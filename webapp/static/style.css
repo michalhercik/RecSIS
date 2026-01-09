@@ -706,6 +706,102 @@ tr:target td {
 
 /* ============================================== */
 
+/* === Degree plan results table columns width styles === */
+.degree-plan-results-table {
+    table-layout: fixed;
+}
+
+/* code */
+.degree-plan-results-table th:nth-child(1),
+.degree-plan-results-table td:nth-child(1) {
+    width: 140px;
+}
+
+/* title */
+.degree-plan-results-table th:nth-child(2),
+.degree-plan-results-table td:nth-child(2) {
+    width: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* study_type */
+.degree-plan-results-table th:nth-child(3),
+.degree-plan-results-table td:nth-child(3) {
+    width: 60px;
+}
+
+/* valid_from */
+.degree-plan-results-table th:nth-child(4),
+.degree-plan-results-table td:nth-child(4) {
+    width: 40px;
+}
+
+/* dash */
+.degree-plan-results-table th:nth-child(5),
+.degree-plan-results-table td:nth-child(5) {
+    width: 10px;
+}
+
+/* valid_to */
+.degree-plan-results-table th:nth-child(6),
+.degree-plan-results-table td:nth-child(6) {
+    width: 40px;
+}
+
+/* ============================================== */
+
+/* DP -> filter styles */
+.dp-filter {
+    max-width: 90vw;
+}
+
+.dp-filter-label {
+    max-width: 100%;
+}
+
+#dp-filter-section,
+#dp-filter-section-skeleton {
+    max-width: 197px;
+    width: 197px;
+}
+
+@media (max-width: 765.5px) {
+    #dp-filter-section,
+    #dp-filter-section-skeleton {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+#dp-filters-wrapper {
+    height: 100%;
+}
+
+.bg-dp-filters {
+    background-color: white !important;
+}
+
+@media (max-width: 765.5px) {
+    .bg-dp-filters {
+        background-color: rgba(240, 116, 0, 0.2) !important;
+    }
+}
+
+.bg-dp-filters-buttons { 
+    background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* DP -> clear search btn */
+.dp-clear-search-btn {
+    top: 1px;
+    right: 1px;
+    z-index: 6 !important;
+    border-top-right-radius: 0.375rem !important;
+    border-bottom-right-radius: 0.375rem !important;
+}
+
 /* DP -> Checked courses menu with buttons */
 #dp-checked-courses-menu,
 #dp-checked-courses-menu-skeleton {
@@ -730,7 +826,7 @@ tr:target td {
 }
 
 /* DP -> choose degree plan button styles */
-.choose-degree-plan-btn {
+.save-degree-plan-btn {
     z-index: 1000 !important;
     top: 12px;
     right: 12px;
@@ -861,6 +957,18 @@ tr:target td {
     width: 40px;
 }
 
+.dp-mobile-plan-code {
+    width: 100px;
+}
+
+.dp-mobile-validity {
+    width: 120px;
+}
+
+.dp-mobile-study-type {
+    width: 40px;
+}
+
 /* DP -> small table semester */
 .dp-lg-semester {
     width: 130px;
@@ -903,14 +1011,14 @@ tr:target td {
 #home-skeleton,
 #courses-skeleton,
 #blueprint-skeleton,
-#degreeplan-skeleton {
+#degreeplans-skeleton {
     display: none;
 }
 
 #home-skeleton.htmx-request,
 #courses-skeleton.htmx-request,
 #blueprint-skeleton.htmx-request,
-#degreeplan-skeleton.htmx-request {
+#degreeplans-skeleton.htmx-request {
     display: block;
 }
 

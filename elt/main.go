@@ -53,7 +53,7 @@ func main() {
 	err = uploadToMeili(recsis, meili, []meiliUpload{
 		{table: "povinn2searchable", index: "courses"},
 		{table: "ankecy2searchable", index: "survey"},
-		{table: "studplanlist2searchable", index: "degree-plans"},
+		{table: "studplan2searchable", index: "degree-plans"},
 	})
 	elapsed = time.Since(start)
 	report = makeReport(err, elapsed)
@@ -124,11 +124,12 @@ func transform(recsis *sqlx.DB) error {
 		parallelRunner{
 			povinn2courses,
 			studplan2lang,
-			studplanlist2searchable,
-			degreePlanYears,
+			studobor2lang,
+			studmetadata2lang,
 		},
 		parallelRunner{
 			povinn2searchable,
+			studplan2searchable,
 		},
 		parallelRunner{
 			ankecy2searchable,
@@ -150,6 +151,12 @@ func transform(recsis *sqlx.DB) error {
 			createFilterValuesForSurveyStudyYears,
 			createFilterValuesForSurveyTargetTypes,
 			createFilterValuesForSurveyAcademicYears,
+			createFilterValuesForDegreePlanFaculties,
+			createFilterValuesForDegreePlanSections,
+			createFilterValuesForDegreePlanFields,
+			createFilterValuesForDegreePlanLanguages,
+			createFilterValuesForDegreePlanValid,
+			createFilterValuesForDegreePlanStudyTypes,
 		},
 	}
 
@@ -182,11 +189,11 @@ func migrate(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	err = migrateDegreePlanYears(tx)
+	err = migrateStudPlanMetadata(tx)
 	if err != nil {
 		return err
 	}
-	err = migrateDegreePlans(tx)
+	err = migrateStudPlans(tx)
 	if err != nil {
 		return err
 	}

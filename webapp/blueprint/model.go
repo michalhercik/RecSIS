@@ -12,6 +12,11 @@ import (
 //================================================================================
 
 const (
+	orGroup  = "M"
+	andGroup = "V"
+)
+
+const (
 	lastPosition   = -1
 	unassignedYear = -1
 	ttDelay        = "600"
@@ -65,6 +70,8 @@ type courseLocation struct {
 	course   *course
 }
 
+// TODO: make this into normal iterator
+// TODO: transform to only assigned courses
 func (bp *blueprintPage) courses() <-chan courseLocation {
 	ch := make(chan courseLocation)
 	go func() {

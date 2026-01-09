@@ -91,11 +91,9 @@ func migrateStudPlanList(tx *sqlx.Tx) error {
 	var err error
 	_, err = tx.Exec(`--sql
 		DELETE FROM webapp.degree_plan_list WHERE TRUE;
-		INSERT INTO webapp.degree_plan_list (
-			code
-		) SELECT DISTINCT
-			plan_code
-		FROM stud_plan;
+		INSERT INTO webapp.degree_plan_list (code)
+		SELECT DISTINCT plan_code
+		FROM studmetadata2lang;
 	`)
 	if err != nil {
 		return err
@@ -103,12 +101,31 @@ func migrateStudPlanList(tx *sqlx.Tx) error {
 	return nil
 }
 
-func migrateDegreePlanYears(tx *sqlx.Tx) error {
+func migrateStudPlanMetadata(tx *sqlx.Tx) error {
 	var err error
 	_, err = tx.Exec(`--sql
-		DELETE FROM webapp.degree_plan_years WHERE TRUE;
-		INSERT INTO webapp.degree_plan_years (plan_year)
-		SELECT plan_year FROM degree_plan_years;
+		DELETE FROM webapp.degree_plan_metadata WHERE TRUE;
+		INSERT INTO webapp.degree_plan_metadata (
+			plan_code,
+			lang,
+			title,
+			valid_from,
+			valid_to,
+			faculty,
+			section,
+			field_code,
+			study_type
+		) SELECT DISTINCT
+			plan_code,
+			lang,
+			title,
+			valid_from,
+			valid_to,
+			faculty,
+			section,
+			field_code,
+			study_type
+		FROM studmetadata2lang;
 	`)
 	if err != nil {
 		return err
@@ -116,33 +133,37 @@ func migrateDegreePlanYears(tx *sqlx.Tx) error {
 	return nil
 }
 
-func migrateDegreePlans(tx *sqlx.Tx) error {
+func migrateStudPlans(tx *sqlx.Tx) error {
 	var err error
 	_, err = tx.Exec(`--sql
 		DELETE FROM webapp.degree_plans WHERE TRUE;
 		INSERT INTO webapp.degree_plans (
 			plan_code,
-			plan_year,		
-			lang,		
-			course_code,		
-			interchangeability,		
-			bloc_subject_code,		
-			bloc_type,		
-			bloc_limit,	
-			bloc_name,				
+			lang,
+			course_code,
+			interchangeability,
+			recommended_year_from,
+			recommended_year_to,
+			recommended_semester,
+			bloc_name,
+			bloc_subject_code,
+			bloc_type,
+			bloc_limit,
 			seq
 		) SELECT
 			plan_code,
-			plan_year,		
-			lang,		
-			course_code,		
-			interchangeability,		
-			bloc_subject_code,		
-			bloc_type,		
-			bloc_limit,	
-			bloc_name,				
+			lang,
+			course_code,
+			interchangeability,
+			recommended_year_from,
+			recommended_year_to,
+			recommended_semester,
+			bloc_name,
+			bloc_subject_code,
+			bloc_type,
+			bloc_limit,
 			seq
-		FROM studplan2lang
+		FROM studplan2lang;
 	`)
 	if err != nil {
 		return err

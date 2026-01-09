@@ -63,6 +63,24 @@ func (f filters) Facets() []string {
 	return f.facets
 }
 
+func (f filters) FiltersMapWithFacets(facets Facets, query url.Values, lang language.Language) map[string]FacetIterator {
+	result := make(map[string]FacetIterator)
+	for _, c := range f.categories {
+		f := facets[c.facetID]
+		checked := query[prefix+c.id]
+		result[c.facetID] = FacetIterator{
+			title:   c.title.String(lang),
+			desc:    c.desc.String(lang),
+			count:   len(f),
+			filter:  c,
+			facets:  f,
+			lang:    lang,
+			checked: checked,
+		}
+	}
+	return result
+}
+
 func (f filters) ParseURLQuery(query url.Values, lang language.Language) (expression, error) {
 	var result expression
 	conditions := make([]condition, 0, len(query))
@@ -96,8 +114,8 @@ func (f filters) parseParams(k string, v []string, lang language.Language) (cond
 			t.errCategoryNotFound,
 		)
 	}
-	result.param = category.facetID
-	result.values = make([]string, len(v))
+	param := category.facetID
+	values := make([]string, len(v))
 	for i, value := range v {
 		valueObj, ok := f.idToValue[value]
 		if !ok {
@@ -113,7 +131,21 @@ func (f filters) parseParams(k string, v []string, lang language.Language) (cond
 				t.errValueNotFound,
 			)
 		}
-		result.values[i] = valueObj.facetID
+		values[i] = valueObj.facetID
+	}
+	//TODO: result = conditionFactory(category.conditionType), returns: INcondition, TOcondition, ...
+	if category.condition.Valid {
+		result = &customCondition{
+			condition: category.condition.String,
+			param:     param,
+			values:    values,
+		}
+		return result, nil
+	} else {
+		result = &inCondition{
+			param:  param,
+			values: values,
+		}
 	}
 	return result, nil
 }
@@ -127,7 +159,7 @@ func fromRecords(rec []record) []category {
 				row.CategoryFacetID,
 				language.MakeLangString(row.CategoryTitleCS, row.CategoryTitleEN),
 				language.MakeLangString(row.CategoryDescCS.String, row.CategoryDescEN.String),
-			), row.CategoryDisplayedValueLimit)
+			), row.CategoryCondition, row.CategoryDisplayedValueLimit)
 		}
 		if row.ValueID.Valid {
 			fb.value(makeFilterIdentity(
@@ -174,6 +206,7 @@ type record struct {
 	CategoryTitleEN             string         `db:"category_title_en"`
 	CategoryDescCS              sql.NullString `db:"category_description_cs"`
 	CategoryDescEN              sql.NullString `db:"category_description_en"`
+	CategoryCondition           sql.NullString `db:"category_condition"`
 	CategoryDisplayedValueLimit int            `db:"category_displayed_value_limit"`
 	ValueID                     sql.NullString `db:"value_id"`
 	ValueFacetID                sql.NullString `db:"value_facet_id"`
@@ -186,6 +219,7 @@ type record struct {
 type category struct {
 	identity
 	displayedValueLimit int
+	condition           sql.NullString
 	values              []value
 }
 
@@ -201,9 +235,10 @@ func (cb categoryBuilder) isLastCategory(categoryID string) bool {
 	return lastID != categoryID
 }
 
-func (cb *categoryBuilder) category(identity identity, displayedValueLimit int) {
+func (cb *categoryBuilder) category(identity identity, condition sql.NullString, displayedValueLimit int) {
 	cb.categories = append(cb.categories, category{
 		identity:            identity,
+		condition:           condition,
 		displayedValueLimit: displayedValueLimit,
 		values:              []value{},
 	})
