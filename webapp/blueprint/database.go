@@ -162,9 +162,9 @@ func intoCourse(from *dbBlueprintRecord) course {
 		examType:           from.ExamType,
 		credits:            from.Credits,
 		guarantors:         intoTeacherSlice(from.Guarantors),
-		prerequisitesRoot:  intoRequisiteTree(from.requisites, from.Code, "P"),
-		corequisitesRoot:   intoRequisiteTree(from.requisites, from.Code, "K"),
-		incompatiblesRoot:  intoRequisiteTree(from.requisites, from.Code, "N"),
+		prerequisites:      intoRequisiteTree(from.requisites, from.Code, "P", prerequisiteCondition),
+		corequisites:       intoRequisiteTree(from.requisites, from.Code, "K", corequisiteCondition),
+		incompatibles:      intoRequisiteTree(from.requisites, from.Code, "N", incompatibleCondition),
 	}
 }
 
@@ -182,7 +182,7 @@ func intoTeacherSlice(from []dbds.Teacher) []teacher {
 	return teachers
 }
 
-func intoRequisiteTree(from []dbds.Requisite, rootCourse string, reqType string) *requisiteNode {
+func intoRequisiteTree(from []dbds.Requisite, rootCourse string, reqType string, condition requisiteCondition) *requisiteTree {
 	if from == nil {
 		return nil
 	}
@@ -213,7 +213,7 @@ func intoRequisiteTree(from []dbds.Requisite, rootCourse string, reqType string)
 		}
 	}
 
-	return root
+	return &requisiteTree{root: root, condition: condition}
 }
 
 func (m DBManager) moveCourses(userID string, lang language.Language, year int, semester semesterAssignment, position int, courses ...int) error {

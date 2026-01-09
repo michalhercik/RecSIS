@@ -3,6 +3,7 @@ package blueprint
 import (
 	"database/sql"
 	"fmt"
+	"iter"
 	"strings"
 	"unicode/utf8"
 )
@@ -70,25 +71,21 @@ type courseLocation struct {
 	course   *course
 }
 
-// TODO: make this into normal iterator
-// TODO: transform to only assigned courses
-func (bp *blueprintPage) courses() <-chan courseLocation {
-	ch := make(chan courseLocation)
-	go func() {
-		for i := range bp.unassigned.courses {
-			ch <- courseLocation{unassignedYear, assignmentNone, &bp.unassigned.courses[i]}
-		}
+func (bp *blueprintPage) assignedCourses() iter.Seq[courseLocation] {
+	return func(yield func(courseLocation) bool) {
 		for _, year := range bp.years {
 			for i := range year.winter.courses {
-				ch <- courseLocation{year.position, assignmentWinter, &year.winter.courses[i]}
+				if !yield(courseLocation{year.position, assignmentWinter, &year.winter.courses[i]}) {
+					return
+				}
 			}
 			for i := range year.summer.courses {
-				ch <- courseLocation{year.position, assignmentSummer, &year.summer.courses[i]}
+				if !yield(courseLocation{year.position, assignmentSummer, &year.summer.courses[i]}) {
+					return
+				}
 			}
 		}
-		close(ch)
-	}()
-	return ch
+	}
 }
 
 type assignedYears []academicYear
@@ -136,9 +133,9 @@ type course struct {
 	examType           string
 	credits            int
 	guarantors         teacherSlice
-	prerequisitesRoot  *requisiteNode
-	corequisitesRoot   *requisiteNode
-	incompatiblesRoot  *requisiteNode
+	prerequisites      *requisiteTree
+	corequisites       *requisiteTree
+	incompatibles      *requisiteTree
 	warnings           []string
 }
 
@@ -228,10 +225,44 @@ func (t teacher) string() string {
 	return fmt.Sprintf("%c. %s", firstRune, t.lastName)
 }
 
+type requisiteTree struct {
+	root      *requisiteNode
+	condition requisiteCondition
+}
+
+type requisiteCondition func(parentLoc, childLoc courseLocation) bool
+
+var prerequisiteCondition requisiteCondition = func(parentLoc, childLoc courseLocation) bool {
+	// Prerequisite must be assigned before the current course
+	return (childLoc.year < parentLoc.year || (childLoc.year == parentLoc.year && childLoc.semester < parentLoc.semester))
+}
+
+var corequisiteCondition requisiteCondition = func(parentLoc, childLoc courseLocation) bool {
+	// Corequisite must be assigned in the same semester or before the current course
+	return (childLoc.year < parentLoc.year || (childLoc.year == parentLoc.year && childLoc.semester <= parentLoc.semester))
+}
+
+var incompatibleCondition requisiteCondition = func(parentLoc, childLoc courseLocation) bool {
+	// Incompatible course must not be assigned anywhere
+	return true
+}
+
 type requisiteNode struct {
 	courseCode string
 	groupType  sql.NullString
 	children   []*requisiteNode
+}
+
+func (rn *requisiteNode) isGroup() bool {
+	return rn.groupType.Valid
+}
+
+func (rn *requisiteNode) isConjunction() bool {
+	return rn.groupType.String == andGroup
+}
+
+func (rn *requisiteNode) isDisjunction() bool {
+	return rn.groupType.String == orGroup
 }
 
 type semesterAssignment int

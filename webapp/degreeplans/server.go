@@ -95,7 +95,7 @@ func (s Server) searchPage(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	userID := s.Auth.UserID(r)
-	degreePlanSearchContent, err := s.makeSearch(w, r)
+	degreePlanSearchContent, err := s.processSearchRequest(r)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -113,7 +113,7 @@ func (s Server) searchPage(w http.ResponseWriter, r *http.Request) {
 func (s Server) searchContent(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	degreePlanSearchContent, err := s.makeSearch(w, r)
+	degreePlanSearchContent, err := s.processSearchRequest(r)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -127,10 +127,7 @@ func (s Server) searchContent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: work on this section
-// =================================================================================
-// TODO: rename to something more appropriate
-func (s Server) makeSearch(w http.ResponseWriter, r *http.Request) (*degreePlanSearchPage, error) {
+func (s Server) processSearchRequest(r *http.Request) (*degreePlanSearchPage, error) {
 	req, err := s.parseRequest(r)
 	if err != nil {
 		return nil, errorx.AddContext(err)
@@ -179,8 +176,6 @@ func (s Server) search(req request, httpReq *http.Request) (degreePlanSearchPage
 	}
 	return result, nil
 }
-
-// ================================================================================
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
