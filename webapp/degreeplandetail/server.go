@@ -14,12 +14,13 @@ import (
 //================================================================================
 
 type Server struct {
-	Auth   Authentication
-	BpBtn  BlueprintAddButton
-	Data   DBManager
-	Error  Error
-	Page   Page
-	router http.Handler
+	Auth                    Authentication
+	BpBtn                   BlueprintAddButton
+	Data                    DBManager
+	Error                   Error
+	NoSavedPlanRedirectPath string
+	Page                    Page
+	router                  http.Handler
 }
 
 type Authentication interface {
@@ -81,8 +82,8 @@ func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.userDegreePlanPage)
 	router.HandleFunc(fmt.Sprintf("GET /{%s}", dpCode), s.degreePlanByCodePage)
-	router.HandleFunc(fmt.Sprintf("PATCH /{%s}", dpCode), s.saveDegreePlan)
-	router.HandleFunc(fmt.Sprintf("DELETE /{%s}", dpCode), s.deleteSavedPlan)
+	router.HandleFunc(fmt.Sprintf("PATCH /user-plan/{%s}", dpCode), s.saveDegreePlan)
+	router.HandleFunc(fmt.Sprintf("DELETE /user-plan/{%s}", dpCode), s.deleteSavedPlan)
 	router.HandleFunc(s.BpBtn.Endpoint(), s.addCourseToBlueprint)
 	router.HandleFunc("/", s.pageNotFound)
 	s.router = router
@@ -94,12 +95,12 @@ func (s *Server) Init() {
 
 func (s Server) userDegreePlanPage(w http.ResponseWriter, r *http.Request) {
 	userID := s.Auth.UserID(r)
-	if s.Data.userHasSelectedDegreePlan(userID) == false {
-		http.Redirect(w, r, "/degreeplans", http.StatusSeeOther)
-		return
-	}
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
+	if !s.Data.userHasSelectedDegreePlan(userID) {
+		http.Redirect(w, r, lang.LocalizeURL(s.NoSavedPlanRedirectPath), http.StatusSeeOther)
+		return
+	}
 	dp, err := s.Data.userDegreePlan(userID, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
@@ -146,7 +147,7 @@ func (s Server) saveDegreePlan(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	http.Redirect(w, r, lang.LocalizeURL("/degreeplan"), http.StatusSeeOther)
+	s.userDegreePlanPage(w, r)
 }
 
 func (s Server) deleteSavedPlan(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +160,7 @@ func (s Server) deleteSavedPlan(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("%s%s", lang.LocalizeURL("/degreeplan"), r.URL.String()), http.StatusSeeOther)
+	s.degreePlanByCodePage(w, r)
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {

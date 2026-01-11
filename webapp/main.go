@@ -256,9 +256,10 @@ func degreePlanDetailServer(db *sqlx.DB, errorHandler degreeplandetail.Error, pa
 			},
 			TemplSecond: bpbtn.PlusSignBtnChecked,
 		},
-		Data:  degreeplandetail.DBManager{DB: db},
-		Error: errorHandler,
-		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Data:                    degreeplandetail.DBManager{DB: db},
+		Error:                   errorHandler,
+		NoSavedPlanRedirectPath: degreePlansRoot,
+		Page:                    page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
 	degreePlanDetail.Init()
 	return degreePlanDetail.Router()
@@ -275,6 +276,7 @@ func degreePlansServer(db *sqlx.DB, errorHandler degreeplans.Error, pageTempl pa
 			Client:      meiliClient,
 			DegreePlans: meilisearch.IndexConfig{Uid: degreeplans.SearchIndex},
 		},
+		UserPlanRedirectPath: degreePlanDetailRoot,
 	}
 	degreePlans.Init()
 	return degreePlans.Router()

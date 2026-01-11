@@ -17,13 +17,14 @@ import (
 //================================================================================
 
 type Server struct {
-	Auth    Authentication
-	Data    DBManager
-	Error   Error
-	Filters filters.Filters
-	Page    Page
-	router  http.Handler
-	Search  searchEngine
+	Auth                 Authentication
+	Data                 DBManager
+	Error                Error
+	Filters              filters.Filters
+	Page                 Page
+	router               http.Handler
+	Search               searchEngine
+	UserPlanRedirectPath string
 }
 
 func (s *Server) Init() {
@@ -83,9 +84,10 @@ func (s *Server) initRouter() {
 
 func (s Server) defaultDegreePlanPage(w http.ResponseWriter, r *http.Request) {
 	userID := s.Auth.UserID(r)
+	lang := language.FromContext(r.Context())
 	userHasSelectedPlan := s.Data.userHasSelectedDegreePlan(userID)
 	if userHasSelectedPlan {
-		http.Redirect(w, r, "/degreeplan", http.StatusSeeOther)
+		http.Redirect(w, r, lang.LocalizeURL(s.UserPlanRedirectPath), http.StatusSeeOther)
 	} else {
 		s.searchPage(w, r)
 	}
