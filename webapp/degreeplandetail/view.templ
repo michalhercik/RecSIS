@@ -52,7 +52,7 @@ templ saveDegreePlan(isUserPlan bool, code string, t text) {
             <button
                 type="button"
                 class="btn bg-degreeplan"
-                hx-delete={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/user-plan/" + code)) }
+                hx-delete={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/user-plan")) }
                 hx-target="body"
                 hx-swap="outerHTML"
                 hx-push-url={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }>

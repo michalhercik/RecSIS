@@ -80,16 +80,17 @@ func (m DBManager) saveDegreePlan(uid, dpCode string, lang language.Language) er
 	return nil
 }
 
-func (m DBManager) deleteSavedDegreePlan(uid string, lang language.Language) error {
-	_, err := m.DB.Exec(sqlquery.DeleteSavedDegreePlan, uid)
+func (m DBManager) deleteSavedDegreePlan(uid string, lang language.Language) (string, error) {
+	var planCode sql.NullString
+	err := m.DB.QueryRow(sqlquery.DeleteSavedDegreePlan, uid).Scan(&planCode)
 	if err != nil {
-		return errorx.NewHTTPErr(
+		return "", errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("sqlquery.DeleteSavedDegreePlan: %w", err), errorx.P("lang", lang)),
 			http.StatusInternalServerError,
 			texts[lang].errCannotDeleteSavedDP,
 		)
 	}
-	return nil
+	return planCode.String, nil
 }
 
 func (m DBManager) userHasSelectedDegreePlan(uid string) bool {

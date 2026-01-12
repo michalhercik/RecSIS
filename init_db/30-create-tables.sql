@@ -55,7 +55,7 @@ CREATE TABLE degree_plan_list(
     code VARCHAR(15) PRIMARY KEY
 );
 
-CREATE TABLE degree_plan_metadata(
+CREATE TABLE degree_plans(
     plan_code VARCHAR(15) NOT NULL,
     lang CHAR(2) NOT NULL,
     title VARCHAR(250),
@@ -68,7 +68,7 @@ CREATE TABLE degree_plan_metadata(
     PRIMARY KEY (plan_code, lang)
 );
 
-CREATE TABLE degree_plans(
+CREATE TABLE degree_plan_courses(
     plan_code VARCHAR(15) NOT NULL REFERENCES degree_plan_list(code) DEFERRABLE INITIALLY DEFERRED,
     lang CHAR(2) NOT NULL,
     course_code VARCHAR(10) NOT NULL,
@@ -81,10 +81,10 @@ CREATE TABLE degree_plans(
     bloc_type CHAR(1) NOT NULL,
     bloc_limit INT,
     seq VARCHAR(50),
-    FOREIGN KEY (plan_code, lang) REFERENCES degree_plan_metadata(plan_code, lang) DEFERRABLE INITIALLY DEFERRED
+    FOREIGN KEY (plan_code, lang) REFERENCES degree_plans(plan_code, lang) DEFERRABLE INITIALLY DEFERRED
 );
 
-CREATE INDEX degree_plan_code_lang ON degree_plans(plan_code, lang);
+CREATE INDEX degree_plan_code_lang ON degree_plan_courses(plan_code, lang);
 
 CREATE TABLE users (
     id VARCHAR(8) PRIMARY KEY

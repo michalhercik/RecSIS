@@ -83,7 +83,7 @@ func (s *Server) Init() {
 	router.HandleFunc("GET /{$}", s.userDegreePlanPage)
 	router.HandleFunc(fmt.Sprintf("GET /{%s}", dpCode), s.degreePlanByCodePage)
 	router.HandleFunc(fmt.Sprintf("PATCH /user-plan/{%s}", dpCode), s.saveDegreePlan)
-	router.HandleFunc(fmt.Sprintf("DELETE /user-plan/{%s}", dpCode), s.deleteSavedPlan)
+	router.HandleFunc("DELETE /user-plan", s.deleteSavedPlan)
 	router.HandleFunc(s.BpBtn.Endpoint(), s.addCourseToBlueprint)
 	router.HandleFunc("/", s.pageNotFound)
 	s.router = router
@@ -153,13 +153,14 @@ func (s Server) saveDegreePlan(w http.ResponseWriter, r *http.Request) {
 func (s Server) deleteSavedPlan(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	userID := s.Auth.UserID(r)
-	err := s.Data.deleteSavedDegreePlan(userID, lang)
+	planCode, err := s.Data.deleteSavedDegreePlan(userID, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
+	r.SetPathValue(dpCode, planCode)
 	s.degreePlanByCodePage(w, r)
 }
 

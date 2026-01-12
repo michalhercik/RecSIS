@@ -104,8 +104,8 @@ func migrateStudPlanList(tx *sqlx.Tx) error {
 func migrateStudPlanMetadata(tx *sqlx.Tx) error {
 	var err error
 	_, err = tx.Exec(`--sql
-		DELETE FROM webapp.degree_plan_metadata WHERE TRUE;
-		INSERT INTO webapp.degree_plan_metadata (
+		DELETE FROM webapp.degree_plans WHERE TRUE;
+		INSERT INTO webapp.degree_plans (
 			plan_code,
 			lang,
 			title,
@@ -136,8 +136,8 @@ func migrateStudPlanMetadata(tx *sqlx.Tx) error {
 func migrateStudPlans(tx *sqlx.Tx) error {
 	var err error
 	_, err = tx.Exec(`--sql
-		DELETE FROM webapp.degree_plans WHERE TRUE;
-		INSERT INTO webapp.degree_plans (
+		DELETE FROM webapp.degree_plan_courses WHERE TRUE;
+		INSERT INTO webapp.degree_plan_courses (
 			plan_code,
 			lang,
 			course_code,
