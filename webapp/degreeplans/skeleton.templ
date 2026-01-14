@@ -1,0 +1,164 @@
+package degreeplans
+
+import (
+    "github.com/michalhercik/RecSIS/language"
+
+    "fmt"
+    "math/rand"
+)
+
+templ Skeleton(lang language.Language) {
+    {{
+        const seed = 21
+        rnd := rand.New(rand.NewSource(int64(seed)))
+    }}
+    <div
+        id="degreeplans-skeleton"
+        class="container mt-3 placeholder-glow"
+        x-data
+        x-intersect.once={ fmt.Sprintf("document.title = '%s | RecSIS'", texts[lang].pageTitle) }>
+        <div class="form-control search-input">
+            @placeholder(4)
+        </div>
+        <div class="row mx-0">
+            <div id="filter-section-skeleton" class="col-12 col-sm px-1 py-3 p-sm-3">
+                @skeletonFilters()
+            </div>
+            <div class="col-12 col-sm pt-0 pt-sm-4 px-0">
+                @skeletonRows(rnd)
+            </div>
+        </div>
+    </div>
+}
+
+templ skeletonFilters() {
+    <div>
+        <div
+            x-data="{ showFilters: window.innerWidth > 575.5 }"
+            @resize.window="showFilters = window.innerWidth > 575.5"
+        >
+            <div>
+                <div x-cloak x-show="showFilters">
+                    <div class="px-4 px-sm-0 pb-4 pb-sm-0">
+                        @skeletonInternalFilters()
+                    </div>
+                </div>
+                <div class="d-flex d-sm-none justify-content-center py-2 position-sticky bottom-0 bg-filters-buttons rounded-5 shadow-sm">
+                    <button class="btn d-inline my-2 placeholder bg-secondary col-4" style="width: 171px;"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+templ skeletonInternalFilters() {
+    <p class="form-label fw-semibold mb-0 mt-2" style="height: 32px;">
+        @placeholder(4)
+    </p>
+    <div>
+        @placeholder(1)&nbsp;
+        @placeholder(10)&nbsp;
+        <span class="placeholder bg-white col-1"></span>&nbsp;
+        @placeholder(5)&nbsp;
+        @placeholder(4)&nbsp;
+        <span class="placeholder bg-white col-1"></span>&nbsp;
+        @placeholder(4)
+    </div>
+    @skeletonFilterCategory(2, 4, []int{10, 9}, false)
+    @skeletonFilterCategory(6, 0, []int{5, 5, 4}, false)
+    @skeletonFilterCategory(5, 0, []int{3, 2, 3, 4, 3, 3}, true)
+    @skeletonFilterCategory(3, 4, []int{5, 2}, false)
+    @skeletonFilterCategory(3, 4, []int{5, 4, 5}, true)
+    @skeletonFilterCategory(3, 3, []int{5, 4, 5}, true)
+    @skeletonFilterCategory(3, 2, []int{8, 9}, true)
+    @skeletonFilterCategory(2, 4, []int{7, 5, 5, 4}, true)
+    @skeletonFilterCategory(5, 5, []int{3, 3, 5, 3}, false)
+    @skeletonFilterCategory(4, 0, []int{6, 6, 7, 6, 7, 6}, true)
+}
+
+templ skeletonFilterCategory(name1, name2 int, values []int, hide bool) {
+    <p class="form-label fw-semibold mb-0 mt-2" style="height: 32px;">
+        @placeholder(name1)&nbsp;
+        @placeholder(name2)
+    </p>
+    for _, value := range values {
+        <div>
+            @placeholder(1)&nbsp;
+            @placeholder(value)
+        </div>
+    }
+    if hide {
+        @placeholder(4)
+    }
+}
+
+templ skeletonRows(rnd *rand.Rand) {
+    <table class="table table-sm degree-plan-results-table">
+        <thead>
+            <tr>
+                // code
+                <th class="d-none d-md-table-cell">@placeholder(6)</th>
+                // title
+                <th class="d-none d-md-table-cell">@placeholder(2)</th>
+                // study type
+                <th class="text-end pe-3 d-none d-lg-table-cell">@placeholder(9)</th>
+                // validity
+                <th class="d-none d-lg-table-cell">@placeholder(10)</th>
+                <th class="d-none d-lg-table-cell"></th>
+                <th class="d-none d-lg-table-cell"></th>
+                // add for compare button
+                // TODO: implement
+            </tr>
+        </thead>
+        <tbody>
+            for i := 0; i < 15; i++ {
+                <tr>
+                    // code
+                    <td class="d-none d-md-table-cell">
+                        @placeholder(6 + rnd.Intn(4))
+                    </td>
+                    // title
+                    <td>
+                        <span class="d-none d-md-inline">
+                            @placeholder(4 + rnd.Intn(6))
+                        </span>
+                        <div class="d-flex flex-column d-md-none">
+                            <div class="d-flex justify-content-between align-items-center small lh-1">
+                                <span class="text-muted dp-mobile-code">
+                                    @placeholder(11)
+                                </span>
+                                <span class="text-muted dp-mobile-semester">
+                                    @placeholder(7)
+                                </span>
+                                <span class="text-muted dp-mobile-credits">
+                                    @placeholder(10)
+                                </span>
+                            </div>
+                            <span class="fw-semibold text-truncate">
+                                @placeholder(6 + rnd.Intn(4))
+                            </span>
+                        </div>
+                    </td>
+                    // study type
+                    <td class="text-end pe-3 d-none d-lg-table-cell">@placeholder(9)</td>
+                    // valid from
+                    <td class="text-center px-0 d-none d-lg-table-cell">@placeholder(10)</td>
+                    // dash
+                    <td class="text-center px-0 d-none d-lg-table-cell"></td>
+                    // valid to
+                    <td class="text-center px-0 d-none d-lg-table-cell">@placeholder(10)</td>
+                    // add for compare button
+                    // TODO: implement
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+templ placeholder(size int) {
+    <span class={ fmt.Sprintf("placeholder bg-secondary col-%d", size) }></span>
+}
+
+templ placeholderAbsolute(width int) {
+    <span class="placeholder bg-secondary" { templ.Attributes{"style": fmt.Sprintf("width: %dpx;",  width) }... }></span>
+}

@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -143,7 +142,7 @@ func (ep *extractPovinn) selectData(from *sqlx.DB, to *sqlx.DB) error {
 			PURL
 		FROM POVINN
 		WHERE TO_CHAR(sysdate, 'YYYY') BETWEEN VPLATIOD AND VPLATIDO
-		AND PFAKULTA = '11320'
+			AND PFAKULTA = '11320'
 	`
 	err := from.Select(&ep.data, query)
 	if err != nil {
@@ -772,14 +771,15 @@ func (ep *extractPovinn2Jazyk) insertData(to *sqlx.DB) error {
 	return nil
 }
 
-// POVINN2JAZYK
+// PREQ
 // ============================================================================================================
 
 type extractPreq struct {
 	data []struct {
-		POVINN    string `db:"POVINN"`
-		REQTYP    string `db:"REQTYP"`
-		REQPOVINN string `db:"REQPOVINN"`
+		POVINN    string         `db:"POVINN"`
+		REQTYP    string         `db:"REQTYP"`
+		REQPOVINN string         `db:"REQPOVINN"`
+		PSKUPINA  sql.NullString `db:"PSKUPINA"`
 	}
 }
 
@@ -792,13 +792,17 @@ func (ep *extractPreq) selectData(from *sqlx.DB, to *sqlx.DB) error {
 	var err error
 	query = `
 		SELECT
-			PREQ.POVINN, PREQ.REQTYP, REQPOVINN
+			PREQ.POVINN, PREQ.REQTYP, REQPOVINN,
+			CASE -- TODO: should be 'povinn.pskupina' but we don't have the column yet
+				WHEN PREQ.REQPOVINN LIKE '%#%' THEN 'M'
+				ELSE null
+			END AS PSKUPINA
 		FROM PREQ
 		LEFT JOIN POVINN ON PREQ.POVINN = POVINN.POVINN
+			AND POVINN.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PREQ.POVINN)
+			AND POVINN.PFAKULTA='11320'
+			AND POVINN.PVYUCOVAN <> 'Z' -- exclude non-teaching courses
 		WHERE to_char(sysdate, 'YYYY') BETWEEN PREQ.REQOD AND PREQ.REQDO
-		AND TO_CHAR(sysdate, 'YYYY') BETWEEN POVINN.VPLATIOD AND POVINN.VPLATIDO
-		AND POVINN.PFAKULTA='11320'
-		AND (POVINN.PVYUCOVAN = 'V' OR POVINN.PVYUCOVAN = 'N' OR POVINN.PVYUCOVAN = 'P')
 	`
 	err = from.Select(&ep.data, query)
 	if err != nil {
@@ -815,17 +819,83 @@ func (ep *extractPreq) insertData(to *sqlx.DB) error {
 		CREATE TABLE preq (
 			POVINN VARCHAR(10),
 			REQTYP VARCHAR(1),
-			REQPOVINN VARCHAR(10)
+			REQPOVINN VARCHAR(10),
+			PSKUPINA VARCHAR(1)
 		)
 	`
 	insert := `
 		INSERT INTO preq (
-			POVINN, REQTYP, REQPOVINN
-		) VALUES(
-			:POVINN, :REQTYP, :REQPOVINN
+			POVINN, REQTYP, REQPOVINN, PSKUPINA
+		)
+		( SELECT * FROM unnest(
+	 		$1::text[], $2::text[], $3::text[], $4::text[]
+	 	))
+	`
+	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// PSKUP
+// ============================================================================================================
+
+type extractPskup struct {
+	data []struct {
+		POVINN   string         `db:"POVINN"`
+		PSPOVINN string         `db:"PSPOVINN"`
+		PSKUPINA sql.NullString `db:"PSKUPINA"`
+	}
+}
+
+func (ep *extractPskup) name() string {
+	return "PSKUP"
+}
+
+func (ep *extractPskup) selectData(from *sqlx.DB, to *sqlx.DB) error {
+	var query string
+	var err error
+	query = `
+		SELECT
+			PSKUP.POVINN, PSKUP.PSPOVINN,
+			CASE -- TODO: should be 'povinn.pskupina' but we don't have the column yet
+				WHEN PSKUP.PSPOVINN LIKE '%#%' THEN 'M'
+				ELSE null
+			END AS PSKUPINA
+		FROM PSKUP
+		LEFT JOIN POVINN ON PSKUP.POVINN = POVINN.POVINN
+			AND POVINN.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PSKUP.POVINN)
+			AND POVINN.PFAKULTA='11320'
+		WHERE to_char(sysdate, 'YYYY') BETWEEN PSOD AND PSDO
+	`
+	err = from.Select(&ep.data, query)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (ep *extractPskup) insertData(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS pskup
+	`
+	create := `
+		CREATE TABLE pskup (
+			POVINN VARCHAR(10),
+			PSPOVINN VARCHAR(10),
+			PSKUPINA VARCHAR(1)
 		)
 	`
-	err := simpleInsert(to, drop, create, insert, ep.data)
+	insert := `
+		INSERT INTO pskup (
+			POVINN, PSPOVINN, PSKUPINA
+		)
+		( SELECT * FROM unnest(
+	 		$1::text[], $2::text[], $3::text[]
+	 	))
+	`
+	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
 	if err != nil {
 		return err
 	}
@@ -1278,44 +1348,61 @@ func (ep *Ciselnik) insertData(to *sqlx.DB) error {
 
 // STUDPLAN
 
-type studplanRecord struct {
-	Code               string         `db:"CODE"`
-	NameCz             string         `db:"NAME_CZ"`
-	NameEn             sql.NullString `db:"NAME_EN"`
-	SubjectStatus      sql.NullString `db:"SUBJECT_STATUS"`
-	Department         sql.NullString `db:"DEPARTMENT"`
-	Faculty            sql.NullString `db:"FACULTY"`
-	SemesterPrimary    sql.NullString `db:"SEMESTER_PRIMARY"`
-	SemesterCount      sql.NullInt64  `db:"SEMESTER_COUNT"`
-	SubjectType        sql.NullString `db:"SUBJECT_TYPE"`
-	WorkloadPrimary1   sql.NullInt64  `db:"WORKLOAD_PRIMARY1"`
-	WorkloadSecondary1 sql.NullInt64  `db:"WORKLOAD_SECONDARY1"`
-	WorkloadPrimary2   sql.NullInt64  `db:"WORKLOAD_PRIMARY2"`
-	WorkloadSecondary2 sql.NullInt64  `db:"WORKLOAD_SECONDARY2"`
-	WorkloadTimeUnit   sql.NullString `db:"WORKLOAD_TIME_UNIT"`
-	Credits            sql.NullInt64  `db:"CREDITS"`
-	Interchangeability sql.NullString `db:"INTERCHANGEABILITY"`
-	BlocSubjectCode    sql.NullString `db:"BLOC_SUBJECT_CODE"`
-	BlocType           sql.NullString `db:"BLOC_TYPE"`
-	BlocGrade          sql.NullString `db:"BLOC_GRADE"`
-	BlocLimit          sql.NullInt64  `db:"BLOC_LIMIT"`
-	BlocNameCs         sql.NullString `db:"BLOC_NAME_CZ"`
-	BlocNameEn         sql.NullString `db:"BLOC_NAME_EN"`
-	PlanCode           string         `db:"PLAN_CODE"`
-	PlanYear           int            `db:"PLAN_YEAR"`
-	Seq                sql.NullString `db:"SEQ"`
-}
-
-type studplanListRecord struct {
-	StudiumSplan string         `db:"SPLAN"`
-	OborNazev    sql.NullString `db:"NAZEV"`
-	OborKod      sql.NullString `db:"KOD"`
-	DruhZkratka  sql.NullString `db:"ZKRATKA"`
-}
-
 type extractStudPlan struct {
-	data        []studplanRecord
-	listOfPlans []studplanListRecord
+	data     []studplanRecord
+	metadata []studplanMetadataRecord
+	fields   []studOborRecord
+}
+
+type studplanRecord struct {
+	Code                string         `db:"CODE"`
+	NameCz              string         `db:"NAME_CZ"`
+	NameEn              sql.NullString `db:"NAME_EN"`
+	SubjectStatus       sql.NullString `db:"SUBJECT_STATUS"`
+	Department          sql.NullString `db:"DEPARTMENT"`
+	Faculty             sql.NullString `db:"FACULTY"`
+	SemesterPrimary     sql.NullString `db:"SEMESTER_PRIMARY"`
+	SemesterCount       sql.NullInt64  `db:"SEMESTER_COUNT"`
+	SubjectType         sql.NullString `db:"SUBJECT_TYPE"`
+	WorkloadPrimary1    sql.NullInt64  `db:"WORKLOAD_PRIMARY1"`
+	WorkloadSecondary1  sql.NullInt64  `db:"WORKLOAD_SECONDARY1"`
+	WorkloadPrimary2    sql.NullInt64  `db:"WORKLOAD_PRIMARY2"`
+	WorkloadSecondary2  sql.NullInt64  `db:"WORKLOAD_SECONDARY2"`
+	WorkloadTimeUnit    sql.NullString `db:"WORKLOAD_TIME_UNIT"`
+	Credits             sql.NullInt64  `db:"CREDITS"`
+	Interchangeability  sql.NullString `db:"INTERCHANGEABILITY"`
+	RecommendedYearFrom sql.NullInt64  `db:"BLOC_GRADE_FROM"`
+	RecommendedYearTo   sql.NullInt64  `db:"BLOC_GRADE_TO"`
+	RecommendedSemester sql.NullInt64  `db:"BLOC_SEMESTER"`
+	BlocSubjectCode     sql.NullString `db:"BLOC_SUBJECT_CODE"`
+	BlocType            sql.NullString `db:"BLOC_TYPE"`
+	BlocLimit           sql.NullInt64  `db:"BLOC_LIMIT"`
+	BlocNameCs          sql.NullString `db:"BLOC_NAME_CZ"`
+	BlocNameEn          sql.NullString `db:"BLOC_NAME_EN"`
+	PlanCode            string         `db:"PLAN_CODE"`
+	Seq                 sql.NullString `db:"SEQ"`
+}
+
+type studplanMetadataRecord struct {
+	Code      string         `db:"KOD"`
+	NameCz    string         `db:"NAZEV"`
+	NameEn    sql.NullString `db:"ANAZEV"`
+	ValidFrom int            `db:"LOD"`
+	ValidTo   int            `db:"LDO"`
+	Faculty   string         `db:"FAKULTA"`
+	Section   string         `db:"SEKCE"`
+	FieldCode string         `db:"OBOR"`
+	StudyType string         `db:"DRUH"`
+}
+
+type studOborRecord struct {
+	Code       string `db:"KOD"`
+	NameCz     string `db:"NAZEV"`
+	NameEn     string `db:"ANAZEV"`
+	Language   string `db:"JAZYK"`
+	SIMSCode   string `db:"SIMS_KOD"`
+	SIMSNameCz string `db:"SIMS_NAZEV_CZ"`
+	SIMSNameEn string `db:"SIMS_NAZEV_EN"`
 }
 
 func (ep *extractStudPlan) name() string {
@@ -1324,20 +1411,40 @@ func (ep *extractStudPlan) name() string {
 
 func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
 	var err error
-	selectListQuery := `
-		SELECT DISTINCT 
-			STUDIUM.SPLAN, OBOR.NAZEV, OBOR.KOD, DRUH.ZKRATKA 
-		FROM STUDIUM
-		LEFT JOIN OBOR ON OBOR.KOD = STUDIUM.SOBOR
-		LEFT JOIN DRUH ON DRUH.KOD = STUDIUM.SDRUH
-		WHERE SROKP >= to_char(sysdate, 'YYYY') - 10
-		AND SPLAN IS NOT NULL
+	selectMetadataQuery := `
+		SELECT
+			KOD,
+			NAZEV,
+			COALESCE(ANAZEV, NAZEV) AS ANAZEV, 
+			LOD,
+			LDO,
+			FAKULTA,
+			'N' || SUBSTR(OBOR,1,1) AS SEKCE,
+			OBOR,
+			DRUH
+		FROM PLANY
+		WHERE OBOR IN (SELECT OBOR FROM FDOPARAM WHERE SPLATI IS NOT NULL)
+			AND FAKULTA = '11320'
+			AND DRUH IN ('B', 'N', 'M')
+			AND OBOR NOT LIKE '__U%'
+	`
+	selectFieldsQuery := `
+		SELECT
+			O.KOD AS KOD,
+			O.NAZEV AS NAZEV,
+			COALESCE(O.ANAZEV, O.NAZEV) AS ANAZEV,
+			O.JAZYK AS JAZYK,
+			N.KOD AS SIMS_KOD,
+			N.NAZEV AS SIMS_NAZEV_CZ,
+			COALESCE(N.ANAZEV, N.NAZEV) AS SIMS_NAZEV_EN
+		FROM OBOR O LEFT JOIN NOBOR N ON N.KOD = O.NOBOR1
+		WHERE O.KOD IN ('%s')
 	`
 	selectPlanQuery := `
 		SELECT 
 			CODE,
 			NAME_CZ,
-			NAME_EN,
+			COALESCE(NAME_EN, NAME_CZ) AS NAME_EN,
 			SUBJECT_STATUS,
 			DEPARTMENT,
 			FACULTY,
@@ -1351,39 +1458,58 @@ func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
 			WORKLOAD_TIME_UNIT,
 			CREDITS,
 			INTERCHANGEABILITY,
+			CASE
+				WHEN BLOC_GRADE = '0' THEN NULL
+				WHEN INSTR(BLOC_GRADE, ',') > 0 THEN CAST(SUBSTR(BLOC_GRADE, 1, INSTR(BLOC_GRADE, ',') - 1) AS INT)
+				ELSE CAST(BLOC_GRADE AS INT)
+			END AS BLOC_GRADE_FROM,
+			CASE
+				WHEN BLOC_GRADE = '0' THEN NULL
+				WHEN INSTR(BLOC_GRADE, ',') > 0 THEN CAST(SUBSTR(BLOC_GRADE, INSTR(BLOC_GRADE, ',') + 1) AS INT)
+				ELSE CAST(BLOC_GRADE AS INT)
+			END AS BLOC_GRADE_TO,
+			CAST(BLOC_SEMESTER AS INT) AS BLOC_SEMESTER,
 			BLOC_SUBJECT_CODE,
 			BLOC_TYPE,
-			BLOC_GRADE,
 			BLOC_LIMIT,
 			BLOC_NAME_CZ,
-			BLOC_NAME_EN,
+			COALESCE(BLOC_NAME_EN, BLOC_NAME_CZ) AS BLOC_NAME_EN,
 			PLAN_CODE,
-			PLAN_YEAR,
 			SEQ
-		FROM TABLE(study_plan.stud_plan('%s', %d))
+		FROM TABLE(study_plan.stud_plan('%s', to_char(sysdate, 'YYYY')))
 	`
-	err = from.Select(&ep.listOfPlans, selectListQuery)
+	err = from.Select(&ep.metadata, selectMetadataQuery)
 	if err != nil {
-		return fmt.Errorf("selectData: list of codes: %w", err)
+		return fmt.Errorf("selectMetadata: %w", err)
 	}
-	now := time.Now()
-	var plan []studplanRecord
-	for _, planInfo := range ep.listOfPlans {
-		for i := range 10 {
-			err = from.Select(&plan, fmt.Sprintf(selectPlanQuery, planInfo.StudiumSplan, now.Year()-i))
-			if err != nil {
-				return fmt.Errorf("selectData: plan: %s, year: %d: %w", planInfo.StudiumSplan, now.Year()-i, err)
-			}
-			ep.data = append(ep.data, plan...)
+	fieldSet := make(map[string]struct{})
+	var fields []string
+	for _, planMetadata := range ep.metadata {
+		if _, exists := fieldSet[planMetadata.FieldCode]; exists {
+			continue
 		}
+		fieldSet[planMetadata.FieldCode] = struct{}{}
+		fields = append(fields, planMetadata.FieldCode)
+	}
+	err = from.Select(&ep.fields, fmt.Sprintf(selectFieldsQuery, strings.Join(fields, "','")))
+	var plan []studplanRecord
+	for _, planMetadata := range ep.metadata {
+		err = from.Select(&plan, fmt.Sprintf(selectPlanQuery, planMetadata.Code))
+		if err != nil {
+			return fmt.Errorf("selectData: plan: %s, %w", planMetadata.Code, err)
+		}
+		ep.data = append(ep.data, plan...)
 	}
 	return nil
 }
 
 func (ep *extractStudPlan) insertData(to *sqlx.DB) error {
 	var err error
-	if err = ep.insertStudPlanList(to); err != nil {
-		return fmt.Errorf("insertStudPlanList: %w", err)
+	if err = ep.insertStudPlanMetadata(to); err != nil {
+		return fmt.Errorf("insertStudPlanMetadata: %w", err)
+	}
+	if err = ep.insertFields(to); err != nil {
+		return fmt.Errorf("insertFields: %w", err)
 	}
 	if err = ep.insertStudPlan(to); err != nil {
 		return fmt.Errorf("insertStudPlan: %w", err)
@@ -1391,26 +1517,68 @@ func (ep *extractStudPlan) insertData(to *sqlx.DB) error {
 	return nil
 }
 
-func (ep *extractStudPlan) insertStudPlanList(to *sqlx.DB) error {
+func (ep *extractStudPlan) insertStudPlanMetadata(to *sqlx.DB) error {
 	drop := `--sql
-		DROP TABLE IF EXISTS stud_plan_list
+		DROP TABLE IF EXISTS stud_plan_metadata
 	`
 	create := `
-		CREATE TABLE stud_plan_list (
-			splan VARCHAR(15),
-			nazev VARCHAR(250),
-			kod VARCHAR(12),
-			zkratka VARCHAR(10)
+		CREATE TABLE stud_plan_metadata (
+			code VARCHAR(15),
+			name_cz VARCHAR(250),
+			name_en VARCHAR(250),
+			valid_from INT,
+			valid_to INT,
+			faculty VARCHAR(5),
+			section VARCHAR(2),
+			field_code VARCHAR(20),
+			study_type VARCHAR(1)
 		)
 	`
 	insert := `
-		INSERT INTO stud_plan_list (
-			splan, nazev, kod, zkratka	
+		INSERT INTO stud_plan_metadata (
+			code, name_cz, name_en,
+			valid_from, valid_to,
+			faculty, section,
+			field_code, study_type
 		) VALUES (
-			:SPLAN, :NAZEV, :KOD, :ZKRATKA
+			:KOD, :NAZEV, :ANAZEV,
+			:LOD, :LDO,
+			:FAKULTA, :SEKCE,
+			:OBOR, :DRUH
 		)
 	`
-	err := simpleInsert(to, drop, create, insert, ep.listOfPlans)
+	err := simpleInsert(to, drop, create, insert, ep.metadata)
+	if err != nil {
+		return fmt.Errorf("insertData: %w", err)
+	}
+	return nil
+}
+
+func (ep *extractStudPlan) insertFields(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS stud_plan_obor
+	`
+	create := `
+		CREATE TABLE stud_plan_obor (
+			code VARCHAR(10),
+			name_cz VARCHAR(250),
+			name_en VARCHAR(250),
+			teaching_lang CHAR(3),
+			sims_code VARCHAR(20),
+			sims_name_cz VARCHAR(250),
+			sims_name_en VARCHAR(250)
+		)
+	`
+	insert := `
+		INSERT INTO stud_plan_obor (
+			code, name_cz, name_en, teaching_lang,
+			sims_code, sims_name_cz, sims_name_en
+		) VALUES (
+			:KOD, :NAZEV, :ANAZEV, :JAZYK,
+			:SIMS_KOD, :SIMS_NAZEV_CZ, :SIMS_NAZEV_EN
+		)
+	`
+	err := simpleInsert(to, drop, create, insert, ep.fields)
 	if err != nil {
 		return fmt.Errorf("insertData: %w", err)
 	}
@@ -1439,14 +1607,15 @@ func (ep *extractStudPlan) insertStudPlan(to *sqlx.DB) error {
 			workload_time_unit VARCHAR(6),
 			credits INT,
 			interchangeability VARCHAR(10),
+			recommended_year_from INT,
+			recommended_year_to INT,
+			recommended_semester INT,
 			bloc_subject_code VARCHAR(20),
 			bloc_type VARCHAR(1),
-			bloc_grade VARCHAR(50),
 			bloc_limit INT,
 			bloc_name_cz VARCHAR(250),
 			bloc_name_en VARCHAR(250),
 			plan_code VARCHAR(15),
-			plan_year INT,
 			seq VARCHAR(50)
 		)
 	`
@@ -1457,9 +1626,9 @@ func (ep *extractStudPlan) insertStudPlan(to *sqlx.DB) error {
 			semester_primary, semester_count, subject_type,
 			workload_primary1, workload_secondary1, workload_primary2, workload_secondary2, 
 			workload_time_unit, credits,
-			interchangeability,
-			bloc_subject_code, bloc_type, bloc_grade, bloc_limit, bloc_name_cz, bloc_name_en,
-			plan_code, plan_year,
+			interchangeability, recommended_year_from, recommended_year_to, recommended_semester,
+			bloc_subject_code, bloc_type, bloc_limit, bloc_name_cz, bloc_name_en,
+			plan_code,
 			seq
 		) SELECT * FROM unnest(
 			$1::text[], $2::text[], $3::text[], $4::text[],
@@ -1467,10 +1636,10 @@ func (ep *extractStudPlan) insertStudPlan(to *sqlx.DB) error {
 			$7::text[], $8::int[], $9::text[],
 			$10::int[], $11::int[], $12::int[], $13::int[],
 			$14::text[], $15::int[],
-			$16::text[],
-			$17::text[], $18::text[], $19::text[], $20::int[], $21::text[], $22::text[],
-			$23::text[], $24::int[],
-			$25::text[]
+			$16::text[], $17::int[], $18::int[], $19::int[],
+			$20::text[], $21::text[], $22::int[], $23::text[], $24::text[],
+			$25::text[],
+			$26::text[]
 		)
 	`
 	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))

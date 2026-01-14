@@ -31,6 +31,8 @@ type text struct {
 	corequisites            string
 	interchange             string
 	incompatible            string
+	and                     string
+	or                      string
 	classes                 string
 	classification          string
 	guarantors              string
@@ -57,6 +59,7 @@ type text struct {
 	errCourseNotFoundSuf         string
 	errCannotGetCourse           string
 	errCannotGetCourseRatings    string
+	errCannotGetRequisites       string
 	errRatingMustBeInt           string
 	errInvalidRating0to10        string
 	errInvalidRating0or1         string
@@ -106,6 +109,8 @@ var texts = map[language.Language]text{
 		corequisites:            "Korekvizity",
 		interchange:             "Záměnnost",
 		incompatible:            "Neslučitelnost",
+		and:                     "a",
+		or:                      "nebo",
 		classes:                 "Třída(y)",
 		classification:          "Klasifikace",
 		guarantors:              "Garant(i)",
@@ -132,6 +137,7 @@ var texts = map[language.Language]text{
 		errCourseNotFoundSuf:         " nebyl nalezen",
 		errCannotGetCourse:           "Nebylo možné získat předmět z databáze",
 		errCannotGetCourseRatings:    "Nebylo možné získat hodnocení předmětu z databáze",
+		errCannotGetRequisites:       "Nebylo možné získat rekvizity z databáze",
 		errRatingMustBeInt:           "Hodnocení musí být celé číslo",
 		errInvalidRating0to10:        "Hodnocení musí být v rozsahu 0-10",
 		errInvalidRating0or1:         "Hodnocení musí být 0 nebo 1",
@@ -170,6 +176,8 @@ var texts = map[language.Language]text{
 		corequisites:            "Co-requisites",
 		interchange:             "Interchangeability",
 		incompatible:            "Incompatibility",
+		and:                     "and",
+		or:                      "or",
 		classes:                 "Class(es)",
 		classification:          "Classification",
 		guarantors:              "Guarantor(s)",
@@ -196,6 +204,7 @@ var texts = map[language.Language]text{
 		errCourseNotFoundSuf:         " was not found",
 		errCannotGetCourse:           "Unable to retrieve course from database",
 		errCannotGetCourseRatings:    "Unable to retrieve course ratings from database",
+		errCannotGetRequisites:       "Unable to retrieve requisites from database",
 		errRatingMustBeInt:           "Rating must be an integer",
 		errInvalidRating0to10:        "Rating must be between 0 and 10",
 		errInvalidRating0or1:         "Rating must be 0 or 1",

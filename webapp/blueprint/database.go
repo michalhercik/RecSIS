@@ -24,6 +24,7 @@ type DBManager struct {
 
 type dbBlueprintRecord struct {
 	dbds.Course
+	requisites []dbds.Requisite
 	blueprintRecordPosition
 }
 
@@ -61,6 +62,18 @@ func (m DBManager) blueprint(userID string, lang language.Language) (*blueprintP
 			t.errCannotGetBlueprint,
 		)
 	}
+
+	// Fetch requisites for each course
+	for i := range records {
+		if err := tx.Select(&records[i].requisites, sqlquery.SelectRequisites, records[i].Code); err != nil {
+			return nil, errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.SelectRequisites: %w", err), errorx.P("course", records[i].Code)),
+				http.StatusInternalServerError,
+				t.errCannotGetBlueprint,
+			)
+		}
+	}
+
 	if err := tx.Commit(); err != nil {
 		return nil, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("tx.Commit: %w", err)),
@@ -149,6 +162,9 @@ func intoCourse(from *dbBlueprintRecord) course {
 		examType:           from.ExamType,
 		credits:            from.Credits,
 		guarantors:         intoTeacherSlice(from.Guarantors),
+		prerequisites:      intoRequisiteTree(from.requisites, from.Code, "P", prerequisiteCondition),
+		corequisites:       intoRequisiteTree(from.requisites, from.Code, "K", corequisiteCondition),
+		incompatibles:      intoRequisiteTree(from.requisites, from.Code, "N", incompatibleCondition),
 	}
 }
 
@@ -164,6 +180,40 @@ func intoTeacherSlice(from []dbds.Teacher) []teacher {
 		}
 	}
 	return teachers
+}
+
+func intoRequisiteTree(from []dbds.Requisite, rootCourse string, reqType string, condition requisiteCondition) *requisiteTree {
+	if from == nil {
+		return nil
+	}
+
+	filteredByType := []dbds.Requisite{}
+	for _, req := range from {
+		if req.Type == reqType {
+			filteredByType = append(filteredByType, req)
+		}
+	}
+
+	nodes := map[string]*requisiteNode{}
+	getNode := func(course string) *requisiteNode {
+		if _, ok := nodes[course]; !ok {
+			nodes[course] = &requisiteNode{courseCode: course}
+		}
+		return nodes[course]
+	}
+
+	var root *requisiteNode
+	for _, r := range filteredByType {
+		parentNode := getNode(r.Parent)
+		childNode := getNode(r.Child)
+		childNode.groupType = r.Group
+		parentNode.children = append(parentNode.children, childNode)
+		if r.Parent == rootCourse {
+			root = parentNode
+		}
+	}
+
+	return &requisiteTree{root: root, condition: condition}
 }
 
 func (m DBManager) moveCourses(userID string, lang language.Language, year int, semester semesterAssignment, position int, courses ...int) error {

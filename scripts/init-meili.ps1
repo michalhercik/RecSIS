@@ -1,3 +1,7 @@
+###############################################################
+# Course index settings
+###############################################################
+
 $filterable = @(
     "code",
     "start_semester",
@@ -20,7 +24,7 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settin
     -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
     -ContentType "application/json" `
     -Body ($filterable | ConvertTo-Json)
-echo "$($response.StatusCode) $($response.Content)"
+Write-Output "$($response.StatusCode) $($response.Content)"
 
 $response = Invoke-RestMethod -Uri "http://localhost:7700/indexes/courses/settings/embedders" `
     -Method Patch `
@@ -39,7 +43,7 @@ $response = Invoke-RestMethod -Uri "http://localhost:7700/indexes/courses/settin
             "documentTemplate": "University course with title {{doc.title.en}} {% if doc.annotation != nil %} {{doc.annotation[0]}} {% endif %}"
         }
     }'
-echo $response
+Write-Output $response
 # "documentTemplate": "University course with title {{doc.title.cs}} guaranted by {% for g in doc.guarantors %} {{ g.last_name }} {% endfor %} has following syllabus: {{doc.syllabus[0]}}"
 
 $searchable = @(
@@ -59,7 +63,7 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settin
     -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
     -ContentType "application/json" `
     -Body ($searchable | ConvertTo-Json)
-echo "$($response.StatusCode) $($response.Content)"
+Write-Output "$($response.StatusCode) $($response.Content)"
 
 $dict = @("C#", "c#", "C++", "c++")
 $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settings/dictionary" `
@@ -67,7 +71,11 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settin
     -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
     -ContentType "application/json" `
     -Body ($dict | ConvertTo-Json)
-echo "$($response.StatusCode) $($response.Content)"
+Write-Output "$($response.StatusCode) $($response.Content)"
+
+###############################################################
+# Survey index settings
+###############################################################
 
 $filterable = @(
     "teacher.id",
@@ -83,7 +91,7 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/setting
     -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
     -ContentType "application/json" `
     -Body ($filterable | ConvertTo-Json)
-echo "$($response.StatusCode) $($response.Content)"
+Write-Output "$($response.StatusCode) $($response.Content)"
 
 $sortable = @(
     "academic_year",
@@ -94,4 +102,34 @@ $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/survey/setting
     -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
     -ContentType "application/json" `
     -Body ($sortable | ConvertTo-Json)
-echo "$($response.StatusCode) $($response.Content)"
+Write-Output "$($response.StatusCode) $($response.Content)"
+
+###############################################################
+# Degree plan index settings
+###############################################################
+
+$searchable = @(
+    "code",
+    "title"
+)
+$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/degree-plans/settings/searchable-attributes" `
+    -Method Put `
+    -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
+    -ContentType "application/json" `
+    -Body ($searchable | ConvertTo-Json)
+Write-Output "$($response.StatusCode) $($response.Content)"
+
+$filterable = @(
+    "faculty",
+    "section",
+    "field.code",
+    "teaching_lang",
+    "validity",
+    "study_type"
+)
+$response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/degree-plans/settings/filterable-attributes" `
+    -Method Put `
+    -Headers @{ "Authorization" = "Bearer $env:MEILI_MASTER_KEY" } `
+    -ContentType "application/json" `
+    -Body ($filterable | ConvertTo-Json)
+Write-Output "$($response.StatusCode) $($response.Content)"

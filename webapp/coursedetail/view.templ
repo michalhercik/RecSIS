@@ -146,7 +146,7 @@ templ basicInfo(course *course, t text) {
 		@infoRow(t.capacity) {
 			<span>{ course.capacity }</span>
 		}
-		@requisitesLinksRow(course.prerequisites, t.prerequisites, t)
+		@requisitesLinksRow(course.prerequisitesRoot, t.prerequisites, t)
 		if len(course.guarantors) > 0 {
 			@infoRow(t.guarantors) {
 				<table id="guarantors-table" class="mb-0">
@@ -538,9 +538,9 @@ templ detailInfo(course *course, t text) {
 							}
 						}
 					}
-					@requisitesLinksRow(course.corequisites, t.corequisites, t)
-					@requisitesLinksRow(course.interchange, t.interchange, t)
-					@requisitesLinksRow(course.incompatible, t.incompatible, t)
+					@requisitesLinksRow(course.corequisitesRoot, t.corequisites, t)
+					@requisitesLinksRow(course.interchangesRoot, t.interchange, t)
+					@requisitesLinksRow(course.incompatiblesRoot, t.incompatible, t)
 				</table>
 			</div>
 			// right column teachers
@@ -561,19 +561,55 @@ templ detailInfo(course *course, t text) {
 	}
 }
 
-templ requisitesLinksRow(req []requisite, title string, t text) {
-	if len(req) != 0 {
+templ requisitesLinksRow(reqRoot *requisiteNode, title string, t text) {
+	if reqRoot != nil {
 		@infoRow(title) {
-			for i, c := range req {
-				if i != len(req) - 1 {
-					@courseLink(c.courseCode, t)<span>, </span>
+			for i, req := range reqRoot.children {
+				if i == 0 {
+					@renderRequisite(req, t)
 				} else {
-					@courseLink(c.courseCode, t)
+					{", "}@renderRequisite(req, t)
 				}
 			}
 		}
 	}
 }
+
+templ renderRequisite(r *requisiteNode, t text) {
+	if !r.groupType.Valid {
+		@courseLink(r.courseCode, t)
+	} else {
+		// for correct formatting, there must not be any whitespaces
+		switch r.groupType.String {
+			case "M":
+				{ "{" }for i, child := range r.children {
+					if i == 0 {
+						@renderRequisite(child, t)
+					} else {
+						{ fmt.Sprintf(" %s ", t.or) }@renderRequisite(child, t)
+					}
+				}{ "}" }
+			case "V":
+				{ "{" }for i, child := range r.children {
+					if i == 0 {
+						@renderRequisite(child, t)
+					} else {
+						{ fmt.Sprintf(" %s ", t.and) }@renderRequisite(child, t)
+					}
+				}{ "}" }
+			default:
+				{ "{" }for i, child := range r.children {
+					if i == 0 {
+						@renderRequisite(child, t)
+					} else {
+						{ fmt.Sprintf(", ") }@renderRequisite(child, t)
+					}
+				}{ "}" }
+		}
+	}
+}
+
+
 
 templ courseLink(code string, t text) {
     <a
@@ -585,7 +621,7 @@ templ courseLink(code string, t text) {
 
 templ infoRow(title string) {
 	<tr>
-		<td class="text-end align-top fw-semibold p-2">{ title }</td>
+		<td class="text-end text-nowrap align-top fw-semibold p-2">{ title }</td>
 		<td class="border-bottom p-2">{ children... }</td>
 	</tr>
 }

@@ -509,13 +509,11 @@ func atoiSliceCourses(s []string, lang language.Language) ([]int, error) {
 func generateWarnings(bp *blueprintPage, t text) {
 	forCorrectAssignment(bp, t)
 	forDuplicateAssignments(bp, t)
+	forRequisites(bp, t)
 }
 
 func forCorrectAssignment(bp *blueprintPage, t text) {
-	for c := range bp.courses() {
-		if c.year == unassignedYear {
-			continue
-		}
+	for c := range bp.assignedCourses() {
 		if c.course.semester == teachingWinterOnly && c.semester == assignmentSummer {
 			c.course.warnings = append(c.course.warnings, t.wWrongAssignSummer)
 		}
@@ -526,33 +524,21 @@ func forCorrectAssignment(bp *blueprintPage, t text) {
 }
 
 func forDuplicateAssignments(bp *blueprintPage, t text) {
-	courseCodes := make(map[string][]courseLocation)
-	for c := range bp.courses() {
-		code := c.course.code
-		courseCodes[code] = append(courseCodes[code], courseLocation{
-			year:     c.year,
-			semester: c.semester,
-			course:   c.course,
-		})
-	}
+	assignedCourseCodes := buildAssignedCourseMap(bp)
 
-	for _, locations := range courseCodes {
+	for _, locations := range assignedCourseCodes {
 		if len(locations) > 1 {
 			warning := t.wAssignedMoreThanOnce + " ("
 			locationsStr := make([]string, len(locations))
 			for i, loc := range locations {
-				if loc.year == unassignedYear {
-					locationsStr[i] = t.unassigned
-				} else {
-					semester := ""
-					switch loc.semester {
-					case assignmentWinter:
-						semester = t.winter
-					case assignmentSummer:
-						semester = t.summer
-					}
-					locationsStr[i] = fmt.Sprintf("%s %s", t.yearStr(loc.year), semester)
+				semester := ""
+				switch loc.semester {
+				case assignmentWinter:
+					semester = t.winter
+				case assignmentSummer:
+					semester = t.summer
 				}
+				locationsStr[i] = fmt.Sprintf("%s %s", t.yearStr(loc.year), semester)
 			}
 			warning += strings.Join(locationsStr, ", ") + ")."
 			for _, loc := range locations {
@@ -560,6 +546,108 @@ func forDuplicateAssignments(bp *blueprintPage, t text) {
 			}
 		}
 	}
+}
+
+func forRequisites(bp *blueprintPage, t text) {
+	assignedCourseMap := buildAssignedCourseMap(bp)
+
+	// Check each course's requisites
+	for courseLoc := range bp.assignedCourses() {
+		course := courseLoc.course
+		requisites := course.prerequisites
+
+		if requisites.root != nil {
+			reqIsMet := areAllRequisitesMet(requisites.root, courseLoc, requisites.condition, assignedCourseMap)
+			if !reqIsMet {
+				course.warnings = append(course.warnings, t.wPrerequisiteNotMet)
+				// TODO: better warning message with details
+			}
+		}
+
+		requisites = course.corequisites
+		if requisites.root != nil {
+			reqIsMet := areAllRequisitesMet(requisites.root, courseLoc, requisites.condition, assignedCourseMap)
+			if !reqIsMet {
+				course.warnings = append(course.warnings, t.wCorequisiteNotMet)
+				// TODO: better warning message with details
+			}
+		}
+
+		requisites = course.incompatibles
+		if requisites.root != nil {
+			reqIsViolated := isAnyRequisiteMet(requisites.root, courseLoc, requisites.condition, assignedCourseMap)
+			if reqIsViolated {
+				course.warnings = append(course.warnings, t.wIncompatiblePresent)
+			}
+		}
+	}
+}
+
+func areAllRequisitesMet(course *requisiteNode, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
+	for _, reqNode := range course.children {
+		if reqNode.isGroup() {
+			switch reqNode.groupType.String {
+			case orGroup:
+				// At least one child requisite must be met
+				if !isAnyRequisiteMet(reqNode, originLoc, condition, courseMap) {
+					return false
+				}
+			case andGroup:
+				// All child requisites must be met
+				if !areAllRequisitesMet(reqNode, originLoc, condition, courseMap) {
+					return false
+				}
+			}
+		} else {
+			if !isCourseRequisiteMet(reqNode, originLoc, condition, courseMap) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func isAnyRequisiteMet(course *requisiteNode, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
+	for _, reqNode := range course.children {
+		if reqNode.isGroup() {
+			if reqNode.isDisjunction() {
+				// At least one child requisite must be met
+				if isAnyRequisiteMet(reqNode, originLoc, condition, courseMap) {
+					return true
+				}
+			} else if reqNode.isConjunction() {
+				// All child requisites must be met
+				if areAllRequisitesMet(reqNode, originLoc, condition, courseMap) {
+					return true
+				}
+			}
+		} else {
+			if isCourseRequisiteMet(reqNode, originLoc, condition, courseMap) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isCourseRequisiteMet(reqNode *requisiteNode, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
+	if locs, exists := courseMap[reqNode.courseCode]; exists {
+		for _, reqLoc := range locs {
+			if condition(originLoc, reqLoc) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Helper: Build map of assigned courses' codes to their locations
+func buildAssignedCourseMap(bp *blueprintPage) map[string][]courseLocation {
+	courseMap := make(map[string][]courseLocation)
+	for loc := range bp.assignedCourses() {
+		courseMap[loc.course.code] = append(courseMap[loc.course.code], loc)
+	}
+	return courseMap
 }
 
 //================================================================================

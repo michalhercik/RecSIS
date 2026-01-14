@@ -22,7 +22,8 @@ import (
 	"github.com/michalhercik/RecSIS/blueprint"
 	"github.com/michalhercik/RecSIS/coursedetail"
 	"github.com/michalhercik/RecSIS/courses"
-	"github.com/michalhercik/RecSIS/degreeplan"
+	"github.com/michalhercik/RecSIS/degreeplandetail"
+	"github.com/michalhercik/RecSIS/degreeplans"
 	"github.com/michalhercik/RecSIS/home"
 
 	"github.com/jmoiron/sqlx"
@@ -103,13 +104,14 @@ func setupHandler(conf config) http.Handler {
 	}
 
 	s := servers{
-		pageTempl:          pageTempl.Router(),
-		homeServer:         homeServer(db, conf, errorHandler, pageTempl, meiliClient),
-		blueprintServer:    blueprintServer(db, errorHandler, pageTempl),
-		coursedetailServer: courseDetailServer(db, errorHandler, pageTempl, meiliClient),
-		coursesServer:      coursesServer(db, errorHandler, pageTempl, meiliClient),
-		degreePlanServer:   degreePlanServer(db, errorHandler, pageTempl, meiliClient),
-		static:             http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "static"))),
+		pageTempl:              pageTempl.Router(),
+		homeServer:             homeServer(db, conf, errorHandler, pageTempl, meiliClient),
+		blueprintServer:        blueprintServer(db, errorHandler, pageTempl),
+		coursedetailServer:     courseDetailServer(db, errorHandler, pageTempl, meiliClient),
+		coursesServer:          coursesServer(db, errorHandler, pageTempl, meiliClient),
+		degreePlanDetailServer: degreePlanDetailServer(db, errorHandler, pageTempl),
+		degreePlansServer:      degreePlansServer(db, errorHandler, pageTempl, meiliClient),
+		static:                 http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "static"))),
 	}
 	handler := protectedHandler(s)
 	handler = authenticationHandler(handler, db, errorHandler, conf)
@@ -148,7 +150,7 @@ func pageTemplate(errorHandler page.Error, meiliClient meilisearch.ServiceManage
 			{Title: language.MakeLangString("Domů", "Home"), Path: homeRoot, Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
 			{Title: language.MakeLangString("Hledání", "Search"), Path: coursesRoot, Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
 			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: blueprintRoot, Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
-			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: degreePlanRoot, Skeleton: degreeplan.Skeleton, Indicator: "#degreeplan-skeleton"},
+			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: degreePlansRoot, Skeleton: degreeplans.Skeleton, Indicator: "#degreeplans-skeleton"},
 		},
 		Search: page.MeiliSearch{
 			Client: meiliClient,
@@ -243,27 +245,41 @@ func coursesServer(db *sqlx.DB, errorHandler courses.Error, pageTempl page.Page,
 	return courses.Router()
 }
 
-func degreePlanServer(db *sqlx.DB, errorHandler degreeplan.Error, pageTempl page.Page, meiliClient meilisearch.ServiceManager) http.Handler {
-	degreePlan := degreeplan.Server{
+func degreePlanDetailServer(db *sqlx.DB, errorHandler degreeplandetail.Error, pageTempl page.Page) http.Handler {
+	degreePlanDetail := degreeplandetail.Server{
 		Auth: cas.UserIDFromContext{},
 		BpBtn: bpbtn.AddWithTwoTemplComponents{
 			Add: bpbtn.Add{
 				DB:         db,
 				Templ:      bpbtn.PlusSignBtn,
-				HxPostBase: degreePlanRoot,
+				HxPostBase: degreePlanDetailRoot,
 			},
 			TemplSecond: bpbtn.PlusSignBtnChecked,
 		},
-		Data: degreeplan.DBManager{DB: db},
-		DPSearch: degreeplan.MeiliSearch{
-			Client:      meiliClient,
-			DegreePlans: meilisearch.IndexConfig{Uid: "degree-plans"},
-		},
-		Error: errorHandler,
-		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Data:                    degreeplandetail.DBManager{DB: db},
+		Error:                   errorHandler,
+		NoSavedPlanRedirectPath: degreePlansRoot,
+		Page:                    page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
-	degreePlan.Init()
-	return degreePlan.Router()
+	degreePlanDetail.Init()
+	return degreePlanDetail.Router()
+}
+
+func degreePlansServer(db *sqlx.DB, errorHandler degreeplans.Error, pageTempl page.Page, meiliClient meilisearch.ServiceManager) http.Handler {
+	degreePlans := degreeplans.Server{
+		Auth:    cas.UserIDFromContext{},
+		Data:    degreeplans.DBManager{DB: db},
+		Filters: filters.MakeFilters(db, degreeplans.SearchIndex),
+		Error:   errorHandler,
+		Page:    page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Search: degreeplans.MeiliSearch{
+			Client:      meiliClient,
+			DegreePlans: meilisearch.IndexConfig{Uid: degreeplans.SearchIndex},
+		},
+		UserPlanRedirectPath: degreePlanDetailRoot,
+	}
+	degreePlans.Init()
+	return degreePlans.Router()
 }
 
 func protectedHandler(s servers) http.Handler {
@@ -273,7 +289,8 @@ func protectedHandler(s servers) http.Handler {
 	handle(protectedRouter, blueprintRoot, s.blueprintServer)
 	handle(protectedRouter, courseDetailRoot, s.coursedetailServer)
 	handle(protectedRouter, coursesRoot, s.coursesServer)
-	handle(protectedRouter, degreePlanRoot, s.degreePlanServer)
+	handle(protectedRouter, degreePlanDetailRoot, s.degreePlanDetailServer)
+	handle(protectedRouter, degreePlansRoot, s.degreePlansServer)
 	protectedRouter.Handle("GET /logo.svg", s.static)
 	protectedRouter.Handle("GET /style.css", s.static)
 	protectedRouter.Handle("GET /js/", s.static)
@@ -321,22 +338,24 @@ func handle(router *http.ServeMux, prefix string, handler http.Handler) {
 }
 
 type servers struct {
-	homeServer         http.Handler
-	pageTempl          http.Handler
-	blueprintServer    http.Handler
-	coursedetailServer http.Handler
-	coursesServer      http.Handler
-	degreePlanServer   http.Handler
-	static             http.Handler
+	homeServer             http.Handler
+	pageTempl              http.Handler
+	blueprintServer        http.Handler
+	coursedetailServer     http.Handler
+	coursesServer          http.Handler
+	degreePlanDetailServer http.Handler
+	degreePlansServer      http.Handler
+	static                 http.Handler
 }
 
 const (
-	pageRoot         = "/page/"
-	homeRoot         = "/"
-	blueprintRoot    = "/blueprint/"
-	courseDetailRoot = "/course/"
-	coursesRoot      = "/courses/"
-	degreePlanRoot   = "/degreeplan/"
+	pageRoot             = "/page/"
+	homeRoot             = "/"
+	blueprintRoot        = "/blueprint/"
+	courseDetailRoot     = "/course/"
+	coursesRoot          = "/courses/"
+	degreePlanDetailRoot = "/degreeplan/"
+	degreePlansRoot      = "/degreeplans/"
 )
 
 const (

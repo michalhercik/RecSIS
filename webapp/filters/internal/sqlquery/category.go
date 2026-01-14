@@ -8,6 +8,7 @@ const SelectCategoriesAndValues = `--sql
 		fc.description_cs AS category_description_cs,
 		fc.title_en AS category_title_en,
 		fc.description_en AS category_description_en,
+		fc.condition AS category_condition,
 		fc.displayed_value_limit AS category_displayed_value_limit,
 		fv.id AS value_id,
 		fv.facet_id AS value_facet_id,

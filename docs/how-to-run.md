@@ -123,7 +123,7 @@ scripts\init-env.ps1 [.env file path]
 docker compose up -d postgres meilisearch elt bert mockcas adminer
 
 # Init Meilisearch
-.\scripts\init_meili.ps1
+.\scripts\init-meili.ps1
 
 # Install templ and wgo
 go install github.com/a-h/templ/cmd/templ@v0.2.793
@@ -147,7 +147,7 @@ export $(cut -d= -f1 [.env file path])
 docker compose up -d postgres meilisearch elt bert mockcas adminer
 
 # Init Meilisearch
-./scripts/init_meili.sh
+./scripts/init-meili.sh
 
 # Install templ and wgo
 go install github.com/a-h/templ/cmd/templ@v0.2.793

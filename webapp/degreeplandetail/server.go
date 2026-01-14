@@ -1,9 +1,8 @@
-package degreeplan
+package degreeplandetail
 
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/errorx"
@@ -15,13 +14,13 @@ import (
 //================================================================================
 
 type Server struct {
-	Auth     Authentication
-	BpBtn    BlueprintAddButton
-	Data     DBManager
-	DPSearch MeiliSearch
-	Error    Error
-	Page     Page
-	router   http.Handler
+	Auth                    Authentication
+	BpBtn                   BlueprintAddButton
+	Data                    DBManager
+	Error                   Error
+	NoSavedPlanRedirectPath string
+	Page                    Page
+	router                  http.Handler
 }
 
 type Authentication interface {
@@ -81,10 +80,10 @@ func (s Server) Router() http.Handler {
 
 func (s *Server) Init() {
 	router := http.NewServeMux()
-	router.HandleFunc("GET /{$}", s.degreePlanPage)
+	router.HandleFunc("GET /{$}", s.userDegreePlanPage)
 	router.HandleFunc(fmt.Sprintf("GET /{%s}", dpCode), s.degreePlanByCodePage)
-	router.HandleFunc(fmt.Sprintf("PATCH /{%s}", dpCode), s.saveDegreePlan)
-	router.HandleFunc("GET /search", s.searchDegreePlan)
+	router.HandleFunc(fmt.Sprintf("PATCH /user-plan/{%s}", dpCode), s.saveDegreePlan)
+	router.HandleFunc("DELETE /user-plan", s.deleteSavedPlan)
 	router.HandleFunc(s.BpBtn.Endpoint(), s.addCourseToBlueprint)
 	router.HandleFunc("/", s.pageNotFound)
 	s.router = router
@@ -94,10 +93,14 @@ func (s *Server) Init() {
 // Handlers
 //================================================================================
 
-func (s Server) degreePlanPage(w http.ResponseWriter, r *http.Request) {
-	lang := language.FromContext(r.Context())
+func (s Server) userDegreePlanPage(w http.ResponseWriter, r *http.Request) {
 	userID := s.Auth.UserID(r)
+	lang := language.FromContext(r.Context())
 	t := texts[lang]
+	if !s.Data.userHasSelectedDegreePlan(userID) {
+		http.Redirect(w, r, lang.LocalizeURL(s.NoSavedPlanRedirectPath), http.StatusSeeOther)
+		return
+	}
 	dp, err := s.Data.userDegreePlan(userID, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
@@ -117,15 +120,8 @@ func (s Server) degreePlanByCodePage(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	userID := s.Auth.UserID(r)
-	unparsedDPYear := r.FormValue(searchDegreePlanYear)
-	dpYear, err := strconv.Atoi(unparsedDPYear)
-	if err != nil {
-		s.Error.Log(errorx.AddContext(err, errorx.P(searchDegreePlanYear, unparsedDPYear)))
-		s.Error.RenderPage(w, r, http.StatusBadRequest, t.errInvalidDPYear, t.pageTitle, userID, lang)
-		return
-	}
 	dpCode := r.PathValue(dpCode)
-	dp, err := s.Data.degreePlan(userID, dpCode, dpYear, lang)
+	dp, err := s.Data.degreePlan(userID, dpCode, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -143,44 +139,29 @@ func (s Server) degreePlanByCodePage(w http.ResponseWriter, r *http.Request) {
 func (s Server) saveDegreePlan(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	userID := s.Auth.UserID(r)
-	dpYearString := r.FormValue(saveDegreePlanYear)
-	dpYear, err := strconv.Atoi(dpYearString)
-	if err != nil {
-		t := texts[lang]
-		s.Error.Log(errorx.AddContext(err, errorx.P(saveDegreePlanYear, dpYearString)))
-		s.Error.Render(w, r, http.StatusBadRequest, t.errInvalidDPYear, lang)
-		return
-	}
 	dpCode := r.PathValue(dpCode)
-	err = s.Data.saveDegreePlan(userID, dpCode, dpYear, lang)
+	err := s.Data.saveDegreePlan(userID, dpCode, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
+	s.userDegreePlanPage(w, r)
 }
 
-func (s Server) searchDegreePlan(w http.ResponseWriter, r *http.Request) {
+func (s Server) deleteSavedPlan(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
-	t := texts[lang]
-	query := r.FormValue(searchDegreePlanName)
-	searchRequest := quickRequest{
-		query: query,
-		limit: searchDegreePlanLimit,
-	}
-	results, err := s.DPSearch.QuickSearch(searchRequest, t)
+	userID := s.Auth.UserID(r)
+	planCode, err := s.Data.deleteSavedDegreePlan(userID, lang)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	view := QuickSearchResultsContent(results.DegreePlans, t)
-	err = view.Render(r.Context(), w)
-	if err != nil {
-		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
-	}
+	r.SetPathValue(dpCode, planCode)
+	s.degreePlanByCodePage(w, r)
 }
 
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
@@ -218,16 +199,16 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
-	lang := language.FromContext(r.Context())
-	t := texts[lang]
-	userID := s.Auth.UserID(r)
-	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.pageTitle, userID, lang)
-}
-
 func (s Server) pageContent(dp *degreePlanPage, t text) templ.Component {
 	partialBpBtn := s.BpBtn.PartialComponent(t.language)
 	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(t.language)
 	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
 	return main
+}
+
+func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+	userID := s.Auth.UserID(r)
+	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.pageTitle, userID, lang)
 }

@@ -1,8 +1,7 @@
-package degreeplan
+package degreeplandetail
 
 import (
     "fmt"
-    "time"
 
     "github.com/michalhercik/RecSIS/stringsx"
 )
@@ -16,10 +15,10 @@ templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChe
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"
     >
-        @chooseDegreePlanModal(dp.canSave, dp.degreePlanCode, dp.degreePlanYear, t)
+        @saveDegreePlan(dp.isUserPlan, dp.degreePlanCode, t)
         @checkedCoursesMenu(dp.bpNumberOfSemesters(), bpBtnChecked, t)
         // TODO: add title
-        <h1 class="text-center pt-0 pt-md-3">{ fmt.Sprintf("%s - %d", dp.degreePlanCode, dp.degreePlanYear) }</h1>
+        <h1 class="text-center pt-0 pt-md-3">{ dp.degreePlanCode }</h1>
         for _, bloc := range dp.blocs {
             @completionStatusBadges(&bloc, t)
             @blocName(&bloc, "d-md-none", "px-1 my-1", t)
@@ -36,116 +35,32 @@ templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChe
     </div>
 }
 
-templ chooseDegreePlanModal(canSave bool, code string, year int, t text) {
-    <div class="position-absolute choose-degree-plan-btn">
-        if canSave {
+templ saveDegreePlan(isUserPlan bool, code string, t text) {
+    <div class="position-absolute save-degree-plan-btn">
+        if !isUserPlan {
             <button
                 type="button"
                 class="btn bg-degreeplan"
-                hx-patch={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }
-                hx-vals={ fmt.Sprintf(`"%s": "%d"`, saveDegreePlanYear, year) }
-                hx-target="this"
+                hx-patch={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/user-plan/" + code)) }
+                hx-target="body"
                 hx-swap="outerHTML"
                 hx-push-url={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/")) }>
                 <span class="d-none d-sm-inline">{ t.saveDegreePlan }</span>
                 <span class="d-sm-none">{ t.saveDegreePlanShort }</span>
             </button>
-        }
-        <button
-            type="button"
-            class="btn bg-degreeplan"
-            data-bs-toggle="modal" data-bs-target="#chooseDegreePlanModal">
-            <span class="d-none d-sm-inline">{ t.showDegreePlan }</span>
-            <span class="d-sm-none">{ t.showDegreePlanShort }</span>
-        </button>
-    </div>
-
-    <div class="modal fade" id="chooseDegreePlanModal" tabindex="-1" aria-labelledby="chooseDegreePlanModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="chooseDegreePlanModalLabel">
-                        { t.chooseDegreePlan }
-                        @chooseDegreePlanHelp(t)
-                    </h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div id="choose-degree-plan-modal-body" class="modal-body">
-                    <div class="input-group mb-3">
-                        <input
-                            type="text"
-                            name={ searchDegreePlanName }
-                            class="form-control search-input"
-                            placeholder={ t.degreePlanPlaceholder }
-                            hx-get={ t.language.LocalizeURL("/degreeplan/search") }
-                            hx-trigger="keyup changed delay:200ms"
-                            hx-target="#dp-results"
-                            hx-indicator="#explicit-no-loader"
-                            autocomplete="off">
-                        <div class="form-floating dp-select-year-width">
-                            <select id="dp-year" class="form-select" name={ searchDegreePlanYear }>
-                                <option selected value={ fmt.Sprintf("%d", time.Now().Year()) }>{ fmt.Sprintf("%d", time.Now().Year()) }</option>
-                                for i := time.Now().Year() - 1; i >= 2015; i-- {
-                                    <option value={ fmt.Sprintf("%d", i) }>{ fmt.Sprintf("%d", i) }</option>
-                                }
-                            </select>
-                            <label for="dp-year">{ t.enrollmentYear }</label>
-                        </div>
-                    </div>
-                    @quickSearchResults()
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-templ chooseDegreePlanHelp(t text) {
-    <span
-        class="bi ps-1 cursor-help"
-        x-data="{ hover: false }"
-        @mouseenter="hover = true"
-        @mouseleave="hover = false"
-        :class="hover ? 'bi-info-circle-fill' : 'bi-info-circle'"
-        data-bs-toggle="tooltip"
-        data-bs-placement="bottom"
-        data-bs-title={ t.chooseDegreePlanHelp }>
-    </span>
-}
-
-templ quickSearchResults() {
-    <div id="dp-results">
-        { children... }
-    </div>
-}
-
-templ QuickSearchResultsContent(results []quickDegreePlan, t text) {
-    @quickSearchResults() {
-        if len(results) == 0 {
-            <div class="alert alert-info" role="alert">
-                { t.noDegreePlanResults }
-            </div>
         } else {
-            <table class="table table-sm table-borderless mb-0" hx-include="#dp-year">
-                for _, result := range results {
-                    <tr>
-                        <td><a
-                            href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
-                            data-bs-dismiss="modal">
-                            { result.Code }
-                        </a></td>
-                        <td class="text-wrap"><a
-                            href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + result.Code)) }
-                            data-bs-dismiss="modal">
-                            { result.Name }
-                        </a> </td>
-                        <td class="text-end">
-                            <span class="badge bg-degreeplan">{ result.Type }</span>
-                        </td>
-                    </tr>
-                }
-            </table>
+            <button
+                type="button"
+                class="btn bg-degreeplan"
+                hx-delete={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/user-plan")) }
+                hx-target="body"
+                hx-swap="outerHTML"
+                hx-push-url={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }>
+                <span class="d-none d-sm-inline">{ t.removeSavedDegreePlan }</span>
+                <span class="d-sm-none">{ t.removeSavedDegreePlan }</span>
+            </button>
         }
-    }
+    </div>
 }
 
 templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {

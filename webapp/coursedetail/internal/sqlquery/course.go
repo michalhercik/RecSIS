@@ -18,7 +18,6 @@ degree_plan AS (
 	FROM studies bs
 	LEFT JOIN degree_plans dp
 		ON dp.plan_code = bs.degree_plan_code
-		AND dp.plan_year = bs.start_year
 	WHERE bs.user_id = $1
 		AND dp.course_code = $2
 		AND dp.lang = 'cs'
@@ -69,10 +68,6 @@ SELECT
 	ucor.rating,
 	acor.avg_rating,
 	acor.rating_count,
-	c.prerequisities,
-	c.corequisities,
-	c.incompatibilities,
-	c.interchangeabilities,
 	c.classes,
 	c.classifications,
 	ubs.semesters,
@@ -115,6 +110,16 @@ LEFT JOIN user_ratings ur
 LEFT JOIN avg_course_rating avg_cr
 	ON avg_cr.category_code = crc.code
 WHERE crc.lang = $3;
+`
+
+const Requisites = `--sql
+SELECT
+	parent_course,
+	child_course,
+	req_type,
+	group_type
+FROM requisites
+WHERE target_course = $1;
 `
 
 const RateCategory = `
