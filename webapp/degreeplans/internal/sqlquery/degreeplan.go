@@ -1,11 +1,5 @@
 package sqlquery
 
-const UserDegreePlanCode = `--sql
-SELECT degree_plan_code
-FROM studies
-WHERE user_id = $1
-`
-
 const DegreePlanMetadataForSearch = `--sql
 SELECT
 	plan_code,

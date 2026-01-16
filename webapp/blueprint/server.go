@@ -526,26 +526,38 @@ func forCorrectAssignment(bp *blueprintPage, t text) {
 func forDuplicateAssignments(bp *blueprintPage, t text) {
 	assignedCourseCodes := buildAssignedCourseMap(bp)
 
+	for course := range bp.unassignedCourses() {
+		if locations, exists := assignedCourseCodes[course.code]; exists {
+			warning := makeDuplicateWarning(locations, t.wUnassignedButAssigned, t)
+			course.warnings = append(course.warnings, warning)
+		}
+	}
+
 	for _, locations := range assignedCourseCodes {
 		if len(locations) > 1 {
-			warning := t.wAssignedMoreThanOnce + " ("
-			locationsStr := make([]string, len(locations))
-			for i, loc := range locations {
-				semester := ""
-				switch loc.semester {
-				case assignmentWinter:
-					semester = t.winter
-				case assignmentSummer:
-					semester = t.summer
-				}
-				locationsStr[i] = fmt.Sprintf("%s %s", t.yearStr(loc.year), semester)
-			}
-			warning += strings.Join(locationsStr, ", ") + ")."
+			warning := makeDuplicateWarning(locations, t.wAssignedMoreThanOnce, t)
 			for _, loc := range locations {
 				loc.course.warnings = append(loc.course.warnings, warning)
 			}
 		}
 	}
+}
+
+func makeDuplicateWarning(locations []courseLocation, warningText string, t text) string {
+	warning := warningText + " ("
+	locationsStr := make([]string, len(locations))
+	for i, loc := range locations {
+		semester := ""
+		switch loc.semester {
+		case assignmentWinter:
+			semester = t.winter
+		case assignmentSummer:
+			semester = t.summer
+		}
+		locationsStr[i] = fmt.Sprintf("%s %s", t.yearStr(loc.year), semester)
+	}
+	warning += strings.Join(locationsStr, ", ") + ")."
+	return warning
 }
 
 func forRequisites(bp *blueprintPage, t text) {
@@ -554,52 +566,50 @@ func forRequisites(bp *blueprintPage, t text) {
 	// Check each course's requisites
 	for courseLoc := range bp.assignedCourses() {
 		course := courseLoc.course
-		requisites := course.prerequisites
 
-		if requisites.root != nil {
-			reqIsMet := areAllRequisitesMet(requisites.root, courseLoc, requisites.condition, assignedCourseMap)
+		reqSlice := course.prerequisites
+		if !reqSlice.isEmpty() {
+			reqIsMet := areAllRequisitesMet(reqSlice, courseLoc, prerequisiteCondition, assignedCourseMap)
 			if !reqIsMet {
 				course.warnings = append(course.warnings, t.wPrerequisiteNotMet)
 				// TODO: better warning message with details
 			}
 		}
 
-		requisites = course.corequisites
-		if requisites.root != nil {
-			reqIsMet := areAllRequisitesMet(requisites.root, courseLoc, requisites.condition, assignedCourseMap)
+		reqSlice = course.corequisites
+		if !reqSlice.isEmpty() {
+			reqIsMet := areAllRequisitesMet(reqSlice, courseLoc, corequisiteCondition, assignedCourseMap)
 			if !reqIsMet {
 				course.warnings = append(course.warnings, t.wCorequisiteNotMet)
 				// TODO: better warning message with details
 			}
 		}
 
-		requisites = course.incompatibles
-		if requisites.root != nil {
-			reqIsViolated := isAnyRequisiteMet(requisites.root, courseLoc, requisites.condition, assignedCourseMap)
+		reqSlice = course.incompatibles
+		if !reqSlice.isEmpty() {
+			reqIsViolated := isAnyRequisiteMet(reqSlice, courseLoc, incompatibleCondition, assignedCourseMap)
 			if reqIsViolated {
 				course.warnings = append(course.warnings, t.wIncompatiblePresent)
+				// TODO: better warning message with details
 			}
 		}
 	}
 }
 
-func areAllRequisitesMet(course *requisiteNode, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
-	for _, reqNode := range course.children {
-		if reqNode.isGroup() {
-			switch reqNode.groupType.String {
-			case orGroup:
-				// At least one child requisite must be met
-				if !isAnyRequisiteMet(reqNode, originLoc, condition, courseMap) {
-					return false
-				}
-			case andGroup:
-				// All child requisites must be met
-				if !areAllRequisitesMet(reqNode, originLoc, condition, courseMap) {
-					return false
-				}
+func areAllRequisitesMet(courses []requisite, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
+	for _, req := range courses {
+		if req.isNode() {
+			if !isCourseRequisiteMet(req, originLoc, condition, courseMap) {
+				return false
 			}
-		} else {
-			if !isCourseRequisiteMet(reqNode, originLoc, condition, courseMap) {
+		} else if req.isDisjunction() {
+			// At least one child requisite must be met
+			if !isAnyRequisiteMet(req.children, originLoc, condition, courseMap) {
+				return false
+			}
+		} else if req.isConjunction() {
+			// All child requisites must be met
+			if !areAllRequisitesMet(req.children, originLoc, condition, courseMap) {
 				return false
 			}
 		}
@@ -607,22 +617,20 @@ func areAllRequisitesMet(course *requisiteNode, originLoc courseLocation, condit
 	return true
 }
 
-func isAnyRequisiteMet(course *requisiteNode, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
-	for _, reqNode := range course.children {
-		if reqNode.isGroup() {
-			if reqNode.isDisjunction() {
-				// At least one child requisite must be met
-				if isAnyRequisiteMet(reqNode, originLoc, condition, courseMap) {
-					return true
-				}
-			} else if reqNode.isConjunction() {
-				// All child requisites must be met
-				if areAllRequisitesMet(reqNode, originLoc, condition, courseMap) {
-					return true
-				}
+func isAnyRequisiteMet(courses []requisite, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
+	for _, req := range courses {
+		if req.isNode() {
+			if isCourseRequisiteMet(req, originLoc, condition, courseMap) {
+				return true
 			}
-		} else {
-			if isCourseRequisiteMet(reqNode, originLoc, condition, courseMap) {
+		} else if req.isDisjunction() {
+			// At least one child requisite must be met
+			if isAnyRequisiteMet(req.children, originLoc, condition, courseMap) {
+				return true
+			}
+		} else if req.isConjunction() {
+			// All child requisites must be met
+			if areAllRequisitesMet(req.children, originLoc, condition, courseMap) {
 				return true
 			}
 		}
@@ -630,7 +638,7 @@ func isAnyRequisiteMet(course *requisiteNode, originLoc courseLocation, conditio
 	return false
 }
 
-func isCourseRequisiteMet(reqNode *requisiteNode, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
+func isCourseRequisiteMet(reqNode requisite, originLoc courseLocation, condition requisiteCondition, courseMap map[string][]courseLocation) bool {
 	if locs, exists := courseMap[reqNode.courseCode]; exists {
 		for _, reqLoc := range locs {
 			if condition(originLoc, reqLoc) {
