@@ -150,6 +150,8 @@ func (b Add) semesterFromRequest(r *http.Request, t text) (int, error) {
 	return semester, nil
 }
 
+// TODO: make package `services` with operation with BP
+// TODO: is possible to add course to multiple years/semesters at once?
 func (b Add) Action(userID string, year int, semester int, lang language.Language, courses ...string) ([]int, error) {
 	var courseIDs []int
 	err := b.DB.Select(&courseIDs, sqlquery.InsertCourse, userID, year, semester, pq.StringArray(courses))

@@ -15,70 +15,351 @@ templ Content(dp *degreePlanPage, t text, bpBtnRow PartialBlueprintAdd, bpBtnChe
         @resize.window="smallScreen = window.innerWidth < 768"
         hx-indicator="#loader"
     >
-        @saveDegreePlan(dp.isUserPlan, dp.degreePlanCode, t)
         @checkedCoursesMenu(dp.bpNumberOfSemesters(), bpBtnChecked, t)
-        // TODO: add title
-        <h1 class="text-center pt-0 pt-md-3">{ dp.degreePlanCode }</h1>
-        for _, bloc := range dp.blocs {
-            @completionStatusBadges(&bloc, t)
-            @blocName(&bloc, "d-md-none", "px-1 my-1", t)
-            <table class="table table-sm degree-plan-table mb-4" :class="{ 'table-hover': !smallScreen }">
-                @tableHeader(&bloc, t)
-                <tbody>
-                    for _, course := range bloc.courses {
-                        @CourseRow(&course, bloc.isCompulsory, bpBtnRow, t)
-                    }
-                </tbody>
-            </table>
-        }
+        @planHeadline(dp, t)
+        @tabs(dp, bpBtnRow, t)
         @scripts()
     </div>
 }
 
-templ saveDegreePlan(isUserPlan bool, code string, t text) {
-    <div class="position-absolute save-degree-plan-btn">
-        if !isUserPlan {
-            <button
-                type="button"
-                class="btn bg-degreeplan"
-                hx-patch={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/user-plan/" + code)) }
-                hx-target="body"
-                hx-swap="outerHTML"
-                hx-push-url={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/")) }>
-                <span class="d-none d-sm-inline">{ t.saveDegreePlan }</span>
-                <span class="d-sm-none">{ t.saveDegreePlanShort }</span>
-            </button>
-        } else {
-            <button
-                type="button"
-                class="btn bg-degreeplan"
-                hx-delete={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/user-plan")) }
-                hx-target="body"
-                hx-swap="outerHTML"
-                hx-push-url={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }>
-                <span class="d-none d-sm-inline">{ t.removeSavedDegreePlan }</span>
-                <span class="d-sm-none">{ t.removeSavedDegreePlan }</span>
-            </button>
-        }
-    </div>
-}
-
 templ checkedCoursesMenu(semCount int, bpBtn PartialBlueprintAdd, t text) {
-    <div id="dp-checked-courses-menu" @resize.window="updateStickyOffset" class="pe-none bg-transparent">
-        <div x-cloak x-show="checkedNumber > 0" class="pe-auto bg-white">
+    <div id="dp-checked-courses-menu" @resize.window="updateStickyOffset" class="pt-1">
+        <div x-cloak x-show="checkedNumber > 0" class="position-absolute px-2 py-1 bg-white border rounded-3 shadow">
             // uncheck all checkboxes
             <button
-                class="btn big-mobile-btn btn-outline-secondary border-0 bi bi-dash-square"
-                @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur();">
+                class="btn big-mobile-btn btn-outline-dark border-0 bi bi-dash-square"
+                @click="checkedNumber = 0; $dispatch('uncheck-all'); $el.blur();"
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                data-bs-title={ t.ttUncheckAll }>
             </button>
             @bpBtn("outerHTML", "#degreeplan-content", fmt.Sprintf("input:checked[name=%s]", checkboxName), make([]bool, semCount), "")
         </div>
     </div>
 }
 
+templ planHeadline(dp *degreePlanPage, t text) {
+    <div class="text-center my-3">
+        <h2 class="mb-0 dp-headline-title">
+            { dp.title }
+            <span class="text-nowrap">
+                { fmt.Sprintf("(%s)", dp.code) }
+                if dp.isUserPlan {
+                    <i class="bi bi-mortarboard-fill"></i>&nbsp;
+                }
+                @offcanvasTrigger()
+            </span>
+        </h2>
+        <h5 class="text-muted mb-0 d-none d-md-block">
+            { fmt.Sprintf("%s: %s", t.studyField, dp.fieldTitle) }
+        </h5>
+        if (!dp.isValid()) {
+            <h5 class="text-muted mb-0">
+                { fmt.Sprintf("%s: %d - %d", t.validity, dp.validFrom, dp.validTo) }
+            </h5>
+        }
+        @offcanvasMenu(dp, t)
+        @addRecommendedPlanToBPModal(dp.code, dp.recommendedPlan.totalYears(), t)
+    </div>
+}
+
+templ offcanvasTrigger() {
+    <i
+        class="bi bi-list"
+        type="button"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#dp-offcanvas-menu"
+        aria-controls="dp-offcanvas-menu">
+    </i>
+}
+
+templ offcanvasMenu(dp *degreePlanPage, t text) {
+    <div
+        class="offcanvas offcanvas-end"
+        tabindex="-1"
+        id="dp-offcanvas-menu"
+        aria-labelledby="dp-offcanvas-menu-label">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="dp-offcanvas-menu-label">{ t.offcanvasMenu }</h5>
+            <button
+                type="button fs-5"
+                class="btn-close"
+                data-bs-dismiss="offcanvas">
+            </button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column gap-3">
+            @saveDegreePlan(dp.isUserPlan, dp.code, t)
+            @searchDPButton(dp.searchEndpoint, t)
+            if !dp.recommendedPlan.isEmpty() {
+                @addRecommendedPlanToBPBtn(t)
+            }
+        </div>
+    </div>
+}
+
+templ saveDegreePlan(isUserPlan bool, code string, t text) {
+    if !isUserPlan {
+        <button
+            type="button"
+            class="btn bg-degreeplan"
+            hx-patch={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }
+            hx-target="body"
+            hx-swap="outerHTML"
+            hx-push-url={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/")) }>
+            <span>{ t.saveDegreePlan }</span>
+        </button>
+    } else {
+        <button
+            type="button"
+            class="btn bg-degreeplan"
+            hx-delete={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/")) }
+            hx-target="body"
+            hx-swap="outerHTML"
+            hx-push-url={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }>
+            <span>{ t.removeSavedDegreePlan }</span>
+        </button>
+    }
+}
+
+templ searchDPButton(endpoint string, t text) {
+    <a
+        type="button"
+        class="btn bg-degreeplan"
+        href={ templ.SafeURL(t.language.LocalizeURL(endpoint)) }
+        data-bs-dismiss="offcanvas">
+        <span>{ t.searchDegreePlans }</span>
+    </a>
+}
+
+templ addRecommendedPlanToBPBtn(t text) {
+    <button
+        type="button"
+        class="btn bg-degreeplan"
+        data-bs-toggle="modal"
+        data-bs-target="#addRecToBPModal">
+        { t.addRecToBPBtn }
+    </button>
+}
+
+templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
+    <div class="modal fade" id="addRecToBPModal" tabindex="-1" aria-labelledby="addRecToBPModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="addRecToBPModalLabel">{  t.addRecToBPTitle }</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-justify">
+                    { t.addRecToBPText }
+                </div>
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn bg-degreeplan"
+                        data-bs-dismiss="modal"
+                        hx-patch={ templ.SafeURL(t.language.LocalizeURL(fmt.Sprintf("/degreeplan/plan-to-blueprint/%s", planCode))) }
+                        hx-vals={ fmt.Sprintf(`"%s": "%d"`, maxYearParam, maxYears) }
+                        hx-swap="none">
+                        { t.mergeRecToBP }
+                    </button>
+                    <button
+                        type="button"
+                        class="btn bg-degreeplan"
+                        data-bs-dismiss="modal"
+                        hx-put={ templ.SafeURL(t.language.LocalizeURL(fmt.Sprintf("/degreeplan/plan-to-blueprint/%s", planCode))) }
+                        hx-vals={ fmt.Sprintf(`"%s": "%d"`, maxYearParam, maxYears) }
+                        hx-swap="none">
+                        { t.clearBPaddRec }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+templ tabs(dp *degreePlanPage, bpBtnRow PartialBlueprintAdd, t text) {
+	<ul
+		role="tablist"
+		id="dp-tabs"
+		class="nav nav-tabs justify-content-center mb-3">
+		@tabButton(fmt.Sprintf("%s-desc-tab-pane", dp.code), t.tabDetail, t.tabDetail, true)
+        if !dp.recommendedPlan.isEmpty() {
+		    @tabButton(fmt.Sprintf("%s-survey-tab-pane", dp.code), t.tabRecommendedPlan, t.tabRecommendedPlanSm, false)
+        }
+        <span class="d-none d-md-inline">
+		    @tabButton(fmt.Sprintf("%s-detail-tab-pane", dp.code), t.tabReqMap, t.tabReqMap, false)
+        </span>
+	</ul>
+	<div class="tab-content">
+		@tabPane(fmt.Sprintf("%s-desc-tab-pane", dp.code), true) {
+			for _, bloc := range dp.blocs {
+                @blocOverview(&bloc, bpBtnRow, t)
+            }
+		}
+		@tabPane(fmt.Sprintf("%s-survey-tab-pane", dp.code), false) {
+			@recommendedPlanOverview(&dp.recommendedPlan, t)
+		}
+        @tabPane(fmt.Sprintf("%s-detail-tab-pane", dp.code), false) {
+            @requisiteGraph("dp.requisitesGraphData()", t)
+        }
+	</div>
+}
+
+templ tabButton(target, text, textSm string, active bool) {
+	<li class="nav-item" role="presentation">
+		<button
+			id={ fmt.Sprintf("%s-btn", target) }
+            class={ "nav-link text-dark", templ.KV("active", active) }
+			data-bs-toggle="tab"
+			data-bs-target={ fmt.Sprintf("#%s", target) }
+			type="button"
+			role="tab"
+			aria-controls={ fmt.Sprintf("%s", target) }
+			aria-selected={ fmt.Sprintf("%t", active) }>
+			<span class="d-sm-none">{ textSm }</span>
+            <span class="d-none d-sm-inline">{ text }</span>
+		</button>
+	</li>
+}
+
+templ tabPane(target string, active bool) {
+	<div
+		id={ target }
+		class={ "tab-pane pt-2", templ.KV("active", active), templ.KV("show", active) }
+		role="tabpanel">
+		{ children... }
+	</div>
+}
+
+templ recommendedPlanOverview(plan *recommendedPlan, t text) {
+    if plan.totalYears() > 0 {
+        <div class="mb-2">
+            for i, year := range plan.years {
+                @recommendedWinterTable(year.winter, i+1, t)
+                @recommendedSummerTable(year.summer, i+1, t)
+            }
+        </div>
+    }
+}
+
+templ recommendedWinterTable(courses []course, year int, t text) {
+    if len(courses) > 0 {
+        <table class="table table-sm dp-recommended-table">
+            @recommendedTableHeader(year, t.winter, t)
+            @recommendedCoursesBody(courses, t)
+        </table>
+    }
+}
+
+templ recommendedSummerTable(courses []course, year int, t text) {
+    if len(courses) > 0 {
+        <table class="table table-sm dp-recommended-table">
+            @recommendedTableHeader(year, t.summer, t)
+            @recommendedCoursesBody(courses, t)
+        </table>
+    }
+}
+
+templ recommendedTableHeader(year int, semester string, t text) {
+    <thead>
+        <tr>
+            // code
+            <th>
+                <h5 class="mb-0 text-nowrap">
+                    { fmt.Sprintf("%s %s", t.yearStr(year), semester) }
+                </h5>
+            </th>
+            // title
+            <th class="d-none d-md-table-cell"></th>
+            // semester, range, exam for md
+            <th class="d-none d-md-table-cell d-lg-none"></th>
+            // credits
+            <th class="d-none d-md-table-cell text-end th-overflow credits-column">{ t.credits }</th>
+            // winter
+            <th class="d-none d-lg-table-cell">{ t.winter }</th>
+            // summer
+            <th class="d-none d-lg-table-cell">{ t.summer }</th>
+            // guarantors
+            <th class="d-none d-xl-table-cell">{ t.guarantors }</th>
+        </tr>
+    </thead>
+}
+
+templ recommendedCoursesBody(courses []course, t text) {
+    <tbody>
+        for _, course := range courses {
+            <tr>
+                // code
+                <td class="d-none d-md-table-cell">
+                    @courseLink(course.code, course.isSupported, t)
+                </td>
+                // title
+                <td>
+                    <span class="d-none d-md-inline">
+                        @titleCourseLink(course.code, course.title, course.isSupported, t)
+                    </span>
+                    @mobileInfoTd(&course, false, t)
+                </td>
+                // semester, range, exam for md
+                <td class="d-none d-md-table-cell d-lg-none">
+                    { course.semesterHoursExamString(t) }
+                </td>
+                // credits
+                <td class="d-none d-md-table-cell text-end credits-column">{ course.creditsString() }</td>
+                // winter
+                <td class="d-none d-lg-table-cell">{ course.winterString() }</td>
+                // summer
+                <td class="d-none d-lg-table-cell">{ course.summerString() }</td>
+                // guarantors
+                <td class="d-none d-xl-table-cell">{ course.guarantors.string() }</td>
+            </tr>
+        }
+    </tbody>
+}
+
+// TODO: work on this
+// TODO: lazy load graph data
+// TODO: if we put data using server method, the page will be shifting when adding courses to BP
+templ requisiteGraph(graphDataJSON string, t text) {
+    <span id="graph-data" class="d-none" type="application/json">
+        { graphDataJSON }
+    </span>
+    <div>
+        <div class="controls d-flex flex-row gap-3 mb-3">
+            @filterCheckbox("show-prerequisites", t.showPrerequisites)
+            @filterCheckbox("show-corequisites", t.showCorequisites)
+            @filterCheckbox("show-incompatibilities", t.showIncompatibilities)
+        </div>
+        <div id="course-graph" class="w-100 border border-secondary-subtle border-1" style="height: 600px;"></div>
+    </div>
+}
+
+templ filterCheckbox(id, label string) {
+    <div class="form-check">
+        <input id={ id } class="form-check-input" type="checkbox" role="button" checked>
+        <label class="form-check-label" role="button" for={ id }>
+            { label }
+        </label>
+    </div>
+}
+// ======================================   
+
+templ blocOverview(bloc *bloc, bpBtnRow PartialBlueprintAdd, t text) {
+    @completionStatusBadges(bloc, t)
+    @blocName(bloc, t)
+    <table class="table table-sm degree-plan-table mb-4" :class="{ 'table-hover': !smallScreen }">
+        @tableHeader(bloc, t)
+        <tbody>
+            for _, course := range bloc.courses {
+                @CourseRow(&course, bloc.isCompulsory, bpBtnRow, t)
+            }
+        </tbody>
+    </table>
+}
+
 templ completionStatusBadges(bloc *bloc, t text) {
     if !bloc.isOptional {
-        <h5 class="d-flex gap-2 status-badges mb-0">
+        <h5 class="d-flex gap-2 px-1 mb-0">
             // TODO: after SIS integration, uncomment this badge -> should be already working
             // <div class="d-flex justify-content-start">
             //     <span class="badge bg-success rounded-end-0 py-2">{ t.completed }</span>
@@ -115,24 +396,42 @@ templ completionStatusBadges(bloc *bloc, t text) {
     }
 }
 
+templ blocName(bloc *bloc, t text) {
+    <h5 class="dp-bloc-title text-justify px-1 mt-1 mb-0">
+        {{
+            rest, last := stringsx.SplitByLastSpace(stringsx.Capitalize(bloc.name))
+        }}
+        { rest }
+        <span class="text-nowrap">
+            { last } 
+            @statusIcon(bloc, t)
+        </span>
+    </h5>
+}
+
+templ statusIcon(bloc *bloc, t text) {
+    if bloc.isCompleted() {
+        <i class="bi bi-check-lg text-success ms-2"></i>
+    } else if bloc.isAssigned() {
+        <i class="bi bi-basket2 blueprint-color ms-2"></i>
+    } else if bloc.hasLimit() {
+        <i class="bi bi-x-lg text-danger ms-2"></i>
+    }
+}
+
 templ tableHeader(bloc *bloc, t text) {
     <thead>
         <tr>
             // checkbox + status
             <th></th>
-            if bloc.name != "" {
-                // code
-                <th class="d-none d-md-table-cell">
-                    @blocName(bloc, "d-none d-md-block", "text-nowrap", t)
-                </th>
-                // title
-                <th></th>
-            } else {
-                // code
-                <th class="d-none d-md-table-cell">{ t.code }</th>
-                // title
-                <th><span class="d-none d-md-inline">{ t.title }</span></th>
-            }
+            // code
+            <th class="d-none d-md-table-cell">{ t.code }</th>
+            // title
+            <th>
+                <span class="d-none d-md-block">{ t.title }</span>
+            </th>
+            // semester, range, exam for md
+            <th class="d-none d-md-table-cell d-lg-none"></th>
             // credits
             <th class="d-none d-md-table-cell th-overflow credits-column">{ t.credits }</th>
             // winter
@@ -147,25 +446,6 @@ templ tableHeader(bloc *bloc, t text) {
             </th>
         </tr>
     </thead>
-}
-
-templ blocName(bloc *bloc, show, classes string, t text) {
-    if bloc.name != "" {
-        <h5 class={ "mb-0", classes, show }>
-            { stringsx.Capitalize(bloc.name) }&nbsp;
-            @statusIcon(bloc, t)
-        </h5>
-    }
-}
-
-templ statusIcon(bloc *bloc, t text) {
-    if bloc.isCompleted() {
-        <i class="bi bi-check-lg text-success"></i>
-    } else if bloc.isAssigned() {
-        <i class="bi bi-basket2 blueprint-color"></i>
-    } else if bloc.hasLimit() {
-        <i class="bi bi-x-lg text-danger"></i>
-    }
 }
 
 templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t text) {
@@ -185,23 +465,22 @@ templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         </td>
         // code
         <td class="d-none d-md-table-cell position-relative">
-            @courseLink(course.code, t)
+            @courseLink(course.code, course.isSupported, t)
             @warningIcon(course, t)
         </td>
         // title
         <td>
-            <div class="d-flex justify-content-between">
-                <span class={ "d-none d-md-inline", templ.KV("fw-bold", isCompulsory) }>
-                    @titleCourseLink(course.code, course.title, t)
-                </span>
-                <span class="d-none d-md-inline d-lg-none dp-lg-semester">
-                    { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
-                </span>
-            </div>
+            <span class={ "d-none d-md-inline", templ.KV("fw-bold", isCompulsory) }>
+                @titleCourseLink(course.code, course.title, course.isSupported, t)
+            </span>
             @mobileInfoTd(course, isCompulsory, t)
         </td>
+        // semester, range, exam for md
+        <td class="d-none d-md-table-cell d-lg-none">
+            { course.semesterHoursExamString(t) }
+        </td>
         // credits
-        <td class="d-none d-md-table-cell text-end credits-column">{ fmt.Sprintf("%d", course.credits) }</td>
+        <td class="d-none d-md-table-cell text-end credits-column">{ course.creditsString() }</td>
         // winter
         <td class="d-none d-lg-table-cell">{ course.winterString() }</td>
         // summer
@@ -210,41 +489,53 @@ templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         <td class="d-none d-xl-table-cell">{ course.guarantors.string() }</td>
         // blueprint button
         <td class="d-none d-md-table-cell text-start align-middle p-0">
-            @bpBtn("outerHTML", "#degreeplan-content", "", course.blueprintSemesters, course.code)
+            if course.isSupported {
+                @bpBtn("outerHTML", "#degreeplan-content", "", course.blueprintSemesters, course.code)
+            }
         </td>
     </tr>
 }
 
-templ courseLink(code string, t text) {
-    <a
-        class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
-        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
-        { code }
-    </a>
-}
-
 templ checkbox(course *course) {
-    <div class="checkbox-container position-relative">
-        // circle under the checkbox - course status
-        <div class={ "circle-underlay", course.statusBackgroundColor() }></div>
-        <input
-            type="checkbox"
-            id={ fmt.Sprintf("dp-checkbox-%s", course.code) }
-            class="form-check-input dp-checkbox"
-            name={ checkboxName }
-            value={ course.code }
-            @change={ fmt.Sprintf("checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; updateCheckedCoursesMenu(%d)", len(course.blueprintSemesters)) }
-            @uncheck-all.window="$el.checked = false;"
-        />
-        // circle overlay for easier clicking
-        <div class="d-none d-md-inline">
-            <div
-                role="button"
-                class="circle-overlay"
-                @click="handleCircleClick($event)">
+    if course.isSupported {
+        <div class="checkbox-container position-relative">
+            // circle under the checkbox - course status
+            <div class={ "circle-underlay", course.statusBackgroundColor() }></div>
+            <input
+                type="checkbox"
+                id={ fmt.Sprintf("dp-checkbox-%s", course.code) }
+                class="form-check-input dp-checkbox"
+                name={ checkboxName }
+                value={ course.code }
+                @change={ fmt.Sprintf("checkedNumber = $event.target.checked ? checkedNumber + 1 : checkedNumber - 1; updateCheckedCoursesMenu(%d)", len(course.blueprintSemesters)) }
+                @uncheck-all.window="$el.checked = false;"
+            />
+            // circle overlay for easier clicking
+            <div class="d-none d-md-inline">
+                <div
+                    role="button"
+                    class="circle-overlay"
+                    @click="handleCircleClick($event)">
+                </div>
             </div>
         </div>
-    </div>
+    } else {
+        <div class="checkbox-container position-relative"></div>
+    }
+}
+
+templ courseLink(code string, isSupported bool, t text) {
+    if isSupported {
+        <a
+            class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+            href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+            { code }
+        </a>
+    } else {
+        <span class="text-muted">
+            { code }
+        </span>
+    }
 }
 
 templ warningIcon(course *course, t text) {
@@ -265,22 +556,28 @@ templ mobileInfoTd(course *course, isCompulsory bool, t text) {
                 { course.code }
             </span>
             <span class="text-muted dp-mobile-semester">
-                { fmt.Sprintf("%s %s, %s", course.semester.string(t), course.hoursString(), course.examType) }
+                { course.semesterHoursExamString(t) }
             </span>
             <span class="text-muted dp-mobile-credits">
-                { fmt.Sprintf("%s: %d", t.creditsShort, course.credits) }
+                { fmt.Sprintf("%s: %s", t.creditsShort, course.creditsString()) }
             </span>
         </div>
         <span class={ "fw-semibold text-truncate", templ.KV("fw-bold", isCompulsory) }>
-            @titleCourseLink(course.code, course.title, t)
+            @titleCourseLink(course.code, course.title, course.isSupported, t)
         </span>
     </div>
 }
 
-templ titleCourseLink(code, title string, t text) {
-    <a
-        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
-        href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
-        { title }
-    </a>
+templ titleCourseLink(code, title string, isSupported bool, t text) {
+    if isSupported {
+        <a
+            class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
+            href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+            { title }
+        </a>
+    } else {
+        <span class="text-muted">
+            { title }
+        </span>
+    }
 }

@@ -17,12 +17,12 @@ const unlimitedYear = 9999
 const SearchIndex = "degree-plans"
 
 const (
-	FacultyFacetID   = "faculty"
-	SectionFacetID   = "section"
-	StudyTypeFacetID = "study_type"
-	LanguageFacetID  = "teaching_lang"
-	ValidityFacetID  = "validity"
-	FieldFacetID     = "field.code"
+	facultyFacetID   = "faculty"
+	sectionFacetID   = "section"
+	studyTypeFacetID = "study_type"
+	languageFacetID  = "teaching_lang"
+	validityFacetID  = "validity"
+	fieldFacetID     = "field.code"
 )
 
 //================================================================================
@@ -30,8 +30,9 @@ const (
 //================================================================================
 
 type degreePlanSearchPage struct {
-	filters map[string]filters.FacetIterator
-	results []degreePlanSearchResult
+	filters     map[string]filters.FacetIterator
+	results     []degreePlanSearchResult
+	searchQuery string
 }
 
 type degreePlanSearchResult struct {

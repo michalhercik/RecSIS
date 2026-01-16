@@ -5,6 +5,8 @@ templ scripts() {
 		setupCheckboxShiftClick();
 		updateStickyOffset();
 		initializeTooltips();
+		cleanupOffcanvasOnNavigation();
+		initializeRequisiteGraph();
 
 		// shift click for multiple checkboxes
 		function setupCheckboxShiftClick() {
@@ -133,6 +135,175 @@ templ scripts() {
 					item.disabled = disabledSemesters[idx + 1];
 				}
 			});
+		}
+
+		// Close offcanvas before HTMX navigation and on browser back
+		function cleanupOffcanvasOnNavigation() {
+			document.body.addEventListener('htmx:beforeRequest', function(event) {
+				const offcanvasElement = document.getElementById('dp-offcanvas-menu');
+				if (offcanvasElement && offcanvasElement.classList.contains('show')) {
+					const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasElement);
+					if (bsOffcanvas) {
+						event.preventDefault();
+						bsOffcanvas.hide();
+						// Wait for the offcanvas to fully close, then trigger the request again
+						offcanvasElement.addEventListener('hidden.bs.offcanvas', function() {
+							htmx.trigger(event.detail.elt, 'click');
+						}, { once: true });
+					}
+				}
+			});
+		}
+
+		// Initialize the requisite graph using Cytoscape.js
+		function initializeRequisiteGraph() {
+			const graphContainer = document.getElementById('course-graph');
+			if (!graphContainer) return;
+
+			const graphData = buildGraphData();
+			
+			const cy = cytoscape({
+				container: graphContainer,
+				layout: {
+					name: 'elk',
+					elk: {
+						algorithm: 'layered',
+						'elk.direction': 'UP',
+						'spacing.nodeNode': 100,						
+						'spacing.componentComponent': 150,
+						'spacing.nodeNodeBetweenLayers': 30,
+						'spacing.edgeEdgeBetweenLayers': 20,
+						'spacing.edgeNodeBetweenLayers': 30,
+						'layering.strategy': 'LONGEST_PATH',
+						'crossingMinimization.semiInteractive': true
+					}
+				},
+				elements: graphData,
+				style: [
+					{
+						selector: 'node',
+						style: {
+							'label': 'data(label)',
+							'text-valign': 'center',
+							'text-halign': 'center',
+							'background-color': '#4f86f7',
+							'color': '#000',
+							'text-wrap': 'wrap',
+							'text-max-width': 120,
+							'font-size': 10
+						}
+					},
+					{
+						selector: 'node[inPlan="false"]',
+						style: {
+							'background-color': '#bbb',
+							'border-style': 'dashed',
+							'border-width': 2,
+							'border-color': '#666'
+						}
+					},
+					{
+						selector: 'edge[type="prerequisite"]',
+						style: {
+							'line-color': '#1f77b4',
+							'target-arrow-color': '#1f77b4',
+							'target-arrow-shape': 'triangle',
+							'curve-style': 'bezier'
+						}
+					},
+					{
+						selector: 'edge[type="corequisite"]',
+						style: {
+							'line-color': '#2ca02c',
+							'target-arrow-color': '#2ca02c',
+							'target-arrow-shape': 'triangle',
+							'curve-style': 'straight'
+						}
+					},
+					{
+						selector: 'edge[type="incompatibility"]',
+						style: {
+							'line-color': '#d62728',
+							'target-arrow-color': '#d62728',
+							'target-arrow-shape': 'triangle',
+							'width': 4,
+							'curve-style': 'bezier'
+						}
+					}
+				],
+			});
+
+			// Fit the graph to the canvas after layout completes
+			cy.on('layoutstop', function() {
+				cy.fit(cy.elements(), 50);
+			});
+
+			// Click handler
+			cy.on('tap', 'node', (evt) => {
+				const code = evt.target.data('code');
+				window.location.href = `/course/${code}`;
+			});
+
+			// Cursor handlers
+			cy.on('mouseover', 'node', function() {
+				graphContainer.style.cursor = 'pointer';
+			});
+			cy.on('mouseout', 'node', function() {
+				graphContainer.style.cursor = 'default';
+			});
+
+			// Filter handlers
+			setupGraphFilters(cy);
+		}
+
+		// Build graph data from server-side data
+		function buildGraphData() {
+			// This is populated from server-side data
+			const dataElement = document.getElementById('graph-data');
+			if (dataElement) {
+				return JSON.parse(dataElement.textContent);
+			}
+			return { nodes: [], edges: [] };
+		}
+
+		function setupGraphFilters(cy) {
+			const prereqCheckbox = document.getElementById('show-prerequisites');
+			const coreqCheckbox = document.getElementById('show-corequisites');
+			const incompatCheckbox = document.getElementById('show-incompatibilities');
+
+			function applyFilters() {
+				cy.edges().forEach(edge => {
+					const type = edge.data('type');
+					let visible = true;
+					
+					if (type === 'prerequisite') visible = prereqCheckbox.checked;
+					if (type === 'corequisite') visible = coreqCheckbox.checked;
+					if (type === 'incompatibility') visible = incompatCheckbox.checked;
+
+					edge.style('display', visible ? 'element' : 'none');
+				});
+
+				// Hide nodes without visible edges
+				cy.nodes().forEach(node => {
+					const connectedEdges = node.connectedEdges();
+					let hasVisibleEdges = false;
+					
+					connectedEdges.forEach(edge => {
+						const type = edge.data('type');
+						if (type === 'prerequisite' && prereqCheckbox.checked) hasVisibleEdges = true;
+						if (type === 'corequisite' && coreqCheckbox.checked) hasVisibleEdges = true;
+						if (type === 'incompatibility' && incompatCheckbox.checked) hasVisibleEdges = true;
+					});
+
+					node.style('display', hasVisibleEdges ? 'element' : 'none');
+				});
+			}
+
+			prereqCheckbox?.addEventListener('change', applyFilters);
+			coreqCheckbox?.addEventListener('change', applyFilters);
+			incompatCheckbox?.addEventListener('change', applyFilters);
+
+			applyFilters();
 		}
 	</script>
 }

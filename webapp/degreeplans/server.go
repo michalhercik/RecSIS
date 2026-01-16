@@ -72,7 +72,7 @@ func (s Server) Router() http.Handler {
 
 func (s *Server) initRouter() {
 	router := http.NewServeMux()
-	router.HandleFunc("GET /{$}", s.defaultDegreePlanPage)
+	router.HandleFunc("GET /{$}", s.searchPage)
 	router.HandleFunc("GET /search", s.searchContent)
 	router.HandleFunc("/", s.pageNotFound)
 	s.router = router
@@ -81,17 +81,6 @@ func (s *Server) initRouter() {
 //================================================================================
 // Handlers
 //================================================================================
-
-func (s Server) defaultDegreePlanPage(w http.ResponseWriter, r *http.Request) {
-	userID := s.Auth.UserID(r)
-	lang := language.FromContext(r.Context())
-	userHasSelectedPlan := s.Data.userHasSelectedDegreePlan(userID)
-	if userHasSelectedPlan {
-		http.Redirect(w, r, lang.LocalizeURL(s.UserPlanRedirectPath), http.StatusSeeOther)
-	} else {
-		s.searchPage(w, r)
-	}
-}
 
 func (s Server) searchPage(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
@@ -173,8 +162,9 @@ func (s Server) search(req request, httpReq *http.Request) (degreePlanSearchPage
 		return result, errorx.AddContext(err)
 	}
 	result = degreePlanSearchPage{
-		filters: s.Filters.FiltersMapWithFacets(searchResponse.FacetDistribution, httpReq.URL.Query(), req.lang),
-		results: degreePlanMetadata,
+		filters:     s.Filters.FiltersMapWithFacets(searchResponse.FacetDistribution, httpReq.URL.Query(), req.lang),
+		results:     degreePlanMetadata,
+		searchQuery: req.query,
 	}
 	return result, nil
 }

@@ -1,7 +1,6 @@
 package degreeplans
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -27,13 +26,4 @@ func (m DBManager) degreePlanMetadata(dpCodes []string, lang language.Language) 
 		)
 	}
 	return records, nil
-}
-
-func (m DBManager) userHasSelectedDegreePlan(uid string) bool {
-	var userPlan sql.NullString
-	err := m.DB.Get(&userPlan, sqlquery.UserDegreePlanCode, uid)
-	if err != nil {
-		return false
-	}
-	return userPlan.Valid
 }
