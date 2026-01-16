@@ -14,8 +14,7 @@ ON
     webapp.degree_plans,
     webapp.filter_categories,
     webapp.filter_values,
-    webapp.filters,
-    webapp.requisites
+    webapp.filters
 TO elt;
 
 GRANT USAGE ON SCHEMA webapp TO recommender;

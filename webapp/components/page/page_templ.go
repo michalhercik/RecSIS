@@ -60,7 +60,7 @@ func PageView(model pageModel) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</title><link rel=\"icon\" type=\"image/svg+xml\" href=\"/logo.svg\"><link rel=\"icon\" type=\"image/png\" sizes=\"256x256\" href=\"/favicon-256x256.png\"><link rel=\"stylesheet\" href=\"/style.css\"><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH\" crossorigin=\"anonymous\"><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css\"><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz\" crossorigin=\"anonymous\"></script><script src=\"https://unpkg.com/htmx.org@2.0.3\" integrity=\"sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq\" crossorigin=\"anonymous\"></script><script src=\"https://cdn.jsdelivr.net/npm/htmx-ext-response-targets@2.0.2\" integrity=\"sha384-aiAPowx3gG+h620/TJLIfLPgBcn6DMWlhu45oOhWVwTOjds9E6X2pmGbT4Xc8XMJ\" crossorigin=\"anonymous\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><link href=\"https://fonts.googleapis.com/css2?family=Saira:wght@400;700&amp;display=swap\" rel=\"stylesheet\"><script src=\"/js/page.js\"></script></head><body hx-boost=\"true\" hx-ext=\"response-targets\" class=\"position-relative\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</title><link rel=\"icon\" type=\"image/svg+xml\" href=\"/logo.svg\"><link rel=\"icon\" type=\"image/png\" sizes=\"256x256\" href=\"/favicon-256x256.png\"><link rel=\"stylesheet\" href=\"/style.css\"><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH\" crossorigin=\"anonymous\"><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css\"><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz\" crossorigin=\"anonymous\"></script><script src=\"https://unpkg.com/htmx.org@2.0.3\" integrity=\"sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq\" crossorigin=\"anonymous\"></script><script src=\"https://cdn.jsdelivr.net/npm/htmx-ext-response-targets@2.0.2\" integrity=\"sha384-aiAPowx3gG+h620/TJLIfLPgBcn6DMWlhu45oOhWVwTOjds9E6X2pmGbT4Xc8XMJ\" crossorigin=\"anonymous\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><link href=\"https://fonts.googleapis.com/css2?family=Saira:wght@400;700&amp;display=swap\" rel=\"stylesheet\"><script src=\"https://unpkg.com/cytoscape/dist/cytoscape.min.js\"></script><script src=\"https://unpkg.com/elkjs/lib/elk.bundled.js\"></script><script src=\"https://unpkg.com/cytoscape-elk/dist/cytoscape-elk.js\"></script><script src=\"/js/page.js\"></script></head><body hx-boost=\"true\" hx-ext=\"response-targets\" class=\"position-relative\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -140,7 +140,7 @@ func Header(model pageModel) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("{ title: '%s' }", model.title))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 68, Col: 104}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 73, Col: 104}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -233,7 +233,7 @@ func navBrand(model pageModel) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("if (!event.ctrlKey) { clearExpanded(); title = '%s'; hideMain(); }", model.navItems[0].Title.String(model.lang)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 94, Col: 142}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 99, Col: 142}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -246,7 +246,7 @@ func navBrand(model pageModel) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(model.navItems[0].Indicator)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 97, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 102, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -288,7 +288,7 @@ func navItemView(nav NavItem, model pageModel) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("{ 'active': title == '%s' }", nav.Title.String(model.lang)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 107, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 112, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -310,7 +310,7 @@ func navItemView(nav NavItem, model pageModel) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("if (!event.ctrlKey) { clearExpanded(); title = '%s'; hideMain(); }", nav.Title.String(model.lang)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 109, Col: 128}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 114, Col: 128}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -323,7 +323,7 @@ func navItemView(nav NavItem, model pageModel) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(nav.Indicator)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 112, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 117, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -336,7 +336,7 @@ func navItemView(nav NavItem, model pageModel) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(nav.Title.String(model.lang))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 113, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 118, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -449,7 +449,7 @@ func langBtn(l language.Language) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("changeLanguage('%s')", string(l)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 136, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 141, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -462,7 +462,7 @@ func langBtn(l language.Language) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(string(l))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 137, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 142, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -594,7 +594,7 @@ func userID(userID string) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(userID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 178, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 183, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -645,7 +645,7 @@ func logout(t text, lang language.Language) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(t.logout)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 185, Col: 116}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 190, Col: 116}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -687,7 +687,7 @@ func SearchBar(model pageModel) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(model.lang.LocalizeURL(model.searchEndpoint))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 199, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 204, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -710,7 +710,7 @@ func SearchBar(model pageModel) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("searchInput = '%s';", model.searchInput))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 208, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 213, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
@@ -723,7 +723,7 @@ func SearchBar(model pageModel) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(model.searchParam)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 218, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 223, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -736,7 +736,7 @@ func SearchBar(model pageModel) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(model.text.searchPlaceholder)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 219, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 224, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -749,7 +749,7 @@ func SearchBar(model pageModel) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(model.lang.LocalizeURL("/page/quicksearch"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 226, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 231, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -762,7 +762,7 @@ func SearchBar(model pageModel) templ.Component {
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(model.text.searchButton)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 244, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 249, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -829,7 +829,7 @@ func QuickResults(model quickResultsModel) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(model.t.noCoursesFound)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 263, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 268, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {
@@ -857,7 +857,7 @@ func QuickResults(model quickResultsModel) templ.Component {
 					var templ_7745c5c3_Var40 string
 					templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(course.code + " - " + course.name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 273, Col: 59}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 278, Col: 59}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 					if templ_7745c5c3_Err != nil {
@@ -949,7 +949,7 @@ func Footer(model pageModel) templ.Component {
 		var templ_7745c5c3_Var43 string
 		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(model.text.contact)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 291, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 296, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 		if templ_7745c5c3_Err != nil {
@@ -971,7 +971,7 @@ func Footer(model pageModel) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 292, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/page/page.templ`, Line: 297, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {

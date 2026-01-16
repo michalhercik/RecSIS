@@ -26,7 +26,10 @@ SELECT
 	c.seminar_range_summer,
 	c.exam,
 	c.credits,
-	c.guarantors
+	c.guarantors,
+	c.prerequisites,
+	c.corequisites,
+	c.incompatibilities
 FROM blueprint_years y
 INNER JOIN blueprint_semesters bs
 	ON y.id=bs.blueprint_year_id

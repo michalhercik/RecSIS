@@ -128,6 +128,7 @@ func transform(recsis *sqlx.DB) error {
 			studmetadata2lang,
 		},
 		parallelRunner{
+			preq2coursesRequisites,
 			povinn2searchable,
 			studplan2searchable,
 		},
@@ -177,10 +178,6 @@ func migrate(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	err = migrateRequisites(tx)
-	if err != nil {
-		return err
-	}
 	err = migrateFilters(tx)
 	if err != nil {
 		return err
@@ -189,11 +186,11 @@ func migrate(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	err = migrateStudPlanMetadata(tx)
+	err = migrateStudPlans(tx)
 	if err != nil {
 		return err
 	}
-	err = migrateStudPlans(tx)
+	err = migrateStudPlanCourses(tx)
 	if err != nil {
 		return err
 	}

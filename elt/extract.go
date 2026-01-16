@@ -142,7 +142,7 @@ func (ep *extractPovinn) selectData(from *sqlx.DB, to *sqlx.DB) error {
 			PURL
 		FROM POVINN
 		WHERE TO_CHAR(sysdate, 'YYYY') BETWEEN VPLATIOD AND VPLATIDO
-			AND PFAKULTA = '11320'
+			AND (PFAKULTA = '11320' OR POVINN = 'ASE500129' OR POVINN = 'ASE500130') -- support for FF language courses for ENG degree plans
 	`
 	err := from.Select(&ep.data, query)
 	if err != nil {
@@ -1170,7 +1170,7 @@ func (ep *extractUstav) selectData(from *sqlx.DB, to *sqlx.DB) error {
 			NAZEV, ANAZEV,
 			SEKCE, FAKULTA
 		FROM USTAV
-		WHERE FAKULTA='11320'
+		WHERE FAKULTA='11320' OR FAKULTA='11210' -- support for FF language courses for ENG degree plans
 	`
 	err = from.Select(&ep.data, query)
 	if err != nil {

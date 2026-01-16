@@ -32,6 +32,10 @@ func migrateCourses(tx *sqlx.Tx) error {
 			teachers,
 			min_occupancy,
 			capacity,
+			prerequisites,
+			corequisites,
+			incompatibilities,
+			interchangeabilities,
 			annotation,
 			syllabus,
 			terms_of_passing,
@@ -42,25 +46,6 @@ func migrateCourses(tx *sqlx.Tx) error {
 			classes,
 			classifications
 		FROM povinn2courses;
-	`)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func migrateRequisites(tx *sqlx.Tx) error {
-	var err error
-	_, err = tx.Exec(`--sql
-		DELETE FROM webapp.requisites WHERE TRUE;
-		INSERT INTO webapp.requisites
-		SELECT
-			target_course,
-			parent_course,
-			child_course,
-			req_type,
-			group_type
-		FROM requisites;
 	`)
 	if err != nil {
 		return err
@@ -101,7 +86,7 @@ func migrateStudPlanList(tx *sqlx.Tx) error {
 	return nil
 }
 
-func migrateStudPlanMetadata(tx *sqlx.Tx) error {
+func migrateStudPlans(tx *sqlx.Tx) error {
 	var err error
 	_, err = tx.Exec(`--sql
 		DELETE FROM webapp.degree_plans WHERE TRUE;
@@ -111,9 +96,8 @@ func migrateStudPlanMetadata(tx *sqlx.Tx) error {
 			title,
 			valid_from,
 			valid_to,
-			faculty,
-			section,
 			field_code,
+			field_title,
 			study_type
 		) SELECT DISTINCT
 			plan_code,
@@ -121,9 +105,8 @@ func migrateStudPlanMetadata(tx *sqlx.Tx) error {
 			title,
 			valid_from,
 			valid_to,
-			faculty,
-			section,
 			field_code,
+			field_title,
 			study_type
 		FROM studmetadata2lang;
 	`)
@@ -133,7 +116,7 @@ func migrateStudPlanMetadata(tx *sqlx.Tx) error {
 	return nil
 }
 
-func migrateStudPlans(tx *sqlx.Tx) error {
+func migrateStudPlanCourses(tx *sqlx.Tx) error {
 	var err error
 	_, err = tx.Exec(`--sql
 		DELETE FROM webapp.degree_plan_courses WHERE TRUE;
