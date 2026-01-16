@@ -141,6 +141,7 @@ templ addRecommendedPlanToBPBtn(t text) {
     </button>
 }
 
+// TODO: this must refresh to page for BP to work
 templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
     <div class="modal fade" id="addRecToBPModal" tabindex="-1" aria-labelledby="addRecToBPModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -159,7 +160,8 @@ templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
                         data-bs-dismiss="modal"
                         hx-patch={ templ.SafeURL(t.language.LocalizeURL(fmt.Sprintf("/degreeplan/plan-to-blueprint/%s", planCode))) }
                         hx-vals={ fmt.Sprintf(`"%s": "%d"`, maxYearParam, maxYears) }
-                        hx-swap="none">
+                        hx-target="#degreeplan-content"
+                        hx-swap="outerHTML">
                         { t.mergeRecToBP }
                     </button>
                     <button
@@ -168,7 +170,8 @@ templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
                         data-bs-dismiss="modal"
                         hx-put={ templ.SafeURL(t.language.LocalizeURL(fmt.Sprintf("/degreeplan/plan-to-blueprint/%s", planCode))) }
                         hx-vals={ fmt.Sprintf(`"%s": "%d"`, maxYearParam, maxYears) }
-                        hx-swap="none">
+                        hx-target="#degreeplan-content"
+                        hx-swap="outerHTML">
                         { t.clearBPaddRec }
                     </button>
                 </div>

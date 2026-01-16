@@ -4,3 +4,4 @@ meili_data
 webapp/recsis
 *.env
 webapp/config.prod.toml
+.vscode/

@@ -188,12 +188,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	var dp *degreePlanPage
-	if planCode := strings.Split(r.Referer(), "/degreeplan/")[1]; planCode == "" {
-		dp, err = s.Data.userDegreePlan(userID, lang)
-	} else {
-		dp, err = s.Data.degreePlan(userID, planCode, lang)
-	}
+	dp, err := s.getCorrectPlanPage(r)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -226,6 +221,19 @@ func (s Server) mergeRecPlanWithBlueprint(w http.ResponseWriter, r *http.Request
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
+	dp, err := s.getCorrectPlanPage(r)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	t := texts[lang]
+	view := s.pageContent(dp, t)
+	err = view.Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
 }
 
 func (s Server) rewriteBlueprintWithRecPlan(w http.ResponseWriter, r *http.Request) {
@@ -246,6 +254,32 @@ func (s Server) rewriteBlueprintWithRecPlan(w http.ResponseWriter, r *http.Reque
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
+	dp, err := s.getCorrectPlanPage(r)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	t := texts[lang]
+	view := s.pageContent(dp, t)
+	err = view.Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
+}
+
+func (s Server) getCorrectPlanPage(r *http.Request) (*degreePlanPage, error) {
+	lang := language.FromContext(r.Context())
+	userID := s.Auth.UserID(r)
+	var dp *degreePlanPage
+	var err error
+	if planCode := strings.Split(r.Referer(), "/degreeplan/")[1]; planCode == "" {
+		dp, err = s.Data.userDegreePlan(userID, lang)
+	} else {
+		dp, err = s.Data.degreePlan(userID, planCode, lang)
+	}
+	return dp, err
 }
 
 func (s Server) pageContent(dp *degreePlanPage, t text) templ.Component {
