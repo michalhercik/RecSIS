@@ -108,3 +108,30 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -d "$sortable" \
   "$BASE_URL/indexes/survey/settings/sortable-attributes")
 echo "PUT filterable attributes: $response"
+
+searchable='[
+    "code",
+    "title"
+]'
+response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "$searchable" \
+  "$BASE_URL/indexes/degree-plans/settings/searchable-attributes")
+echo "PUT searchable attributes: $response"
+
+filterable='[
+    "faculty",
+    "section",
+    "field.code",
+    "teaching_lang",
+    "validity",
+    "study_type"
+]'
+response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "$filterable" \
+  "$BASE_URL/indexes/degree-plans/settings/filterable-attributes")
+echo "PUT searchable attributes: $response"
+

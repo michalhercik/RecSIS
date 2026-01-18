@@ -50,8 +50,8 @@ SQL=$(mktemp)
 
     for file in "${FILES[@]}"; do
         name=$(basename "$file")
-        echo "Including migration: $name"
-        echo "-- $name"
+        #echo "Including migration: $name"
+        #echo "-- $name"
         cat "$file"
         echo
     done
