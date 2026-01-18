@@ -18,7 +18,7 @@ WITH user_blueprint_semesters AS (
 degree_plan AS (
 	SELECT dp.course_code
 	FROM studies bs
-	LEFT JOIN degree_plans dp
+	LEFT JOIN degree_plan_courses dp
 		ON dp.plan_code = bs.degree_plan_code
 	WHERE bs.user_id = $1
 		AND dp.interchangeability IS NULL
