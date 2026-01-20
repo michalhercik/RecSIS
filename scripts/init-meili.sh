@@ -131,7 +131,7 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
 echo "PUT searchable attributes: $response"
 
 filterable='[
-"faculty",
+    "faculty",
     "section",
     "field.code",
     "teaching_lang",
