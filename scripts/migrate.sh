@@ -16,7 +16,7 @@ CONTAINER="$2"
 # configuration
 # ----------------------------
 DATABASE="${POSTGRES_DB:?POSTGRES_DB is not set}"
-USER="${POSTGRES_USER:?POSTGRES_USER is not set}"
+USER="${POSTGRES_OWNER:?POSTGRES_OWNER is not set}"
 
 # ----------------------------
 # validation

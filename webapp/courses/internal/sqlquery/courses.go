@@ -16,13 +16,13 @@ WITH user_blueprint_semesters AS (
 	GROUP BY t.course_code
 ),
 degree_plan AS (
-	SELECT dp.course_code
+	SELECT DISTINCT(dpc.course_code)
 	FROM studies bs
-	LEFT JOIN degree_plan_courses dp
-		ON dp.plan_code = bs.degree_plan_code
+	LEFT JOIN degree_plan_courses dpc
+		ON dpc.plan_code = bs.degree_plan_code
+		AND dpc.lang = $3
 	WHERE bs.user_id = $1
-		AND dp.interchangeability IS NULL
-		AND dp.lang = $3
+		AND dpc.interchangeability IS NULL
 )
 SELECT
 	c.code,

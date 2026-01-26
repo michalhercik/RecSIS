@@ -71,6 +71,16 @@ type courseLocation struct {
 	course   *course
 }
 
+func (bp *blueprintPage) unassignedCourses() iter.Seq[*course] {
+	return func(yield func(*course) bool) {
+		for i := range bp.unassigned.courses {
+			if !yield(&bp.unassigned.courses[i]) {
+				return
+			}
+		}
+	}
+}
+
 func (bp *blueprintPage) assignedCourses() iter.Seq[courseLocation] {
 	return func(yield func(courseLocation) bool) {
 		for _, year := range bp.years {
@@ -133,9 +143,9 @@ type course struct {
 	examType           string
 	credits            int
 	guarantors         teacherSlice
-	prerequisites      *requisiteTree
-	corequisites       *requisiteTree
-	incompatibles      *requisiteTree
+	prerequisites      requisiteSlice
+	corequisites       requisiteSlice
+	incompatibles      requisiteSlice
 	warnings           []string
 }
 
@@ -225,11 +235,6 @@ func (t teacher) string() string {
 	return fmt.Sprintf("%c. %s", firstRune, t.lastName)
 }
 
-type requisiteTree struct {
-	root      *requisiteNode
-	condition requisiteCondition
-}
-
 type requisiteCondition func(parentLoc, childLoc courseLocation) bool
 
 var prerequisiteCondition requisiteCondition = func(parentLoc, childLoc courseLocation) bool {
@@ -247,22 +252,28 @@ var incompatibleCondition requisiteCondition = func(parentLoc, childLoc courseLo
 	return true
 }
 
-type requisiteNode struct {
+type requisiteSlice []requisite
+
+func (rs requisiteSlice) isEmpty() bool {
+	return len(rs) == 0
+}
+
+type requisite struct {
 	courseCode string
-	groupType  sql.NullString
-	children   []*requisiteNode
+	children   requisiteSlice
+	group      sql.NullString
 }
 
-func (rn *requisiteNode) isGroup() bool {
-	return rn.groupType.Valid
+func (r *requisite) isNode() bool {
+	return !r.group.Valid
 }
 
-func (rn *requisiteNode) isConjunction() bool {
-	return rn.groupType.String == andGroup
+func (r *requisite) isDisjunction() bool {
+	return r.group.String == orGroup
 }
 
-func (rn *requisiteNode) isDisjunction() bool {
-	return rn.groupType.String == orGroup
+func (r *requisite) isConjunction() bool {
+	return r.group.String == andGroup
 }
 
 type semesterAssignment int

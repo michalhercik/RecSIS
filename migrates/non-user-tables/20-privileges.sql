@@ -11,8 +11,7 @@ ON
     webapp.degree_plan_courses,
     webapp.degree_plan_list,
     webapp.degree_plans,
-    webapp.filters,
     webapp.filter_categories,
     webapp.filter_values,
-    webapp.requisites
+    webapp.filters
 TO elt;

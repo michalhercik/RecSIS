@@ -12,14 +12,14 @@ templ Content(dp *degreePlanSearchPage, t text) {
         class="container mt-3"
         hx-indicator="#loader"
     >   
-        @searchBar(t)
+        @searchBar(dp.searchQuery, t)
         @FilterResults(dp, t)
         @scripts()
     </div>
 }
 
-templ searchBar(t text) {
-    <div class="position-relative" x-data="{ searchInput: '' }">
+templ searchBar(searchQuery string, t text) {
+    <div class="position-relative" x-data="{ searchInput: '' }" x-init={ fmt.Sprintf("searchInput = '%s';", searchQuery) }>
         <input
             id="degreeplan-search-input"
             type="text"
@@ -65,18 +65,18 @@ templ filterSection(dp *degreePlanSearchPage, t text) {
             hx-swap="outerHTML"
             hx-include="#degreeplan-search-input"
             hx-trigger="change, filters-changed from:#degreeplan-search-content"
-            x-data="{ showFilters: window.innerWidth > 765.5, expandedFilters: JSON.parse(sessionStorage.getItem('dp-expanded-filters')) || false }"
-            @resize.window="showFilters = window.innerWidth > 765.5"
+            x-data="{ showFilters: window.innerWidth > 767.5, expandedFilters: JSON.parse(sessionStorage.getItem('dp-expanded-filters')) || false }"
+            @resize.window="showFilters = window.innerWidth > 767.5"
         >
             <div class="bg-dp-filters rounded-5">
                 <div x-cloak x-show="showFilters || expandedFilters">
                     <div class="px-4 px-md-0 pb-4 pb-md-0 pt-2 pt-md-0">
-                        @filterList(dp.filters[FacultyFacetID], t)
-                        @filterList(dp.filters[SectionFacetID], t)
-                        @filterList(dp.filters[StudyTypeFacetID], t)
-                        @filterList(dp.filters[LanguageFacetID], t)
-                        @filterDropdown(dp.filters[ValidityFacetID], false, t)
-                        @filterDropdown(dp.filters[FieldFacetID], true, t)
+                        @filterList(dp.filters[facultyFacetID], t)
+                        @filterList(dp.filters[sectionFacetID], t)
+                        @filterList(dp.filters[studyTypeFacetID], t)
+                        @filterList(dp.filters[languageFacetID], t)
+                        @filterDropdown(dp.filters[validityFacetID], false, t)
+                        @filterDropdown(dp.filters[fieldFacetID], true, t)
                     </div>
                 </div>
                 <div class="d-flex d-md-none justify-content-center py-2 position-sticky bottom-0 bg-dp-filters-buttons rounded-5 shadow-md">
@@ -246,16 +246,12 @@ templ degreePlans(dp *degreePlanSearchPage, t text) {
                     <tr>
                         // code
                         <td class="d-none d-md-table-cell">
-                            @degreePlanLink(plan.Code, t) {
-                                { plan.Code }
-                            }
+                            @degreePlanLink(plan.Code, t)
                         </td>
                         // title
                         <td>
                             <span class="d-none d-md-inline">
-                                @degreePlanLink(plan.Code, t) {
-                                    { plan.Title }
-                                }
+                                @titleDegreePlanLink(plan.Code, plan.Title, t)
                             </span>
                             @mobileInfoTd(&plan, t)
                         </td>
@@ -290,9 +286,7 @@ templ mobileInfoTd(plan *degreePlanSearchResult, t text) {
             </span>
         </div>
         <span class="fw-semibold text-truncate">
-            @degreePlanLink(plan.Code, t) {
-                { plan.Title }
-            }
+            @titleDegreePlanLink(plan.Code, plan.Title, t)
         </span>
     </div>
 }
@@ -300,8 +294,15 @@ templ mobileInfoTd(plan *degreePlanSearchResult, t text) {
 templ degreePlanLink(code string, t text) {
     <a
         class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
-        href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }
-    >
-        { children... }
+        href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }>
+        { code }
+    </a>
+}
+
+templ titleDegreePlanLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
+        href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }>
+        { title }
     </a>
 }
