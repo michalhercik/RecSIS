@@ -98,7 +98,8 @@ func migrateStudPlans(tx *sqlx.Tx) error {
 			valid_to,
 			field_code,
 			field_title,
-			study_type
+			study_type,
+			requisite_graph_data
 		) SELECT DISTINCT
 			plan_code,
 			lang,
@@ -107,7 +108,8 @@ func migrateStudPlans(tx *sqlx.Tx) error {
 			valid_to,
 			field_code,
 			field_title,
-			study_type
+			study_type,
+			requisite_graph_data
 		FROM studmetadata2lang;
 	`)
 	if err != nil {

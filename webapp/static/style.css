@@ -875,6 +875,43 @@ tr:target td {
     z-index: 100;
 }
 
+/* DP -> requisite graph */
+#course-graph {
+    height: 600px;
+}
+
+.dp-legend-edge {
+    width: 18px;
+    height: 6px;
+    border-radius: 4px;
+}
+
+.dp-legend-node {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+.dp-prereq-edge {
+    background-color: #1f77b4;
+}
+
+.dp-coreq-edge {
+    background-color: #2ca02c;
+}
+
+.dp-incompat-edge {
+    background-color: #d62728;
+}
+
+.dp-in-plan-node {
+    background-color: rgb(252,227,204);
+}
+
+.dp-not-in-plan-node {
+    background-color: #ccc;
+}
+
 /* DP -> headline styles */
 .dp-headline-title {
     font-size: calc(1.3rem + 1.5vw) !important;

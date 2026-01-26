@@ -13,5 +13,5 @@ ON
     webapp.degree_plans,
     webapp.filter_categories,
     webapp.filter_values,
-    webapp.filters,
+    webapp.filters
 TO elt;

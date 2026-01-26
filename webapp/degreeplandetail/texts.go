@@ -27,6 +27,15 @@ type text struct {
 	showPrerequisites     string
 	showCorequisites      string
 	showIncompatibilities string
+	legendTitle           string
+	legendEdges           string
+	legendNodes           string
+	legendDirection       string
+	prerequisite          string
+	corequisite           string
+	incompatibility       string
+	legendNodeInPlan      string
+	legendNodeOutsidePlan string
 	code                  string
 	title                 string
 	status                string
@@ -99,6 +108,15 @@ var texts = map[language.Language]text{
 		showPrerequisites:     "Zobrazit prerekvizity",
 		showCorequisites:      "Zobrazit korekvizity",
 		showIncompatibilities: "Zobrazit neslučitelnosti",
+		legendTitle:           "Legenda",
+		legendEdges:           "Hrany",
+		legendNodes:           "Uzly",
+		legendDirection:       "Hrany vedou od kurzu k jeho prerekvizitě.",
+		prerequisite:          "Prerekvizita",
+		corequisite:           "Korekvizita",
+		incompatibility:       "Neslučitelnost",
+		legendNodeInPlan:      "V plánu",
+		legendNodeOutsidePlan: "Mimo plán",
 		code:                  "Kód",
 		title:                 "Název",
 		status:                "Stav",
@@ -159,6 +177,15 @@ var texts = map[language.Language]text{
 		showPrerequisites:     "Show prerequisites",
 		showCorequisites:      "Show corequisites",
 		showIncompatibilities: "Show incompatibilities",
+		legendTitle:           "Legend",
+		legendEdges:           "Edges",
+		legendNodes:           "Nodes",
+		legendDirection:       "Edges point from a course to its requisite.",
+		prerequisite:          "Prerequisite",
+		corequisite:           "Corequisite",
+		incompatibility:       "Incompatibility",
+		legendNodeInPlan:      "In degree plan",
+		legendNodeOutsidePlan: "Outside degree plan",
 		code:                  "Code",
 		title:                 "Title",
 		status:                "Status",

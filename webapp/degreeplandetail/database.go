@@ -20,16 +20,17 @@ type DBManager struct {
 }
 
 type dbDegreePlanRecord struct {
-	DegreePlanCode      string `db:"degree_plan_code"`
-	DegreePlanTitle     string `db:"degree_plan_title"`
-	FieldCode           string `db:"field_code"`
-	FieldTitle          string `db:"field_title"`
-	DegreePlanValidFrom int    `db:"degree_plan_valid_from"`
-	DegreePlanValidTo   int    `db:"degree_plan_valid_to"`
-	BlocCode            string `db:"bloc_subject_code"`
-	BlocLimit           int    `db:"bloc_limit"`
-	BlocName            string `db:"bloc_name"`
-	BlocType            string `db:"bloc_type"`
+	DegreePlanCode      string         `db:"degree_plan_code"`
+	DegreePlanTitle     string         `db:"degree_plan_title"`
+	FieldCode           string         `db:"field_code"`
+	FieldTitle          string         `db:"field_title"`
+	DegreePlanValidFrom int            `db:"degree_plan_valid_from"`
+	DegreePlanValidTo   int            `db:"degree_plan_valid_to"`
+	RequisiteGraphData  sql.NullString `db:"requisite_graph_data"`
+	BlocCode            string         `db:"bloc_subject_code"`
+	BlocLimit           int            `db:"bloc_limit"`
+	BlocName            string         `db:"bloc_name"`
+	BlocType            string         `db:"bloc_type"`
 	dbds.Course
 	RecommendedYearFrom sql.NullInt64 `db:"recommended_year_from"`
 	RecommendedYearTo   sql.NullInt64 `db:"recommended_year_to"`
@@ -260,6 +261,7 @@ func buildDegreePlanPage(records []dbDegreePlanRecord, isUserPlan bool) degreePl
 	dp.fieldTitle = records[0].FieldTitle
 	dp.validFrom = records[0].DegreePlanValidFrom
 	dp.validTo = records[0].DegreePlanValidTo
+	dp.reqGraphData = records[0].RequisiteGraphData
 	dp.isUserPlan = isUserPlan
 	for _, record := range records {
 		add(&dp, record)

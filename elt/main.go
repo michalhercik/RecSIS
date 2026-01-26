@@ -159,6 +159,7 @@ func transform(recsis *sqlx.DB) error {
 			createFilterValuesForDegreePlanValid,
 			createFilterValuesForDegreePlanStudyTypes,
 		},
+		createRequisiteGraphData,
 	}
 
 	err := runner.run(recsis)

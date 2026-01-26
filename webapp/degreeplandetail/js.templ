@@ -6,7 +6,6 @@ templ scripts() {
 		updateStickyOffset();
 		initializeTooltips();
 		cleanupOffcanvasOnNavigation();
-		initializeRequisiteGraph();
 
 		// shift click for multiple checkboxes
 		function setupCheckboxShiftClick() {
@@ -169,13 +168,10 @@ templ scripts() {
 					elk: {
 						algorithm: 'layered',
 						'elk.direction': 'UP',
-						'spacing.nodeNode': 100,						
-						'spacing.componentComponent': 150,
-						'spacing.nodeNodeBetweenLayers': 30,
-						'spacing.edgeEdgeBetweenLayers': 20,
-						'spacing.edgeNodeBetweenLayers': 30,
+						'spacing.nodeNode': 30,
+						'spacing.nodeNodeBetweenLayers': 35,
+						'spacing.edgeNodeBetweenLayers': 40,
 						'layering.strategy': 'LONGEST_PATH',
-						'crossingMinimization.semiInteractive': true
 					}
 				},
 				elements: graphData,
@@ -186,20 +182,22 @@ templ scripts() {
 							'label': 'data(label)',
 							'text-valign': 'center',
 							'text-halign': 'center',
-							'background-color': '#4f86f7',
+							'background-color': 'rgb(252,227,204)',
 							'color': '#000',
 							'text-wrap': 'wrap',
 							'text-max-width': 120,
-							'font-size': 10
+							'font-size': 11,
+							'font-weight': 'bold',
+							'shape': 'round-rectangle',
+							'width': 'label',
+							'height': 'label',
+							'padding': '10px'
 						}
 					},
 					{
 						selector: 'node[inPlan="false"]',
 						style: {
-							'background-color': '#bbb',
-							'border-style': 'dashed',
-							'border-width': 2,
-							'border-color': '#666'
+							'background-color': '#ccc',
 						}
 					},
 					{
@@ -217,7 +215,7 @@ templ scripts() {
 							'line-color': '#2ca02c',
 							'target-arrow-color': '#2ca02c',
 							'target-arrow-shape': 'triangle',
-							'curve-style': 'straight'
+							'curve-style': 'bezier'
 						}
 					},
 					{
@@ -226,8 +224,7 @@ templ scripts() {
 							'line-color': '#d62728',
 							'target-arrow-color': '#d62728',
 							'target-arrow-shape': 'triangle',
-							'width': 4,
-							'curve-style': 'bezier'
+							'curve-style': 'straight'
 						}
 					}
 				],
@@ -251,6 +248,9 @@ templ scripts() {
 			cy.on('mouseout', 'node', function() {
 				graphContainer.style.cursor = 'default';
 			});
+
+			// Enable scroll and zoom
+			enableGraphScrollAndZoom(cy, graphContainer);
 
 			// Filter handlers
 			setupGraphFilters(cy);
@@ -304,6 +304,36 @@ templ scripts() {
 			incompatCheckbox?.addEventListener('change', applyFilters);
 
 			applyFilters();
+		}
+
+		// Allow normal page scrolling on wheel, but zoom graph when shift is held
+		function enableGraphScrollAndZoom(cy, graphContainer) {
+			cy.userZoomingEnabled(false);
+			const zoomStep = 0.1;
+			const minZoom = cy.minZoom();
+			const maxZoom = cy.maxZoom();
+
+			graphContainer.addEventListener('wheel', (event) => {
+				if (!event.shiftKey) {
+					return; // let the page handle scroll normally
+				}
+
+				event.preventDefault();
+
+				const bounds = graphContainer.getBoundingClientRect();
+				const renderedPosition = {
+					x: event.clientX - bounds.left,
+					y: event.clientY - bounds.top,
+				};
+
+				const zoomDelta = event.deltaY < 0 ? 1 + zoomStep : 1 - zoomStep;
+				const newZoom = Math.max(minZoom, Math.min(maxZoom, cy.zoom() * zoomDelta));
+
+				cy.zoom({
+					level: newZoom,
+					renderedPosition,
+				});
+			}, { passive: false });
 		}
 	</script>
 }

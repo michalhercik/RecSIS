@@ -141,7 +141,6 @@ templ addRecommendedPlanToBPBtn(t text) {
     </button>
 }
 
-// TODO: this must refresh to page for BP to work
 templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
     <div class="modal fade" id="addRecToBPModal" tabindex="-1" aria-labelledby="addRecToBPModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -180,6 +179,7 @@ templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
     </div>
 }
 
+// TODO: if there is only one tab available, do not show the tabs at all, show only details
 templ tabs(dp *degreePlanPage, bpBtnRow PartialBlueprintAdd, t text) {
 	<ul
 		role="tablist"
@@ -189,9 +189,11 @@ templ tabs(dp *degreePlanPage, bpBtnRow PartialBlueprintAdd, t text) {
         if !dp.recommendedPlan.isEmpty() {
 		    @tabButton(fmt.Sprintf("%s-survey-tab-pane", dp.code), t.tabRecommendedPlan, t.tabRecommendedPlanSm, false)
         }
-        <span class="d-none d-md-inline">
-		    @tabButton(fmt.Sprintf("%s-detail-tab-pane", dp.code), t.tabReqMap, t.tabReqMap, false)
-        </span>
+        if dp.reqGraphData.Valid {
+            <span class="d-none d-md-inline">
+                @tabButton(fmt.Sprintf("%s-detail-tab-pane", dp.code), t.tabReqMap, t.tabReqMap, false)
+            </span>
+        }
 	</ul>
 	<div class="tab-content">
 		@tabPane(fmt.Sprintf("%s-desc-tab-pane", dp.code), true) {
@@ -202,8 +204,10 @@ templ tabs(dp *degreePlanPage, bpBtnRow PartialBlueprintAdd, t text) {
 		@tabPane(fmt.Sprintf("%s-survey-tab-pane", dp.code), false) {
 			@recommendedPlanOverview(&dp.recommendedPlan, t)
 		}
-        @tabPane(fmt.Sprintf("%s-detail-tab-pane", dp.code), false) {
-            @requisiteGraph("dp.requisitesGraphData()", t)
+        if dp.reqGraphData.Valid {
+            @tabPane(fmt.Sprintf("%s-detail-tab-pane", dp.code), false) {
+                @requisiteGraph(dp.reqGraphData.String, t)
+            }
         }
 	</div>
 }
@@ -320,32 +324,76 @@ templ recommendedCoursesBody(courses []course, t text) {
     </tbody>
 }
 
-// TODO: work on this
-// TODO: lazy load graph data
-// TODO: if we put data using server method, the page will be shifting when adding courses to BP
 templ requisiteGraph(graphDataJSON string, t text) {
     <span id="graph-data" class="d-none" type="application/json">
         { graphDataJSON }
     </span>
-    <div>
-        <div class="controls d-flex flex-row gap-3 mb-3">
-            @filterCheckbox("show-prerequisites", t.showPrerequisites)
-            @filterCheckbox("show-corequisites", t.showCorequisites)
-            @filterCheckbox("show-incompatibilities", t.showIncompatibilities)
+    <div x-data x-intersect.once="initializeRequisiteGraph">
+        @graphLegend(t)
+        <div class="controls d-flex flex-wrap align-items-start gap-3 my-3">
+            <div class="d-flex flex-row flex-wrap gap-3">
+                @filterCheckbox("show-prerequisites", t.showPrerequisites)
+                @filterCheckbox("show-corequisites", t.showCorequisites)
+                @filterCheckbox("show-incompatibilities", t.showIncompatibilities)
+            </div>
         </div>
-        <div id="course-graph" class="w-100 border border-secondary-subtle border-1" style="height: 600px;"></div>
+        <div id="course-graph" class="w-100 border border-secondary-subtle border-1"></div>
     </div>
 }
+
+templ graphLegend(t text) {
+    <div class="d-flex justify-content-center">
+        <div class="d-inline-flex border rounded-3 px-5 py-2 bg-light">
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex flex-row gap-4">
+                    @legendGroup(t.legendEdges) {
+                        @legendEdge(t.prerequisite, "dp-prereq-edge")
+                        @legendEdge(t.corequisite, "dp-coreq-edge")
+                        @legendEdge(t.incompatibility, "dp-incompat-edge")
+                    }
+                    @legendGroup(t.legendNodes) {
+                        @legendNode(t.legendNodeInPlan, "dp-in-plan-node")
+                        @legendNode(t.legendNodeOutsidePlan, "dp-not-in-plan-node")
+                    }
+                </div>
+                <div class="small text-muted text-center">{ t.legendDirection }</div>
+            </div>
+        </div>
+    </div>
+}
+
+templ legendGroup(title string) {
+    <div>
+        <div class="small fw-semibold text-center">{ title }</div>
+        <div class="small d-flex flex-row gap-2">
+            { children... }
+        </div>
+    </div>
+}
+
+templ legendEdge(label, colorClass string) {
+    <span class="d-flex align-items-center gap-1">
+        <span class={"d-inline-block dp-legend-edge", colorClass}></span>
+        <span>{ label }</span>
+    </span>
+}
+
+templ legendNode(label string, colorClass string) {
+    <span class="d-flex align-items-center gap-1">
+        <span class={"d-inline-block dp-legend-node", colorClass}></span>
+        <span>{ label }</span>
+    </span>
+}
+// ======================================   
 
 templ filterCheckbox(id, label string) {
     <div class="form-check">
         <input id={ id } class="form-check-input" type="checkbox" role="button" checked>
-        <label class="form-check-label" role="button" for={ id }>
+        <label class="form-check-label user-select-none" role="button" for={ id }>
             { label }
         </label>
     </div>
 }
-// ======================================   
 
 templ blocOverview(bloc *bloc, bpBtnRow PartialBlueprintAdd, t text) {
     @completionStatusBadges(bloc, t)
