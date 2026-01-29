@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type runner interface {
@@ -73,12 +76,25 @@ type transformation struct {
 }
 
 func (t transformation) run(db *sqlx.DB) error {
-	_, err := db.Exec(t.query)
-	if err != nil {
+	if _, err := db.Exec(t.query); err != nil {
 		log.Printf("❌ %s: Transform: %v", t.name, err)
 		return err
 	}
-	log.Printf("✅ Transformation of %s successfull", t.name)
+	log.Printf("✅ Transformation of %s successful", t.name)
+	return nil
+}
+
+type goTransformation struct {
+	name string
+	runF func(db *sqlx.DB) error
+}
+
+func (t goTransformation) run(db *sqlx.DB) error {
+	if err := t.runF(db); err != nil {
+		log.Printf("❌ %s: Transform: %v", t.name, err)
+		return err
+	}
+	log.Printf("✅ Transformation of %s successful", t.name)
 	return nil
 }
 
@@ -511,53 +527,6 @@ var ankecy2JSON = transformation{
 
 /*
 Prerequisites:
-  - preq
-  - pskup
-*/
-var preq2requisites = transformation{
-	name: "preq2requisites",
-	query: `--sql
-	DROP TABLE IF EXISTS requisites;
-	CREATE TABLE requisites (
-		target_course VARCHAR(10),
-		parent_course VARCHAR(10),
-		child_course  VARCHAR(10),
-		req_type      VARCHAR(1),
-		group_type    VARCHAR(1)
-	);
-	WITH RECURSIVE req_tree AS (
-		SELECT
-			p.POVINN       AS target_course,
-			p.POVINN       AS parent_course,
-			p.REQPOVINN    AS child_course,
-			p.REQTYP       AS req_type,
-			p.PSKUPINA     AS group_type
-		FROM preq p
-
-		UNION ALL
-
-		SELECT
-			rt.target_course,
-			rt.child_course AS parent_course,
-			s.PSPOVINN      AS child_course,
-			rt.req_type,
-			s.PSKUPINA      AS group_type
-		FROM req_tree rt
-		JOIN pskup s ON s.POVINN = rt.child_course
-	)
-	INSERT INTO requisites
-	SELECT DISTINCT
-		target_course,
-		parent_course,
-		child_course,
-		req_type,
-		group_type
-	FROM req_tree;
-	`,
-}
-
-/*
-Prerequisites:
   - klas2lang
   - pklas
 */
@@ -641,6 +610,10 @@ var povinn2courses = transformation{
 		guarantors jsonb,
 		teachers jsonb,
 		semester_count INT,
+		prerequisites jsonb,
+		corequisites jsonb,
+		incompatibilities jsonb,
+		interchangeabilities jsonb,
 		annotation jsonb,
 		syllabus jsonb,
 		terms_of_passing jsonb,
@@ -759,6 +732,10 @@ var povinn2courses = transformation{
 		cg.guarantors,
 		cg.teachers,
 		cg.semester_count,
+		NULL::jsonb prerequisites,
+		NULL::jsonb corequisites,
+		NULL::jsonb incompatibilities,
+		NULL::jsonb interchangeabilities,
 		pj.annotation,
 		pj.syllabus,
 		pj.terms_of_passing,
@@ -794,6 +771,430 @@ var povinn2courses = transformation{
 	LEFT JOIN pklas2json pklas ON cg.code = pklas.course_code AND cl.lang = pklas.lang
 	LEFT JOIN ptrida2json ptrida ON cg.code = ptrida.course_code
 	`,
+}
+
+/*
+Prerequisites:
+  - preq
+  - pskup
+*/
+var preq2requisites = transformation{
+	name: "preq2requisites",
+	query: `--sql
+	DROP TABLE IF EXISTS requisites;
+	CREATE TABLE requisites (
+		target_course VARCHAR(10),
+		parent_course VARCHAR(10),
+		child_course  VARCHAR(10),
+		req_type      VARCHAR(1),
+		group_type    VARCHAR(1)
+	);
+	WITH RECURSIVE req_tree AS (
+		SELECT
+			p.POVINN       AS target_course,
+			p.POVINN       AS parent_course,
+			p.REQPOVINN    AS child_course,
+			p.REQTYP       AS req_type,
+			p.PSKUPINA     AS group_type
+		FROM preq p
+
+		UNION ALL
+
+		SELECT
+			rt.target_course,
+			rt.child_course AS parent_course,
+			s.PSPOVINN      AS child_course,
+			rt.req_type,
+			s.PSKUPINA      AS group_type
+		FROM req_tree rt
+		JOIN pskup s ON s.POVINN = rt.child_course
+	)
+	INSERT INTO requisites
+	SELECT DISTINCT
+		target_course,
+		parent_course,
+		child_course,
+		req_type,
+		group_type
+	FROM req_tree;
+	`,
+}
+
+/*
+Prerequisites:
+  - povinn2courses
+  - preq2requisites
+*/
+var preq2coursesRequisites = goTransformation{
+	name: "preq2courses_requisites",
+	runF: func(db *sqlx.DB) error {
+		// Load requisites
+		type requisite struct {
+			TargetCourse string         `db:"target_course"`
+			ParentCourse string         `db:"parent_course"`
+			ChildCourse  string         `db:"child_course"`
+			ReqType      string         `db:"req_type"`
+			GroupType    sql.NullString `db:"group_type"`
+		}
+		var result []requisite
+		selectQuery := `SELECT target_course, parent_course, child_course, req_type, group_type FROM requisites`
+		if err := db.Select(&result, selectQuery); err != nil {
+			return err
+		}
+
+		// Organize requisites by course and type
+		type courseSimpleRequisites struct {
+			prerequisites        []requisite
+			corequisites         []requisite
+			incompatibilities    []requisite
+			interchangeabilities []requisite
+		}
+		courseSimpleMap := make(map[string]*courseSimpleRequisites)
+		for _, r := range result {
+			cr, exists := courseSimpleMap[r.TargetCourse]
+			if !exists {
+				cr = &courseSimpleRequisites{}
+				courseSimpleMap[r.TargetCourse] = cr
+			}
+			switch r.ReqType {
+			case "P":
+				cr.prerequisites = append(cr.prerequisites, r)
+			case "K":
+				cr.corequisites = append(cr.corequisites, r)
+			case "N":
+				cr.incompatibilities = append(cr.incompatibilities, r)
+			case "Z":
+				cr.interchangeabilities = append(cr.interchangeabilities, r)
+			}
+		}
+
+		// Build requisite trees
+		type requisiteNode struct {
+			courseCode string
+			groupType  sql.NullString
+			courses    []*requisiteNode
+		}
+		type courseRefinedRequisites struct {
+			prerequisites        []*requisiteNode
+			corequisites         []*requisiteNode
+			incompatibilities    []*requisiteNode
+			interchangeabilities []*requisiteNode
+		}
+		courseRefinedMap := make(map[string]*courseRefinedRequisites)
+		for courseCode, cr := range courseSimpleMap {
+			crr := &courseRefinedRequisites{}
+			courseRefinedMap[courseCode] = crr
+
+			var makeRequisiteTree = func(requisites []requisite) []*requisiteNode {
+				reqMap := map[string]*requisiteNode{}
+				getNode := func(course string) *requisiteNode {
+					if _, ok := reqMap[course]; !ok {
+						reqMap[course] = &requisiteNode{courseCode: course}
+					}
+					return reqMap[course]
+				}
+
+				var root *requisiteNode
+				for _, r := range requisites {
+					parentNode := getNode(r.ParentCourse)
+					childNode := getNode(r.ChildCourse)
+					childNode.groupType = r.GroupType
+					parentNode.courses = append(parentNode.courses, childNode)
+					if r.ParentCourse == courseCode {
+						root = parentNode
+					}
+				}
+				if root != nil {
+					return root.courses
+				} else {
+					return []*requisiteNode{}
+				}
+			}
+			crr.prerequisites = makeRequisiteTree(cr.prerequisites)
+			crr.corequisites = makeRequisiteTree(cr.corequisites)
+			crr.incompatibilities = makeRequisiteTree(cr.incompatibilities)
+			crr.interchangeabilities = makeRequisiteTree(cr.interchangeabilities)
+		}
+
+		// Convert requisite trees to JSONB array strings
+		toJSONBArray := func(nodes []*requisiteNode) string {
+			if len(nodes) == 0 {
+				return "[]"
+			}
+			var buildNode func(n *requisiteNode) string
+			buildNode = func(n *requisiteNode) string {
+				if !n.groupType.Valid {
+					return fmt.Sprintf(`"%s"`, n.courseCode)
+				}
+				childrenStrs := []string{}
+				for _, child := range n.courses {
+					childrenStrs = append(childrenStrs, buildNode(child))
+				}
+				return fmt.Sprintf(`{"course_code":"%s","group_type":"%s","courses":[%s]}`, n.courseCode, n.groupType.String, strings.Join(childrenStrs, ","))
+			}
+			nodeStrs := []string{}
+			for _, n := range nodes {
+				nodeStrs = append(nodeStrs, buildNode(n))
+			}
+			return fmt.Sprintf("[%s]", strings.Join(nodeStrs, ","))
+		}
+
+		// Start transaction
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		// Prepare statement
+		updateQuery := `UPDATE povinn2courses SET prerequisites=$1, corequisites=$2, incompatibilities=$3, interchangeabilities=$4 WHERE code=$5`
+		stmt, err := tx.Prepare(updateQuery)
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+
+		// Execute updates
+		for courseCode, cr := range courseRefinedMap {
+			_, err := stmt.Exec(
+				toJSONBArray(cr.prerequisites),
+				toJSONBArray(cr.corequisites),
+				toJSONBArray(cr.incompatibilities),
+				toJSONBArray(cr.interchangeabilities),
+				courseCode,
+			)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Commit transaction
+		return tx.Commit()
+	},
+}
+
+/*
+Prerequisites:
+  - povinn2courses
+  - studmetadata2lang
+  - studplan2lang
+  - requisites
+*/
+var createRequisiteGraphData = goTransformation{
+	name: "create_requisite_graph_data",
+	runF: func(db *sqlx.DB) error {
+		type course struct {
+			code              string
+			title             string
+			prerequisites     []string
+			corequisites      []string
+			incompatibilities []string
+		}
+		type node struct {
+			Data struct {
+				ID     string `json:"id"`
+				Code   string `json:"code"`
+				Label  string `json:"label"`
+				InPlan string `json:"inPlan"`
+			} `json:"data"`
+		}
+		type edge struct {
+			Data struct {
+				ID     string `json:"id"`
+				Source string `json:"source"`
+				Target string `json:"target"`
+				Type   string `json:"type"`
+			} `json:"data"`
+		}
+
+		createEdges := func(courseCodes []string, edgeType, targetCode string, nodes *map[string]node, edges map[string]edge, edgeID *int) {
+			for _, req := range courseCodes {
+				if _, exists := (*nodes)[req]; !exists {
+					n := node{}
+					n.Data.ID = req
+					n.Data.Code = req
+					n.Data.Label = req
+					n.Data.InPlan = "false"
+					(*nodes)[req] = n
+				}
+
+				// Create a unique key for this edge to prevent duplicates
+				edgeKey := fmt.Sprintf("%s->%s:%s", targetCode, req, edgeType)
+
+				// Only add edge if it doesn't already exist
+				if _, exists := edges[edgeKey]; !exists {
+					e := edge{}
+					e.Data.ID = fmt.Sprintf("e%d", *edgeID)
+					e.Data.Source = targetCode
+					e.Data.Target = req
+					e.Data.Type = edgeType
+					edges[edgeKey] = e
+					(*edgeID)++
+				}
+			}
+		}
+
+		requisitesGraphData := func(courses []course) string {
+			nodeMap := make(map[string]node)
+			edgeMap := make(map[string]edge)
+			edgeID := 0
+
+			// Build nodes and edges from all courses
+			for _, course := range courses {
+				if foundNode, exists := nodeMap[course.code]; !exists {
+					n := node{}
+					n.Data.ID = course.code
+					n.Data.Code = course.code
+					n.Data.Label = fmt.Sprintf("%s - %s", course.code, course.title) // TODO: maybe better label
+					n.Data.InPlan = "true"
+					nodeMap[course.code] = n
+				} else {
+					foundNode.Data.InPlan = "true"
+					foundNode.Data.Label = fmt.Sprintf("%s - %s", course.code, course.title)
+					nodeMap[course.code] = foundNode
+				}
+				// Add prerequisite nodes and edges
+				createEdges(course.prerequisites, "prerequisite", course.code, &nodeMap, edgeMap, &edgeID)
+				// Add corequisite edges
+				createEdges(course.corequisites, "corequisite", course.code, &nodeMap, edgeMap, &edgeID)
+				// Add incompatibility edges
+				createEdges(course.incompatibilities, "incompatibility", course.code, &nodeMap, edgeMap, &edgeID)
+			}
+
+			// remove incompatibility edges to nodes not in DP
+			edgesToRemove := make([]string, 0)
+			for edgeKey, e := range edgeMap {
+				if e.Data.Type == "incompatibility" {
+					if node, exists := nodeMap[e.Data.Target]; !exists || node.Data.InPlan == "false" {
+						edgesToRemove = append(edgesToRemove, edgeKey)
+					}
+				}
+			}
+			for _, edgeKey := range edgesToRemove {
+				delete(edgeMap, edgeKey)
+			}
+
+			nodeSlice := make([]node, 0, len(nodeMap))
+			for _, n := range nodeMap {
+				nodeSlice = append(nodeSlice, n)
+			}
+
+			edges := make([]edge, 0, len(edgeMap))
+			for _, e := range edgeMap {
+				edges = append(edges, e)
+			}
+
+			result := struct {
+				Nodes []node `json:"nodes"`
+				Edges []edge `json:"edges"`
+			}{nodeSlice, edges}
+
+			jsonData, _ := json.Marshal(result)
+			return string(jsonData)
+		}
+
+		type plan struct {
+			code    string
+			lang    string
+			courses []course
+		}
+
+		runPlan := func(p *plan, db *sqlx.DB) error {
+			graphData := requisitesGraphData(p.courses)
+			updateQuery := `UPDATE studmetadata2lang SET requisite_graph_data=$1 WHERE plan_code=$2 AND lang=$3`
+			_, err := db.Exec(updateQuery, graphData, p.code, p.lang)
+			return err
+		}
+
+		type planCourseRow struct {
+			PlanCode          string         `db:"plan_code"`
+			Lang              string         `db:"lang"`
+			CourseCode        string         `db:"course_code"`
+			Title             string         `db:"title"`
+			Prerequisites     pq.StringArray `db:"prerequisites"`
+			Corequisites      pq.StringArray `db:"corequisites"`
+			Incompatibilities pq.StringArray `db:"incompatibilities"`
+		}
+
+		// TODO: load all study plans
+		const planCoursesQuery = `--sql
+		SELECT
+			dp.plan_code,
+			dp.lang,
+			dpc.course_code,
+			COALESCE(c.title, '') AS title,
+			COALESCE((
+				SELECT array_agg(child_course ORDER BY child_course)
+				FROM requisites r
+				WHERE r.target_course = dpc.course_code
+					AND r.req_type = 'P'
+					AND r.group_type IS NULL
+			), '{}'::varchar[]) AS prerequisites,
+			COALESCE((
+				SELECT array_agg(child_course ORDER BY child_course)
+				FROM requisites r
+				WHERE r.target_course = dpc.course_code
+					AND r.req_type = 'K'
+					AND r.group_type IS NULL
+			), '{}'::varchar[]) AS corequisites,
+			COALESCE((
+				SELECT array_agg(child_course ORDER BY child_course)
+				FROM requisites r
+				WHERE r.target_course = dpc.course_code
+					AND r.req_type = 'N'
+					AND r.group_type IS NULL
+			), '{}'::varchar[]) AS incompatibilities
+		FROM studmetadata2lang dp
+		JOIN studplan2lang dpc ON dpc.plan_code = dp.plan_code AND dpc.lang = dp.lang
+		LEFT JOIN povinn2courses c ON c.code = dpc.course_code AND c.lang = dp.lang
+		WHERE dp.plan_code IN ('NIPVS19B', 'NISD23N') AND dpc.interchangeability IS NULL
+		ORDER BY dp.plan_code, dp.lang, dpc.course_code;
+		`
+
+		log.Printf("ℹ️ Starting requisite graph data creation for study plans")
+		rows := []planCourseRow{}
+		if err := db.Select(&rows, planCoursesQuery); err != nil {
+			return err
+		}
+		log.Printf("ℹ️ Loaded %d plan course rows", len(rows))
+
+		planMap := map[string]*plan{}
+		for _, row := range rows {
+			key := fmt.Sprintf("%s|%s", row.PlanCode, row.Lang)
+			if _, exists := planMap[key]; !exists {
+				planMap[key] = &plan{code: row.PlanCode, lang: row.Lang}
+			}
+			planMap[key].courses = append(planMap[key].courses, course{
+				code:              row.CourseCode,
+				title:             row.Title,
+				prerequisites:     []string(row.Prerequisites),
+				corequisites:      []string(row.Corequisites),
+				incompatibilities: []string(row.Incompatibilities),
+			})
+		}
+
+		plans := make([]plan, 0, len(planMap))
+		for _, p := range planMap {
+			plans = append(plans, *p)
+		}
+
+		runners := parallelRunner{}
+		for _, p := range plans {
+			p := p // capture loop variable
+			runners = append(runners, goTransformation{
+				name: fmt.Sprintf("plan_%s_%s", p.code, p.lang),
+				runF: func(db *sqlx.DB) error {
+					log.Printf("ℹ️ Processing plan %s (%s) with %d courses", p.code, p.lang, len(p.courses))
+					return runPlan(&p, db)
+				},
+			})
+		}
+		if err := runners.run(db); err != nil {
+			return err
+		}
+
+		return nil
+	},
 }
 
 /*
@@ -1193,6 +1594,7 @@ var createFilterValuesForFaculties = transformation{
 		FROM povinn2searchable
 		LEFT JOIN fak ON faculty = fak.kod
 		LEFT JOIN category_id cid ON true
+		WHERE povinn2searchable.code != 'ASE500129' AND povinn2searchable.code != 'ASE500130' -- exclude FF courses
 `,
 }
 
@@ -1461,6 +1863,7 @@ var createFilterValuesForDepartments = transformation{
 			SELECT DISTINCT
 				department
 			FROM povinn2searchable
+			WHERE code != 'ASE500129' AND code != 'ASE500130' -- exclude FF courses
 		)
 		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, description_cs, description_en, position)
 		SELECT
@@ -1506,6 +1909,7 @@ var createFilterValuesForSections = transformation{
 			FROM povinn2searchable ps
 			LEFT JOIN ustav u ON ps.department = u.kod
 			LEFT JOIN sekce s ON u.sekce = s.kod
+			WHERE ps.code != 'ASE500129' AND ps.code != 'ASE500130' -- exclude FF courses
 		)
 		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
 		SELECT
@@ -1715,7 +2119,7 @@ var createFilterValuesForSurveyStudyTypes = transformation{
 		FROM distinct_study_type dst
 		LEFT JOIN druh d ON dst.sdruh = d.kod
 		LEFT JOIN category_id cid ON true
-		`,
+	`,
 }
 
 /*
@@ -1783,7 +2187,7 @@ var createFilterValuesForSurveyTargetTypes = transformation{
 			ROW_NUMBER() OVER (ORDER BY d.prdmtyp) position
 		FROM distinct_target_type d
 		LEFT JOIN category_id cid ON true
-		`,
+	`,
 }
 
 /*
@@ -1844,6 +2248,7 @@ var studplan2lang = transformation{
 /*
 Prerequisites:
   - stud_plan_metadata
+  - stud_plan_obor
 */
 var studmetadata2lang = transformation{
 	name: "studmetadata2lang",
@@ -1858,34 +2263,42 @@ var studmetadata2lang = transformation{
 			faculty VARCHAR(5),
 			section VARCHAR(2),
 			field_code VARCHAR(20),
-			study_type VARCHAR(5)
+			field_title VARCHAR(250),
+			study_type VARCHAR(5),
+			requisite_graph_data TEXT
 		);
 		INSERT INTO studmetadata2lang
 		SELECT
-			code as plan_code,
+			spm.code as plan_code,
 			'cs' lang,
-			name_cz as title,
-			valid_from,
-			valid_to,
-			faculty,
-			section,
-			field_code,
-			druh.zkratka AS study_type
-		FROM stud_plan_metadata
-		JOIN druh ON stud_plan_metadata.study_type = druh.kod
+			spm.name_cz as title,
+			spm.valid_from,
+			spm.valid_to,
+			spm.faculty,
+			spm.section,
+			spm.field_code,
+			spo.name_cz as field_title,
+			druh.zkratka AS study_type,
+			NULL as requisite_graph_data
+		FROM stud_plan_metadata spm
+		JOIN druh ON spm.study_type = druh.kod
+		LEFT JOIN stud_plan_obor spo ON spm.field_code = spo.code
 		UNION
 		SELECT
-			code as plan_code,
+			spm.code as plan_code,
 			'en' lang,
-			name_en as title,
-			valid_from,
-			valid_to,
-			faculty,
-			section,
-			field_code,
-			druh.zkratka AS study_type
-		FROM stud_plan_metadata
-		JOIN druh ON stud_plan_metadata.study_type = druh.kod
+			spm.name_en as title,
+			spm.valid_from,
+			spm.valid_to,
+			spm.faculty,
+			spm.section,
+			spm.field_code,
+			spo.name_en as field_title,
+			druh.zkratka AS study_type,
+			NULL as requisite_graph_data
+		FROM stud_plan_metadata spm
+		JOIN druh ON spm.study_type = druh.kod
+		LEFT JOIN stud_plan_obor spo ON spm.field_code = spo.code
 	`,
 }
 

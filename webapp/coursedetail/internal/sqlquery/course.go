@@ -14,13 +14,13 @@ avg_course_overall_ratings AS (
 	GROUP BY course_code
 ),
 degree_plan AS (
-	SELECT dp.course_code
+	SELECT dpc.course_code
 	FROM studies bs
-	LEFT JOIN degree_plan_courses dp
-		ON dp.plan_code = bs.degree_plan_code
+	LEFT JOIN degree_plan_courses dpc
+		ON dpc.plan_code = bs.degree_plan_code
+		AND dpc.lang = $3
 	WHERE bs.user_id = $1
-		AND dp.course_code = $2
-		AND dp.lang = 'cs'
+		AND dpc.course_code = $2
 ),
 user_blueprint_semesters AS (
 	SELECT array_agg(course_code IS NOT NULL) AS semesters
@@ -58,9 +58,13 @@ SELECT
 	c.min_occupancy,
 	c.capacity,
 	c.course_url,
+	c.prerequisites,
+	c.corequisites,
+	c.incompatibilities,
+	c.interchangeabilities,
 	c.annotation,
 	c.aim,
-	c.requirements_of_assesment,
+	c.requirements_of_assessment,
 	c.syllabus,
 	c.literature,
 	c.entry_requirements,
@@ -110,16 +114,6 @@ LEFT JOIN user_ratings ur
 LEFT JOIN avg_course_rating avg_cr
 	ON avg_cr.category_code = crc.code
 WHERE crc.lang = $3;
-`
-
-const Requisites = `--sql
-SELECT
-	parent_course,
-	child_course,
-	req_type,
-	group_type
-FROM requisites
-WHERE target_course = $1;
 `
 
 const RateCategory = `

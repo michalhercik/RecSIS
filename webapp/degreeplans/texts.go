@@ -18,6 +18,9 @@ type text struct {
 	title               string
 	studyType           string
 	validity            string
+	selectForCompare    string
+	unselectForCompare  string
+	compareWithSelected string
 	// language
 	language language.Language
 	// errors
@@ -36,7 +39,7 @@ func (t text) showMore(rest int) string {
 
 var texts = map[language.Language]text{
 	language.CS: {
-		pageTitle:           "Studijní plán",
+		pageTitle:           "Vyhledávání plánů",
 		searchPlaceholder:   "hledejte studijní plány podle kódu nebo názvu...",
 		showMore4Minus:      "Další",
 		showMore5Plus:       "Dalších",
@@ -49,6 +52,9 @@ var texts = map[language.Language]text{
 		title:               "Název",
 		studyType:           "Druh",
 		validity:            "Platnost",
+		selectForCompare:    "Vybrat k porovnání",
+		unselectForCompare:  "Zrušit výběr k porovnání",
+		compareWithSelected: "Porovnat s vybraným plánem",
 		// language
 		language: language.CS,
 		// errors
@@ -57,7 +63,7 @@ var texts = map[language.Language]text{
 		errPageNotFound:      "Stránka nenalezena",
 	},
 	language.EN: {
-		pageTitle:           "Degree Plan",
+		pageTitle:           "Search Degree Plans",
 		searchPlaceholder:   "search degree plans by code or title...",
 		showMore4Minus:      "Another",
 		showMore5Plus:       "Another",
@@ -70,6 +76,9 @@ var texts = map[language.Language]text{
 		title:               "Title",
 		studyType:           "Type",
 		validity:            "Validity",
+		selectForCompare:    "Select for compare",
+		unselectForCompare:  "Unselect for compare",
+		compareWithSelected: "Compare with selected plan",
 		// language
 		language: language.EN,
 		// errors

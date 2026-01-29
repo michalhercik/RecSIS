@@ -1402,7 +1402,7 @@ func mobileInfoTd(course *course, isCompulsory bool, t text) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var61 = []any{"fw-semibold text-truncate", templ.KV("fw-bold", isCompulsory)}
+		var templ_7745c5c3_Var61 = []any{"fw-medium text-truncate", templ.KV("fw-bold", isCompulsory)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var61...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

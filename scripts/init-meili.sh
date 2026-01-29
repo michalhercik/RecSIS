@@ -4,7 +4,10 @@
 API_KEY=$MEILI_MASTER_KEY
 BASE_URL="http://localhost:7700"
 
-# Set filterable attributes
+###############################################################
+# Course index settings
+###############################################################
+
 filterable='[
   "code",
   "start_semester",
@@ -48,7 +51,6 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
   "$BASE_URL/indexes/courses/settings/embedders")
 echo "PATCH embedders: $response"
 
-# Set searchable attributes
 searchable='[
   "code",
   "title",
@@ -58,7 +60,7 @@ searchable='[
   "sylabus",
   "aim",
   "terms_of_passing",
-  "requirements_of_assesment",
+  "requirements_of_assessment",
   "literature"
 ]'
 response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
@@ -81,6 +83,10 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -d "$dict" \
   "$BASE_URL/indexes/courses/settings/dictionary")
 echo "PUT dictionary: $response"
+
+###############################################################
+# Survey index settings
+###############################################################
 
 filterable='[
     "teacher.id",
@@ -109,6 +115,10 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   "$BASE_URL/indexes/survey/settings/sortable-attributes")
 echo "PUT filterable attributes: $response"
 
+###############################################################
+# Degree plan index settings
+###############################################################
+
 searchable='[
     "code",
     "title"
@@ -133,5 +143,4 @@ response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -H "Content-Type: application/json" \
   -d "$filterable" \
   "$BASE_URL/indexes/degree-plans/settings/filterable-attributes")
-echo "PUT searchable attributes: $response"
-
+echo "PUT filterable attributes: $response"

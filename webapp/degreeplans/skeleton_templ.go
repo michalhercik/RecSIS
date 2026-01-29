@@ -364,7 +364,7 @@ func skeletonRows(rnd *rand.Rand) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</th><th class=\"d-none d-lg-table-cell\"></th><th class=\"d-none d-lg-table-cell\"></th></tr></thead> <tbody>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</th><th class=\"d-none d-lg-table-cell\"></th><th class=\"d-none d-lg-table-cell\"></th><th></th></tr></thead> <tbody>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -441,7 +441,7 @@ func skeletonRows(rnd *rand.Rand) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td></tr>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td></td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
