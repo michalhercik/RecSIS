@@ -1,0 +1,175 @@
+package compare
+
+import (
+    "fmt"
+)
+
+templ Content(cmp *degreePlanComparePage, t text) {
+    <div
+        id="degreeplan-compare-content"
+        class="container mt-3"
+        hx-indicator="#loader"
+        x-data="{ smallScreen: window.innerWidth < 992 }"
+        @resize.window="smallScreen = window.innerWidth < 992"
+    >
+        // TODO: implement legend for colors
+        // TODO: add blueprint course assignments info
+        // TODO: maybe add possibility to add to BP from here
+        
+        // Mobile layout: plan headlines and blocks stacked
+        <div class="d-md-none">
+            <div class="row">
+                <div class="col-12">
+                    @planHeadline(cmp.basePlan.code, cmp.basePlan.title, t)
+                    @planBlocks(cmp.basePlan, t)
+                </div>
+                <div class="px-3 pb-2">
+                    <hr class="border border-3 rounded border-black opacity-50">
+                </div>
+                <div class="col-12">
+                    @planHeadline(cmp.comparePlan.code, cmp.comparePlan.title, t)
+                    @planBlocks(cmp.comparePlan, t)
+                </div>
+            </div>
+        </div>
+        
+        // Desktop layout: plan headlines and blocks side by side
+        <div class="d-none d-md-block">
+            <div class="row">
+                <div class="col-md-6">
+                    @planHeadline(cmp.basePlan.code, cmp.basePlan.title, t)
+                </div>
+                <div class="col-md-6">
+                    @planHeadline(cmp.comparePlan.code, cmp.comparePlan.title, t)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    @planBlocks(cmp.basePlan, t)
+                </div>
+                <div class="col-md-6">
+                    @planBlocks(cmp.comparePlan, t)
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+templ planHeadline(code, title string, t text) {
+    <div class="mb-2">
+        <a
+            class="h4 link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
+            href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }>
+            { fmt.Sprintf("%s (%s)", title, code) }
+        </a>
+    </div>
+}
+
+templ planBlocks(plan degreePlanData, t text) {
+    <div x-data="{ showDifferences: true, showSame: true }">
+        <div class="mb-1">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="button" id={ fmt.Sprintf("switchDifferences%s", plan.code) } checked x-model="showDifferences">
+                <label class="form-check-label" role="button" for={ fmt.Sprintf("switchDifferences%s", plan.code) }>{ t.showDifferences }</label>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="button" id={ fmt.Sprintf("switchSame%s", plan.code) } checked x-model="showSame">
+                <label class="form-check-label" role="button" for={ fmt.Sprintf("switchSame%s", plan.code) }>{ t.showSame }</label>
+            </div>
+        </div>
+        for _, block := range plan.blocks {
+            @blockTable(block, t)
+        }
+    </div>
+}
+
+templ blockTable(block degreePlanBlock, t text) {
+    <div
+        class="pb-2"
+        x-data
+        x-show={ `(showSame && $refs.rows && $refs.rows.querySelector('[data-identic-in-both=true]')) ||
+           (showDifferences && $refs.rows && $refs.rows.querySelector('[data-identic-in-both=false]'))` }
+    >
+        <div class="px-1 d-flex gap-2">
+            <h5 class="mb-0 flex-grow-1">{ block.title }</h5>
+            <div class="text-muted text-nowrap align-self-end">{ fmt.Sprintf("(%d)", block.limit) }</div>
+        </div>
+        <table class="table table-sm dp-compare-table" :class="{ 'table-hover': !smallScreen }">
+            <tbody x-ref="rows">
+                for _, course := range block.courses {
+                    <tr
+                        class={ templ.KV("table-warning", course.inOtherPlanDifferentType() ), templ.KV("table-danger", course.notInOtherPlan()) }
+                        data-identic-in-both={ fmt.Sprintf("%t", course.inOtherPlanSameType()) }
+                        if course.inOtherPlanSameType() {
+                            x-show="showSame"
+                        } else {
+                            x-show="showDifferences"
+                        }
+                    >
+                        <td class="d-none d-lg-table-cell">
+                            @courseLink(course.code, course.isSupported, t)
+                        </td>
+                        <td>
+                            <span class="d-none d-lg-inline">
+                                @titleCourseLink(course.code, course.title, block.isCompulsory, block.isOptional, course.isSupported, t)
+                            </span>
+                            <span class="d-lg-none">
+                                @mobileInfoTd(&course, block.isCompulsory, block.isOptional, t)
+                            </span>
+                        </td>
+                        <td class="text-end d-none d-lg-table-cell">
+                            { course.creditsString() }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>   
+    </div>
+}
+
+templ mobileInfoTd(course *course, isCompulsory, isOptional bool, t text) {
+    <div class="d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-center small lh-1">
+            <span class="text-muted">
+                { course.code }
+            </span>
+            <span class="text-muted">
+                if course.isSupported {
+                    { fmt.Sprintf("%s: %s", t.credits, course.creditsString()) }
+                }
+            </span>
+        </div>
+        <span class="text-truncate fw-medium">
+            @titleCourseLink(course.code, course.title, isCompulsory, isOptional, course.isSupported, t)
+        </span>
+    </div>
+}
+
+templ courseLink(code string, isSupported bool, t text) {
+    if isSupported {
+        <a
+            class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
+            href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+            { code }
+        </a>
+    } else {
+        <span class="text-muted">
+            { code }
+        </span>
+    }
+}
+
+templ titleCourseLink(code, title string, isCompulsory, isOptional, isSupported bool, t text) {
+    if isSupported {
+        <a
+            class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2",
+                    templ.KV("fw-bold", isCompulsory), templ.KV("text-muted", !isSupported), templ.KV("fst-italic", isOptional) }
+            href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
+            { title }
+        </a>
+    } else {
+        <span class="text-muted">
+            { title }
+        </span>
+    }
+}

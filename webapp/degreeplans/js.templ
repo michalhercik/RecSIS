@@ -4,6 +4,14 @@ templ scripts() {
 	<script>
 		initializeTooltips();
 
+		// bootstrap tooltip removal
+		function reloadTooltips() {
+			const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+			const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => bootstrap.Tooltip.getInstance(tooltipTriggerEl).dispose())
+
+			initializeTooltips();
+		};
+
 		// bootstrap tooltip initialization
 		function initializeTooltips() {
 			const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')

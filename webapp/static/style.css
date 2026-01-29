@@ -771,7 +771,7 @@ tr:target td {
     }
 }
 
-/* === Degree plan results table columns width styles === */
+/* === Degree plan results table === */
 
 .degree-plan-results-table {
     table-layout: fixed;
@@ -814,6 +814,39 @@ tr:target td {
 .degree-plan-results-table th:nth-child(6),
 .degree-plan-results-table td:nth-child(6) {
     width: 40px;
+}
+
+/* buttons */
+.degree-plan-results-table th:nth-child(7),
+.degree-plan-results-table td:nth-child(7) {
+    width: 36px;
+}
+
+/* === Degree plan compare table === */
+
+.dp-compare-table {
+    table-layout: fixed;
+}
+
+/* code */
+.dp-compare-table th:nth-child(1),
+.dp-compare-table td:nth-child(1) {
+    width: 85px;
+}
+
+/* title */
+.dp-compare-table th:nth-child(2),
+.dp-compare-table td:nth-child(2) {
+    width: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* credits */
+.dp-compare-table th:nth-child(3),
+.dp-compare-table td:nth-child(3) {
+    width: 30px;
 }
 
 /* ============================================== */
@@ -892,15 +925,15 @@ tr:target td {
     border-radius: 3px;
 }
 
-.dp-prereq-edge {
+.dp-prerequisite-edge {
     background-color: #1f77b4;
 }
 
-.dp-coreq-edge {
+.dp-corequisite-edge {
     background-color: #2ca02c;
 }
 
-.dp-incompat-edge {
+.dp-incompatibility-edge {
     background-color: #d62728;
 }
 
@@ -1042,6 +1075,10 @@ tr:target td {
 
 .dp-mobile-credits {
     width: 40px;
+}
+
+.dp-mobile-credits-long {
+    width: 80px;
 }
 
 .dp-mobile-plan-code {

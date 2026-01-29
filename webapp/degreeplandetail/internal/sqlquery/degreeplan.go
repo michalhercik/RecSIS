@@ -210,7 +210,6 @@ years_and_semesters AS (
     CROSS JOIN LATERAL generate_series(rc.recommended_year_from, rc.recommended_year_to) AS y
     LEFT JOIN blueprint_years by ON by.user_id = $1 AND by.academic_year = y
     LEFT JOIN blueprint_semesters bs ON bs.blueprint_year_id = by.id AND bs.semester = rc.semester
-    WHERE by.id IS NOT NULL
 )
 SELECT 
 	blueprint_semester_id,
@@ -253,7 +252,6 @@ years_and_semesters AS (
     CROSS JOIN LATERAL generate_series(rc.recommended_year_from, rc.recommended_year_to) AS y
     LEFT JOIN blueprint_years by ON by.user_id = $1 AND by.academic_year = y
     LEFT JOIN blueprint_semesters bs ON bs.blueprint_year_id = by.id AND bs.semester = rc.semester
-    WHERE by.id IS NOT NULL
 ),
 max_positions AS (
     SELECT 

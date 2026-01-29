@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/a-h/templ"
+	"github.com/michalhercik/RecSIS/degreeplans/compare"
 	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/filters"
 	"github.com/michalhercik/RecSIS/language"
@@ -17,20 +18,21 @@ import (
 //================================================================================
 
 type Server struct {
-	Auth                 Authentication
-	Data                 DBManager
-	Error                Error
-	Filters              filters.Filters
-	Page                 Page
-	router               http.Handler
-	Search               searchEngine
-	UserPlanRedirectPath string
+	Auth          Authentication
+	Data          DBManager
+	Error         Error
+	Filters       filters.Filters
+	Page          Page
+	router        http.Handler
+	Search        searchEngine
+	compareServer *compare.Server
 }
 
 func (s *Server) Init() {
 	if err := s.Filters.Init(); err != nil {
 		log.Fatal("degreeplan.Init: ", err)
 	}
+	s.initCompareServer()
 	s.initRouter()
 }
 
@@ -63,6 +65,20 @@ type Page interface {
 }
 
 //================================================================================
+// Subserver Initialization
+//================================================================================
+
+func (s *Server) initCompareServer() {
+	s.compareServer = &compare.Server{
+		Auth:  s.Auth,
+		Data:  compare.DBManager{DB: s.Data.DB},
+		Error: s.Error,
+		Page:  s.Page,
+	}
+	s.compareServer.Init()
+}
+
+//================================================================================
 // Routing
 //================================================================================
 
@@ -74,8 +90,13 @@ func (s *Server) initRouter() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.searchPage)
 	router.HandleFunc("GET /search", s.searchContent)
+	s.handleCompareRoutes(router)
 	router.HandleFunc("/", s.pageNotFound)
 	s.router = router
+}
+
+func (s *Server) handleCompareRoutes(router *http.ServeMux) {
+	router.Handle(comparePrefix, http.StripPrefix(comparePrefix[:len(comparePrefix)-1], s.compareServer.Router()))
 }
 
 //================================================================================
@@ -86,11 +107,11 @@ func (s Server) searchPage(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	userID := s.Auth.UserID(r)
-	degreePlanSearchContent, err := s.processSearchRequest(r)
+	degreePlanSearchContent, err := s.getDegreePlanData(r)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
-		s.Error.Render(w, r, code, userMsg, lang)
+		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
 		return
 	}
 	main := Content(degreePlanSearchContent, t)
@@ -104,7 +125,7 @@ func (s Server) searchPage(w http.ResponseWriter, r *http.Request) {
 func (s Server) searchContent(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
-	degreePlanSearchContent, err := s.processSearchRequest(r)
+	degreePlanSearchContent, err := s.getDegreePlanData(r)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -112,18 +133,23 @@ func (s Server) searchContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("HX-Push-Url", s.parseUrl(r.URL.Query(), lang))
-	err = FilterResults(degreePlanSearchContent, t).Render(r.Context(), w)
+	content := Content(degreePlanSearchContent, t)
+	err = content.Render(r.Context(), w)
 	if err != nil {
 		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
 	}
 }
 
-func (s Server) processSearchRequest(r *http.Request) (*degreePlanSearchPage, error) {
+func (s Server) getDegreePlanData(r *http.Request) (*degreePlanSearchPage, error) {
 	req, err := s.parseRequest(r)
 	if err != nil {
 		return nil, errorx.AddContext(err)
 	}
-	result, err := s.search(req, r)
+	res, err := s.Search.Search(req)
+	if err != nil {
+		return nil, errorx.AddContext(err)
+	}
+	result, err := s.buildDegreePlanPage(req, res, r)
 	if err != nil {
 		return nil, errorx.AddContext(err)
 	}
@@ -151,20 +177,21 @@ func (s Server) parseRequest(r *http.Request) (request, error) {
 	return req, nil
 }
 
-func (s Server) search(req request, httpReq *http.Request) (degreePlanSearchPage, error) {
+func (s Server) buildDegreePlanPage(req request, res response, httpReq *http.Request) (degreePlanSearchPage, error) {
 	var result degreePlanSearchPage
-	searchResponse, err := s.Search.Search(req)
+	degreePlanMetadata, err := s.Data.degreePlanMetadata(res.DegreePlanCodes, req.lang)
 	if err != nil {
 		return result, errorx.AddContext(err)
 	}
-	degreePlanMetadata, err := s.Data.degreePlanMetadata(searchResponse.DegreePlanCodes, req.lang)
-	if err != nil {
-		return result, errorx.AddContext(err)
-	}
+	compareCode := httpReq.FormValue(CompareUrlParam)
 	result = degreePlanSearchPage{
-		filters:     s.Filters.FiltersMapWithFacets(searchResponse.FacetDistribution, httpReq.URL.Query(), req.lang),
+		filters:     s.Filters.FiltersMapWithFacets(res.FacetDistribution, httpReq.URL.Query(), req.lang),
 		results:     degreePlanMetadata,
 		searchQuery: req.query,
+		selectedPlan: selectedPlan{
+			isAnySelected: compareCode != "",
+			code:          compareCode,
+		},
 	}
 	return result, nil
 }
@@ -181,6 +208,10 @@ func (s Server) parseUrl(queryValues url.Values, lang language.Language) string 
 	if queryValues.Get(searchDegreePlanName) == "" {
 		queryValues.Del(searchDegreePlanName)
 	}
+	if queryValues.Get(CompareUrlParam) == "" {
+		queryValues.Del(CompareUrlParam)
+	}
+	// build URL
 	url := lang.LocalizeURL("/degreeplans/")
 	if queryValues.Encode() != "" {
 		url = fmt.Sprintf("%s?%s", url, queryValues.Encode())

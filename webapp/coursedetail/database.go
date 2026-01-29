@@ -14,6 +14,10 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
+const (
+	foreignKeyViolationCode = "23503"
+)
+
 type DBManager struct {
 	DB *sqlx.DB
 }
@@ -57,11 +61,20 @@ func (db DBManager) rateCategory(userID string, code string, category string, ra
 	var updatedRating []dbds.CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.RateCategory, userID, code, category, rating)
 	if err != nil {
-		return []courseCategoryRating{}, errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.RateCategory: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("rating", rating), errorx.P("lang", lang)),
-			http.StatusInternalServerError,
-			texts[lang].errCannotRateCategory,
-		)
+		// Handle foreign key violation (invalid category code)
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == foreignKeyViolationCode {
+			return []courseCategoryRating{}, errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.RateCategory: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("rating", rating), errorx.P("lang", lang)),
+				http.StatusBadRequest,
+				texts[lang].errCannotRateCategory,
+			)
+		} else {
+			return []courseCategoryRating{}, errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.RateCategory: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("rating", rating), errorx.P("lang", lang)),
+				http.StatusInternalServerError,
+				texts[lang].errCannotRateCategory,
+			)
+		}
 	}
 	if err = db.DB.Select(&updatedRating, sqlquery.Rating, userID, code, lang); err != nil {
 		return []courseCategoryRating{}, errorx.NewHTTPErr(

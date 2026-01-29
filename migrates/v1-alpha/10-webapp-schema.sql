@@ -29,5 +29,22 @@ BEGIN
     END IF;
 END$$;
 
+-- Add foreign key constraint on degree_plan_code if it does not exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'studies_degree_plan_code_fkey'
+          AND conrelid = 'webapp.studies'::regclass
+    ) THEN
+        ALTER TABLE studies
+        ADD CONSTRAINT studies_degree_plan_code_fkey 
+        FOREIGN KEY (degree_plan_code) 
+        REFERENCES degree_plan_list(code) 
+        DEFERRABLE INITIALLY DEFERRED;
+    END IF;
+END$$;
+
 -- Drop start_year column if it exists
 ALTER TABLE studies DROP COLUMN IF EXISTS start_year;

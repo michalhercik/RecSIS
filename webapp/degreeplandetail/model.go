@@ -36,6 +36,7 @@ type degreePlanPage struct {
 	blocs           []bloc
 	recommendedPlan recommendedPlan
 	searchEndpoint  string
+	compareParam    string
 }
 
 func (dp *degreePlanPage) bpNumberOfSemesters() int {

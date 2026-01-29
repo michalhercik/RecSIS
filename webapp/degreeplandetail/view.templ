@@ -89,10 +89,11 @@ templ offcanvasMenu(dp *degreePlanPage, t text) {
         </div>
         <div class="offcanvas-body d-flex flex-column gap-3">
             @saveDegreePlan(dp.isUserPlan, dp.code, t)
-            @searchDPButton(dp.searchEndpoint, t)
+            @searchDegreePlanButton(dp.searchEndpoint, t)
             if !dp.recommendedPlan.isEmpty() {
                 @addRecommendedPlanToBPBtn(t)
             }
+            @compareDegreePlanButton(dp.code, dp.searchEndpoint, dp.compareParam, t)
         </div>
     </div>
 }
@@ -121,7 +122,7 @@ templ saveDegreePlan(isUserPlan bool, code string, t text) {
     }
 }
 
-templ searchDPButton(endpoint string, t text) {
+templ searchDegreePlanButton(endpoint string, t text) {
     <a
         type="button"
         class="btn bg-degreeplan"
@@ -179,37 +180,51 @@ templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
     </div>
 }
 
-// TODO: if there is only one tab available, do not show the tabs at all, show only details
+templ compareDegreePlanButton(code, endpoint, compareParam string, t text) {
+    <button
+        type="button"
+        class="btn bg-degreeplan"
+        hx-get={ templ.SafeURL(t.language.LocalizeURL(endpoint)) }
+        hx-vals={ fmt.Sprintf(`"%s": "%s"`, compareParam, code) }
+        hx-target="body"
+        hx-swap="outerHTML"
+        data-bs-dismiss="offcanvas">
+        <span>{ t.compareThisPlan }</span>
+    </button>
+}
+
 templ tabs(dp *degreePlanPage, bpBtnRow PartialBlueprintAdd, t text) {
-	<ul
-		role="tablist"
-		id="dp-tabs"
-		class="nav nav-tabs justify-content-center mb-3">
-		@tabButton(fmt.Sprintf("%s-desc-tab-pane", dp.code), t.tabDetail, t.tabDetail, true)
-        if !dp.recommendedPlan.isEmpty() {
-		    @tabButton(fmt.Sprintf("%s-survey-tab-pane", dp.code), t.tabRecommendedPlan, t.tabRecommendedPlanSm, false)
-        }
-        if dp.reqGraphData.Valid {
-            <span class="d-none d-md-inline">
-                @tabButton(fmt.Sprintf("%s-detail-tab-pane", dp.code), t.tabReqMap, t.tabReqMap, false)
-            </span>
-        }
-	</ul>
-	<div class="tab-content">
-		@tabPane(fmt.Sprintf("%s-desc-tab-pane", dp.code), true) {
-			for _, bloc := range dp.blocs {
-                @blocOverview(&bloc, bpBtnRow, t)
+    if dp.recommendedPlan.isEmpty() && !dp.reqGraphData.Valid {
+        @blocks(dp, bpBtnRow, t)
+    } else {
+        <ul
+            role="tablist"
+            id="dp-tabs"
+            class="nav nav-tabs justify-content-center mb-3">
+            @tabButton(fmt.Sprintf("%s-desc-tab-pane", dp.code), t.tabDetail, t.tabDetail, true)
+            if !dp.recommendedPlan.isEmpty() {
+                @tabButton(fmt.Sprintf("%s-survey-tab-pane", dp.code), t.tabRecommendedPlan, t.tabRecommendedPlanSm, false)
             }
-		}
-		@tabPane(fmt.Sprintf("%s-survey-tab-pane", dp.code), false) {
-			@recommendedPlanOverview(&dp.recommendedPlan, t)
-		}
-        if dp.reqGraphData.Valid {
-            @tabPane(fmt.Sprintf("%s-detail-tab-pane", dp.code), false) {
-                @requisiteGraph(dp.reqGraphData.String, t)
+            if dp.reqGraphData.Valid {
+                <span class="d-none d-md-inline">
+                    @tabButton(fmt.Sprintf("%s-detail-tab-pane", dp.code), t.tabReqMap, t.tabReqMap, false)
+                </span>
             }
-        }
-	</div>
+        </ul>
+        <div class="tab-content">
+            @tabPane(fmt.Sprintf("%s-desc-tab-pane", dp.code), true) {
+                @blocks(dp, bpBtnRow, t)
+            }
+            @tabPane(fmt.Sprintf("%s-survey-tab-pane", dp.code), false) {
+                @recommendedPlanOverview(&dp.recommendedPlan, t)
+            }
+            if dp.reqGraphData.Valid {
+                @tabPane(fmt.Sprintf("%s-detail-tab-pane", dp.code), false) {
+                    @requisiteGraph(dp.reqGraphData.String, t)
+                }
+            }
+        </div>
+    }
 }
 
 templ tabButton(target, text, textSm string, active bool) {
@@ -303,9 +318,10 @@ templ recommendedCoursesBody(courses []course, t text) {
                 // title
                 <td>
                     <span class="d-none d-md-inline">
-                        @titleCourseLink(course.code, course.title, course.isSupported, t)
+                    // TODO: add isCompulsory, isOptional info
+                        @titleCourseLink(course.code, course.title, false, false, course.isSupported, t)
                     </span>
-                    @mobileInfoTd(&course, false, t)
+                    @mobileInfoTd(&course, false, false, t)
                 </td>
                 // semester, range, exam for md
                 <td class="d-none d-md-table-cell d-lg-none">
@@ -347,9 +363,9 @@ templ graphLegend(t text) {
             <div class="d-flex flex-column gap-2">
                 <div class="d-flex flex-row gap-4">
                     @legendGroup(t.legendEdges) {
-                        @legendEdge(t.prerequisite, "dp-prereq-edge")
-                        @legendEdge(t.corequisite, "dp-coreq-edge")
-                        @legendEdge(t.incompatibility, "dp-incompat-edge")
+                        @legendEdge(t.prerequisite, "dp-prerequisite-edge")
+                        @legendEdge(t.corequisite, "dp-corequisite-edge")
+                        @legendEdge(t.incompatibility, "dp-incompatibility-edge")
                     }
                     @legendGroup(t.legendNodes) {
                         @legendNode(t.legendNodeInPlan, "dp-in-plan-node")
@@ -384,7 +400,6 @@ templ legendNode(label string, colorClass string) {
         <span>{ label }</span>
     </span>
 }
-// ======================================   
 
 templ filterCheckbox(id, label string) {
     <div class="form-check">
@@ -395,6 +410,12 @@ templ filterCheckbox(id, label string) {
     </div>
 }
 
+templ blocks(dp *degreePlanPage, bpBtnRow PartialBlueprintAdd, t text) {
+    for _, bloc := range dp.blocs {
+        @blocOverview(&bloc, bpBtnRow, t)
+    }
+}
+
 templ blocOverview(bloc *bloc, bpBtnRow PartialBlueprintAdd, t text) {
     @completionStatusBadges(bloc, t)
     @blocName(bloc, t)
@@ -402,7 +423,7 @@ templ blocOverview(bloc *bloc, bpBtnRow PartialBlueprintAdd, t text) {
         @tableHeader(bloc, t)
         <tbody>
             for _, course := range bloc.courses {
-                @CourseRow(&course, bloc.isCompulsory, bpBtnRow, t)
+                @courseRow(&course, bloc.isCompulsory, bloc.isOptional, bpBtnRow, t)
             }
         </tbody>
     </table>
@@ -499,7 +520,7 @@ templ tableHeader(bloc *bloc, t text) {
     </thead>
 }
 
-templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t text) {
+templ courseRow(course *course, isCompulsory, isOptional bool, bpBtn PartialBlueprintAdd, t text) {
     <tr
         id={ fmt.Sprintf("dp-row-%s", course.code) }
         x-data="{ hoverRow: false }"
@@ -521,10 +542,10 @@ templ CourseRow(course *course, isCompulsory bool, bpBtn PartialBlueprintAdd, t 
         </td>
         // title
         <td>
-            <span class={ "d-none d-md-inline", templ.KV("fw-bold", isCompulsory) }>
-                @titleCourseLink(course.code, course.title, course.isSupported, t)
+            <span class="d-none d-md-inline">
+                @titleCourseLink(course.code, course.title, isCompulsory, isOptional, course.isSupported, t)
             </span>
-            @mobileInfoTd(course, isCompulsory, t)
+            @mobileInfoTd(course, isCompulsory, isOptional, t)
         </td>
         // semester, range, exam for md
         <td class="d-none d-md-table-cell d-lg-none">
@@ -600,29 +621,34 @@ templ warningIcon(course *course, t text) {
     }
 }
 
-templ mobileInfoTd(course *course, isCompulsory bool, t text) {
+templ mobileInfoTd(course *course, isCompulsory, isOptional bool, t text) {
     <div class="d-flex flex-column d-md-none">
         <div class="d-flex justify-content-between align-items-center small lh-1">
             <span class="text-muted dp-mobile-code">
                 { course.code }
             </span>
             <span class="text-muted dp-mobile-semester">
-                { course.semesterHoursExamString(t) }
+                if course.isSupported {
+                    { course.semesterHoursExamString(t) }
+                }
             </span>
             <span class="text-muted dp-mobile-credits">
-                { fmt.Sprintf("%s: %s", t.creditsShort, course.creditsString()) }
+                if course.isSupported {
+                    { fmt.Sprintf("%s: %s", t.creditsShort, course.creditsString()) }
+                }   
             </span>
         </div>
-        <span class={ "fw-semibold text-truncate", templ.KV("fw-bold", isCompulsory) }>
-            @titleCourseLink(course.code, course.title, course.isSupported, t)
+        <span class="text-truncate fw-medium">
+            @titleCourseLink(course.code, course.title, isCompulsory, isOptional, course.isSupported, t)
         </span>
     </div>
 }
 
-templ titleCourseLink(code, title string, isSupported bool, t text) {
+templ titleCourseLink(code, title string, isCompulsory, isOptional, isSupported bool, t text) {
     if isSupported {
         <a
-            class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
+            class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2",
+                    templ.KV("fw-bold", isCompulsory), templ.KV("fst-italic", isOptional) }
             href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }>
             { title }
         </a>

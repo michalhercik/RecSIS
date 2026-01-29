@@ -14,6 +14,7 @@ type text struct {
 	saveDegreePlan        string
 	removeSavedDegreePlan string
 	searchDegreePlans     string
+	compareThisPlan       string
 	tabDetail             string
 	tabRecommendedPlan    string
 	tabRecommendedPlanSm  string
@@ -95,6 +96,7 @@ var texts = map[language.Language]text{
 		saveDegreePlan:        "Uložit studijní plán",
 		removeSavedDegreePlan: "Odstranit uložený studijní plán",
 		searchDegreePlans:     "Vyhledat studijní plán",
+		compareThisPlan:       "Porovnat tento plán",
 		tabDetail:             "Detail plánu",
 		tabRecommendedPlan:    "Doporučený průběh studia",
 		tabRecommendedPlanSm:  "Dop. průběh",
@@ -164,6 +166,7 @@ var texts = map[language.Language]text{
 		saveDegreePlan:        "Save degree plan",
 		removeSavedDegreePlan: "Remove saved degree plan",
 		searchDegreePlans:     "Search degree plans",
+		compareThisPlan:       "Compare this plan",
 		tabDetail:             "Plan detail",
 		tabRecommendedPlan:    "Recommended study plan",
 		tabRecommendedPlanSm:  "Rec. plan",

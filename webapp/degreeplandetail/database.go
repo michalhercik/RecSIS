@@ -15,6 +15,11 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
+const (
+	foreignKeyViolationCode = "23503"
+	notNullViolationCode    = "23502"
+)
+
 type DBManager struct {
 	DB *sqlx.DB
 }
@@ -91,11 +96,20 @@ func (m DBManager) degreePlan(uid, dpCode string, lang language.Language) (*degr
 func (m DBManager) saveDegreePlan(uid, dpCode string, lang language.Language) error {
 	_, err := m.DB.Exec(sqlquery.SaveDegreePlan, uid, dpCode)
 	if err != nil {
-		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.SaveDegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
-			http.StatusInternalServerError,
-			texts[lang].errCannotSaveDP,
-		)
+		// Handle foreign key violation (invalid user_id or degree_plan_code)
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == foreignKeyViolationCode {
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.SaveDegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
+				http.StatusBadRequest,
+				texts[lang].errCannotSaveDP,
+			)
+		} else {
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.SaveDegreePlan: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
+				http.StatusInternalServerError,
+				texts[lang].errCannotSaveDP,
+			)
+		}
 	}
 	return nil
 }
@@ -160,11 +174,20 @@ func (m DBManager) mergeRecommendedPlanWithBlueprint(uid, dpCode string, maxYear
 	// insert recommended plan courses to blueprint (merging - duplicates silently ignored via ON CONFLICT)
 	_, err = tx.Exec(sqlquery.MergeRecommendedPlanCourses, uid, dpCode, lang)
 	if err != nil {
-		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.MergeRecommendedPlanCourses: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
-			http.StatusInternalServerError,
-			texts[lang].errCannotMergeToBlueprint,
-		)
+		// Handle NOT NULL constraint violation (missing blueprint year/semester)
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == notNullViolationCode {
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.MergeRecommendedPlanCourses: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
+				http.StatusBadRequest,
+				texts[lang].errCannotMergeToBlueprint,
+			)
+		} else {
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.MergeRecommendedPlanCourses: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
+				http.StatusInternalServerError,
+				texts[lang].errCannotMergeToBlueprint,
+			)
+		}
 	}
 
 	if err = tx.Commit(); err != nil {
@@ -233,11 +256,28 @@ func (m DBManager) rewriteBlueprintWithRecommendedPlan(uid, dpCode string, maxYe
 	}
 
 	// insert recommended plan courses to blueprint
-	_, err = tx.Exec(sqlquery.InsertRecommendedPlanCourses, uid, dpCode, lang)
+	result, err := tx.Exec(sqlquery.InsertRecommendedPlanCourses, uid, dpCode, lang)
 	if err != nil {
+		// Handle NOT NULL constraint violation (missing blueprint year/semester)
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == notNullViolationCode {
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.InsertRecommendedPlanCourses: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
+				http.StatusBadRequest,
+				texts[lang].errCannotRewriteBlueprint,
+			)
+		} else {
+			return errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.InsertRecommendedPlanCourses: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
+				http.StatusInternalServerError,
+				texts[lang].errCannotRewriteBlueprint,
+			)
+		}
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || rowsAffected == 0 {
 		return errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.InsertRecommendedPlanCourses: %w", err), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
-			http.StatusInternalServerError,
+			errorx.AddContext(fmt.Errorf("sqlquery.InsertRecommendedPlanCourses: no courses affected"), errorx.P("dpCode", dpCode), errorx.P("lang", lang)),
+			http.StatusBadRequest,
 			texts[lang].errCannotRewriteBlueprint,
 		)
 	}

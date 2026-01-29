@@ -6,8 +6,8 @@ One important note is that you need to define environment variables for the test
 
 ```json
 "go.testEnvVars": {
-  "RECSIS_WEBAPP_DB_PASS": "your_password_defined_in_env",
-  "MEILI_MASTER_KEY": "your_meili_master_key_defined_in_env"
+  "RECSIS_WEBAPP_DB_PASS": "[your_password_defined_in_env]",
+  "MEILI_MASTER_KEY": "[your_meili_master_key_defined_in_env]"
 },
 ```
 

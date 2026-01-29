@@ -12,6 +12,11 @@ import (
 
 const searchDegreePlanName = "search-dp-query"
 
+const (
+	CompareUrlParam = "cmp"
+	dpCode          = "dpCode"
+)
+
 const unlimitedYear = 9999
 
 const SearchIndex = "degree-plans"
@@ -25,22 +30,30 @@ const (
 	fieldFacetID     = "field.code"
 )
 
+const comparePrefix = "/compare/"
+
 //================================================================================
 // Data Types and Methods
 //================================================================================
 
 type degreePlanSearchPage struct {
-	filters     map[string]filters.FacetIterator
-	results     []degreePlanSearchResult
-	searchQuery string
+	filters      map[string]filters.FacetIterator
+	results      []degreePlanSearchResult
+	searchQuery  string
+	selectedPlan selectedPlan
+}
+
+type selectedPlan struct {
+	isAnySelected bool
+	code          string
 }
 
 type degreePlanSearchResult struct {
-	Code      string `db:"plan_code"`
-	Title     string `db:"title"`
-	StudyType string `db:"study_type"`
-	ValidFrom dpYear `db:"valid_from"`
-	ValidTo   dpYear `db:"valid_to"`
+	code      string
+	title     string
+	studyType string
+	validFrom dpYear
+	validTo   dpYear
 }
 
 type dpYear int
