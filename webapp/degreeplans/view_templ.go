@@ -583,7 +583,7 @@ func filterDropdown(category filters.FacetIterator, skipEmpty bool, t text) temp
 			templ_7745c5c3_Var25 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div x-data=\"{ changed: false }\" @change.stop=\"changed = true;\" @hide-bs-dropdown.dot=\"if (changed) { changed = false; $dispatch(&#39;filters-changed&#39;); }\"><button type=\"button\" class=\"btn bg-degreeplan dropdown-toggle w-100 text-middle mt-2\" data-bs-toggle=\"dropdown\" data-bs-auto-close=\"outside\" aria-expanded=\"false\"><span class=\"category-title\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div x-data=\"{ changed: false }\" @change.stop=\"changed = true;\" @hide-bs-dropdown.dot=\"if (changed) { changed = false; $dispatch(&#39;filters-changed&#39;); }\"><button type=\"button\" class=\"btn btn-degreeplan dropdown-toggle w-100 text-middle mt-2\" data-bs-toggle=\"dropdown\" data-bs-auto-close=\"outside\" aria-expanded=\"false\"><span class=\"category-title\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

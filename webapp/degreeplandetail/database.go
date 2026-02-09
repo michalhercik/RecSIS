@@ -35,7 +35,8 @@ type dbDegreePlanRecord struct {
 	BlocCode            string         `db:"bloc_subject_code"`
 	BlocLimit           int            `db:"bloc_limit"`
 	BlocName            string         `db:"bloc_name"`
-	BlocType            string         `db:"bloc_type"`
+	IsRequired          bool           `db:"is_required"`
+	IsElective          bool           `db:"is_elective"`
 	dbds.Course
 	RecommendedYearFrom sql.NullInt64 `db:"recommended_year_from"`
 	RecommendedYearTo   sql.NullInt64 `db:"recommended_year_to"`
@@ -307,7 +308,7 @@ func buildDegreePlanPage(records []dbDegreePlanRecord, isUserPlan bool) degreePl
 		add(&dp, record)
 	}
 	dp.recommendedPlan = createRecommendedPlan(records, &dp)
-	fixLimits(&dp)
+	//fixLimits(&dp)
 	return dp
 }
 
@@ -324,8 +325,8 @@ func add(dp *degreePlanPage, record dbDegreePlanRecord) {
 			name:         record.BlocName,
 			code:         record.BlocCode,
 			limit:        record.BlocLimit,
-			isCompulsory: record.BlocType == "A",
-			isOptional:   record.BlocType == "C",
+			isCompulsory: record.IsRequired,
+			isOptional:   record.IsElective,
 		})
 		blocIndex = len(dp.blocs) - 1
 	}

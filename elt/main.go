@@ -159,6 +159,7 @@ func transform(recsis *sqlx.DB) error {
 			createFilterValuesForDegreePlanValid,
 			createFilterValuesForDegreePlanStudyTypes,
 		},
+		//fixDegreePlansCredits,
 		createRequisiteGraphData,
 	}
 

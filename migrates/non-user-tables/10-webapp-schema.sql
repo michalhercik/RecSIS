@@ -62,6 +62,9 @@ CREATE TABLE degree_plans(
     field_code VARCHAR(20),
     field_title VARCHAR(250),
     study_type VARCHAR(5),
+    required_credits INT,
+    required_elective_credits INT,
+    total_credits INT NOT NULL,
     requisite_graph_data TEXT,
     PRIMARY KEY (plan_code, lang)
 );
@@ -78,15 +81,14 @@ CREATE TABLE degree_plan_courses(
     recommended_semester INT,
     bloc_name VARCHAR(250),
     bloc_subject_code VARCHAR(20) NOT NULL,
-    bloc_type CHAR(1) NOT NULL,
-    bloc_limit INT,
+    is_required BOOLEAN NOT NULL,
+    is_elective BOOLEAN NOT NULL,
+    bloc_limit INT NOT NULL,
     seq VARCHAR(50),
     FOREIGN KEY (plan_code, lang) REFERENCES degree_plans(plan_code, lang) DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE INDEX degree_plan_code_lang ON degree_plan_courses(plan_code, lang);
-
--- TODO: I did not include course_rating_categories_domain and course_rating_categories tables here, as they are populated with data in init_db/40-insert-data.sql and not ELT processes.
 
 DROP TABLE IF EXISTS filters CASCADE;
 

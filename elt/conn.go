@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/meilisearch/meilisearch-go"
@@ -49,11 +51,39 @@ func createRecSISConn(conf config) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open RecSIS connection: %w", err)
 	}
+	applyRecSISPoolSettings(conn)
 	if err = conn.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping RecSIS database: %w", err)
 	}
 	log.Println("✅ Connection to RecSIS successfull")
 	return conn, err
+}
+
+func applyRecSISPoolSettings(conn *sqlx.DB) {
+	maxOpen := envInt("ELT_MAX_OPEN_CONNS", 10)
+	maxIdle := envInt("ELT_MAX_IDLE_CONNS", 5)
+	maxLifetime := envDuration("ELT_CONN_MAX_LIFETIME", 30*time.Minute)
+	conn.SetMaxOpenConns(maxOpen)
+	conn.SetMaxIdleConns(maxIdle)
+	conn.SetConnMaxLifetime(maxLifetime)
+}
+
+func envInt(key string, fallback int) int {
+	if v := os.Getenv(key); v != "" {
+		if parsed, err := strconv.Atoi(v); err == nil {
+			return parsed
+		}
+	}
+	return fallback
+}
+
+func envDuration(key string, fallback time.Duration) time.Duration {
+	if v := os.Getenv(key); v != "" {
+		if parsed, err := time.ParseDuration(v); err == nil {
+			return parsed
+		}
+	}
+	return fallback
 }
 
 func createMeilisearchConn(conf config) (meilisearch.ServiceManager, error) {

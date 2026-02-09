@@ -976,230 +976,6 @@ var preq2coursesRequisites = goTransformation{
 /*
 Prerequisites:
   - povinn2courses
-  - studmetadata2lang
-  - studplan2lang
-  - requisites
-*/
-var createRequisiteGraphData = goTransformation{
-	name: "create_requisite_graph_data",
-	runF: func(db *sqlx.DB) error {
-		type course struct {
-			code              string
-			title             string
-			prerequisites     []string
-			corequisites      []string
-			incompatibilities []string
-		}
-		type node struct {
-			Data struct {
-				ID     string `json:"id"`
-				Code   string `json:"code"`
-				Label  string `json:"label"`
-				InPlan string `json:"inPlan"`
-			} `json:"data"`
-		}
-		type edge struct {
-			Data struct {
-				ID     string `json:"id"`
-				Source string `json:"source"`
-				Target string `json:"target"`
-				Type   string `json:"type"`
-			} `json:"data"`
-		}
-
-		createEdges := func(courseCodes []string, edgeType, targetCode string, nodes *map[string]node, edges map[string]edge, edgeID *int) {
-			for _, req := range courseCodes {
-				if _, exists := (*nodes)[req]; !exists {
-					n := node{}
-					n.Data.ID = req
-					n.Data.Code = req
-					n.Data.Label = req
-					n.Data.InPlan = "false"
-					(*nodes)[req] = n
-				}
-
-				// Create a unique key for this edge to prevent duplicates
-				edgeKey := fmt.Sprintf("%s->%s:%s", targetCode, req, edgeType)
-
-				// Only add edge if it doesn't already exist
-				if _, exists := edges[edgeKey]; !exists {
-					e := edge{}
-					e.Data.ID = fmt.Sprintf("e%d", *edgeID)
-					e.Data.Source = targetCode
-					e.Data.Target = req
-					e.Data.Type = edgeType
-					edges[edgeKey] = e
-					(*edgeID)++
-				}
-			}
-		}
-
-		requisitesGraphData := func(courses []course) string {
-			nodeMap := make(map[string]node)
-			edgeMap := make(map[string]edge)
-			edgeID := 0
-
-			// Build nodes and edges from all courses
-			for _, course := range courses {
-				if foundNode, exists := nodeMap[course.code]; !exists {
-					n := node{}
-					n.Data.ID = course.code
-					n.Data.Code = course.code
-					n.Data.Label = fmt.Sprintf("%s - %s", course.code, course.title) // TODO: maybe better label
-					n.Data.InPlan = "true"
-					nodeMap[course.code] = n
-				} else {
-					foundNode.Data.InPlan = "true"
-					foundNode.Data.Label = fmt.Sprintf("%s - %s", course.code, course.title)
-					nodeMap[course.code] = foundNode
-				}
-				// Add prerequisite nodes and edges
-				createEdges(course.prerequisites, "prerequisite", course.code, &nodeMap, edgeMap, &edgeID)
-				// Add corequisite edges
-				createEdges(course.corequisites, "corequisite", course.code, &nodeMap, edgeMap, &edgeID)
-				// Add incompatibility edges
-				createEdges(course.incompatibilities, "incompatibility", course.code, &nodeMap, edgeMap, &edgeID)
-			}
-
-			// remove incompatibility edges to nodes not in DP
-			edgesToRemove := make([]string, 0)
-			for edgeKey, e := range edgeMap {
-				if e.Data.Type == "incompatibility" {
-					if node, exists := nodeMap[e.Data.Target]; !exists || node.Data.InPlan == "false" {
-						edgesToRemove = append(edgesToRemove, edgeKey)
-					}
-				}
-			}
-			for _, edgeKey := range edgesToRemove {
-				delete(edgeMap, edgeKey)
-			}
-
-			nodeSlice := make([]node, 0, len(nodeMap))
-			for _, n := range nodeMap {
-				nodeSlice = append(nodeSlice, n)
-			}
-
-			edges := make([]edge, 0, len(edgeMap))
-			for _, e := range edgeMap {
-				edges = append(edges, e)
-			}
-
-			result := struct {
-				Nodes []node `json:"nodes"`
-				Edges []edge `json:"edges"`
-			}{nodeSlice, edges}
-
-			jsonData, _ := json.Marshal(result)
-			return string(jsonData)
-		}
-
-		type plan struct {
-			code    string
-			lang    string
-			courses []course
-		}
-
-		runPlan := func(p *plan, db *sqlx.DB) error {
-			graphData := requisitesGraphData(p.courses)
-			updateQuery := `UPDATE studmetadata2lang SET requisite_graph_data=$1 WHERE plan_code=$2 AND lang=$3`
-			_, err := db.Exec(updateQuery, graphData, p.code, p.lang)
-			return err
-		}
-
-		type planCourseRow struct {
-			PlanCode          string         `db:"plan_code"`
-			Lang              string         `db:"lang"`
-			CourseCode        string         `db:"course_code"`
-			Title             string         `db:"title"`
-			Prerequisites     pq.StringArray `db:"prerequisites"`
-			Corequisites      pq.StringArray `db:"corequisites"`
-			Incompatibilities pq.StringArray `db:"incompatibilities"`
-		}
-
-		// TODO: load all study plans
-		const planCoursesQuery = `--sql
-		SELECT
-			dp.plan_code,
-			dp.lang,
-			dpc.course_code,
-			COALESCE(c.title, '') AS title,
-			COALESCE((
-				SELECT array_agg(child_course ORDER BY child_course)
-				FROM requisites r
-				WHERE r.target_course = dpc.course_code
-					AND r.req_type = 'P'
-					AND r.group_type IS NULL
-			), '{}'::varchar[]) AS prerequisites,
-			COALESCE((
-				SELECT array_agg(child_course ORDER BY child_course)
-				FROM requisites r
-				WHERE r.target_course = dpc.course_code
-					AND r.req_type = 'K'
-					AND r.group_type IS NULL
-			), '{}'::varchar[]) AS corequisites,
-			COALESCE((
-				SELECT array_agg(child_course ORDER BY child_course)
-				FROM requisites r
-				WHERE r.target_course = dpc.course_code
-					AND r.req_type = 'N'
-					AND r.group_type IS NULL
-			), '{}'::varchar[]) AS incompatibilities
-		FROM studmetadata2lang dp
-		JOIN studplan2lang dpc ON dpc.plan_code = dp.plan_code AND dpc.lang = dp.lang
-		LEFT JOIN povinn2courses c ON c.code = dpc.course_code AND c.lang = dp.lang
-		WHERE dp.plan_code IN ('NIPVS19B', 'NISD23N') AND dpc.interchangeability IS NULL
-		ORDER BY dp.plan_code, dp.lang, dpc.course_code;
-		`
-
-		log.Printf("ℹ️ Starting requisite graph data creation for study plans")
-		rows := []planCourseRow{}
-		if err := db.Select(&rows, planCoursesQuery); err != nil {
-			return err
-		}
-		log.Printf("ℹ️ Loaded %d plan course rows", len(rows))
-
-		planMap := map[string]*plan{}
-		for _, row := range rows {
-			key := fmt.Sprintf("%s|%s", row.PlanCode, row.Lang)
-			if _, exists := planMap[key]; !exists {
-				planMap[key] = &plan{code: row.PlanCode, lang: row.Lang}
-			}
-			planMap[key].courses = append(planMap[key].courses, course{
-				code:              row.CourseCode,
-				title:             row.Title,
-				prerequisites:     []string(row.Prerequisites),
-				corequisites:      []string(row.Corequisites),
-				incompatibilities: []string(row.Incompatibilities),
-			})
-		}
-
-		plans := make([]plan, 0, len(planMap))
-		for _, p := range planMap {
-			plans = append(plans, *p)
-		}
-
-		runners := parallelRunner{}
-		for _, p := range plans {
-			p := p // capture loop variable
-			runners = append(runners, goTransformation{
-				name: fmt.Sprintf("plan_%s_%s", p.code, p.lang),
-				runF: func(db *sqlx.DB) error {
-					log.Printf("ℹ️ Processing plan %s (%s) with %d courses", p.code, p.lang, len(p.courses))
-					return runPlan(&p, db)
-				},
-			})
-		}
-		if err := runners.run(db); err != nil {
-			return err
-		}
-
-		return nil
-	},
-}
-
-/*
-Prerequisites:
-  - povinn2courses
   - povinn
   - povinn2jazyk_agg
   - typypov
@@ -2208,7 +1984,8 @@ var studplan2lang = transformation{
 			recommended_semester INT,
 			bloc_name VARCHAR(250),
 			bloc_subject_code VARCHAR(20),
-			bloc_type VARCHAR(1),
+			is_required BOOLEAN NOT NULL,
+			is_elective BOOLEAN NOT NULL,
 			bloc_limit INT,
 			seq VARCHAR(50)
 		);
@@ -2223,8 +2000,17 @@ var studplan2lang = transformation{
 			recommended_semester,
 			bloc_name_cz bloc_name,
 			bloc_subject_code,
-			bloc_type,
-			bloc_limit,
+			bloc_type = 'A' is_required,
+			bloc_type = 'C' is_elective,
+			CASE
+				WHEN bloc_type = 'C' THEN 0
+				WHEN bloc_type = 'A' THEN COALESCE(
+					SUM(credits) FILTER (WHERE credits IS NOT NULL AND interchangeability IS NULL)
+					OVER (PARTITION BY plan_code, bloc_subject_code),
+					0
+				)
+				ELSE bloc_limit
+			END AS bloc_limit,
 			seq
 		FROM stud_plan
 		UNION
@@ -2238,8 +2024,17 @@ var studplan2lang = transformation{
 			recommended_semester,
 			bloc_name_en bloc_name,
 			bloc_subject_code,
-			bloc_type,
-			bloc_limit,
+			bloc_type = 'A' is_required,
+			bloc_type = 'C' is_elective,
+			CASE
+				WHEN bloc_type = 'C' THEN 0
+				WHEN bloc_type = 'A' THEN COALESCE(
+					SUM(credits) FILTER (WHERE credits IS NOT NULL AND interchangeability IS NULL)
+					OVER (PARTITION BY plan_code, bloc_subject_code),
+					0
+				)
+				ELSE bloc_limit
+			END AS bloc_limit,
 			seq
 		FROM stud_plan
 	`,
@@ -2265,6 +2060,9 @@ var studmetadata2lang = transformation{
 			field_code VARCHAR(20),
 			field_title VARCHAR(250),
 			study_type VARCHAR(5),
+			required_credits INT,
+			required_elective_credits INT,
+			total_credits INT,
 			requisite_graph_data TEXT
 		);
 		INSERT INTO studmetadata2lang
@@ -2278,7 +2076,15 @@ var studmetadata2lang = transformation{
 			spm.section,
 			spm.field_code,
 			spo.name_cz as field_title,
-			druh.zkratka AS study_type,
+			druh.zkratka as study_type,
+			NULL::INT as required_credits,
+			NULL::INT as required_elective_credits,
+			CASE
+				WHEN spm.study_type = 'B' THEN 180
+				WHEN spm.study_type = 'N' THEN 120
+				WHEN spm.study_type = 'M' THEN 300
+				ELSE 0
+			END as total_credits,
 			NULL as requisite_graph_data
 		FROM stud_plan_metadata spm
 		JOIN druh ON spm.study_type = druh.kod
@@ -2295,6 +2101,14 @@ var studmetadata2lang = transformation{
 			spm.field_code,
 			spo.name_en as field_title,
 			druh.zkratka AS study_type,
+			NULL::INT as required_credits,
+			NULL::INT as required_elective_credits,
+			CASE
+				WHEN spm.study_type = 'B' THEN 180
+				WHEN spm.study_type = 'N' THEN 120
+				WHEN spm.study_type = 'M' THEN 300
+				ELSE 0
+			END as total_credits,
 			NULL as requisite_graph_data
 		FROM stud_plan_metadata spm
 		JOIN druh ON spm.study_type = druh.kod
@@ -2581,4 +2395,242 @@ var createFilterValuesForDegreePlanStudyTypes = transformation{
 		FROM distinct_study_type d
 		LEFT JOIN category_id cid ON true
 	`,
+}
+
+/*
+Prerequisites:
+  - povinn2courses
+  - studmetadata2lang
+  - studplan2lang
+  - requisites
+*/
+var createRequisiteGraphData = goTransformation{
+	name: "create_requisite_graph_data",
+	runF: func(db *sqlx.DB) error {
+		type course struct {
+			code              string
+			title             string
+			prerequisites     []string
+			corequisites      []string
+			incompatibilities []string
+		}
+		type node struct {
+			Data struct {
+				ID     string `json:"id"`
+				Code   string `json:"code"`
+				Label  string `json:"label"`
+				InPlan string `json:"inPlan"`
+			} `json:"data"`
+		}
+		type edge struct {
+			Data struct {
+				ID     string `json:"id"`
+				Source string `json:"source"`
+				Target string `json:"target"`
+				Type   string `json:"type"`
+			} `json:"data"`
+		}
+
+		createEdges := func(courseCodes []string, edgeType, targetCode string, nodes *map[string]node, edges map[string]edge, edgeID *int) {
+			for _, req := range courseCodes {
+				if _, exists := (*nodes)[req]; !exists {
+					n := node{}
+					n.Data.ID = req
+					n.Data.Code = req
+					n.Data.Label = req
+					n.Data.InPlan = "false"
+					(*nodes)[req] = n
+				}
+
+				// Create a unique key for this edge to prevent duplicates
+				edgeKey := fmt.Sprintf("%s->%s:%s", targetCode, req, edgeType)
+
+				// Only add edge if it doesn't already exist
+				if _, exists := edges[edgeKey]; !exists {
+					e := edge{}
+					e.Data.ID = fmt.Sprintf("e%d", *edgeID)
+					e.Data.Source = targetCode
+					e.Data.Target = req
+					e.Data.Type = edgeType
+					edges[edgeKey] = e
+					(*edgeID)++
+				}
+			}
+		}
+
+		requisitesGraphData := func(courses []course) string {
+			nodeMap := make(map[string]node)
+			edgeMap := make(map[string]edge)
+			edgeID := 0
+
+			// Build nodes and edges from all courses
+			for _, course := range courses {
+				if foundNode, exists := nodeMap[course.code]; !exists {
+					n := node{}
+					n.Data.ID = course.code
+					n.Data.Code = course.code
+					n.Data.Label = fmt.Sprintf("%s - %s", course.code, course.title) // TODO: maybe better label
+					n.Data.InPlan = "true"
+					nodeMap[course.code] = n
+				} else {
+					foundNode.Data.InPlan = "true"
+					foundNode.Data.Label = fmt.Sprintf("%s - %s", course.code, course.title)
+					nodeMap[course.code] = foundNode
+				}
+				// Add prerequisite nodes and edges
+				createEdges(course.prerequisites, "prerequisite", course.code, &nodeMap, edgeMap, &edgeID)
+				// Add corequisite edges
+				createEdges(course.corequisites, "corequisite", course.code, &nodeMap, edgeMap, &edgeID)
+				// Add incompatibility edges
+				createEdges(course.incompatibilities, "incompatibility", course.code, &nodeMap, edgeMap, &edgeID)
+			}
+
+			// remove incompatibility edges to nodes not in DP
+			edgesToRemove := make([]string, 0)
+			for edgeKey, e := range edgeMap {
+				if e.Data.Type == "incompatibility" {
+					if node, exists := nodeMap[e.Data.Target]; !exists || node.Data.InPlan == "false" {
+						edgesToRemove = append(edgesToRemove, edgeKey)
+					}
+				}
+			}
+			for _, edgeKey := range edgesToRemove {
+				delete(edgeMap, edgeKey)
+			}
+
+			nodeSlice := make([]node, 0, len(nodeMap))
+			for _, n := range nodeMap {
+				nodeSlice = append(nodeSlice, n)
+			}
+
+			edges := make([]edge, 0, len(edgeMap))
+			for _, e := range edgeMap {
+				edges = append(edges, e)
+			}
+
+			result := struct {
+				Nodes []node `json:"nodes"`
+				Edges []edge `json:"edges"`
+			}{nodeSlice, edges}
+
+			jsonData, _ := json.Marshal(result)
+			return string(jsonData)
+		}
+
+		type plan struct {
+			code    string
+			lang    string
+			courses []course
+		}
+
+		runPlan := func(p *plan, db *sqlx.DB) error {
+			graphData := requisitesGraphData(p.courses)
+			updateQuery := `UPDATE studmetadata2lang SET requisite_graph_data=$1 WHERE plan_code=$2 AND lang=$3`
+			_, err := db.Exec(updateQuery, graphData, p.code, p.lang)
+			return err
+		}
+
+		type planCourseRow struct {
+			PlanCode          string         `db:"plan_code"`
+			Lang              string         `db:"lang"`
+			CourseCode        string         `db:"course_code"`
+			Title             string         `db:"title"`
+			Prerequisites     pq.StringArray `db:"prerequisites"`
+			Corequisites      pq.StringArray `db:"corequisites"`
+			Incompatibilities pq.StringArray `db:"incompatibilities"`
+		}
+
+		const planCoursesQuery = `--sql
+		SELECT
+			dp.plan_code,
+			dp.lang,
+			dpc.course_code,
+			COALESCE(c.title, '') AS title,
+			COALESCE((
+				SELECT array_agg(child_course ORDER BY child_course)
+				FROM requisites r
+				WHERE r.target_course = dpc.course_code
+					AND r.req_type = 'P'
+					AND r.group_type IS NULL
+			), '{}'::varchar[]) AS prerequisites,
+			COALESCE((
+				SELECT array_agg(child_course ORDER BY child_course)
+				FROM requisites r
+				WHERE r.target_course = dpc.course_code
+					AND r.req_type = 'K'
+					AND r.group_type IS NULL
+			), '{}'::varchar[]) AS corequisites,
+			COALESCE((
+				SELECT array_agg(child_course ORDER BY child_course)
+				FROM requisites r
+				WHERE r.target_course = dpc.course_code
+					AND r.req_type = 'N'
+					AND r.group_type IS NULL
+			), '{}'::varchar[]) AS incompatibilities
+		FROM studmetadata2lang dp
+		JOIN studplan2lang dpc ON dpc.plan_code = dp.plan_code AND dpc.lang = dp.lang
+		LEFT JOIN povinn2courses c ON c.code = dpc.course_code AND c.lang = dp.lang
+		WHERE dpc.interchangeability IS NULL
+		ORDER BY dp.plan_code, dp.lang, dpc.course_code;
+		`
+
+		log.Printf("ℹ️ Starting requisite graph data creation for study plans")
+		rows := []planCourseRow{}
+		if err := db.Select(&rows, planCoursesQuery); err != nil {
+			return err
+		}
+		log.Printf("ℹ️ Loaded %d plan course rows", len(rows))
+
+		planMap := map[string]*plan{}
+		for _, row := range rows {
+			key := fmt.Sprintf("%s|%s", row.PlanCode, row.Lang)
+			if _, exists := planMap[key]; !exists {
+				planMap[key] = &plan{code: row.PlanCode, lang: row.Lang}
+			}
+			planMap[key].courses = append(planMap[key].courses, course{
+				code:              row.CourseCode,
+				title:             row.Title,
+				prerequisites:     []string(row.Prerequisites),
+				corequisites:      []string(row.Corequisites),
+				incompatibilities: []string(row.Incompatibilities),
+			})
+		}
+
+		plans := make([]plan, 0, len(planMap))
+		for _, p := range planMap {
+			plans = append(plans, *p)
+		}
+
+		runners := parallelRunner{}
+		for _, p := range plans {
+			p := p // capture loop variable
+			runners = append(runners, goTransformation{
+				name: fmt.Sprintf("plan_%s_%s", p.code, p.lang),
+				runF: func(db *sqlx.DB) error {
+					return runPlan(&p, db)
+				},
+			})
+		}
+		if err := runners.run(db); err != nil {
+			return err
+		}
+
+		return nil
+	},
+}
+
+/*
+Prerequisites:
+  - povinn2courses
+  - studmetadata2lang
+  - studplan2lang
+*/
+var fixDegreePlansCredits = goTransformation{
+	name: "fix_degree_plans_credits",
+	runF: func(db *sqlx.DB) error {
+		// TODO:
+		// get sum of required credits for each plan
+		// get sum of required-elective credits for each plan - nesting !!!
+		return nil
+	},
 }

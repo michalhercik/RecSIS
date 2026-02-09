@@ -9,7 +9,8 @@ SELECT
 	dpc.bloc_subject_code,
 	dpc.bloc_name,
 	COALESCE(dpc.bloc_limit, -1) AS bloc_limit,
-	dpc.bloc_type,
+	dpc.is_required,
+	dpc.is_elective,
 	c.code,
 	c.title,
 	COALESCE(c.credits, 0) AS credits,
@@ -24,5 +25,5 @@ LEFT JOIN courses c
 WHERE dp.plan_code = $1
 	AND dp.lang = $2
 	AND interchangeability IS NULL
-ORDER BY dpc.bloc_type, dpc.seq, c.code;
+ORDER BY dpc.is_required DESC, (dpc.is_elective = false) DESC, dpc.seq, c.code;
 `

@@ -9,6 +9,12 @@ import "fmt"
 const (
 	dpBaseCompare = "dpBaseCompare"
 	dpCompareWith = "dpCompareWith"
+
+	leftSide  = "left"
+	rightSide = "right"
+
+	mobileLayout  = "mobile"
+	desktopLayout = "desktop"
 )
 
 //================================================================================
@@ -48,6 +54,10 @@ func (c *course) creditsString() string {
 		return ""
 	}
 	return fmt.Sprintf("%d", c.credits)
+}
+
+func (c *course) isInOtherPlan() bool {
+	return c.otherPlan.isIn
 }
 
 func (c *course) notInOtherPlan() bool {

@@ -102,7 +102,7 @@ templ saveDegreePlan(isUserPlan bool, code string, t text) {
     if !isUserPlan {
         <button
             type="button"
-            class="btn bg-degreeplan"
+            class="btn btn-degreeplan"
             hx-patch={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }
             hx-target="body"
             hx-swap="outerHTML"
@@ -112,7 +112,7 @@ templ saveDegreePlan(isUserPlan bool, code string, t text) {
     } else {
         <button
             type="button"
-            class="btn bg-degreeplan"
+            class="btn btn-degreeplan"
             hx-delete={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/")) }
             hx-target="body"
             hx-swap="outerHTML"
@@ -125,7 +125,7 @@ templ saveDegreePlan(isUserPlan bool, code string, t text) {
 templ searchDegreePlanButton(endpoint string, t text) {
     <a
         type="button"
-        class="btn bg-degreeplan"
+        class="btn btn-degreeplan"
         href={ templ.SafeURL(t.language.LocalizeURL(endpoint)) }
         data-bs-dismiss="offcanvas">
         <span>{ t.searchDegreePlans }</span>
@@ -135,7 +135,7 @@ templ searchDegreePlanButton(endpoint string, t text) {
 templ addRecommendedPlanToBPBtn(t text) {
     <button
         type="button"
-        class="btn bg-degreeplan"
+        class="btn btn-degreeplan"
         data-bs-toggle="modal"
         data-bs-target="#addRecToBPModal">
         { t.addRecToBPBtn }
@@ -156,7 +156,7 @@ templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
                 <div class="modal-footer">
                     <button
                         type="button"
-                        class="btn bg-degreeplan"
+                        class="btn btn-degreeplan"
                         data-bs-dismiss="modal"
                         hx-patch={ templ.SafeURL(t.language.LocalizeURL(fmt.Sprintf("/degreeplan/plan-to-blueprint/%s", planCode))) }
                         hx-vals={ fmt.Sprintf(`"%s": "%d"`, maxYearParam, maxYears) }
@@ -166,7 +166,7 @@ templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
                     </button>
                     <button
                         type="button"
-                        class="btn bg-degreeplan"
+                        class="btn btn-degreeplan"
                         data-bs-dismiss="modal"
                         hx-put={ templ.SafeURL(t.language.LocalizeURL(fmt.Sprintf("/degreeplan/plan-to-blueprint/%s", planCode))) }
                         hx-vals={ fmt.Sprintf(`"%s": "%d"`, maxYearParam, maxYears) }
@@ -183,7 +183,7 @@ templ addRecommendedPlanToBPModal(planCode string, maxYears int, t text) {
 templ compareDegreePlanButton(code, endpoint, compareParam string, t text) {
     <button
         type="button"
-        class="btn bg-degreeplan"
+        class="btn btn-degreeplan"
         hx-get={ templ.SafeURL(t.language.LocalizeURL(endpoint)) }
         hx-vals={ fmt.Sprintf(`"%s": "%s"`, compareParam, code) }
         hx-target="body"

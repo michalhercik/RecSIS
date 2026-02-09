@@ -20,17 +20,20 @@ type dbDegreePlanRecord struct {
 	DegreePlanTitle string `db:"degree_plan_title"`
 	// DegreePlanValidFrom int            `db:"degree_plan_valid_from"`
 	// DegreePlanValidTo   int            `db:"degree_plan_valid_to"`
-	BlocCode  string `db:"bloc_subject_code"`
-	BlocName  string `db:"bloc_name"`
-	BlocLimit int    `db:"bloc_limit"`
-	BlocType  string `db:"bloc_type"`
+	BlocCode   string `db:"bloc_subject_code"`
+	BlocName   string `db:"bloc_name"`
+	BlocLimit  int    `db:"bloc_limit"`
+	IsRequired bool   `db:"is_required"`
+	IsElective bool   `db:"is_elective"`
 	dbds.Course
 	CourseIsSupported bool `db:"course_is_supported"`
 }
 
 func (m DBManager) degreePlanCompareContent(basePlan, comparePlan string, lang language.Language) (*degreePlanComparePage, error) {
+	// get base plan
 	var baseRecords []dbDegreePlanRecord
 	err := m.DB.Select(&baseRecords, sqlquery.DegreePlan, basePlan, lang)
+	// errors
 	if err != nil {
 		return nil, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("sqlquery.DegreePlan: %w", err), errorx.P("basePlan", basePlan), errorx.P("lang", lang)),
@@ -45,8 +48,10 @@ func (m DBManager) degreePlanCompareContent(basePlan, comparePlan string, lang l
 			texts[lang].errDPNotExisting,
 		)
 	}
+	// get compare plan
 	var compareRecords []dbDegreePlanRecord
 	err = m.DB.Select(&compareRecords, sqlquery.DegreePlan, comparePlan, lang)
+	// errors
 	if err != nil {
 		return nil, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("sqlquery.DegreePlan: %w", err), errorx.P("comparePlan", comparePlan), errorx.P("lang", lang)),
@@ -61,6 +66,7 @@ func (m DBManager) degreePlanCompareContent(basePlan, comparePlan string, lang l
 			texts[lang].errDPNotExisting,
 		)
 	}
+	// build page
 	dp := buildDegreePlansComparePage(baseRecords, compareRecords)
 	return &dp, nil
 }
@@ -100,8 +106,8 @@ func add(dp *degreePlanData, record dbDegreePlanRecord) {
 			title:        record.BlocName,
 			code:         record.BlocCode,
 			limit:        record.BlocLimit,
-			isCompulsory: record.BlocType == "A",
-			isOptional:   record.BlocType == "C",
+			isCompulsory: record.IsRequired,
+			isOptional:   record.IsElective,
 		})
 		blocIndex = len(dp.blocks) - 1
 	}

@@ -96,7 +96,7 @@ tr:target td {
 
 @keyframes highlight {
     from { background-color: yellow; }
-    to { background-color: white; }
+    to { background-color: transparent; }
 }
 
 /* NAV -> nav items font size */
@@ -843,13 +843,51 @@ tr:target td {
     text-overflow: ellipsis;
 }
 
-/* credits */
+/* locate button */
 .dp-compare-table th:nth-child(3),
 .dp-compare-table td:nth-child(3) {
+    width: 32px;
+}
+
+/* credits */
+.dp-compare-table th:nth-child(4),
+.dp-compare-table td:nth-child(4) {
     width: 30px;
 }
 
 /* ============================================== */
+
+/* DP -> button */
+.btn-outline-degreeplan {
+    color: rgb(240, 116, 0) !important;
+    border-color: rgb(240, 116, 0) !important;
+}
+
+.btn-outline-degreeplan:hover {
+    color: #fff !important;
+    background-color: rgb(240, 116, 0) !important;
+    border-color: rgb(240, 116, 0) !important;
+}
+
+.btn-degreeplan {
+    background-color: rgb(240, 116, 0) !important;
+    color: white !important;
+}
+
+.btn-degreeplan:hover {
+    background-color: rgb(161, 78, 0) !important;
+    color: white !important;
+}
+
+/* DP -> compare highlight */
+.dp-compare-highlight td {
+    animation: dp-compare-highlight 3s ease-in;
+}
+
+@keyframes dp-compare-highlight {
+    from { background-color: rgba(0, 200, 255, 0.8); }
+    to { background-color: transparent; }
+}
 
 /* DP -> filter styles */
 .dp-filter {

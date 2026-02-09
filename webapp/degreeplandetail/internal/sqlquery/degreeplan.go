@@ -36,7 +36,8 @@ SELECT
 	dpc.bloc_subject_code,
 	COALESCE(dpc.bloc_limit, -1) bloc_limit,
 	dpc.bloc_name,
-	dpc.bloc_type,
+	dpc.is_required,
+	dpc.is_elective,
 	c.code,
 	c.title,
 	COALESCE(c.credits, 0) AS credits, -- there exists N# courses without credits in DPs, TODO: what to do with them? 
@@ -66,7 +67,7 @@ LEFT JOIN user_blueprint_semesters ubs
 	ON dpc.course_code = ubs.course_code
 WHERE s.user_id = $1
 	AND interchangeability IS NULL
-ORDER BY dpc.bloc_type, dpc.seq, c.code;
+ORDER BY dpc.is_required DESC, (dpc.is_elective = false) DESC, dpc.seq, c.code;
 `
 
 const DegreePlan = `--sql
@@ -97,7 +98,8 @@ SELECT
 	dpc.bloc_subject_code,
 	COALESCE(dpc.bloc_limit, -1) bloc_limit,
 	dpc.bloc_name,
-	dpc.bloc_type,
+	dpc.is_required,
+	dpc.is_elective,
 	c.code,
 	c.title,
 	COALESCE(c.credits, 0) AS credits, -- there exist N# courses without credits in DPs, TODO: what to do with them? 
@@ -127,7 +129,7 @@ LEFT JOIN studies s
 WHERE dp.plan_code = $2
 	AND dp.lang = $3
 	AND interchangeability IS NULL
-ORDER BY dpc.bloc_type, dpc.seq, c.code;
+ORDER BY dpc.is_required DESC, (dpc.is_elective = false) DESC, dpc.seq, c.code;
 `
 
 const SaveDegreePlan = `--sql

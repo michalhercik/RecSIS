@@ -99,6 +99,9 @@ func migrateStudPlans(tx *sqlx.Tx) error {
 			field_code,
 			field_title,
 			study_type,
+			required_credits,
+			required_elective_credits,
+			total_credits,
 			requisite_graph_data
 		) SELECT DISTINCT
 			plan_code,
@@ -109,6 +112,9 @@ func migrateStudPlans(tx *sqlx.Tx) error {
 			field_code,
 			field_title,
 			study_type,
+			required_credits,
+			required_elective_credits,
+			total_credits,
 			requisite_graph_data
 		FROM studmetadata2lang;
 	`)
@@ -132,7 +138,8 @@ func migrateStudPlanCourses(tx *sqlx.Tx) error {
 			recommended_semester,
 			bloc_name,
 			bloc_subject_code,
-			bloc_type,
+			is_required,
+			is_elective,
 			bloc_limit,
 			seq
 		) SELECT
@@ -145,7 +152,8 @@ func migrateStudPlanCourses(tx *sqlx.Tx) error {
 			recommended_semester,
 			bloc_name,
 			bloc_subject_code,
-			bloc_type,
+			is_required,
+			is_elective,
 			bloc_limit,
 			seq
 		FROM studplan2lang;

@@ -792,11 +792,7 @@ func (ep *extractPreq) selectData(from *sqlx.DB, to *sqlx.DB) error {
 	var err error
 	query = `
 		SELECT
-			PREQ.POVINN, PREQ.REQTYP, REQPOVINN,
-			CASE -- TODO: should be 'povinn.pskupina' but we don't have the column yet
-				WHEN PREQ.REQPOVINN LIKE '%#%' THEN 'M'
-				ELSE null
-			END AS PSKUPINA
+			PREQ.POVINN, PREQ.REQTYP, REQPOVINN, POVINN.PSKUPINA
 		FROM PREQ
 		LEFT JOIN POVINN ON PREQ.POVINN = POVINN.POVINN
 			AND POVINN.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PREQ.POVINN)
@@ -858,11 +854,7 @@ func (ep *extractPskup) selectData(from *sqlx.DB, to *sqlx.DB) error {
 	var err error
 	query = `
 		SELECT
-			PSKUP.POVINN, PSKUP.PSPOVINN,
-			CASE -- TODO: should be 'povinn.pskupina' but we don't have the column yet
-				WHEN PSKUP.PSPOVINN LIKE '%#%' THEN 'M'
-				ELSE null
-			END AS PSKUPINA
+			PSKUP.POVINN, PSKUP.PSPOVINN, POVINN.PSKUPINA
 		FROM PSKUP
 		LEFT JOIN POVINN ON PSKUP.POVINN = POVINN.POVINN
 			AND POVINN.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PSKUP.POVINN)

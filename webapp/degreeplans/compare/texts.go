@@ -5,10 +5,12 @@ import (
 )
 
 type text struct {
-	pageTitle       string
-	showDifferences string
-	showSame        string
-	credits         string
+	pageTitle         string
+	switchPlans       string
+	showDifferences   string
+	showSame          string
+	credits           string
+	locateInOtherPlan string
 	// language
 	language language.Language
 	// errors
@@ -20,10 +22,12 @@ type text struct {
 
 var texts = map[language.Language]text{
 	language.CS: {
-		pageTitle:       "Porovnání plánů",
-		showDifferences: "Zobrazit rozdíly",
-		showSame:        "Zobrazit shodné předměty",
-		credits:         "Kredity",
+		pageTitle:         "Porovnání plánů",
+		switchPlans:       "Prohodit plány",
+		showDifferences:   "Zobrazit rozdíly",
+		showSame:          "Zobrazit shodné předměty",
+		credits:           "Kredity",
+		locateInOtherPlan: "Najít v druhém plánu",
 		// language
 		language: language.CS,
 		// errors
@@ -33,10 +37,12 @@ var texts = map[language.Language]text{
 		errPageNotFound:  "Stránka nebyla nalezena.",
 	},
 	language.EN: {
-		pageTitle:       "Compare Plans",
-		showDifferences: "Show Differences",
-		showSame:        "Show Same Courses",
-		credits:         "Credits",
+		pageTitle:         "Compare Plans",
+		switchPlans:       "Switch Plans",
+		showDifferences:   "Show Differences",
+		showSame:          "Show Same Courses",
+		credits:           "Credits",
+		locateInOtherPlan: "Find in the other plan",
 		// language
 		language: language.EN,
 		// errors
