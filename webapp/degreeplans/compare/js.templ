@@ -1,0 +1,34 @@
+package compare
+
+templ scripts() {
+	<script>
+		initializeTooltips();
+
+		// bootstrap tooltip removal
+		function reloadTooltips() {
+			const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+			const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => bootstrap.Tooltip.getInstance(tooltipTriggerEl).dispose())
+
+			initializeTooltips();
+		};
+
+		// bootstrap tooltip initialization
+		function initializeTooltips() {
+			const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+			const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+		};
+
+		function locateCourse(layout, side, code) {
+			const other = side === 'left' ? 'right' : 'left'
+			const query = `[data-plan-layout='${layout}'][data-plan-side='${other}'] [data-course-code='${code}']`
+			const targets = document.querySelectorAll(query)
+			if (targets.length > 0) {
+				targets[0].scrollIntoView({ behavior: 'smooth', block: 'center' })
+				targets.forEach((el) => {
+					el.classList.add('dp-compare-highlight')
+					setTimeout(() => el.classList.remove('dp-compare-highlight'), 3000);
+				})
+			}	
+		}
+	</script>
+}

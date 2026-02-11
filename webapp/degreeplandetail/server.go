@@ -3,6 +3,8 @@ package degreeplandetail
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/errorx"
@@ -14,13 +16,14 @@ import (
 //================================================================================
 
 type Server struct {
-	Auth                    Authentication
-	BpBtn                   BlueprintAddButton
-	Data                    DBManager
-	Error                   Error
-	NoSavedPlanRedirectPath string
-	Page                    Page
-	router                  http.Handler
+	Auth                Authentication
+	BpBtn               BlueprintAddButton
+	Data                DBManager
+	Error               Error
+	SearchRedirectPath  string
+	ComparePlanUrlParam string
+	Page                Page
+	router              http.Handler
 }
 
 type Authentication interface {
@@ -79,13 +82,25 @@ func (s Server) Router() http.Handler {
 }
 
 func (s *Server) Init() {
+	type routingElement struct {
+		path    string
+		handler http.HandlerFunc
+		params  []any
+	}
+	endpoints := []routingElement{
+		{"GET /{$}", s.userDegreePlanPage, nil},
+		{"GET /{%s}", s.degreePlanByCodePage, []any{dpCode}},
+		{"PATCH /{%s}", s.saveDegreePlan, []any{dpCode}},
+		{"DELETE /", s.deleteSavedPlan, nil},
+		{"%s", s.addCourseToBlueprint, []any{s.BpBtn.Endpoint()}},
+		{"PATCH /plan-to-blueprint/{%s}", s.mergeRecPlanWithBlueprint, []any{dpCode}},
+		{"PUT /plan-to-blueprint/{%s}", s.rewriteBlueprintWithRecPlan, []any{dpCode}},
+		{"/", s.pageNotFound, nil},
+	}
 	router := http.NewServeMux()
-	router.HandleFunc("GET /{$}", s.userDegreePlanPage)
-	router.HandleFunc(fmt.Sprintf("GET /{%s}", dpCode), s.degreePlanByCodePage)
-	router.HandleFunc(fmt.Sprintf("PATCH /user-plan/{%s}", dpCode), s.saveDegreePlan)
-	router.HandleFunc("DELETE /user-plan", s.deleteSavedPlan)
-	router.HandleFunc(s.BpBtn.Endpoint(), s.addCourseToBlueprint)
-	router.HandleFunc("/", s.pageNotFound)
+	for _, e := range endpoints {
+		router.HandleFunc(fmt.Sprintf(e.path, e.params...), e.handler)
+	}
 	s.router = router
 }
 
@@ -98,7 +113,7 @@ func (s Server) userDegreePlanPage(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 	if !s.Data.userHasSelectedDegreePlan(userID) {
-		http.Redirect(w, r, lang.LocalizeURL(s.NoSavedPlanRedirectPath), http.StatusSeeOther)
+		http.Redirect(w, r, lang.LocalizeURL(s.SearchRedirectPath), http.StatusSeeOther)
 		return
 	}
 	dp, err := s.Data.userDegreePlan(userID, lang)
@@ -184,7 +199,7 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 		s.Error.Render(w, r, code, userMsg, lang)
 		return
 	}
-	dp, err := s.Data.userDegreePlan(userID, lang)
+	dp, err := s.getCorrectPlanPage(r)
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -199,9 +214,101 @@ func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s Server) mergeRecPlanWithBlueprint(w http.ResponseWriter, r *http.Request) {
+	planCode := r.PathValue(dpCode)
+	lang := language.FromContext(r.Context())
+	userID := s.Auth.UserID(r)
+	maxYear, err := parseMaxYearParam(r)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	err = s.Data.mergeRecommendedPlanWithBlueprint(userID, planCode, maxYear, lang)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	dp, err := s.getCorrectPlanPage(r)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	t := texts[lang]
+	view := s.pageContent(dp, t)
+	err = view.Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
+}
+
+func (s Server) rewriteBlueprintWithRecPlan(w http.ResponseWriter, r *http.Request) {
+	planCode := r.PathValue(dpCode)
+	lang := language.FromContext(r.Context())
+	userID := s.Auth.UserID(r)
+	maxYear, err := parseMaxYearParam(r)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	err = s.Data.rewriteBlueprintWithRecommendedPlan(userID, planCode, maxYear, lang)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	dp, err := s.getCorrectPlanPage(r)
+	if err != nil {
+		code, userMsg := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.Render(w, r, code, userMsg, lang)
+		return
+	}
+	t := texts[lang]
+	view := s.pageContent(dp, t)
+	err = view.Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)
+	}
+}
+
+/*
+TODO: better handler this problem
+  - do not rely on referer header
+  - if there is no referer, redirect to user's saved plan may be wrong, as there may be no saved plan
+  - perhaps pass the plan code as a query parameter when needed
+  - although, this is only used after adding a course to blueprint from this page
+    -- so referer should always be present
+    -- and it should contain /degreeplan/{code} or /degreeplan/
+*/
+func (s Server) getCorrectPlanPage(r *http.Request) (*degreePlanPage, error) {
+	lang := language.FromContext(r.Context())
+	userID := s.Auth.UserID(r)
+	var dp *degreePlanPage
+	var err error
+	parts := strings.Split(r.Referer(), "/degreeplan/")
+	if len(parts) > 1 && parts[1] != "" {
+		planCode := parts[1]
+		dp, err = s.Data.degreePlan(userID, planCode, lang)
+	} else {
+		dp, err = s.Data.userDegreePlan(userID, lang)
+	}
+	return dp, err
+}
+
 func (s Server) pageContent(dp *degreePlanPage, t text) templ.Component {
 	partialBpBtn := s.BpBtn.PartialComponent(t.language)
 	partialBpBtnChecked := s.BpBtn.PartialComponentSecond(t.language)
+	dp.searchEndpoint = s.SearchRedirectPath
+	dp.compareParam = s.ComparePlanUrlParam
 	main := Content(dp, t, partialBpBtn, partialBpBtnChecked)
 	return main
 }
@@ -211,4 +318,41 @@ func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
 	t := texts[lang]
 	userID := s.Auth.UserID(r)
 	s.Error.RenderPage(w, r, http.StatusNotFound, t.errPageNotFound, t.pageTitle, userID, lang)
+}
+
+//================================================================================
+// Parse parameters
+//================================================================================
+
+func parseMaxYearParam(r *http.Request) (int, error) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+
+	yearString := r.FormValue(maxYearParam)
+	if yearString == "" {
+		return 0, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("year parameter is missing in the request form")),
+			http.StatusBadRequest,
+			t.errMissingMaxYearParam,
+		)
+	}
+
+	year, err := strconv.Atoi(yearString)
+	if err != nil {
+		return 0, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("unable to parse year parameter to int: %w", err)),
+			http.StatusBadRequest,
+			t.errInvalidMaxYearParam,
+		)
+	}
+
+	if year < 0 {
+		return 0, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("invalid year %d", year)),
+			http.StatusBadRequest,
+			t.errInvalidMaxYearParam,
+		)
+	}
+
+	return year, nil
 }

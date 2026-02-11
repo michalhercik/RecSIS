@@ -51,6 +51,7 @@ type text struct {
 	cancelFilters           string
 	scrollToSearch          string
 	detail                  string
+	detailSm                string
 	noDetail                string
 	// language
 	language language.Language
@@ -129,6 +130,7 @@ var texts = map[language.Language]text{
 		cancelFilters:           "Zrušit vybrané filtry",
 		scrollToSearch:          "Nahoru na vyhledávání",
 		detail:                  "Detailní informace",
+		detailSm:                "Detail",
 		noDetail:                "Pro tento předmět nejsou k dispozici žádné podrobnosti.",
 		// language
 		language: language.CS,
@@ -196,6 +198,7 @@ var texts = map[language.Language]text{
 		cancelFilters:           "Cancel selected filters",
 		scrollToSearch:          "Scroll to search",
 		detail:                  "Detailed information",
+		detailSm:                "Detail",
 		noDetail:                "No detailed information available for this course.",
 		// language
 		language: language.EN,

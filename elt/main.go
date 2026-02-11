@@ -120,6 +120,7 @@ func transform(recsis *sqlx.DB) error {
 			pklas2JSON,
 			povinn2jazykAgg,
 			ankecy2JSON,
+			studmetadata2intermediate,
 		},
 		parallelRunner{
 			povinn2courses,
@@ -128,6 +129,7 @@ func transform(recsis *sqlx.DB) error {
 			studmetadata2lang,
 		},
 		parallelRunner{
+			preq2coursesRequisites,
 			povinn2searchable,
 			studplan2searchable,
 		},
@@ -158,6 +160,8 @@ func transform(recsis *sqlx.DB) error {
 			createFilterValuesForDegreePlanValid,
 			createFilterValuesForDegreePlanStudyTypes,
 		},
+		fixDegreePlansCredits,
+		createRequisiteGraphData,
 	}
 
 	err := runner.run(recsis)
@@ -177,10 +181,6 @@ func migrate(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	err = migrateRequisites(tx)
-	if err != nil {
-		return err
-	}
 	err = migrateFilters(tx)
 	if err != nil {
 		return err
@@ -189,11 +189,11 @@ func migrate(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	err = migrateStudPlanMetadata(tx)
+	err = migrateStudPlans(tx)
 	if err != nil {
 		return err
 	}
-	err = migrateStudPlans(tx)
+	err = migrateStudPlanCourses(tx)
 	if err != nil {
 		return err
 	}

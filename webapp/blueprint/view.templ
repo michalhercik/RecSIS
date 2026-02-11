@@ -326,7 +326,7 @@ templ mobileInfoTd(course *course, isCompulsory bool, t text) {
                 { fmt.Sprintf("%s: %d", t.creditsShort, course.credits) }
             </span>
         </div>
-        <span class={ "fw-semibold text-truncate", templ.KV("fw-bold", isCompulsory) }>
+        <span class={ "fw-medium text-truncate", templ.KV("fw-bold", isCompulsory) }>
             @titleCourseLink(course.code, course.title, t)
         </span>
     </div>

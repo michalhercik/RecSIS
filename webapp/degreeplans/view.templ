@@ -11,15 +11,17 @@ templ Content(dp *degreePlanSearchPage, t text) {
         id="degreeplan-search-content"
         class="container mt-3"
         hx-indicator="#loader"
+        x-data="{ smallScreen: window.innerWidth < 768 }"
+        @resize.window="smallScreen = window.innerWidth < 768"
     >   
-        @searchBar(t)
-        @FilterResults(dp, t)
+        @searchBar(dp.searchQuery, dp.selectedPlan, t)
+        @filterResults(dp, t)
         @scripts()
     </div>
 }
 
-templ searchBar(t text) {
-    <div class="position-relative" x-data="{ searchInput: '' }">
+templ searchBar(searchQuery string, selectedPlan selectedPlan, t text) {
+    <div class="position-relative" x-data="{ searchInput: '' }" x-init={ fmt.Sprintf("searchInput = '%s';", searchQuery) }>
         <input
             id="degreeplan-search-input"
             type="text"
@@ -27,10 +29,13 @@ templ searchBar(t text) {
             class="form-control search-input mb-3"
             placeholder={ t.searchPlaceholder }
             hx-get={ t.language.LocalizeURL("/degreeplans/search") }
-            hx-trigger="keyup changed delay:250ms"
-            hx-target="#degreeplan-filters-results"
+            hx-trigger="keyup changed delay:250ms, reload-search from:#degreeplan-search-content"
+            hx-target="#degreeplan-search-content"
             hx-swap="outerHTML"
             hx-include="#filter-form"
+            if selectedPlan.isAnySelected {
+                hx-vals={ fmt.Sprintf(`"%s": "%s"`, CompareUrlParam, selectedPlan.code) }
+            }
             autocomplete="off"
             x-model="searchInput"
             x-ref="searchInput">
@@ -38,14 +43,14 @@ templ searchBar(t text) {
             type="reset"
             x-cloak x-show="searchInput.length > 0"
             class="btn bg-white border-0 position-absolute dp-clear-search-btn"
-            @click="searchInput = ''; $refs.searchInput.focus();">
+            @click="searchInput = ''; $nextTick(() => { $refs.searchInput.focus(); $dispatch('reload-search'); })">
             <i class="bi bi-x-lg"></i>
         </button>
     </div>
 }
 
-templ FilterResults(dp *degreePlanSearchPage, t text) {
-    <div id="degreeplan-filters-results" class="row mx-0">
+templ filterResults(dp *degreePlanSearchPage, t text) {
+    <div id="degreeplan-filters-results" class="row mx-0" x-init="initializeTooltips()">
         <div id="dp-filter-section" class="col-12 col-md px-1 pb-3 px-md-3">
             @filterSection(dp, t)
         </div>
@@ -61,22 +66,25 @@ templ filterSection(dp *degreePlanSearchPage, t text) {
         <form
             id="filter-form"
             hx-get={ t.language.LocalizeURL("/degreeplans/search") }
-            hx-target="#degreeplan-filters-results"
+            hx-target="#degreeplan-search-content"
             hx-swap="outerHTML"
             hx-include="#degreeplan-search-input"
+            if dp.selectedPlan.isAnySelected {
+                hx-vals={ fmt.Sprintf(`"%s": "%s"`, CompareUrlParam, dp.selectedPlan.code) }
+            }
             hx-trigger="change, filters-changed from:#degreeplan-search-content"
-            x-data="{ showFilters: window.innerWidth > 765.5, expandedFilters: JSON.parse(sessionStorage.getItem('dp-expanded-filters')) || false }"
-            @resize.window="showFilters = window.innerWidth > 765.5"
+            x-data="{ showFilters: window.innerWidth > 767.5, expandedFilters: JSON.parse(sessionStorage.getItem('dp-expanded-filters')) || false }"
+            @resize.window="showFilters = window.innerWidth > 767.5"
         >
             <div class="bg-dp-filters rounded-5">
                 <div x-cloak x-show="showFilters || expandedFilters">
                     <div class="px-4 px-md-0 pb-4 pb-md-0 pt-2 pt-md-0">
-                        @filterList(dp.filters[FacultyFacetID], t)
-                        @filterList(dp.filters[SectionFacetID], t)
-                        @filterList(dp.filters[StudyTypeFacetID], t)
-                        @filterList(dp.filters[LanguageFacetID], t)
-                        @filterDropdown(dp.filters[ValidityFacetID], false, t)
-                        @filterDropdown(dp.filters[FieldFacetID], true, t)
+                        @filterList(dp.filters[facultyFacetID], t)
+                        @filterList(dp.filters[sectionFacetID], t)
+                        @filterList(dp.filters[studyTypeFacetID], t)
+                        @filterList(dp.filters[languageFacetID], t)
+                        @filterDropdown(dp.filters[validityFacetID], false, t)
+                        @filterDropdown(dp.filters[fieldFacetID], true, t)
                     </div>
                 </div>
                 <div class="d-flex d-md-none justify-content-center py-2 position-sticky bottom-0 bg-dp-filters-buttons rounded-5 shadow-md">
@@ -138,7 +146,7 @@ templ filterDropdown(category filters.FacetIterator, skipEmpty bool, t text) {
     >
         <button
             type="button"
-            class="btn bg-degreeplan dropdown-toggle w-100 text-middle mt-2"
+            class="btn btn-degreeplan dropdown-toggle w-100 text-middle mt-2"
             data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
         >
             <span class="category-title">
@@ -212,8 +220,11 @@ templ activeFilters(dp *degreePlanSearchPage, t text) {
             <button
                 class="btn btn-link text-secondary p-0 pb-3"
                 hx-get={ t.language.LocalizeURL("/degreeplans/search") }
-                hx-target="#degreeplan-filters-results"
-                hx-swap="outerHTML show:window:top">
+                hx-target="#degreeplan-search-content"
+                hx-swap="outerHTML show:window:top"
+                if dp.selectedPlan.isAnySelected {
+                    hx-vals={ fmt.Sprintf(`"%s": "%s"`, CompareUrlParam, dp.selectedPlan.code) }
+                }>
                 { t.cancelFilters }
             </button>
         }
@@ -224,13 +235,13 @@ templ degreePlans(dp *degreePlanSearchPage, t text) {
     if len(dp.results) == 0 {
         <p>{ t.noDegreePlanResults }</p>
     } else {
-        <table class="table table-sm degree-plan-results-table">
+        <table class="table table-sm degree-plan-results-table" :class="{ 'table-hover': !smallScreen }">
             <thead>
                 <tr>
                     // code
                     <th class="d-none d-md-table-cell">{ t.code }</th>
                     // title
-                    <th class="d-none d-md-table-cell">{ t.title }</th>
+                    <th><span  class="d-none d-md-inline">{ t.title }</span></th>
                     // study type
                     <th class="text-end pe-3 d-none d-lg-table-cell">{ t.studyType }</th>
                     // validity
@@ -238,37 +249,44 @@ templ degreePlans(dp *degreePlanSearchPage, t text) {
                     <th class="d-none d-lg-table-cell"></th>
                     <th class="d-none d-lg-table-cell"></th>
                     // add for compare button
-                    // TODO: implement
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 for _, plan := range dp.results {
-                    <tr>
+                    <tr
+                        x-data="{ hover: false }"
+                        @mouseover="hover = true"
+                        @mouseleave="hover = false"
+                    >
                         // code
                         <td class="d-none d-md-table-cell">
-                            @degreePlanLink(plan.Code, t) {
-                                { plan.Code }
-                            }
+                            @degreePlanLink(plan.code, t)
                         </td>
                         // title
                         <td>
                             <span class="d-none d-md-inline">
-                                @degreePlanLink(plan.Code, t) {
-                                    { plan.Title }
-                                }
+                                @titleDegreePlanLink(plan.code, plan.title, t)
                             </span>
                             @mobileInfoTd(&plan, t)
                         </td>
                         // study type
-                        <td class="text-end pe-3 d-none d-lg-table-cell">{ plan.StudyType }</td>
+                        <td class="text-end pe-3 d-none d-lg-table-cell">{ plan.studyType }</td>
                         // valid from
-                        <td class="text-center px-0 d-none d-lg-table-cell">{ plan.ValidFrom.String() }</td>
+                        <td class="text-center px-0 d-none d-lg-table-cell">{ plan.validFrom.String() }</td>
                         // dash
                         <td class="text-center px-0 d-none d-lg-table-cell">-</td>
                         // valid to
-                        <td class="text-center px-0 d-none d-lg-table-cell">{ plan.ValidTo.String() }</td>
+                        <td class="text-center px-0 d-none d-lg-table-cell">{ plan.validTo.String() }</td>
                         // add for compare button
-                        // TODO: implement
+                        <td class="align-middle py-0">
+                            <span class="d-none d-md-inline">
+                                @compareButton(plan.code, dp.selectedPlan, false, t)
+                            </span>
+                            <span class="d-md-none">
+                                @compareButton(plan.code, dp.selectedPlan, true, t)
+                            </span>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -280,19 +298,17 @@ templ mobileInfoTd(plan *degreePlanSearchResult, t text) {
     <div class="d-flex flex-column d-md-none">
         <div class="d-flex justify-content-between align-items-center small lh-1">
             <span class="text-muted dp-mobile-plan-code">
-                { plan.Code }
+                { plan.code }
             </span>
             <span class="text-muted dp-mobile-validity">
-                { fmt.Sprintf("%s - %s", plan.ValidFrom.String(), plan.ValidTo.String()) }
+                { fmt.Sprintf("%s - %s", plan.validFrom.String(), plan.validTo.String()) }
             </span>
             <span class="text-muted text-end dp-mobile-study-type">
-                { plan.StudyType }
+                { plan.studyType }
             </span>
         </div>
-        <span class="fw-semibold text-truncate">
-            @degreePlanLink(plan.Code, t) {
-                { plan.Title }
-            }
+        <span class="fw-medium text-truncate">
+            @titleDegreePlanLink(plan.code, plan.title, t)
         </span>
     </div>
 }
@@ -300,8 +316,87 @@ templ mobileInfoTd(plan *degreePlanSearchResult, t text) {
 templ degreePlanLink(code string, t text) {
     <a
         class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover"
-        href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }
-    >
-        { children... }
+        href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }>
+        { code }
     </a>
+}
+
+templ titleDegreePlanLink(code, title string, t text) {
+    <a
+        class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover link-offset-2"
+        href={ templ.SafeURL(t.language.LocalizeURL("/degreeplan/" + code)) }>
+        { title }
+    </a>
+}
+
+templ compareButton(code string, selectedPlan selectedPlan, mobile bool, t text) {
+    if selectedPlan.isAnySelected {
+        if selectedPlan.code == code {
+            @unselectForCompareButton(mobile, t)
+        } else {
+            @compareWithSelectedButton(selectedPlan.code, code, mobile, t)
+        }
+    } else {
+        @selectForCompareButton(code, mobile, t)
+    }
+}
+
+templ unselectForCompareButton(mobile bool, t text) {
+    <button
+        type="button"
+        class={ "btn btn-outline-secondary border-0", templ.KV("btn-sm", !mobile), templ.KV("px-1", mobile) }
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-delay={ fmt.Sprintf(`{ "show": 300, "hide": 0 }`) }
+        data-bs-title={ t.unselectForCompare }
+        hx-get={ templ.SafeURL(t.language.LocalizeURL("/degreeplans/search")) }
+        hx-target="#degreeplan-search-content"
+        hx-include="#degreeplan-search-input, #filter-form"
+        hx-swap="outerHTML"
+        @click="reloadTooltips()">
+        <i class="bi bi-bookmark-check-fill"></i>
+    </button>
+}
+
+templ compareWithSelectedButton(selectedCode, code string, mobile bool, t text) {
+    <button
+        if !mobile {
+            x-cloak
+            x-show="hover"
+        }
+        type="button"
+        class={ "btn btn-outline-secondary border-0", templ.KV("btn-sm", !mobile), templ.KV("px-1", mobile) }
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-delay={ fmt.Sprintf(`{ "show": 300, "hide": 0 }`) }
+        data-bs-title={ t.compareWithSelected }
+        hx-get={ templ.SafeURL(t.language.LocalizeURL(fmt.Sprintf("/degreeplans%s%s/%s", comparePrefix, selectedCode, code))) }
+        hx-target="body"
+        hx-push-url="true"
+        hx-swap="outerHTML show:top"
+        @click="reloadTooltips()">
+        <i class="bi bi-file-earmark-diff"></i>
+    </button>
+}
+
+templ selectForCompareButton(code string, mobile bool, t text) {
+    <button
+        if !mobile {
+            x-cloak
+            x-show="hover"
+        }
+        type="button"
+        class={ "btn btn-outline-secondary border-0", templ.KV("btn-sm", !mobile), templ.KV("px-1", mobile) }
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-delay={ fmt.Sprintf(`{ "show": 300, "hide": 0 }`) }
+        data-bs-title={ t.selectForCompare }
+        hx-get={ templ.SafeURL(t.language.LocalizeURL("/degreeplans/search")) }
+        hx-target="#degreeplan-search-content"
+        hx-include="#degreeplan-search-input, #filter-form"
+        hx-vals={ fmt.Sprintf(`"%s": "%s"`, CompareUrlParam, code) }
+        hx-swap="outerHTML"
+        @click="reloadTooltips()">
+        <i class="bi bi-bookmark"></i>
+    </button>
 }

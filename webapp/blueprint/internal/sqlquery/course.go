@@ -1,16 +1,5 @@
 package sqlquery
 
-/*
-TODO: OUT of date -> upgrade to named param
-Param order:
-	1. student
-	2. blueprint_years.position
-	3. blueprint_semesters.semester
-	4. blueprint_semesters.position
-	5. blueprint.id
-	6. course.code
-*/
-
 const SelectCourses = `--sql
 SELECT
 	y.academic_year,
@@ -26,7 +15,10 @@ SELECT
 	c.seminar_range_summer,
 	c.exam,
 	c.credits,
-	c.guarantors
+	c.guarantors,
+	c.prerequisites,
+	c.corequisites,
+	c.incompatibilities
 FROM blueprint_years y
 INNER JOIN blueprint_semesters bs
 	ON y.id=bs.blueprint_year_id

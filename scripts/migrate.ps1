@@ -14,16 +14,16 @@ Set-StrictMode -Version Latest
 
 # configuration
 $Database = $env:POSTGRES_DB
-$User     = $env:POSTGRES_USER
+$User     = $env:POSTGRES_OWNER
 
 if (-not (Test-Path $MigrationsDir)) {
     throw "Migration directory not found: $MigrationsDir"
 }
 
-$files = Get-ChildItem `
-    -Path $MigrationsDir `
-    -Filter "*.sql" `
-    | Sort-Object Name
+$files = @(Get-ChildItem `
+     -Path $MigrationsDir `
+     -Filter "*.sql" `
+     | Sort-Object Name)
 
 if ($files.Count -eq 0) {
     Write-Host "No migration files found."

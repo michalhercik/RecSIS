@@ -96,7 +96,7 @@ tr:target td {
 
 @keyframes highlight {
     from { background-color: yellow; }
-    to { background-color: white; }
+    to { background-color: transparent; }
 }
 
 /* NAV -> nav items font size */
@@ -628,9 +628,8 @@ tr:target td {
     padding-right: 20px !important;
 }
 
-/* =============================== */
-
 /* === Degree plan table columns width styles === */
+
 .degree-plan-table {
     table-layout: fixed;
 }
@@ -663,27 +662,33 @@ tr:target td {
     text-overflow: ellipsis;
 }
 
-/* credits */
+/* semester, range, exam for md */
 .degree-plan-table th:nth-child(4),
 .degree-plan-table td:nth-child(4) {
+    width: 130px;
+}
+
+/* credits */
+.degree-plan-table th:nth-child(5),
+.degree-plan-table td:nth-child(5) {
     width: 42px;
 }
 
 /* winter */
-.degree-plan-table th:nth-child(5),
-.degree-plan-table td:nth-child(5) {
-    width: 90px;
-}
-
-/* summer */
 .degree-plan-table th:nth-child(6),
 .degree-plan-table td:nth-child(6) {
     width: 90px;
 }
 
-/* guarantors */
+/* summer */
 .degree-plan-table th:nth-child(7),
 .degree-plan-table td:nth-child(7) {
+    width: 90px;
+}
+
+/* guarantors */
+.degree-plan-table th:nth-child(8),
+.degree-plan-table td:nth-child(8) {
     width: 265px;
     white-space: nowrap;
     overflow: hidden;
@@ -692,21 +697,82 @@ tr:target td {
 
 /* guarantors smaller */
 @media (max-width: 1399.5px) {
-    .degree-plan-table th:nth-child(7),
-    .degree-plan-table td:nth-child(7) {
+    .degree-plan-table th:nth-child(8),
+    .degree-plan-table td:nth-child(8) {
         width: 200px;
     }
 }
 
 /* button */
-.degree-plan-table th:nth-child(8),
-.degree-plan-table td:nth-child(8) {
+.degree-plan-table th:nth-child(9),
+.degree-plan-table td:nth-child(9) {
     width: 55px;
 }
 
-/* ============================================== */
+/* === Degree plan recommended plan table === */
 
-/* === Degree plan results table columns width styles === */
+.dp-recommended-table {
+    table-layout: fixed;
+}
+
+/* code */
+.dp-recommended-table th:nth-child(1),
+.dp-recommended-table td:nth-child(1) {
+    width: 85px;
+}
+
+/* title */
+.dp-recommended-table th:nth-child(2),
+.dp-recommended-table td:nth-child(2) {
+    width: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* semester, range, exam for md */
+.dp-recommended-table th:nth-child(3),
+.dp-recommended-table td:nth-child(3) {
+    width: 130px;
+}
+
+/* credits */
+.dp-recommended-table th:nth-child(4),
+.dp-recommended-table td:nth-child(4) {
+    width: 42px;
+}
+
+/* winter */
+.dp-recommended-table th:nth-child(5),
+.dp-recommended-table td:nth-child(5) {
+    width: 90px;
+}
+
+/* summer */
+.dp-recommended-table th:nth-child(6),
+.dp-recommended-table td:nth-child(6) {
+    width: 90px;
+}
+
+/* guarantors */
+.dp-recommended-table th:nth-child(7),
+.dp-recommended-table td:nth-child(7) {
+    width: 265px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* guarantors smaller */
+@media (max-width: 1399.5px) {
+    .dp-recommended-table th:nth-child(7),
+    .dp-recommended-table td:nth-child(7) {
+        width: 200px;
+    }
+}
+
+/* === Degree plan results table === */
+
 .degree-plan-results-table {
     table-layout: fixed;
 }
@@ -750,7 +816,78 @@ tr:target td {
     width: 40px;
 }
 
+/* buttons */
+.degree-plan-results-table th:nth-child(7),
+.degree-plan-results-table td:nth-child(7) {
+    width: 36px;
+}
+
+/* === Degree plan compare table === */
+
+.dp-compare-table {
+    table-layout: fixed;
+}
+
+/* code */
+.dp-compare-table th:nth-child(1),
+.dp-compare-table td:nth-child(1) {
+    width: 85px;
+}
+
+/* title */
+.dp-compare-table th:nth-child(2),
+.dp-compare-table td:nth-child(2) {
+    width: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* locate button */
+.dp-compare-table th:nth-child(3),
+.dp-compare-table td:nth-child(3) {
+    width: 32px;
+}
+
+/* credits */
+.dp-compare-table th:nth-child(4),
+.dp-compare-table td:nth-child(4) {
+    width: 30px;
+}
+
 /* ============================================== */
+
+/* DP -> button */
+.btn-outline-degreeplan {
+    color: rgb(240, 116, 0) !important;
+    border-color: rgb(240, 116, 0) !important;
+}
+
+.btn-outline-degreeplan:hover {
+    color: #fff !important;
+    background-color: rgb(240, 116, 0) !important;
+    border-color: rgb(240, 116, 0) !important;
+}
+
+.btn-degreeplan {
+    background-color: rgb(240, 116, 0) !important;
+    color: white !important;
+}
+
+.btn-degreeplan:hover {
+    background-color: rgb(161, 78, 0) !important;
+    color: white !important;
+}
+
+/* DP -> compare highlight */
+.dp-compare-highlight td {
+    animation: dp-compare-highlight 3s ease-in;
+}
+
+@keyframes dp-compare-highlight {
+    from { background-color: rgba(0, 200, 255, 0.8); }
+    to { background-color: transparent; }
+}
 
 /* DP -> filter styles */
 .dp-filter {
@@ -803,43 +940,86 @@ tr:target td {
 }
 
 /* DP -> Checked courses menu with buttons */
-#dp-checked-courses-menu,
-#dp-checked-courses-menu-skeleton {
+#dp-checked-courses-menu {
     position: sticky;
     top: 55px;
-    height: 37px;
-    background-color: white;
     z-index: 100;
 }
 
+/* DP -> requisite graph */
+#course-graph {
+    height: 600px;
+}
+
+.dp-legend-edge {
+    width: 18px;
+    height: 6px;
+    border-radius: 4px;
+}
+
+.dp-legend-node {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+.dp-prerequisite-edge {
+    background-color: #1f77b4;
+}
+
+.dp-corequisite-edge {
+    background-color: #2ca02c;
+}
+
+.dp-incompatibility-edge {
+    background-color: #d62728;
+}
+
+.dp-in-plan-node {
+    background-color: rgb(252,227,204);
+}
+
+.dp-not-in-plan-node {
+    background-color: #ccc;
+}
+
+/* DP -> headline styles */
+.dp-headline-title {
+    font-size: calc(1.3rem + 1.5vw) !important;
+}
+
 @media (max-width: 767.5px) {
-    #dp-checked-courses-menu,
-    #dp-checked-courses-menu-skeleton {
-        height: 60px;
+    .dp-headline-title {
+        font-size: 1.4rem !important;
     }
 }
 
-/* DP -> degree plan code styles */
-.dp-code {
-    z-index: 1000 !important;
-    top: 12px;
+@media (max-width: 575.5px) {
+    .dp-headline-title {
+        font-size: 1.2rem !important;
+    }
 }
 
-/* DP -> choose degree plan button styles */
-.save-degree-plan-btn {
-    z-index: 1000 !important;
-    top: 12px;
-    right: 12px;
+/* DP -> bloc title styles */
+.dp-bloc-title {
+    font-size: 1.25rem !important;
 }
 
-/* DP -> choose degree plan modal styles */
-#choose-degree-plan-modal-body {
-    min-height: 400px;
+@media (max-width: 767.5px) {
+    .dp-bloc-title {
+        font-size: 1.1rem !important;
+    }
 }
 
-/* DP -> degree plan year select styles */
-.dp-select-year-width {
-    max-width: 120px;
+/* DP -> status badges color */
+.bg-success-dark {
+    background-color: rgb(27, 99, 42);
+    color: white;
+}
+
+.bg-blueprint-dark {
+    background-color: rgb(4, 54, 90);
+    color: white;
 }
 
 /* DP -> Checkbox styles */
@@ -882,28 +1062,6 @@ tr:target td {
         height: 34px;
         border-radius: 20%;
     }
-}
-
-/* DP -> status badges overview */
-.status-badges {
-    padding-left: 36px;
-}
-
-@media (max-width: 767.5px) {
-    .status-badges {
-        padding-left: 0;
-    }
-}
-
-/* DP -> status badges color */
-.bg-success-dark {
-    background-color: rgb(27, 99, 42);
-    color: white;
-}
-
-.bg-blueprint-dark {
-    background-color: rgb(4, 54, 90);
-    color: white;
 }
 
 /* DP -> all blueprint (with unassigned) credits */
@@ -957,6 +1115,10 @@ tr:target td {
     width: 40px;
 }
 
+.dp-mobile-credits-long {
+    width: 80px;
+}
+
 .dp-mobile-plan-code {
     width: 100px;
 }
@@ -967,11 +1129,6 @@ tr:target td {
 
 .dp-mobile-study-type {
     width: 40px;
-}
-
-/* DP -> small table semester */
-.dp-lg-semester {
-    width: 130px;
 }
 
 /* === Loader and page overlay styles === */
@@ -1011,6 +1168,7 @@ tr:target td {
 #home-skeleton,
 #courses-skeleton,
 #blueprint-skeleton,
+#degreeplan-skeleton,
 #degreeplans-skeleton {
     display: none;
 }
@@ -1018,6 +1176,7 @@ tr:target td {
 #home-skeleton.htmx-request,
 #courses-skeleton.htmx-request,
 #blueprint-skeleton.htmx-request,
+#degreeplan-skeleton.htmx-request,
 #degreeplans-skeleton.htmx-request {
     display: block;
 }

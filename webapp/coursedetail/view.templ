@@ -146,7 +146,7 @@ templ basicInfo(course *course, t text) {
 		@infoRow(t.capacity) {
 			<span>{ course.capacity }</span>
 		}
-		@requisitesLinksRow(course.prerequisitesRoot, t.prerequisites, t)
+		@requisitesLinksRow(course.prerequisites, t.prerequisites, t)
 		if len(course.guarantors) > 0 {
 			@infoRow(t.guarantors) {
 				<table id="guarantors-table" class="mb-0">
@@ -183,27 +183,27 @@ templ details(course *course, t text) {
 		role="tablist"
 		id="details-nav-tabs"
 		class="nav nav-tabs justify-content-center justify-content-md-start">
-		@tabButton("desc-tab-pane", t.description, true)
-		@tabButton("survey-tab-pane", t.survey, false)
-		@tabButton("detail-tab-pane", t.detail, false)
+		@tabButton(fmt.Sprintf("%s-desc-tab-pane", course.code), t.description, t.description, true)
+		@tabButton(fmt.Sprintf("%s-survey-tab-pane", course.code), t.survey, t.survey, false)
+		@tabButton(fmt.Sprintf("%s-detail-tab-pane", course.code), t.detail, t.detailSm, false)
 	</ul>
 	<div
 		class="tab-content"
 		x-init="$el.style.minHeight = window.innerHeight - 73 + 'px';"
 		@resize.window="$el.style.minHeight = window.innerHeight - 73 + 'px'">
-		@tabPane("desc-tab-pane", true) {
+		@tabPane(fmt.Sprintf("%s-desc-tab-pane", course.code), true) {
 			@descriptions(course, t)
 		}
-		@tabPane("survey-tab-pane", false) {
+		@tabPane(fmt.Sprintf("%s-survey-tab-pane", course.code), false) {
 			@surveys(course.code, t)
 		}
-		@tabPane("detail-tab-pane", false) {
+		@tabPane(fmt.Sprintf("%s-detail-tab-pane", course.code), false) {
 			@detailInfo(course, t)
 		}
 	</div>
 }
 
-templ tabButton(target, text string, active bool) {
+templ tabButton(target, text, textSm string, active bool) {
 	<li class="nav-item" role="presentation">
 		<button
 			id={ fmt.Sprintf("%s-btn", target) }
@@ -215,7 +215,8 @@ templ tabButton(target, text string, active bool) {
 			role="tab"
 			aria-controls={ fmt.Sprintf("%s", target) }
 			aria-selected={ fmt.Sprintf("%t", active) }>
-			{ text }
+			<span class="d-sm-none">{ textSm }</span>
+			<span class="d-none d-sm-inline">{ text }</span>
 		</button>
 	</li>
 }
@@ -225,8 +226,7 @@ templ tabPane(target string, active bool) {
 		id={ target }
 		class={ "tab-pane pt-2", templ.KV("active", active), templ.KV("show", active) }
 		hx-preserve="true"
-		role="tabpanel"
-		tabindex="0">
+		role="tabpanel">
 		{ children... }
 	</div>
 }
@@ -538,9 +538,9 @@ templ detailInfo(course *course, t text) {
 							}
 						}
 					}
-					@requisitesLinksRow(course.corequisitesRoot, t.corequisites, t)
-					@requisitesLinksRow(course.interchangesRoot, t.interchange, t)
-					@requisitesLinksRow(course.incompatiblesRoot, t.incompatible, t)
+					@requisitesLinksRow(course.corequisites, t.corequisites, t)
+					@requisitesLinksRow(course.interchanges, t.interchange, t)
+					@requisitesLinksRow(course.incompatibles, t.incompatible, t)
 				</table>
 			</div>
 			// right column teachers
@@ -561,10 +561,10 @@ templ detailInfo(course *course, t text) {
 	}
 }
 
-templ requisitesLinksRow(reqRoot *requisiteNode, title string, t text) {
-	if reqRoot != nil {
+templ requisitesLinksRow(requisites requisiteSlice, title string, t text) {
+	if len(requisites) > 0 {
 		@infoRow(title) {
-			for i, req := range reqRoot.children {
+			for i, req := range requisites {
 				if i == 0 {
 					@renderRequisite(req, t)
 				} else {
@@ -575,37 +575,34 @@ templ requisitesLinksRow(reqRoot *requisiteNode, title string, t text) {
 	}
 }
 
-templ renderRequisite(r *requisiteNode, t text) {
-	if !r.groupType.Valid {
+// for correct formatting, there must not be any whitespaces (no even comments, ...) 
+templ renderRequisite(r requisite, t text) {
+	if r.isNode() {
 		@courseLink(r.courseCode, t)
+	} else if r.isDisjunction() {
+		{ "{" }for i, child := range r.children {
+			if i == 0 {
+				@renderRequisite(child, t)
+			} else {
+				{ fmt.Sprintf(" %s ", t.or) }@renderRequisite(child, t)
+			}
+		}{ "}" }
+	} else if r.isConjunction() {
+		{ "{" }for i, child := range r.children {
+			if i == 0 {
+				@renderRequisite(child, t)
+			} else {
+				{ fmt.Sprintf(" %s ", t.and) }@renderRequisite(child, t)
+			}
+		}{ "}" }
 	} else {
-		// for correct formatting, there must not be any whitespaces
-		switch r.groupType.String {
-			case "M":
-				{ "{" }for i, child := range r.children {
-					if i == 0 {
-						@renderRequisite(child, t)
-					} else {
-						{ fmt.Sprintf(" %s ", t.or) }@renderRequisite(child, t)
-					}
-				}{ "}" }
-			case "V":
-				{ "{" }for i, child := range r.children {
-					if i == 0 {
-						@renderRequisite(child, t)
-					} else {
-						{ fmt.Sprintf(" %s ", t.and) }@renderRequisite(child, t)
-					}
-				}{ "}" }
-			default:
-				{ "{" }for i, child := range r.children {
-					if i == 0 {
-						@renderRequisite(child, t)
-					} else {
-						{ fmt.Sprintf(", ") }@renderRequisite(child, t)
-					}
-				}{ "}" }
-		}
+		{ "{" }for i, child := range r.children {
+			if i == 0 {
+				@renderRequisite(child, t)
+			} else {
+				{ fmt.Sprintf(", ") }@renderRequisite(child, t)
+			}
+		}{ "}" }
 	}
 }
 

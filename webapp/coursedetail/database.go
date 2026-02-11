@@ -14,6 +14,10 @@ import (
 	"github.com/michalhercik/RecSIS/language"
 )
 
+const (
+	foreignKeyViolationCode = "23503"
+)
+
 type DBManager struct {
 	DB *sqlx.DB
 }
@@ -22,7 +26,6 @@ type courseDetail struct {
 	dbds.Course
 	dbds.OverallRating
 	CategoryRatings    []dbds.CourseCategoryRating
-	requisites         []dbds.Requisite
 	BlueprintSemesters pq.BoolArray `db:"semesters"`
 	InDegreePlan       bool         `db:"in_degree_plan"`
 }
@@ -50,13 +53,6 @@ func (reader DBManager) course(userID string, code string, lang language.Languag
 			texts[lang].errCannotGetCourseRatings,
 		)
 	}
-	if err := reader.DB.Select(&result.requisites, sqlquery.Requisites, code); err != nil {
-		return nil, errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.Requisites: %w", err), errorx.P("code", code)),
-			http.StatusInternalServerError,
-			texts[lang].errCannotGetRequisites,
-		)
-	}
 	course := intoCourse(&result)
 	return &course, nil
 }
@@ -65,11 +61,20 @@ func (db DBManager) rateCategory(userID string, code string, category string, ra
 	var updatedRating []dbds.CourseCategoryRating
 	_, err := db.DB.Exec(sqlquery.RateCategory, userID, code, category, rating)
 	if err != nil {
-		return []courseCategoryRating{}, errorx.NewHTTPErr(
-			errorx.AddContext(fmt.Errorf("sqlquery.RateCategory: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("rating", rating), errorx.P("lang", lang)),
-			http.StatusInternalServerError,
-			texts[lang].errCannotRateCategory,
-		)
+		// Handle foreign key violation (invalid category code)
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == foreignKeyViolationCode {
+			return []courseCategoryRating{}, errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.RateCategory: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("rating", rating), errorx.P("lang", lang)),
+				http.StatusBadRequest,
+				texts[lang].errCannotRateCategory,
+			)
+		} else {
+			return []courseCategoryRating{}, errorx.NewHTTPErr(
+				errorx.AddContext(fmt.Errorf("sqlquery.RateCategory: %w", err), errorx.P("code", code), errorx.P("category", category), errorx.P("rating", rating), errorx.P("lang", lang)),
+				http.StatusInternalServerError,
+				texts[lang].errCannotRateCategory,
+			)
+		}
 	}
 	if err = db.DB.Select(&updatedRating, sqlquery.Rating, userID, code, lang); err != nil {
 		return []courseCategoryRating{}, errorx.NewHTTPErr(
@@ -184,10 +189,10 @@ func intoCourse(from *courseDetail) course {
 		assessmentRequirements: intoNullDesc(from.AssessmentRequirements),
 		entryRequirements:      intoNullDesc(from.EntryRequirements),
 		aim:                    intoNullDesc(from.Aim),
-		prerequisitesRoot:      intoRequisiteTree(from.requisites, from.Code, "P"),
-		corequisitesRoot:       intoRequisiteTree(from.requisites, from.Code, "K"),
-		incompatiblesRoot:      intoRequisiteTree(from.requisites, from.Code, "N"),
-		interchangesRoot:       intoRequisiteTree(from.requisites, from.Code, "Z"),
+		prerequisites:          intoRequisites(from.Prerequisites),
+		corequisites:           intoRequisites(from.Corequisites),
+		incompatibles:          intoRequisites(from.Incompatibilities),
+		interchanges:           intoRequisites(from.Interchanges),
 		classes:                []string(from.Classes),
 		classifications:        []string(from.Classifications),
 		overallRating:          intoCourseRating(from.OverallRating),
@@ -222,38 +227,16 @@ func intoDepartment(from dbds.Department) department {
 	}
 }
 
-func intoRequisiteTree(from []dbds.Requisite, rootCourse string, reqType string) *requisiteNode {
-	if from == nil {
-		return nil
-	}
-
-	filteredByType := []dbds.Requisite{}
-	for _, req := range from {
-		if req.Type == reqType {
-			filteredByType = append(filteredByType, req)
+func intoRequisites(from dbds.RequisiteSlice) requisiteSlice {
+	result := make(requisiteSlice, len(from))
+	for i, r := range from {
+		result[i] = requisite{
+			courseCode: r.CourseCode,
+			children:   intoRequisites(r.Children),
+			group:      r.Group,
 		}
 	}
-
-	nodes := map[string]*requisiteNode{}
-	getNode := func(course string) *requisiteNode {
-		if _, ok := nodes[course]; !ok {
-			nodes[course] = &requisiteNode{courseCode: course}
-		}
-		return nodes[course]
-	}
-
-	var root *requisiteNode
-	for _, r := range filteredByType {
-		parentNode := getNode(r.Parent)
-		childNode := getNode(r.Child)
-		childNode.groupType = r.Group
-		parentNode.children = append(parentNode.children, childNode)
-		if r.Parent == rootCourse {
-			root = parentNode
-		}
-	}
-
-	return root
+	return result
 }
 
 func intoBlueprintAssignmentSlice(from pq.BoolArray) []assignment {

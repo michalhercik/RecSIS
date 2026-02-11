@@ -40,7 +40,7 @@ $response = Invoke-RestMethod -Uri "http://localhost:7700/indexes/courses/settin
             "response": {
                 "embedding": "{{embedding}}"
             },
-            "documentTemplate": "University course with title {{doc.title.en}} {% if doc.annotation != nil %} {{doc.annotation[0]}} {% endif %}"
+            "documentTemplate": "University course with title {{doc.title.en}}"
         }
     }'
 Write-Output $response
@@ -55,7 +55,7 @@ $searchable = @(
     "sylabus",
     "aim",
     "terms_of_passing",
-    "requirements_of_assesment",
+    "requirements_of_assessment",
     "literature"
 )
 $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settings/searchable-attributes" `

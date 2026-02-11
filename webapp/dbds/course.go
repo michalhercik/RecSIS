@@ -29,11 +29,15 @@ type Course struct {
 	MaxOccupancy           sql.NullString    `db:"capacity"`
 	Classes                JSONArray[string] `db:"classes"`
 	Classifications        JSONArray[string] `db:"classifications"`
+	Prerequisites          RequisiteSlice    `db:"prerequisites"`
+	Corequisites           RequisiteSlice    `db:"corequisites"`
+	Incompatibilities      RequisiteSlice    `db:"incompatibilities"`
+	Interchanges           RequisiteSlice    `db:"interchangeabilities"`
 	Annotation             NullDescription   `db:"annotation"`
 	Syllabus               NullDescription   `db:"syllabus"`
 	PassingTerms           NullDescription   `db:"terms_of_passing"`
 	Literature             NullDescription   `db:"literature"`
-	AssessmentRequirements NullDescription   `db:"requirements_of_assesment"`
+	AssessmentRequirements NullDescription   `db:"requirements_of_assessment"`
 	EntryRequirements      NullDescription   `db:"entry_requirements"`
 	Aim                    NullDescription   `db:"aim"`
 }
@@ -101,13 +105,13 @@ func (d *Department) Scan(val any) error {
 	case []byte:
 		err := json.Unmarshal(v, &d)
 		if err != nil {
-			return fmt.Errorf("error unmarshalling Department: %w", err)
+			return fmt.Errorf("error unmarshaling Department: %w", err)
 		}
 		return nil
 	case string:
 		err := json.Unmarshal([]byte(v), &d)
 		if err != nil {
-			return fmt.Errorf("error unmarshalling Department: %w", err)
+			return fmt.Errorf("error unmarshaling Department: %w", err)
 		}
 		return nil
 	default:
@@ -132,6 +136,55 @@ func (jsa *JSONArray[T]) Scan(val any) error {
 	default:
 		return fmt.Errorf("unsupported type: %T", v)
 	}
+}
+
+type RequisiteSlice []Requisite
+
+func (rs *RequisiteSlice) Scan(val any) error {
+	switch v := val.(type) {
+	case nil:
+		*rs = nil
+		return nil
+	case []byte:
+		return json.Unmarshal(v, &rs)
+	case string:
+		return json.Unmarshal([]byte(v), &rs)
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+type Requisite struct {
+	CourseCode string
+	Children   RequisiteSlice
+	Group      sql.NullString
+}
+
+func (r *Requisite) UnmarshalJSON(data []byte) error {
+	// Try to unmarshal as string (course code)
+	var code string
+	if err := json.Unmarshal(data, &code); err == nil {
+		r.CourseCode = code
+		r.Children = nil
+		r.Group = sql.NullString{Valid: false}
+		return nil
+	}
+
+	// Try to unmarshal as object (group with children)
+	var obj struct {
+		CourseCode string      `json:"course_code"`
+		GroupType  string      `json:"group_type"`
+		Courses    []Requisite `json:"courses"`
+	}
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return fmt.Errorf("requisite must be either string or object with group_type and courses: %w", err)
+	}
+
+	r.CourseCode = obj.CourseCode
+	r.Children = obj.Courses
+	r.Group = sql.NullString{String: obj.GroupType, Valid: obj.GroupType != "NODE"}
+
+	return nil
 }
 
 type ClassSlice []Class
@@ -209,11 +262,4 @@ type CourseCategoryRating struct {
 	UserRating  sql.NullInt64   `db:"rating"`
 	AvgRating   sql.NullFloat64 `db:"avg_rating"`
 	RatingCount sql.NullInt64   `db:"rating_count"`
-}
-
-type Requisite struct {
-	Parent string         `db:"parent_course"`
-	Child  string         `db:"child_course"`
-	Type   string         `db:"req_type"`
-	Group  sql.NullString `db:"group_type"`
 }

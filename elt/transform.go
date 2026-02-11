@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type runner interface {
@@ -73,12 +76,25 @@ type transformation struct {
 }
 
 func (t transformation) run(db *sqlx.DB) error {
-	_, err := db.Exec(t.query)
-	if err != nil {
+	if _, err := db.Exec(t.query); err != nil {
 		log.Printf("❌ %s: Transform: %v", t.name, err)
 		return err
 	}
-	log.Printf("✅ Transformation of %s successfull", t.name)
+	log.Printf("✅ Transformation of %s successful", t.name)
+	return nil
+}
+
+type goTransformation struct {
+	name string
+	runF func(db *sqlx.DB) error
+}
+
+func (t goTransformation) run(db *sqlx.DB) error {
+	if err := t.runF(db); err != nil {
+		log.Printf("❌ %s: Transform: %v", t.name, err)
+		return err
+	}
+	log.Printf("✅ Transformation of %s successful", t.name)
 	return nil
 }
 
@@ -271,7 +287,7 @@ var pamela2JSON = transformation{
 			syllabus jsonb,
 			terms_of_passing jsonb,
 			literature jsonb,
-			requirements_of_assesment jsonb,
+			requirements_of_assessment jsonb,
 			entry_requirements jsonb,
 			aim jsonb
 		);
@@ -296,9 +312,9 @@ var pamela2JSON = transformation{
 				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[literature_title, literature])
 			END literature,
 			CASE
-				WHEN requirements_of_assesment IS NULL THEN NULL
-				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[requirements_of_assesment_title, requirements_of_assesment])
-			END requirements_of_assesment,
+				WHEN requirements_of_assessment IS NULL THEN NULL
+				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[requirements_of_assessment_title, requirements_of_assessment])
+			END requirements_of_assessment,
 			CASE
 				WHEN entry_requirements IS NULL THEN NULL
 				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[entry_requirements_title, entry_requirements])
@@ -319,8 +335,8 @@ var pamela2JSON = transformation{
 				max(memo) FILTER (WHERE typ='E') terms_of_passing,
 				max(nazev) FILTER (WHERE typ='L') literature_title,
 				max(memo) FILTER (WHERE typ='L') literature,
-				max(nazev) FILTER (WHERE typ='P') requirements_of_assesment_title,
-				max(memo) FILTER (WHERE typ='P') requirements_of_assesment,
+				max(nazev) FILTER (WHERE typ='P') requirements_of_assessment_title,
+				max(memo) FILTER (WHERE typ='P') requirements_of_assessment,
 				max(nazev) FILTER (WHERE typ='V') entry_requirements_title,
 				max(memo) FILTER (WHERE typ='V') entry_requirements,
 				max(nazev) FILTER (WHERE typ='C') aim_title,
@@ -341,8 +357,8 @@ var pamela2JSON = transformation{
 				max(memo) FILTER (WHERE typ='E') terms_of_passing,
 				max(anazev) FILTER (WHERE typ='L') literature_title,
 				max(memo) FILTER (WHERE typ='L') literature,
-				max(anazev) FILTER (WHERE typ='P') requirements_of_assesment_title,
-				max(memo) FILTER (WHERE typ='P') requirements_of_assesment,
+				max(anazev) FILTER (WHERE typ='P') requirements_of_assessment_title,
+				max(memo) FILTER (WHERE typ='P') requirements_of_assessment,
 				max(anazev) FILTER (WHERE typ='V') entry_requirements_title,
 				max(memo) FILTER (WHERE typ='V') entry_requirements,
 				max(anazev) FILTER (WHERE typ='C') aim_title,
@@ -511,53 +527,6 @@ var ankecy2JSON = transformation{
 
 /*
 Prerequisites:
-  - preq
-  - pskup
-*/
-var preq2requisites = transformation{
-	name: "preq2requisites",
-	query: `--sql
-	DROP TABLE IF EXISTS requisites;
-	CREATE TABLE requisites (
-		target_course VARCHAR(10),
-		parent_course VARCHAR(10),
-		child_course  VARCHAR(10),
-		req_type      VARCHAR(1),
-		group_type    VARCHAR(1)
-	);
-	WITH RECURSIVE req_tree AS (
-		SELECT
-			p.POVINN       AS target_course,
-			p.POVINN       AS parent_course,
-			p.REQPOVINN    AS child_course,
-			p.REQTYP       AS req_type,
-			p.PSKUPINA     AS group_type
-		FROM preq p
-
-		UNION ALL
-
-		SELECT
-			rt.target_course,
-			rt.child_course AS parent_course,
-			s.PSPOVINN      AS child_course,
-			rt.req_type,
-			s.PSKUPINA      AS group_type
-		FROM req_tree rt
-		JOIN pskup s ON s.POVINN = rt.child_course
-	)
-	INSERT INTO requisites
-	SELECT DISTINCT
-		target_course,
-		parent_course,
-		child_course,
-		req_type,
-		group_type
-	FROM req_tree;
-	`,
-}
-
-/*
-Prerequisites:
   - klas2lang
   - pklas
 */
@@ -641,11 +610,15 @@ var povinn2courses = transformation{
 		guarantors jsonb,
 		teachers jsonb,
 		semester_count INT,
+		prerequisites jsonb,
+		corequisites jsonb,
+		incompatibilities jsonb,
+		interchangeabilities jsonb,
 		annotation jsonb,
 		syllabus jsonb,
 		terms_of_passing jsonb,
 		literature jsonb,
-		requirements_of_assesment jsonb,
+		requirements_of_assessment jsonb,
 		entry_requirements jsonb,
 		aim jsonb,
 		department jsonb,
@@ -759,11 +732,15 @@ var povinn2courses = transformation{
 		cg.guarantors,
 		cg.teachers,
 		cg.semester_count,
+		NULL::jsonb prerequisites,
+		NULL::jsonb corequisites,
+		NULL::jsonb incompatibilities,
+		NULL::jsonb interchangeabilities,
 		pj.annotation,
 		pj.syllabus,
 		pj.terms_of_passing,
 		pj.literature,
-		pj.requirements_of_assesment,
+		pj.requirements_of_assessment,
 		pj.entry_requirements,
 		pj.aim,
 		uj.department,
@@ -794,6 +771,206 @@ var povinn2courses = transformation{
 	LEFT JOIN pklas2json pklas ON cg.code = pklas.course_code AND cl.lang = pklas.lang
 	LEFT JOIN ptrida2json ptrida ON cg.code = ptrida.course_code
 	`,
+}
+
+/*
+Prerequisites:
+  - preq
+  - pskup
+*/
+var preq2requisites = transformation{
+	name: "preq2requisites",
+	query: `--sql
+	DROP TABLE IF EXISTS requisites;
+	CREATE TABLE requisites (
+		target_course VARCHAR(10),
+		parent_course VARCHAR(10),
+		child_course  VARCHAR(10),
+		req_type      VARCHAR(1),
+		group_type    VARCHAR(1)
+	);
+	WITH RECURSIVE req_tree AS (
+		SELECT
+			p.POVINN       AS target_course,
+			p.POVINN       AS parent_course,
+			p.REQPOVINN    AS child_course,
+			p.REQTYP       AS req_type,
+			p.PSKUPINA     AS group_type
+		FROM preq p
+
+		UNION ALL
+
+		SELECT
+			rt.target_course,
+			rt.child_course AS parent_course,
+			s.PSPOVINN      AS child_course,
+			rt.req_type,
+			s.PSKUPINA      AS group_type
+		FROM req_tree rt
+		JOIN pskup s ON s.POVINN = rt.child_course
+	)
+	INSERT INTO requisites
+	SELECT DISTINCT
+		target_course,
+		parent_course,
+		child_course,
+		req_type,
+		group_type
+	FROM req_tree;
+	`,
+}
+
+/*
+Prerequisites:
+  - povinn2courses
+  - preq2requisites
+*/
+var preq2coursesRequisites = goTransformation{
+	name: "preq2courses_requisites",
+	runF: func(db *sqlx.DB) error {
+		// Load requisites
+		type requisite struct {
+			TargetCourse string         `db:"target_course"`
+			ParentCourse string         `db:"parent_course"`
+			ChildCourse  string         `db:"child_course"`
+			ReqType      string         `db:"req_type"`
+			GroupType    sql.NullString `db:"group_type"`
+		}
+		var result []requisite
+		selectQuery := `SELECT target_course, parent_course, child_course, req_type, group_type FROM requisites`
+		if err := db.Select(&result, selectQuery); err != nil {
+			return err
+		}
+
+		// Organize requisites by course and type
+		type courseSimpleRequisites struct {
+			prerequisites        []requisite
+			corequisites         []requisite
+			incompatibilities    []requisite
+			interchangeabilities []requisite
+		}
+		courseSimpleMap := make(map[string]*courseSimpleRequisites)
+		for _, r := range result {
+			cr, exists := courseSimpleMap[r.TargetCourse]
+			if !exists {
+				cr = &courseSimpleRequisites{}
+				courseSimpleMap[r.TargetCourse] = cr
+			}
+			switch r.ReqType {
+			case "P":
+				cr.prerequisites = append(cr.prerequisites, r)
+			case "K":
+				cr.corequisites = append(cr.corequisites, r)
+			case "N":
+				cr.incompatibilities = append(cr.incompatibilities, r)
+			case "Z":
+				cr.interchangeabilities = append(cr.interchangeabilities, r)
+			}
+		}
+
+		// Build requisite trees
+		type requisiteNode struct {
+			courseCode string
+			groupType  sql.NullString
+			courses    []*requisiteNode
+		}
+		type courseRefinedRequisites struct {
+			prerequisites        []*requisiteNode
+			corequisites         []*requisiteNode
+			incompatibilities    []*requisiteNode
+			interchangeabilities []*requisiteNode
+		}
+		courseRefinedMap := make(map[string]*courseRefinedRequisites)
+		for courseCode, cr := range courseSimpleMap {
+			crr := &courseRefinedRequisites{}
+			courseRefinedMap[courseCode] = crr
+
+			var makeRequisiteTree = func(requisites []requisite) []*requisiteNode {
+				reqMap := map[string]*requisiteNode{}
+				getNode := func(course string) *requisiteNode {
+					if _, ok := reqMap[course]; !ok {
+						reqMap[course] = &requisiteNode{courseCode: course}
+					}
+					return reqMap[course]
+				}
+
+				var root *requisiteNode
+				for _, r := range requisites {
+					parentNode := getNode(r.ParentCourse)
+					childNode := getNode(r.ChildCourse)
+					childNode.groupType = r.GroupType
+					parentNode.courses = append(parentNode.courses, childNode)
+					if r.ParentCourse == courseCode {
+						root = parentNode
+					}
+				}
+				if root != nil {
+					return root.courses
+				} else {
+					return []*requisiteNode{}
+				}
+			}
+			crr.prerequisites = makeRequisiteTree(cr.prerequisites)
+			crr.corequisites = makeRequisiteTree(cr.corequisites)
+			crr.incompatibilities = makeRequisiteTree(cr.incompatibilities)
+			crr.interchangeabilities = makeRequisiteTree(cr.interchangeabilities)
+		}
+
+		// Convert requisite trees to JSONB array strings
+		toJSONBArray := func(nodes []*requisiteNode) string {
+			if len(nodes) == 0 {
+				return "[]"
+			}
+			var buildNode func(n *requisiteNode) string
+			buildNode = func(n *requisiteNode) string {
+				if !n.groupType.Valid {
+					return fmt.Sprintf(`"%s"`, n.courseCode)
+				}
+				childrenStrs := []string{}
+				for _, child := range n.courses {
+					childrenStrs = append(childrenStrs, buildNode(child))
+				}
+				return fmt.Sprintf(`{"course_code":"%s","group_type":"%s","courses":[%s]}`, n.courseCode, n.groupType.String, strings.Join(childrenStrs, ","))
+			}
+			nodeStrs := []string{}
+			for _, n := range nodes {
+				nodeStrs = append(nodeStrs, buildNode(n))
+			}
+			return fmt.Sprintf("[%s]", strings.Join(nodeStrs, ","))
+		}
+
+		// Start transaction
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		// Prepare statement
+		updateQuery := `UPDATE povinn2courses SET prerequisites=$1, corequisites=$2, incompatibilities=$3, interchangeabilities=$4 WHERE code=$5`
+		stmt, err := tx.Prepare(updateQuery)
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+
+		// Execute updates
+		for courseCode, cr := range courseRefinedMap {
+			_, err := stmt.Exec(
+				toJSONBArray(cr.prerequisites),
+				toJSONBArray(cr.corequisites),
+				toJSONBArray(cr.incompatibilities),
+				toJSONBArray(cr.interchangeabilities),
+				courseCode,
+			)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Commit transaction
+		return tx.Commit()
+	},
 }
 
 /*
@@ -829,7 +1006,7 @@ var povinn2searchable = transformation{
 			syllabus JSONB,
 			terms_of_passing JSONB,
 			literature JSONB,
-			requirements_of_assesment JSONB,
+			requirements_of_assessment JSONB,
 			aim JSONB
 		);
 			WITH guarantors as (
@@ -867,7 +1044,7 @@ var povinn2searchable = transformation{
 				jsonb_agg(syllabus->'content') syllabus,
 				jsonb_agg(terms_of_passing->'content') terms_of_passing,
 				jsonb_agg(literature->'content') literature,
-				jsonb_agg(requirements_of_assesment->'content') requirements_of_assesment,
+				jsonb_agg(requirements_of_assessment->'content') requirements_of_assessment,
 				jsonb_agg(aim->'content') aim
 			FROM povinn2courses
 			GROUP BY code
@@ -895,7 +1072,7 @@ var povinn2searchable = transformation{
 			d.syllabus,
 			d.terms_of_passing,
 			d.literature,
-			d.requirements_of_assesment,
+			d.requirements_of_assessment,
 			d.aim
 		FROM povinn2courses pc
 		LEFT JOIN povinn p ON p.povinn = pc.code
@@ -1193,6 +1370,7 @@ var createFilterValuesForFaculties = transformation{
 		FROM povinn2searchable
 		LEFT JOIN fak ON faculty = fak.kod
 		LEFT JOIN category_id cid ON true
+		WHERE povinn2searchable.code != 'ASE500129' AND povinn2searchable.code != 'ASE500130' -- exclude FF courses
 `,
 }
 
@@ -1461,6 +1639,7 @@ var createFilterValuesForDepartments = transformation{
 			SELECT DISTINCT
 				department
 			FROM povinn2searchable
+			WHERE code != 'ASE500129' AND code != 'ASE500130' -- exclude FF courses
 		)
 		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, description_cs, description_en, position)
 		SELECT
@@ -1506,6 +1685,7 @@ var createFilterValuesForSections = transformation{
 			FROM povinn2searchable ps
 			LEFT JOIN ustav u ON ps.department = u.kod
 			LEFT JOIN sekce s ON u.sekce = s.kod
+			WHERE ps.code != 'ASE500129' AND ps.code != 'ASE500130' -- exclude FF courses
 		)
 		INSERT INTO filter_values (category_id, facet_id, title_cs, title_en, position)
 		SELECT
@@ -1715,7 +1895,7 @@ var createFilterValuesForSurveyStudyTypes = transformation{
 		FROM distinct_study_type dst
 		LEFT JOIN druh d ON dst.sdruh = d.kod
 		LEFT JOIN category_id cid ON true
-		`,
+	`,
 }
 
 /*
@@ -1783,7 +1963,7 @@ var createFilterValuesForSurveyTargetTypes = transformation{
 			ROW_NUMBER() OVER (ORDER BY d.prdmtyp) position
 		FROM distinct_target_type d
 		LEFT JOIN category_id cid ON true
-		`,
+	`,
 }
 
 /*
@@ -1804,8 +1984,9 @@ var studplan2lang = transformation{
 			recommended_semester INT,
 			bloc_name VARCHAR(250),
 			bloc_subject_code VARCHAR(20),
-			bloc_type VARCHAR(1),
-			bloc_limit INT,
+			is_required BOOLEAN NOT NULL,
+			is_elective BOOLEAN NOT NULL,
+			bloc_limit INT NOT NULL,
 			seq VARCHAR(50)
 		);
 		INSERT INTO studplan2lang
@@ -1819,8 +2000,17 @@ var studplan2lang = transformation{
 			recommended_semester,
 			bloc_name_cz bloc_name,
 			bloc_subject_code,
-			bloc_type,
-			bloc_limit,
+			bloc_type = 'A' is_required,
+			bloc_type = 'C' is_elective,
+			CASE
+				WHEN bloc_type = 'C' THEN 0
+				WHEN bloc_type = 'A' THEN COALESCE(
+					SUM(credits) FILTER (WHERE credits IS NOT NULL AND interchangeability IS NULL)
+					OVER (PARTITION BY plan_code, bloc_subject_code),
+					0
+				)
+				ELSE bloc_limit
+			END AS bloc_limit,
 			seq
 		FROM stud_plan
 		UNION
@@ -1834,8 +2024,17 @@ var studplan2lang = transformation{
 			recommended_semester,
 			bloc_name_en bloc_name,
 			bloc_subject_code,
-			bloc_type,
-			bloc_limit,
+			bloc_type = 'A' is_required,
+			bloc_type = 'C' is_elective,
+			CASE
+				WHEN bloc_type = 'C' THEN 0
+				WHEN bloc_type = 'A' THEN COALESCE(
+					SUM(credits) FILTER (WHERE credits IS NOT NULL AND interchangeability IS NULL)
+					OVER (PARTITION BY plan_code, bloc_subject_code),
+					0
+				)
+				ELSE bloc_limit
+			END AS bloc_limit,
 			seq
 		FROM stud_plan
 	`,
@@ -1844,6 +2043,126 @@ var studplan2lang = transformation{
 /*
 Prerequisites:
   - stud_plan_metadata
+  - stud_plan_obor
+  - druh
+  - stud_plan_stat_studying
+  - stud_plan_stat_graduates
+  - stud_plan_stat_transfers
+*/
+var studmetadata2intermediate = transformation{
+	name: "studmetadata2intermediate",
+	query: `--sql
+		DROP TABLE IF EXISTS studmetadata2intermediate;
+		CREATE TABLE studmetadata2intermediate (
+			plan_code VARCHAR(15) NOT NULL,
+			name_cz VARCHAR(250),
+			name_en VARCHAR(250),
+			valid_from INT,
+			valid_to INT,
+			faculty VARCHAR(5),
+			section VARCHAR(2),
+			field_code VARCHAR(20),
+			field_name_cz VARCHAR(250),
+			field_name_en VARCHAR(250),
+			study_type VARCHAR(5),
+			required_credits INT,
+			required_elective_credits INT,
+			total_credits INT,
+			studying JSONB,
+			graduates JSONB,
+			next_plans JSONB,
+			previous_plans JSONB,
+			requisite_graph_data TEXT
+		);
+		INSERT INTO studmetadata2intermediate
+		WITH studying_stats AS (
+			SELECT
+				plan_code,
+				jsonb_agg(
+					jsonb_build_object(
+						'year', year,
+						'count', count
+					)
+					ORDER BY year
+				) AS studying
+			FROM stud_plan_stat_studying
+			GROUP BY plan_code
+		), graduates_stats AS (
+			SELECT
+				plan_code,
+				jsonb_agg(
+					jsonb_build_object(
+						'year', year,
+						'count', count,
+						'avg_years', avr_years
+					)
+					ORDER BY year
+				) AS graduates
+			FROM stud_plan_stat_graduates
+			GROUP BY plan_code
+		), transfers_from AS (
+			SELECT
+				plan_code_from AS plan_code,
+				jsonb_agg(
+					jsonb_build_object(
+						'plan', plan_code_to,
+						'count', count
+					)
+					ORDER BY count DESC, plan_code_to
+				) AS next_plans
+			FROM stud_plan_stat_transfers
+			GROUP BY plan_code_from
+		), transfers_to AS (
+			SELECT
+				plan_code_to AS plan_code,
+				jsonb_agg(
+					jsonb_build_object(
+						'plan', plan_code_from,
+						'count', count
+					)
+					ORDER BY count DESC, plan_code_from
+				) AS previous_plans
+			FROM stud_plan_stat_transfers
+			GROUP BY plan_code_to
+		)
+		SELECT
+			spm.code as plan_code,
+			spm.name_cz,
+			spm.name_en,
+			spm.valid_from,
+			spm.valid_to,
+			spm.faculty,
+			spm.section,
+			spm.field_code,
+			spo.name_cz as field_name_cz,
+			spo.name_en as field_name_en,
+			druh.zkratka as study_type,
+			NULL::INT as required_credits,
+			NULL::INT as required_elective_credits,
+			CASE
+				WHEN spm.study_type = 'B' THEN 180
+				WHEN spm.study_type = 'N' THEN 120
+				WHEN spm.study_type = 'M' THEN 300
+				ELSE 0
+			END as total_credits,
+			s.studying,
+			g.graduates,
+			tf.next_plans,
+			tt.previous_plans,
+			NULL as requisite_graph_data
+		FROM stud_plan_metadata spm
+		JOIN druh ON spm.study_type = druh.kod
+		LEFT JOIN stud_plan_obor spo ON spm.field_code = spo.code
+		LEFT JOIN studying_stats s ON spm.code = s.plan_code
+		LEFT JOIN graduates_stats g ON spm.code = g.plan_code
+		LEFT JOIN transfers_from tf ON spm.code = tf.plan_code
+		LEFT JOIN transfers_to tt ON spm.code = tt.plan_code
+	`,
+}
+
+/*
+Prerequisites:
+  - studmetadata2intermediate
 */
 var studmetadata2lang = transformation{
 	name: "studmetadata2lang",
@@ -1858,11 +2177,20 @@ var studmetadata2lang = transformation{
 			faculty VARCHAR(5),
 			section VARCHAR(2),
 			field_code VARCHAR(20),
-			study_type VARCHAR(5)
+			field_title VARCHAR(250),
+			study_type VARCHAR(5),
+			required_credits INT,
+			required_elective_credits INT,
+			total_credits INT,
+			studying JSONB,
+			graduates JSONB,
+			next_plans JSONB,
+			previous_plans JSONB,
+			requisite_graph_data TEXT
 		);
 		INSERT INTO studmetadata2lang
 		SELECT
-			code as plan_code,
+			plan_code,
 			'cs' lang,
 			name_cz as title,
 			valid_from,
@@ -1870,12 +2198,20 @@ var studmetadata2lang = transformation{
 			faculty,
 			section,
 			field_code,
-			druh.zkratka AS study_type
-		FROM stud_plan_metadata
-		JOIN druh ON stud_plan_metadata.study_type = druh.kod
+			field_name_cz as field_title,
+			study_type,
+			required_credits,
+			required_elective_credits,
+			total_credits,
+			studying,
+			graduates,
+			next_plans,
+			previous_plans,
+			requisite_graph_data
+		FROM studmetadata2intermediate
 		UNION
 		SELECT
-			code as plan_code,
+			plan_code,
 			'en' lang,
 			name_en as title,
 			valid_from,
@@ -1883,9 +2219,17 @@ var studmetadata2lang = transformation{
 			faculty,
 			section,
 			field_code,
-			druh.zkratka AS study_type
-		FROM stud_plan_metadata
-		JOIN druh ON stud_plan_metadata.study_type = druh.kod
+			field_name_en as field_title,
+			study_type,
+			required_credits,
+			required_elective_credits,
+			total_credits,
+			studying,
+			graduates,
+			next_plans,
+			previous_plans,
+			requisite_graph_data
+		FROM studmetadata2intermediate
 	`,
 }
 
@@ -2168,4 +2512,395 @@ var createFilterValuesForDegreePlanStudyTypes = transformation{
 		FROM distinct_study_type d
 		LEFT JOIN category_id cid ON true
 	`,
+}
+
+/*
+Prerequisites:
+  - povinn2courses
+  - studmetadata2lang
+  - studplan2lang
+  - requisites
+*/
+var createRequisiteGraphData = goTransformation{
+	name: "create_requisite_graph_data",
+	runF: func(db *sqlx.DB) error {
+		type course struct {
+			code              string
+			title             string
+			prerequisites     []string
+			corequisites      []string
+			incompatibilities []string
+		}
+		type node struct {
+			Data struct {
+				ID     string `json:"id"`
+				Code   string `json:"code"`
+				Label  string `json:"label"`
+				InPlan string `json:"inPlan"`
+			} `json:"data"`
+		}
+		type edge struct {
+			Data struct {
+				ID     string `json:"id"`
+				Source string `json:"source"`
+				Target string `json:"target"`
+				Type   string `json:"type"`
+			} `json:"data"`
+		}
+
+		createEdges := func(courseCodes []string, edgeType, targetCode string, nodes *map[string]node, edges map[string]edge, edgeID *int) {
+			for _, req := range courseCodes {
+				if _, exists := (*nodes)[req]; !exists {
+					n := node{}
+					n.Data.ID = req
+					n.Data.Code = req
+					n.Data.Label = req
+					n.Data.InPlan = "false"
+					(*nodes)[req] = n
+				}
+
+				// Create a unique key for this edge to prevent duplicates
+				edgeKey := fmt.Sprintf("%s->%s:%s", targetCode, req, edgeType)
+
+				// Only add edge if it doesn't already exist
+				if _, exists := edges[edgeKey]; !exists {
+					e := edge{}
+					e.Data.ID = fmt.Sprintf("e%d", *edgeID)
+					e.Data.Source = targetCode
+					e.Data.Target = req
+					e.Data.Type = edgeType
+					edges[edgeKey] = e
+					(*edgeID)++
+				}
+			}
+		}
+
+		requisitesGraphData := func(courses []course) string {
+			nodeMap := make(map[string]node)
+			edgeMap := make(map[string]edge)
+			edgeID := 0
+
+			// Build nodes and edges from all courses
+			for _, course := range courses {
+				if foundNode, exists := nodeMap[course.code]; !exists {
+					n := node{}
+					n.Data.ID = course.code
+					n.Data.Code = course.code
+					n.Data.Label = fmt.Sprintf("%s - %s", course.code, course.title) // TODO: maybe better label
+					n.Data.InPlan = "true"
+					nodeMap[course.code] = n
+				} else {
+					foundNode.Data.InPlan = "true"
+					foundNode.Data.Label = fmt.Sprintf("%s - %s", course.code, course.title)
+					nodeMap[course.code] = foundNode
+				}
+				// Add prerequisite nodes and edges
+				createEdges(course.prerequisites, "prerequisite", course.code, &nodeMap, edgeMap, &edgeID)
+				// Add corequisite edges
+				createEdges(course.corequisites, "corequisite", course.code, &nodeMap, edgeMap, &edgeID)
+				// Add incompatibility edges
+				createEdges(course.incompatibilities, "incompatibility", course.code, &nodeMap, edgeMap, &edgeID)
+			}
+
+			// remove incompatibility edges to nodes not in DP
+			edgesToRemove := make([]string, 0)
+			for edgeKey, e := range edgeMap {
+				if e.Data.Type == "incompatibility" {
+					if node, exists := nodeMap[e.Data.Target]; !exists || node.Data.InPlan == "false" {
+						edgesToRemove = append(edgesToRemove, edgeKey)
+					}
+				}
+			}
+			for _, edgeKey := range edgesToRemove {
+				delete(edgeMap, edgeKey)
+			}
+
+			nodeSlice := make([]node, 0, len(nodeMap))
+			for _, n := range nodeMap {
+				nodeSlice = append(nodeSlice, n)
+			}
+
+			edges := make([]edge, 0, len(edgeMap))
+			for _, e := range edgeMap {
+				edges = append(edges, e)
+			}
+
+			result := struct {
+				Nodes []node `json:"nodes"`
+				Edges []edge `json:"edges"`
+			}{nodeSlice, edges}
+
+			jsonData, _ := json.Marshal(result)
+			return string(jsonData)
+		}
+
+		type plan struct {
+			code    string
+			lang    string
+			courses []course
+		}
+
+		runPlan := func(p *plan, db *sqlx.DB) error {
+			graphData := requisitesGraphData(p.courses)
+			updateQuery := `UPDATE studmetadata2lang SET requisite_graph_data=$1 WHERE plan_code=$2 AND lang=$3`
+			_, err := db.Exec(updateQuery, graphData, p.code, p.lang)
+			return err
+		}
+
+		type planCourseRow struct {
+			PlanCode          string         `db:"plan_code"`
+			Lang              string         `db:"lang"`
+			CourseCode        string         `db:"course_code"`
+			Title             string         `db:"title"`
+			Prerequisites     pq.StringArray `db:"prerequisites"`
+			Corequisites      pq.StringArray `db:"corequisites"`
+			Incompatibilities pq.StringArray `db:"incompatibilities"`
+		}
+
+		const planCoursesQuery = `--sql
+		SELECT
+			dp.plan_code,
+			dp.lang,
+			dpc.course_code,
+			COALESCE(c.title, '') AS title,
+			COALESCE((
+				SELECT array_agg(child_course ORDER BY child_course)
+				FROM requisites r
+				WHERE r.target_course = dpc.course_code
+					AND r.req_type = 'P'
+					AND r.group_type IS NULL
+			), '{}'::varchar[]) AS prerequisites,
+			COALESCE((
+				SELECT array_agg(child_course ORDER BY child_course)
+				FROM requisites r
+				WHERE r.target_course = dpc.course_code
+					AND r.req_type = 'K'
+					AND r.group_type IS NULL
+			), '{}'::varchar[]) AS corequisites,
+			COALESCE((
+				SELECT array_agg(child_course ORDER BY child_course)
+				FROM requisites r
+				WHERE r.target_course = dpc.course_code
+					AND r.req_type = 'N'
+					AND r.group_type IS NULL
+			), '{}'::varchar[]) AS incompatibilities
+		FROM studmetadata2lang dp
+		JOIN studplan2lang dpc ON dpc.plan_code = dp.plan_code AND dpc.lang = dp.lang
+		LEFT JOIN povinn2courses c ON c.code = dpc.course_code AND c.lang = dp.lang
+		WHERE dpc.interchangeability IS NULL
+		ORDER BY dp.plan_code, dp.lang, dpc.course_code;
+		`
+
+		log.Printf("ℹ️ Starting requisite graph data creation for study plans")
+		rows := []planCourseRow{}
+		if err := db.Select(&rows, planCoursesQuery); err != nil {
+			return err
+		}
+		log.Printf("ℹ️ Loaded %d plan course rows", len(rows))
+
+		planMap := map[string]*plan{}
+		for _, row := range rows {
+			key := fmt.Sprintf("%s|%s", row.PlanCode, row.Lang)
+			if _, exists := planMap[key]; !exists {
+				planMap[key] = &plan{code: row.PlanCode, lang: row.Lang}
+			}
+			planMap[key].courses = append(planMap[key].courses, course{
+				code:              row.CourseCode,
+				title:             row.Title,
+				prerequisites:     []string(row.Prerequisites),
+				corequisites:      []string(row.Corequisites),
+				incompatibilities: []string(row.Incompatibilities),
+			})
+		}
+
+		plans := make([]plan, 0, len(planMap))
+		for _, p := range planMap {
+			plans = append(plans, *p)
+		}
+
+		runners := parallelRunner{}
+		for _, p := range plans {
+			p := p // capture loop variable
+			runners = append(runners, goTransformation{
+				name: fmt.Sprintf("plan_%s_%s", p.code, p.lang),
+				runF: func(db *sqlx.DB) error {
+					return runPlan(&p, db)
+				},
+			})
+		}
+		if err := runners.run(db); err != nil {
+			return err
+		}
+
+		return nil
+	},
+}
+
+/*
+Prerequisites:
+  - povinn2courses
+  - studmetadata2lang
+  - studplan2lang
+*/
+var fixDegreePlansCredits = goTransformation{
+	name: "fix_degree_plans_credits",
+	runF: func(db *sqlx.DB) error {
+		type planRow struct {
+			PlanCode           string         `db:"plan_code"`
+			Lang               string         `db:"lang"`
+			BlocSubjectCode    sql.NullString `db:"bloc_subject_code"`
+			IsRequired         bool           `db:"is_required"`
+			IsElective         bool           `db:"is_elective"`
+			CourseCode         string         `db:"course_code"`
+			Interchangeability sql.NullString `db:"interchangeability"`
+			BlocLimit          int            `db:"bloc_limit"`
+			Credits            sql.NullInt64  `db:"credits"`
+		}
+
+		const selectPlanRows = `--sql
+		SELECT
+			sp.plan_code,
+			sp.lang,
+			sp.bloc_subject_code,
+			sp.is_required,
+			sp.is_elective,
+			sp.course_code,
+			sp.interchangeability,
+			sp.bloc_limit,
+			c.credits
+		FROM studplan2lang sp
+		LEFT JOIN povinn2courses c
+			ON c.code = sp.course_code
+			AND c.lang = sp.lang
+		ORDER BY sp.plan_code, sp.lang;
+		`
+
+		log.Printf("ℹ️ Starting fix degree plans credits")
+		rows := []planRow{}
+		if err := db.Select(&rows, selectPlanRows); err != nil {
+			return err
+		}
+		log.Printf("ℹ️ Loaded %d plan rows", len(rows))
+
+		type block struct {
+			code       string
+			isRequired bool
+			isElective bool
+			blocLimit  int
+			courses    map[string]struct{}
+		}
+		type planCredits struct {
+			code          string
+			lang          string
+			blocks        map[string]*block
+			courseCredits map[string]int
+		}
+
+		planMap := map[string]*planCredits{}
+		for _, row := range rows {
+			key := fmt.Sprintf("%s|%s", row.PlanCode, row.Lang)
+			pc, exists := planMap[key]
+			if !exists {
+				pc = &planCredits{
+					code:          row.PlanCode,
+					lang:          row.Lang,
+					blocks:        map[string]*block{},
+					courseCredits: map[string]int{},
+				}
+				planMap[key] = pc
+			}
+
+			blockKey := row.BlocSubjectCode.String
+			if !row.BlocSubjectCode.Valid || blockKey == "" {
+				blockKey = fmt.Sprintf("COURSE:%s", row.CourseCode)
+			}
+
+			b, bExists := pc.blocks[blockKey]
+			if !bExists {
+				b = &block{
+					code:       blockKey,
+					isRequired: row.IsRequired,
+					isElective: row.IsElective,
+					blocLimit:  row.BlocLimit,
+					courses:    map[string]struct{}{},
+				}
+				pc.blocks[blockKey] = b
+			} else if b.blocLimit == 0 && row.BlocLimit != 0 {
+				b.blocLimit = row.BlocLimit
+			}
+			b.courses[row.CourseCode] = struct{}{}
+
+			if row.Credits.Valid && row.Interchangeability.String == "" {
+				pc.courseCredits[row.CourseCode] = int(row.Credits.Int64)
+			}
+		}
+		log.Printf("ℹ️ Transformed plan rows into %d plans", len(planMap))
+
+		isSubset := func(a, b map[string]struct{}) bool {
+			if len(a) > len(b) {
+				return false
+			}
+			for c := range a {
+				if _, ok := b[c]; !ok {
+					return false
+				}
+			}
+			return true
+		}
+
+		// Start transaction
+		tx, err := db.Beginx()
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		updateQuery := `UPDATE studmetadata2lang SET required_credits=$1, required_elective_credits=$2 WHERE plan_code=$3 AND lang=$4`
+		stmt, err := tx.Prepare(updateQuery)
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+
+		for _, pc := range planMap {
+			blocks := make([]*block, 0, len(pc.blocks))
+			for _, b := range pc.blocks {
+				blocks = append(blocks, b)
+			}
+
+			ignored := map[string]struct{}{}
+			for i := 0; i < len(blocks); i++ {
+				for j := 0; j < len(blocks); j++ {
+					if i == j {
+						continue
+					}
+					if isSubset(blocks[i].courses, blocks[j].courses) {
+						ignored[blocks[i].code] = struct{}{}
+						break
+					}
+				}
+			}
+
+			requiredCredits := 0
+			requiredElectiveCredits := 0
+			for _, b := range blocks {
+				if _, skip := ignored[b.code]; skip {
+					continue
+				}
+				blockCredits := b.blocLimit
+				if b.isRequired {
+					requiredCredits += blockCredits
+				} else if !b.isElective {
+					requiredElectiveCredits += blockCredits
+				}
+			}
+
+			if _, err := stmt.Exec(requiredCredits, requiredElectiveCredits, pc.code, pc.lang); err != nil {
+				return err
+			}
+			log.Printf("✅ Updated plan %s (%s): required_credits=%d, required_elective_credits=%d", pc.code, pc.lang, requiredCredits, requiredElectiveCredits)
+		}
+
+		return tx.Commit()
+	},
 }

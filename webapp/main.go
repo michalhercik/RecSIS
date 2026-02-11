@@ -150,7 +150,7 @@ func pageTemplate(errorHandler page.Error, meiliClient meilisearch.ServiceManage
 			{Title: language.MakeLangString("Domů", "Home"), Path: homeRoot, Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
 			{Title: language.MakeLangString("Hledání", "Search"), Path: coursesRoot, Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
 			{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: blueprintRoot, Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
-			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: degreePlansRoot, Skeleton: degreeplans.Skeleton, Indicator: "#degreeplans-skeleton"},
+			{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: degreePlanDetailRoot, Skeleton: degreeplandetail.Skeleton, Indicator: "#degreeplan-skeleton"},
 		},
 		Search: page.MeiliSearch{
 			Client: meiliClient,
@@ -256,10 +256,11 @@ func degreePlanDetailServer(db *sqlx.DB, errorHandler degreeplandetail.Error, pa
 			},
 			TemplSecond: bpbtn.PlusSignBtnChecked,
 		},
-		Data:                    degreeplandetail.DBManager{DB: db},
-		Error:                   errorHandler,
-		NoSavedPlanRedirectPath: degreePlansRoot,
-		Page:                    page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Data:                degreeplandetail.DBManager{DB: db},
+		Error:               errorHandler,
+		SearchRedirectPath:  degreePlansRoot,
+		ComparePlanUrlParam: degreeplans.CompareUrlParam,
+		Page:                page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 	}
 	degreePlanDetail.Init()
 	return degreePlanDetail.Router()
@@ -276,7 +277,6 @@ func degreePlansServer(db *sqlx.DB, errorHandler degreeplans.Error, pageTempl pa
 			Client:      meiliClient,
 			DegreePlans: meilisearch.IndexConfig{Uid: degreeplans.SearchIndex},
 		},
-		UserPlanRedirectPath: degreePlanDetailRoot,
 	}
 	degreePlans.Init()
 	return degreePlans.Router()

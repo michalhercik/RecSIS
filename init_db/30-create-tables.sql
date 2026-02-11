@@ -43,12 +43,8 @@ CREATE TABLE courses(
 
 CREATE INDEX courses_code_lang_idx ON courses(code, lang);
 
-CREATE TABLE requisites(
-    target_course VARCHAR(10) NOT NULL,
-    parent_course VARCHAR(10) NOT NULL,
-    child_course VARCHAR(10) NOT NULL,
-    req_type CHAR(1) NOT NULL,
-    group_type VARCHAR(1)
+CREATE TABLE degree_plan_years(
+    plan_year INT PRIMARY KEY
 );
 
 CREATE TABLE degree_plan_list(
@@ -56,35 +52,21 @@ CREATE TABLE degree_plan_list(
 );
 
 CREATE TABLE degree_plans(
-    plan_code VARCHAR(15) NOT NULL,
-    lang CHAR(2) NOT NULL,
-    title VARCHAR(250),
-    valid_from INT NOT NULL,
-    valid_to INT NOT NULL,
-    faculty VARCHAR(5),
-    section CHAR(2),
-    field_code VARCHAR(20),
-    study_type VARCHAR(5),
-    PRIMARY KEY (plan_code, lang)
-);
-
-CREATE TABLE degree_plan_courses(
     plan_code VARCHAR(15) NOT NULL REFERENCES degree_plan_list(code) DEFERRABLE INITIALLY DEFERRED,
+    plan_year INT NOT NULL REFERENCES degree_plan_years(plan_year) DEFERRABLE INITIALLY DEFERRED,
     lang CHAR(2) NOT NULL,
     course_code VARCHAR(10) NOT NULL,
     interchangeability VARCHAR(10),
-    recommended_year_from INT,
-    recommended_year_to INT,
-    recommended_semester INT,
-    bloc_name VARCHAR(250),
     bloc_subject_code VARCHAR(20) NOT NULL,
     bloc_type CHAR(1) NOT NULL,
     bloc_limit INT,
-    seq VARCHAR(50),
-    FOREIGN KEY (plan_code, lang) REFERENCES degree_plans(plan_code, lang) DEFERRABLE INITIALLY DEFERRED
+    bloc_name VARCHAR(250),
+    bloc_note VARCHAR(1000),
+    note VARCHAR(250),
+    seq VARCHAR(50)
 );
 
-CREATE INDEX degree_plan_code_lang ON degree_plan_courses(plan_code, lang);
+CREATE INDEX degree_plan_code_year_lang ON degree_plans(plan_code, plan_year, lang);
 
 CREATE TABLE users (
     id VARCHAR(8) PRIMARY KEY
@@ -160,8 +142,9 @@ EXECUTE FUNCTION blueprint_course_reordering();
 
 CREATE TABLE studies (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id VARCHAR(8) UNIQUE NOT NULL,
-    degree_plan_code VARCHAR(15) REFERENCES degree_plan_list(code) DEFERRABLE INITIALLY DEFERRED,
+    user_id VARCHAR(8) NOT NULL,
+    degree_plan_code VARCHAR(15) NOT NULL REFERENCES degree_plan_list(code) DEFERRABLE INITIALLY DEFERRED,
+    start_year INT NOT NULL REFERENCES degree_plan_years(plan_year) DEFERRABLE INITIALLY DEFERRED,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -220,7 +203,6 @@ CREATE TABLE filter_categories (
     title_en VARCHAR(50) NOT NULL,
     description_cs VARCHAR(200),
     description_en VARCHAR(200),
-	condition VARCHAR(100),
     displayed_value_limit INT NOT NULL,
     position INT NOT NULL
 );

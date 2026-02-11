@@ -165,7 +165,7 @@ The degree_plans index is used to search in degree plans. The surveys index is u
     "string - course literature in czech",
     "string - course literature in english"
   ],
-  "requirements_of_assesment": [
+  "requirements_of_assessment": [
     "string - course requirements of assessment in czech",
     "string - course requirements of assessment in english"
   ],

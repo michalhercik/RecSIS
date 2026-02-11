@@ -3,6 +3,8 @@ package courses
 import (
     "fmt"
     "net/url"
+
+	"github.com/michalhercik/RecSIS/stringsx"
 )
 
 templ Content(coursesPage *coursesPage, t text) {
@@ -60,7 +62,7 @@ templ filtersInternal(cp *coursesPage, t text) {
             // category title (with help icon)
             <p class="form-label fw-semibold mb-0 mt-2" >
                 {{
-                    rest, last := splitByLastSpace(category.Title())
+                    rest, last := stringsx.SplitByLastSpace(category.Title())
                 }}
                 { rest }
                 <span style="white-space:nowrap">

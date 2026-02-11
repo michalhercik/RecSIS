@@ -13,8 +13,11 @@ import (
 
 const dpCode = "dpCode"
 
+const unlimitedYear = 9999
+
 const (
 	checkboxName = "selected-courses"
+	maxYearParam = "maxYear"
 )
 
 //================================================================================
@@ -22,9 +25,23 @@ const (
 //================================================================================
 
 type degreePlanPage struct {
-	degreePlanCode string
-	isUserPlan     bool
-	blocs          []bloc
+	code                    string
+	title                   string
+	fieldCode               string
+	fieldTitle              string
+	validFrom               int
+	validTo                 int
+	requiredCredits         int
+	requiredElectiveCredits int
+	totalCredits            int
+	studying                StudyingSlice
+	graduates               GraduatesSlice
+	reqGraphData            sql.NullString
+	isUserPlan              bool
+	blocs                   []bloc
+	recommendedPlan         recommendedPlan
+	searchEndpoint          string
+	compareParam            string
 }
 
 func (dp *degreePlanPage) bpNumberOfSemesters() int {
@@ -35,6 +52,65 @@ func (dp *degreePlanPage) bpNumberOfSemesters() int {
 		return 0
 	}
 	return len(dp.blocs[0].courses[0].blueprintSemesters)
+}
+
+func (dp *degreePlanPage) isValid() bool {
+	return dp.validTo == unlimitedYear
+}
+
+type StudyingSlice []Studying
+
+func (ss StudyingSlice) isEmpty() bool {
+	return len(ss) == 0
+}
+
+func (ss StudyingSlice) totalStudying() int {
+	total := 0
+	for _, s := range ss {
+		total += s.count
+	}
+	return total
+}
+
+type Studying struct {
+	year  int
+	count int
+}
+
+type GraduatesSlice []Graduates
+
+func (gs GraduatesSlice) isEmpty() bool {
+	return len(gs) == 0
+}
+
+func (gs GraduatesSlice) totalGraduates() int {
+	total := 0
+	for _, g := range gs {
+		total += g.count
+	}
+	return total
+}
+
+func (gs GraduatesSlice) avgYearsToGraduate() float64 {
+	if len(gs) == 0 {
+		return 0.0
+	}
+	totalGraduates := 0
+	totalYears := 0.0
+	for _, g := range gs {
+		totalGraduates += g.count
+		totalYears += float64(g.count) * g.avgYears
+	}
+	if totalGraduates == 0 {
+		return 0.0
+	}
+	return totalYears / float64(totalGraduates)
+}
+
+type Graduates struct {
+	year     int
+	count    int
+	avgYears float64
 }
 
 type bloc struct {
@@ -95,6 +171,23 @@ func (b *bloc) blueprintCredits() int {
 	return credits
 }
 
+type recommendedPlan struct {
+	years []year
+}
+
+func (rp *recommendedPlan) isEmpty() bool {
+	return len(rp.years) == 0
+}
+
+func (rp *recommendedPlan) totalYears() int {
+	return len(rp.years)
+}
+
+type year struct {
+	winter []course
+	summer []course
+}
+
 type course struct {
 	code               string
 	title              string
@@ -106,6 +199,7 @@ type course struct {
 	lectureRangeSummer sql.NullInt64
 	seminarRangeSummer sql.NullInt64
 	examType           string
+	isSupported        bool
 	blueprintSemesters []bool
 }
 
@@ -150,7 +244,17 @@ func (c *course) statusBackgroundColor() string {
 	}
 }
 
+func (c *course) creditsString() string {
+	if !c.isSupported {
+		return ""
+	}
+	return fmt.Sprintf("%d", c.credits)
+}
+
 func (c *course) winterString() string {
+	if !c.isSupported {
+		return "---"
+	}
 	winterText := ""
 	if c.semester == teachingWinterOnly || c.semester == teachingBoth {
 		winterText = fmt.Sprintf("%d/%d, %s", c.lectureRangeWinter.Int64, c.seminarRangeWinter.Int64, c.examType)
@@ -161,6 +265,9 @@ func (c *course) winterString() string {
 }
 
 func (c *course) summerString() string {
+	if !c.isSupported {
+		return "---"
+	}
 	summerText := ""
 	switch c.semester {
 	case teachingSummerOnly:
@@ -173,7 +280,17 @@ func (c *course) summerString() string {
 	return summerText
 }
 
+func (c *course) semesterHoursExamString(t text) string {
+	if !c.isSupported {
+		return "---"
+	}
+	return fmt.Sprintf("%s %s, %s", c.semester.string(t), c.hoursString(), c.examType)
+}
+
 func (c *course) hoursString() string {
+	if !c.isSupported {
+		return "---"
+	}
 	result := ""
 	winter := c.lectureRangeWinter.Valid && c.seminarRangeWinter.Valid
 	summer := c.lectureRangeSummer.Valid && c.seminarRangeSummer.Valid
