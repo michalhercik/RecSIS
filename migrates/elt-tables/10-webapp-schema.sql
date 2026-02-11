@@ -56,15 +56,19 @@ DROP TABLE IF EXISTS degree_plans CASCADE;
 CREATE TABLE degree_plans(
     plan_code VARCHAR(15) NOT NULL,
     lang CHAR(2) NOT NULL,
-    title VARCHAR(250),
+    title VARCHAR(250) NOT NULL,
     valid_from INT NOT NULL,
     valid_to INT NOT NULL,
-    field_code VARCHAR(20),
-    field_title VARCHAR(250),
-    study_type VARCHAR(5),
+    field_code VARCHAR(20) NOT NULL,
+    field_title VARCHAR(250) NOT NULL,
+    study_type VARCHAR(5) NOT NULL,
     required_credits INT,
     required_elective_credits INT,
     total_credits INT NOT NULL,
+    studying JSONB,
+    graduates JSONB,
+    next_plans JSONB,
+    previous_plans JSONB,
     requisite_graph_data TEXT,
     PRIMARY KEY (plan_code, lang)
 );

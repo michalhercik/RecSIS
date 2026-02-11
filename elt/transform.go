@@ -287,7 +287,7 @@ var pamela2JSON = transformation{
 			syllabus jsonb,
 			terms_of_passing jsonb,
 			literature jsonb,
-			requirements_of_assesment jsonb,
+			requirements_of_assessment jsonb,
 			entry_requirements jsonb,
 			aim jsonb
 		);
@@ -312,9 +312,9 @@ var pamela2JSON = transformation{
 				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[literature_title, literature])
 			END literature,
 			CASE
-				WHEN requirements_of_assesment IS NULL THEN NULL
-				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[requirements_of_assesment_title, requirements_of_assesment])
-			END requirements_of_assesment,
+				WHEN requirements_of_assessment IS NULL THEN NULL
+				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[requirements_of_assessment_title, requirements_of_assessment])
+			END requirements_of_assessment,
 			CASE
 				WHEN entry_requirements IS NULL THEN NULL
 				ELSE jsonb_object(ARRAY['title', 'content'], ARRAY[entry_requirements_title, entry_requirements])
@@ -335,8 +335,8 @@ var pamela2JSON = transformation{
 				max(memo) FILTER (WHERE typ='E') terms_of_passing,
 				max(nazev) FILTER (WHERE typ='L') literature_title,
 				max(memo) FILTER (WHERE typ='L') literature,
-				max(nazev) FILTER (WHERE typ='P') requirements_of_assesment_title,
-				max(memo) FILTER (WHERE typ='P') requirements_of_assesment,
+				max(nazev) FILTER (WHERE typ='P') requirements_of_assessment_title,
+				max(memo) FILTER (WHERE typ='P') requirements_of_assessment,
 				max(nazev) FILTER (WHERE typ='V') entry_requirements_title,
 				max(memo) FILTER (WHERE typ='V') entry_requirements,
 				max(nazev) FILTER (WHERE typ='C') aim_title,
@@ -357,8 +357,8 @@ var pamela2JSON = transformation{
 				max(memo) FILTER (WHERE typ='E') terms_of_passing,
 				max(anazev) FILTER (WHERE typ='L') literature_title,
 				max(memo) FILTER (WHERE typ='L') literature,
-				max(anazev) FILTER (WHERE typ='P') requirements_of_assesment_title,
-				max(memo) FILTER (WHERE typ='P') requirements_of_assesment,
+				max(anazev) FILTER (WHERE typ='P') requirements_of_assessment_title,
+				max(memo) FILTER (WHERE typ='P') requirements_of_assessment,
 				max(anazev) FILTER (WHERE typ='V') entry_requirements_title,
 				max(memo) FILTER (WHERE typ='V') entry_requirements,
 				max(anazev) FILTER (WHERE typ='C') aim_title,
@@ -618,7 +618,7 @@ var povinn2courses = transformation{
 		syllabus jsonb,
 		terms_of_passing jsonb,
 		literature jsonb,
-		requirements_of_assesment jsonb,
+		requirements_of_assessment jsonb,
 		entry_requirements jsonb,
 		aim jsonb,
 		department jsonb,
@@ -740,7 +740,7 @@ var povinn2courses = transformation{
 		pj.syllabus,
 		pj.terms_of_passing,
 		pj.literature,
-		pj.requirements_of_assesment,
+		pj.requirements_of_assessment,
 		pj.entry_requirements,
 		pj.aim,
 		uj.department,
@@ -1006,7 +1006,7 @@ var povinn2searchable = transformation{
 			syllabus JSONB,
 			terms_of_passing JSONB,
 			literature JSONB,
-			requirements_of_assesment JSONB,
+			requirements_of_assessment JSONB,
 			aim JSONB
 		);
 			WITH guarantors as (
@@ -1044,7 +1044,7 @@ var povinn2searchable = transformation{
 				jsonb_agg(syllabus->'content') syllabus,
 				jsonb_agg(terms_of_passing->'content') terms_of_passing,
 				jsonb_agg(literature->'content') literature,
-				jsonb_agg(requirements_of_assesment->'content') requirements_of_assesment,
+				jsonb_agg(requirements_of_assessment->'content') requirements_of_assessment,
 				jsonb_agg(aim->'content') aim
 			FROM povinn2courses
 			GROUP BY code
@@ -1072,7 +1072,7 @@ var povinn2searchable = transformation{
 			d.syllabus,
 			d.terms_of_passing,
 			d.literature,
-			d.requirements_of_assesment,
+			d.requirements_of_assessment,
 			d.aim
 		FROM povinn2courses pc
 		LEFT JOIN povinn p ON p.povinn = pc.code
@@ -1986,7 +1986,7 @@ var studplan2lang = transformation{
 			bloc_subject_code VARCHAR(20),
 			is_required BOOLEAN NOT NULL,
 			is_elective BOOLEAN NOT NULL,
-			bloc_limit INT,
+			bloc_limit INT NOT NULL,
 			seq VARCHAR(50)
 		);
 		INSERT INTO studplan2lang
@@ -2044,6 +2044,125 @@ var studplan2lang = transformation{
 Prerequisites:
   - stud_plan_metadata
   - stud_plan_obor
+  - druh
+  - stud_plan_stat_studying
+  - stud_plan_stat_graduates
+  - stud_plan_stat_transfers
+*/
+var studmetadata2intermediate = transformation{
+	name: "studmetadata2intermediate",
+	query: `--sql
+		DROP TABLE IF EXISTS studmetadata2intermediate;
+		CREATE TABLE studmetadata2intermediate (
+			plan_code VARCHAR(15) NOT NULL,
+			name_cz VARCHAR(250),
+			name_en VARCHAR(250),
+			valid_from INT,
+			valid_to INT,
+			faculty VARCHAR(5),
+			section VARCHAR(2),
+			field_code VARCHAR(20),
+			field_name_cz VARCHAR(250),
+			field_name_en VARCHAR(250),
+			study_type VARCHAR(5),
+			required_credits INT,
+			required_elective_credits INT,
+			total_credits INT,
+			studying JSONB,
+			graduates JSONB,
+			next_plans JSONB,
+			previous_plans JSONB,
+			requisite_graph_data TEXT
+		);
+		INSERT INTO studmetadata2intermediate
+		WITH studying_stats AS (
+			SELECT
+				plan_code,
+				jsonb_agg(
+					jsonb_build_object(
+						'year', year,
+						'count', count
+					)
+					ORDER BY year
+				) AS studying
+			FROM stud_plan_stat_studying
+			GROUP BY plan_code
+		), graduates_stats AS (
+			SELECT
+				plan_code,
+				jsonb_agg(
+					jsonb_build_object(
+						'year', year,
+						'count', count,
+						'avg_years', avr_years
+					)
+					ORDER BY year
+				) AS graduates
+			FROM stud_plan_stat_graduates
+			GROUP BY plan_code
+		), transfers_from AS (
+			SELECT
+				plan_code_from AS plan_code,
+				jsonb_agg(
+					jsonb_build_object(
+						'plan', plan_code_to,
+						'count', count
+					)
+					ORDER BY count DESC, plan_code_to
+				) AS next_plans
+			FROM stud_plan_stat_transfers
+			GROUP BY plan_code_from
+		), transfers_to AS (
+			SELECT
+				plan_code_to AS plan_code,
+				jsonb_agg(
+					jsonb_build_object(
+						'plan', plan_code_from,
+						'count', count
+					)
+					ORDER BY count DESC, plan_code_from
+				) AS previous_plans
+			FROM stud_plan_stat_transfers
+			GROUP BY plan_code_to
+		)
+		SELECT
+			spm.code as plan_code,
+			spm.name_cz,
+			spm.name_en,
+			spm.valid_from,
+			spm.valid_to,
+			spm.faculty,
+			spm.section,
+			spm.field_code,
+			spo.name_cz as field_name_cz,
+			spo.name_en as field_name_en,
+			druh.zkratka as study_type,
+			NULL::INT as required_credits,
+			NULL::INT as required_elective_credits,
+			CASE
+				WHEN spm.study_type = 'B' THEN 180
+				WHEN spm.study_type = 'N' THEN 120
+				WHEN spm.study_type = 'M' THEN 300
+				ELSE 0
+			END as total_credits,
+			s.studying,
+			g.graduates,
+			tf.next_plans,
+			tt.previous_plans,
+			NULL as requisite_graph_data
+		FROM stud_plan_metadata spm
+		JOIN druh ON spm.study_type = druh.kod
+		LEFT JOIN stud_plan_obor spo ON spm.field_code = spo.code
+		LEFT JOIN studying_stats s ON spm.code = s.plan_code
+		LEFT JOIN graduates_stats g ON spm.code = g.plan_code
+		LEFT JOIN transfers_from tf ON spm.code = tf.plan_code
+		LEFT JOIN transfers_to tt ON spm.code = tt.plan_code
+	`,
+}
+
+/*
+Prerequisites:
+  - studmetadata2intermediate
 */
 var studmetadata2lang = transformation{
 	name: "studmetadata2lang",
@@ -2063,56 +2182,54 @@ var studmetadata2lang = transformation{
 			required_credits INT,
 			required_elective_credits INT,
 			total_credits INT,
+			studying JSONB,
+			graduates JSONB,
+			next_plans JSONB,
+			previous_plans JSONB,
 			requisite_graph_data TEXT
 		);
 		INSERT INTO studmetadata2lang
 		SELECT
-			spm.code as plan_code,
+			plan_code,
 			'cs' lang,
-			spm.name_cz as title,
-			spm.valid_from,
-			spm.valid_to,
-			spm.faculty,
-			spm.section,
-			spm.field_code,
-			spo.name_cz as field_title,
-			druh.zkratka as study_type,
-			NULL::INT as required_credits,
-			NULL::INT as required_elective_credits,
-			CASE
-				WHEN spm.study_type = 'B' THEN 180
-				WHEN spm.study_type = 'N' THEN 120
-				WHEN spm.study_type = 'M' THEN 300
-				ELSE 0
-			END as total_credits,
-			NULL as requisite_graph_data
-		FROM stud_plan_metadata spm
-		JOIN druh ON spm.study_type = druh.kod
-		LEFT JOIN stud_plan_obor spo ON spm.field_code = spo.code
+			name_cz as title,
+			valid_from,
+			valid_to,
+			faculty,
+			section,
+			field_code,
+			field_name_cz as field_title,
+			study_type,
+			required_credits,
+			required_elective_credits,
+			total_credits,
+			studying,
+			graduates,
+			next_plans,
+			previous_plans,
+			requisite_graph_data
+		FROM studmetadata2intermediate
 		UNION
 		SELECT
-			spm.code as plan_code,
+			plan_code,
 			'en' lang,
-			spm.name_en as title,
-			spm.valid_from,
-			spm.valid_to,
-			spm.faculty,
-			spm.section,
-			spm.field_code,
-			spo.name_en as field_title,
-			druh.zkratka AS study_type,
-			NULL::INT as required_credits,
-			NULL::INT as required_elective_credits,
-			CASE
-				WHEN spm.study_type = 'B' THEN 180
-				WHEN spm.study_type = 'N' THEN 120
-				WHEN spm.study_type = 'M' THEN 300
-				ELSE 0
-			END as total_credits,
-			NULL as requisite_graph_data
-		FROM stud_plan_metadata spm
-		JOIN druh ON spm.study_type = druh.kod
-		LEFT JOIN stud_plan_obor spo ON spm.field_code = spo.code
+			name_en as title,
+			valid_from,
+			valid_to,
+			faculty,
+			section,
+			field_code,
+			field_name_en as field_title,
+			study_type,
+			required_credits,
+			required_elective_credits,
+			total_credits,
+			studying,
+			graduates,
+			next_plans,
+			previous_plans,
+			requisite_graph_data
+		FROM studmetadata2intermediate
 	`,
 }
 
@@ -2628,9 +2745,162 @@ Prerequisites:
 var fixDegreePlansCredits = goTransformation{
 	name: "fix_degree_plans_credits",
 	runF: func(db *sqlx.DB) error {
-		// TODO:
-		// get sum of required credits for each plan
-		// get sum of required-elective credits for each plan - nesting !!!
-		return nil
+		type planRow struct {
+			PlanCode           string         `db:"plan_code"`
+			Lang               string         `db:"lang"`
+			BlocSubjectCode    sql.NullString `db:"bloc_subject_code"`
+			IsRequired         bool           `db:"is_required"`
+			IsElective         bool           `db:"is_elective"`
+			CourseCode         string         `db:"course_code"`
+			Interchangeability sql.NullString `db:"interchangeability"`
+			BlocLimit          int            `db:"bloc_limit"`
+			Credits            sql.NullInt64  `db:"credits"`
+		}
+
+		const selectPlanRows = `--sql
+		SELECT
+			sp.plan_code,
+			sp.lang,
+			sp.bloc_subject_code,
+			sp.is_required,
+			sp.is_elective,
+			sp.course_code,
+			sp.interchangeability,
+			sp.bloc_limit,
+			c.credits
+		FROM studplan2lang sp
+		LEFT JOIN povinn2courses c
+			ON c.code = sp.course_code
+			AND c.lang = sp.lang
+		ORDER BY sp.plan_code, sp.lang;
+		`
+
+		log.Printf("ℹ️ Starting fix degree plans credits")
+		rows := []planRow{}
+		if err := db.Select(&rows, selectPlanRows); err != nil {
+			return err
+		}
+		log.Printf("ℹ️ Loaded %d plan rows", len(rows))
+
+		type block struct {
+			code       string
+			isRequired bool
+			isElective bool
+			blocLimit  int
+			courses    map[string]struct{}
+		}
+		type planCredits struct {
+			code          string
+			lang          string
+			blocks        map[string]*block
+			courseCredits map[string]int
+		}
+
+		planMap := map[string]*planCredits{}
+		for _, row := range rows {
+			key := fmt.Sprintf("%s|%s", row.PlanCode, row.Lang)
+			pc, exists := planMap[key]
+			if !exists {
+				pc = &planCredits{
+					code:          row.PlanCode,
+					lang:          row.Lang,
+					blocks:        map[string]*block{},
+					courseCredits: map[string]int{},
+				}
+				planMap[key] = pc
+			}
+
+			blockKey := row.BlocSubjectCode.String
+			if !row.BlocSubjectCode.Valid || blockKey == "" {
+				blockKey = fmt.Sprintf("COURSE:%s", row.CourseCode)
+			}
+
+			b, bExists := pc.blocks[blockKey]
+			if !bExists {
+				b = &block{
+					code:       blockKey,
+					isRequired: row.IsRequired,
+					isElective: row.IsElective,
+					blocLimit:  row.BlocLimit,
+					courses:    map[string]struct{}{},
+				}
+				pc.blocks[blockKey] = b
+			} else if b.blocLimit == 0 && row.BlocLimit != 0 {
+				b.blocLimit = row.BlocLimit
+			}
+			b.courses[row.CourseCode] = struct{}{}
+
+			if row.Credits.Valid && row.Interchangeability.String == "" {
+				pc.courseCredits[row.CourseCode] = int(row.Credits.Int64)
+			}
+		}
+		log.Printf("ℹ️ Transformed plan rows into %d plans", len(planMap))
+
+		isSubset := func(a, b map[string]struct{}) bool {
+			if len(a) > len(b) {
+				return false
+			}
+			for c := range a {
+				if _, ok := b[c]; !ok {
+					return false
+				}
+			}
+			return true
+		}
+
+		// Start transaction
+		tx, err := db.Beginx()
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		updateQuery := `UPDATE studmetadata2lang SET required_credits=$1, required_elective_credits=$2 WHERE plan_code=$3 AND lang=$4`
+		stmt, err := tx.Prepare(updateQuery)
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+
+		for _, pc := range planMap {
+			blocks := make([]*block, 0, len(pc.blocks))
+			for _, b := range pc.blocks {
+				blocks = append(blocks, b)
+			}
+
+			ignored := map[string]struct{}{}
+			for i := 0; i < len(blocks); i++ {
+				for j := 0; j < len(blocks); j++ {
+					if i == j {
+						continue
+					}
+					if isSubset(blocks[i].courses, blocks[j].courses) {
+						ignored[blocks[i].code] = struct{}{}
+						break
+					}
+				}
+			}
+
+			requiredCredits := 0
+			requiredElectiveCredits := 0
+			for _, b := range blocks {
+				if _, skip := ignored[b.code]; skip {
+					continue
+				}
+				blockCredits := b.blocLimit
+				if b.isRequired {
+					requiredCredits += blockCredits
+				} else if !b.isElective {
+					requiredElectiveCredits += blockCredits
+				}
+			}
+
+			if _, err := stmt.Exec(requiredCredits, requiredElectiveCredits, pc.code, pc.lang); err != nil {
+				return err
+			}
+			log.Printf("✅ Updated plan %s (%s): required_credits=%d, required_elective_credits=%d", pc.code, pc.lang, requiredCredits, requiredElectiveCredits)
+		}
+
+		return tx.Commit()
 	},
 }

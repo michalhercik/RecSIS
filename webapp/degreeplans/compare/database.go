@@ -89,7 +89,6 @@ func intoDegreePlan(records []dbDegreePlanRecord) degreePlanData {
 	for _, record := range records {
 		add(&dp, record)
 	}
-	fixLimits(&dp)
 	return dp
 }
 
@@ -120,20 +119,6 @@ func intoCourse(from dbDegreePlanRecord) course {
 		title:       from.Title,
 		credits:     from.Credits,
 		isSupported: from.CourseIsSupported,
-	}
-}
-
-func fixLimits(dp *degreePlanData) {
-	for i := range dp.blocks {
-		if dp.blocks[i].isCompulsory {
-			creditSum := 0
-			for _, c := range dp.blocks[i].courses {
-				creditSum += c.credits
-			}
-			dp.blocks[i].limit = creditSum
-		} else if dp.blocks[i].isOptional {
-			dp.blocks[i].limit = 0
-		}
 	}
 }
 

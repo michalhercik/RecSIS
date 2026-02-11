@@ -119,6 +119,7 @@ type povinnRecord struct {
 	PPOCMIN    sql.NullInt64  `db:"PPOCMIN"`
 	PPOCMAX    sql.NullInt64  `db:"PPOCMAX"`
 	PURL       sql.NullString `db:"PURL"`
+	PSKUPINA   sql.NullString `db:"PSKUPINA"`
 }
 type extractPovinn struct {
 	data []povinnRecord
@@ -139,7 +140,7 @@ func (ep *extractPovinn) selectData(from *sqlx.DB, to *sqlx.DB) error {
 			VRVCEM,VTYP,VEBODY,
 			VUCIT1,VUCIT2,VUCIT3,
 			PPOCMIN,PPOCMAX,
-			PURL
+			PURL, PSKUPINA
 		FROM POVINN
 		WHERE TO_CHAR(sysdate, 'YYYY') BETWEEN VPLATIOD AND VPLATIDO
 			AND (PFAKULTA = '11320' OR POVINN = 'ASE500129' OR POVINN = 'ASE500130') -- support for FF language courses for ENG degree plans
@@ -180,7 +181,8 @@ func (ep *extractPovinn) insertData(to *sqlx.DB) error {
 			VUCIT3     VARCHAR(10),
 			PPOCMIN    INT,
 			PPOCMAX    INT,
-			PURL 	   VARCHAR(250)
+			PURL 	   VARCHAR(250),
+			PSKUPINA   CHAR(1)
 		)
 	`
 	insert := `
@@ -193,7 +195,7 @@ func (ep *extractPovinn) insertData(to *sqlx.DB) error {
 			VRVCEM,VTYP,VEBODY,
 			VUCIT1,VUCIT2,VUCIT3,
 			PPOCMIN,PPOCMAX,
-			PURL
+			PURL, PSKUPINA
 		)
 		(SELECT * FROM unnest(
 			$1::text[], $2::text[], $3::text[],
@@ -206,7 +208,7 @@ func (ep *extractPovinn) insertData(to *sqlx.DB) error {
 			$18::int[],
 			$19::text[], $20::text[], $21::text[],
 			$22::int[], $23::int[],
-			$24::text[]
+			$24::text[], $25::text[]
 			))
 	`
 	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
@@ -792,12 +794,15 @@ func (ep *extractPreq) selectData(from *sqlx.DB, to *sqlx.DB) error {
 	var err error
 	query = `
 		SELECT
-			PREQ.POVINN, PREQ.REQTYP, REQPOVINN, POVINN.PSKUPINA
+			PREQ.POVINN, PREQ.REQTYP, REQPOVINN, RP.PSKUPINA
 		FROM PREQ
-		LEFT JOIN POVINN ON PREQ.POVINN = POVINN.POVINN
-			AND POVINN.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PREQ.POVINN)
-			AND POVINN.PFAKULTA='11320'
-			AND POVINN.PVYUCOVAN <> 'Z' -- exclude non-teaching courses
+		LEFT JOIN POVINN P ON PREQ.POVINN = P.POVINN
+			AND P.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PREQ.POVINN)
+			AND P.PFAKULTA='11320'
+			AND P.PVYUCOVAN <> 'Z' -- exclude non-teaching courses
+		LEFT JOIN POVINN RP ON PREQ.REQPOVINN = RP.POVINN
+			AND RP.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p3 WHERE p3.POVINN = PREQ.REQPOVINN)
+			AND RP.PFAKULTA='11320'
 		WHERE to_char(sysdate, 'YYYY') BETWEEN PREQ.REQOD AND PREQ.REQDO
 	`
 	err = from.Select(&ep.data, query)
@@ -854,11 +859,14 @@ func (ep *extractPskup) selectData(from *sqlx.DB, to *sqlx.DB) error {
 	var err error
 	query = `
 		SELECT
-			PSKUP.POVINN, PSKUP.PSPOVINN, POVINN.PSKUPINA
+			PSKUP.POVINN, PSKUP.PSPOVINN, PSP.PSKUPINA
 		FROM PSKUP
-		LEFT JOIN POVINN ON PSKUP.POVINN = POVINN.POVINN
-			AND POVINN.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PSKUP.POVINN)
-			AND POVINN.PFAKULTA='11320'
+		LEFT JOIN POVINN P ON PSKUP.POVINN = P.POVINN
+			AND P.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p2 WHERE p2.POVINN = PSKUP.POVINN)
+			AND P.PFAKULTA='11320'
+		LEFT JOIN POVINN PSP ON PSKUP.PSPOVINN = PSP.POVINN
+			AND PSP.VPLATIOD = (SELECT MAX(VPLATIOD) FROM POVINN p3 WHERE p3.POVINN = PSKUP.PSPOVINN)
+			AND PSP.PFAKULTA='11320'
 		WHERE to_char(sysdate, 'YYYY') BETWEEN PSOD AND PSDO
 	`
 	err = from.Select(&ep.data, query)
@@ -1341,9 +1349,12 @@ func (ep *Ciselnik) insertData(to *sqlx.DB) error {
 // STUDPLAN
 
 type extractStudPlan struct {
-	data     []studplanRecord
-	metadata []studplanMetadataRecord
-	fields   []studOborRecord
+	data      []studplanRecord
+	metadata  []studplanMetadataRecord
+	fields    []studOborRecord
+	studying  []studStudStat
+	graduates []studAbsStat
+	transfers []studTransStat
 }
 
 type studplanRecord struct {
@@ -1395,6 +1406,25 @@ type studOborRecord struct {
 	SIMSCode   string `db:"SIMS_KOD"`
 	SIMSNameCz string `db:"SIMS_NAZEV_CZ"`
 	SIMSNameEn string `db:"SIMS_NAZEV_EN"`
+}
+
+type studStudStat struct {
+	PlanCode string `db:"KOD"`
+	Year     int    `db:"ROK"`
+	Count    int    `db:"POCET"`
+}
+
+type studAbsStat struct {
+	PlanCode string  `db:"KOD"`
+	Year     int     `db:"ROK"`
+	Count    int     `db:"POCET"`
+	AvrYears float64 `db:"PRUM_LET"`
+}
+
+type studTransStat struct {
+	PlanCodeFrom string `db:"KOD_OD"`
+	PlanCodeTo   string `db:"KOD_DO"`
+	Count        int    `db:"POCET"`
 }
 
 func (ep *extractStudPlan) name() string {
@@ -1470,10 +1500,39 @@ func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
 			SEQ
 		FROM TABLE(study_plan.stud_plan('%s', to_char(sysdate, 'YYYY')))
 	`
+	selectStudyingQuery := `
+		SELECT
+			SPLAN AS KOD,
+			SSKR AS ROK,
+			SUM(STUDUJICICH) AS POCET
+		FROM MFFSTUD10
+		GROUP BY SPLAN, SSKR
+		ORDER BY SPLAN, SSKR
+	`
+	selectGraduatesQuery := `
+		SELECT
+			SPLAN AS KOD,
+			SSKR AS ROK,
+			ABSOLVENTU AS POCET,
+			PRUM_LET
+		FROM MFFABS10
+		ORDER BY SPLAN, SSKR
+	`
+	selectTransfersQuery := `
+		SELECT
+			SPLAN AS KOD_OD,
+			SPLAN_1 AS KOD_DO,
+			SUM(STUDII) AS POCET
+		FROM MFFZMEN10
+		GROUP BY SPLAN, SPLAN_1
+		ORDER BY SPLAN, SPLAN_1
+	`
+	// get metadata from SIS
 	err = from.Select(&ep.metadata, selectMetadataQuery)
 	if err != nil {
 		return fmt.Errorf("selectMetadata: %w", err)
 	}
+	// get field details for all fields in the plans
 	fieldSet := make(map[string]struct{})
 	var fields []string
 	for _, planMetadata := range ep.metadata {
@@ -1484,6 +1543,7 @@ func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
 		fields = append(fields, planMetadata.FieldCode)
 	}
 	err = from.Select(&ep.fields, fmt.Sprintf(selectFieldsQuery, strings.Join(fields, "','")))
+	// get study plan details for all plans
 	var plan []studplanRecord
 	for _, planMetadata := range ep.metadata {
 		err = from.Select(&plan, fmt.Sprintf(selectPlanQuery, planMetadata.Code))
@@ -1491,6 +1551,18 @@ func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
 			return fmt.Errorf("selectData: plan: %s, %w", planMetadata.Code, err)
 		}
 		ep.data = append(ep.data, plan...)
+	}
+	// get studying stats
+	if err = from.Select(&ep.studying, selectStudyingQuery); err != nil {
+		return fmt.Errorf("selectData: studying: %w", err)
+	}
+	// get graduates stats
+	if err = from.Select(&ep.graduates, selectGraduatesQuery); err != nil {
+		return fmt.Errorf("selectData: graduates: %w", err)
+	}
+	// get transfers stats
+	if err = from.Select(&ep.transfers, selectTransfersQuery); err != nil {
+		return fmt.Errorf("selectData: transfers: %w", err)
 	}
 	return nil
 }
@@ -1505,6 +1577,15 @@ func (ep *extractStudPlan) insertData(to *sqlx.DB) error {
 	}
 	if err = ep.insertStudPlan(to); err != nil {
 		return fmt.Errorf("insertStudPlan: %w", err)
+	}
+	if err = ep.insertStudying(to); err != nil {
+		return fmt.Errorf("insertStudying: %w", err)
+	}
+	if err = ep.insertGraduates(to); err != nil {
+		return fmt.Errorf("insertGraduates: %w", err)
+	}
+	if err = ep.insertTransfers(to); err != nil {
+		return fmt.Errorf("insertTransfers: %w", err)
 	}
 	return nil
 }
@@ -1635,6 +1716,82 @@ func (ep *extractStudPlan) insertStudPlan(to *sqlx.DB) error {
 		)
 	`
 	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
+	if err != nil {
+		return fmt.Errorf("insertData: %w", err)
+	}
+	return nil
+}
+
+func (ep *extractStudPlan) insertStudying(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS stud_plan_stat_studying
+	`
+	create := `
+		CREATE TABLE stud_plan_stat_studying (
+			plan_code VARCHAR(15),
+			year INT,
+			count INT
+		)
+	`
+	insert := `
+		INSERT INTO stud_plan_stat_studying (
+			plan_code, year, count
+		) VALUES (
+			:KOD, :ROK, :POCET
+		)
+	`
+	err := simpleInsert(to, drop, create, insert, ep.studying)
+	if err != nil {
+		return fmt.Errorf("insertData: %w", err)
+	}
+	return nil
+}
+
+func (ep *extractStudPlan) insertGraduates(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS stud_plan_stat_graduates
+	`
+	create := `
+		CREATE TABLE stud_plan_stat_graduates (
+			plan_code VARCHAR(15),
+			year INT,
+			count INT,
+			avr_years FLOAT
+		)
+	`
+	insert := `
+		INSERT INTO stud_plan_stat_graduates (
+			plan_code, year, count, avr_years
+		) VALUES (
+			:KOD, :ROK, :POCET, :PRUM_LET
+		)
+	`
+	err := simpleInsert(to, drop, create, insert, ep.graduates)
+	if err != nil {
+		return fmt.Errorf("insertData: %w", err)
+	}
+	return nil
+}
+
+func (ep *extractStudPlan) insertTransfers(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS stud_plan_stat_transfers
+	`
+	create := `
+		CREATE TABLE stud_plan_stat_transfers (
+			plan_code_from VARCHAR(15),
+			plan_code_to VARCHAR(15),
+			count INT
+		)
+	`
+	insert := `
+		INSERT INTO stud_plan_stat_transfers (
+			plan_code_from, plan_code_to, count
+		) VALUES (
+			:KOD_OD, :KOD_DO, :POCET
+		)
+	`
+	err := simpleInsert(to, drop, create, insert, ep.transfers)
 	if err != nil {
 		return fmt.Errorf("insertData: %w", err)
 	}

@@ -25,18 +25,23 @@ const (
 //================================================================================
 
 type degreePlanPage struct {
-	code            string
-	title           string
-	fieldCode       string
-	fieldTitle      string
-	validFrom       int
-	validTo         int
-	reqGraphData    sql.NullString
-	isUserPlan      bool
-	blocs           []bloc
-	recommendedPlan recommendedPlan
-	searchEndpoint  string
-	compareParam    string
+	code                    string
+	title                   string
+	fieldCode               string
+	fieldTitle              string
+	validFrom               int
+	validTo                 int
+	requiredCredits         int
+	requiredElectiveCredits int
+	totalCredits            int
+	studying                StudyingSlice
+	graduates               GraduatesSlice
+	reqGraphData            sql.NullString
+	isUserPlan              bool
+	blocs                   []bloc
+	recommendedPlan         recommendedPlan
+	searchEndpoint          string
+	compareParam            string
 }
 
 func (dp *degreePlanPage) bpNumberOfSemesters() int {
@@ -51,6 +56,61 @@ func (dp *degreePlanPage) bpNumberOfSemesters() int {
 
 func (dp *degreePlanPage) isValid() bool {
 	return dp.validTo == unlimitedYear
+}
+
+type StudyingSlice []Studying
+
+func (ss StudyingSlice) isEmpty() bool {
+	return len(ss) == 0
+}
+
+func (ss StudyingSlice) totalStudying() int {
+	total := 0
+	for _, s := range ss {
+		total += s.count
+	}
+	return total
+}
+
+type Studying struct {
+	year  int
+	count int
+}
+
+type GraduatesSlice []Graduates
+
+func (gs GraduatesSlice) isEmpty() bool {
+	return len(gs) == 0
+}
+
+func (gs GraduatesSlice) totalGraduates() int {
+	total := 0
+	for _, g := range gs {
+		total += g.count
+	}
+	return total
+}
+
+func (gs GraduatesSlice) avgYearsToGraduate() float64 {
+	if len(gs) == 0 {
+		return 0.0
+	}
+	totalGraduates := 0
+	totalYears := 0.0
+	for _, g := range gs {
+		totalGraduates += g.count
+		totalYears += float64(g.count) * g.avgYears
+	}
+	if totalGraduates == 0 {
+		return 0.0
+	}
+	return totalYears / float64(totalGraduates)
+}
+
+type Graduates struct {
+	year     int
+	count    int
+	avgYears float64
 }
 
 type bloc struct {

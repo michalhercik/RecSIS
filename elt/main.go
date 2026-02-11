@@ -120,6 +120,7 @@ func transform(recsis *sqlx.DB) error {
 			pklas2JSON,
 			povinn2jazykAgg,
 			ankecy2JSON,
+			studmetadata2intermediate,
 		},
 		parallelRunner{
 			povinn2courses,
@@ -159,7 +160,7 @@ func transform(recsis *sqlx.DB) error {
 			createFilterValuesForDegreePlanValid,
 			createFilterValuesForDegreePlanStudyTypes,
 		},
-		//fixDegreePlansCredits,
+		fixDegreePlansCredits,
 		createRequisiteGraphData,
 	}
 

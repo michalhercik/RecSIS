@@ -25,18 +25,12 @@ type DBManager struct {
 }
 
 type dbDegreePlanRecord struct {
-	DegreePlanCode      string         `db:"degree_plan_code"`
-	DegreePlanTitle     string         `db:"degree_plan_title"`
-	FieldCode           string         `db:"field_code"`
-	FieldTitle          string         `db:"field_title"`
-	DegreePlanValidFrom int            `db:"degree_plan_valid_from"`
-	DegreePlanValidTo   int            `db:"degree_plan_valid_to"`
-	RequisiteGraphData  sql.NullString `db:"requisite_graph_data"`
-	BlocCode            string         `db:"bloc_subject_code"`
-	BlocLimit           int            `db:"bloc_limit"`
-	BlocName            string         `db:"bloc_name"`
-	IsRequired          bool           `db:"is_required"`
-	IsElective          bool           `db:"is_elective"`
+	Plan       dbds.DegreePlan `db:"plan"`
+	BlocCode   string          `db:"bloc_subject_code"`
+	BlocLimit  int             `db:"bloc_limit"`
+	BlocName   string          `db:"bloc_name"`
+	IsRequired bool            `db:"is_required"`
+	IsElective bool            `db:"is_elective"`
 	dbds.Course
 	RecommendedYearFrom sql.NullInt64 `db:"recommended_year_from"`
 	RecommendedYearTo   sql.NullInt64 `db:"recommended_year_to"`
@@ -296,20 +290,51 @@ func (m DBManager) rewriteBlueprintWithRecommendedPlan(uid, dpCode string, maxYe
 
 func buildDegreePlanPage(records []dbDegreePlanRecord, isUserPlan bool) degreePlanPage {
 	var dp degreePlanPage
-	dp.code = records[0].DegreePlanCode
-	dp.title = records[0].DegreePlanTitle
-	dp.fieldCode = records[0].FieldCode
-	dp.fieldTitle = records[0].FieldTitle
-	dp.validFrom = records[0].DegreePlanValidFrom
-	dp.validTo = records[0].DegreePlanValidTo
-	dp.reqGraphData = records[0].RequisiteGraphData
+	insertMetadata(&dp, records[0].Plan)
 	dp.isUserPlan = isUserPlan
 	for _, record := range records {
 		add(&dp, record)
 	}
-	dp.recommendedPlan = createRecommendedPlan(records, &dp)
-	//fixLimits(&dp)
+	dp.recommendedPlan = createRecommendedPlan(&dp, records)
 	return dp
+}
+
+func insertMetadata(dp *degreePlanPage, from dbds.DegreePlan) {
+	dp.code = from.Code
+	dp.title = from.Title
+	dp.fieldCode = from.FieldCode
+	dp.fieldTitle = from.FieldTitle
+	dp.validFrom = from.ValidFrom
+	dp.validTo = from.ValidTo
+	dp.reqGraphData = from.RequisiteGraphData
+	dp.requiredCredits = from.RequiredCredits
+	dp.requiredElectiveCredits = from.RequiredElectiveCredits
+	dp.totalCredits = from.TotalCredits
+	dp.studying = intoStudyingSlice(from.Studying)
+	dp.graduates = intoGraduatesSlice(from.Graduates)
+}
+
+func intoStudyingSlice(from []dbds.Studying) StudyingSlice {
+	studying := make(StudyingSlice, len(from))
+	for i, s := range from {
+		studying[i] = Studying{
+			year:  s.Year,
+			count: s.Count,
+		}
+	}
+	return studying
+}
+
+func intoGraduatesSlice(from []dbds.Graduates) GraduatesSlice {
+	graduates := make(GraduatesSlice, len(from))
+	for i, g := range from {
+		graduates[i] = Graduates{
+			year:     g.Year,
+			count:    g.Count,
+			avgYears: g.AvgYears,
+		}
+	}
+	return graduates
 }
 
 func add(dp *degreePlanPage, record dbDegreePlanRecord) {
@@ -364,21 +389,7 @@ func intoTeacherSlice(from []dbds.Teacher) []teacher {
 	return teachers
 }
 
-func fixLimits(dp *degreePlanPage) {
-	for i := range dp.blocs {
-		if dp.blocs[i].isCompulsory {
-			creditSum := 0
-			for _, c := range dp.blocs[i].courses {
-				creditSum += c.credits
-			}
-			dp.blocs[i].limit = creditSum
-		} else if dp.blocs[i].isOptional {
-			dp.blocs[i].limit = 0
-		}
-	}
-}
-
-func createRecommendedPlan(records []dbDegreePlanRecord, dp *degreePlanPage) recommendedPlan {
+func createRecommendedPlan(dp *degreePlanPage, records []dbDegreePlanRecord) recommendedPlan {
 	coursesMap := make(map[string]course)
 	for _, bloc := range dp.blocs {
 		for _, c := range bloc.courses {

@@ -2,11 +2,11 @@ package sqlquery
 
 const DegreePlanMetadataForSearch = `--sql
 SELECT
-	plan_code,
+	plan_code as code,
 	title,
-	study_type,
 	valid_from,
-	valid_to
+	valid_to,
+	study_type
 FROM degree_plans
 WHERE plan_code = ANY($1)
 	AND lang = $2

@@ -40,7 +40,7 @@ func migrateCourses(tx *sqlx.Tx) error {
 			syllabus,
 			terms_of_passing,
 			literature,
-			requirements_of_assesment,
+			requirements_of_assessment,
 			entry_requirements,
 			aim,
 			classes,
@@ -102,6 +102,10 @@ func migrateStudPlans(tx *sqlx.Tx) error {
 			required_credits,
 			required_elective_credits,
 			total_credits,
+			studying,
+			graduates,
+			next_plans,
+			previous_plans,
 			requisite_graph_data
 		) SELECT DISTINCT
 			plan_code,
@@ -115,6 +119,10 @@ func migrateStudPlans(tx *sqlx.Tx) error {
 			required_credits,
 			required_elective_credits,
 			total_credits,
+			studying,
+			graduates,
+			next_plans,
+			previous_plans,
 			requisite_graph_data
 		FROM studmetadata2lang;
 	`)

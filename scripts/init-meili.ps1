@@ -55,7 +55,7 @@ $searchable = @(
     "sylabus",
     "aim",
     "terms_of_passing",
-    "requirements_of_assesment",
+    "requirements_of_assessment",
     "literature"
 )
 $response = Invoke-WebRequest -Uri "http://localhost:7700/indexes/courses/settings/searchable-attributes" `

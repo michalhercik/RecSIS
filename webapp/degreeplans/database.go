@@ -6,6 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/degreeplans/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
@@ -15,16 +16,8 @@ type DBManager struct {
 	DB *sqlx.DB
 }
 
-type dbDegreePlanRecord struct {
-	Code      string `db:"plan_code"`
-	Title     string `db:"title"`
-	StudyType string `db:"study_type"`
-	ValidFrom dpYear `db:"valid_from"`
-	ValidTo   dpYear `db:"valid_to"`
-}
-
 func (m DBManager) degreePlanMetadata(dpCodes []string, lang language.Language) ([]degreePlanSearchResult, error) {
-	var records []dbDegreePlanRecord
+	var records []dbds.DegreePlan
 	err := m.DB.Select(&records, sqlquery.DegreePlanMetadataForSearch, pq.Array(dpCodes), lang)
 	if err != nil {
 		return nil, errorx.NewHTTPErr(
@@ -36,15 +29,15 @@ func (m DBManager) degreePlanMetadata(dpCodes []string, lang language.Language) 
 	return intoDPSearchResults(records), nil
 }
 
-func intoDPSearchResults(records []dbDegreePlanRecord) []degreePlanSearchResult {
+func intoDPSearchResults(records []dbds.DegreePlan) []degreePlanSearchResult {
 	results := make([]degreePlanSearchResult, len(records))
 	for i, record := range records {
 		results[i] = degreePlanSearchResult{
 			code:      record.Code,
 			title:     record.Title,
 			studyType: record.StudyType,
-			validFrom: record.ValidFrom,
-			validTo:   record.ValidTo,
+			validFrom: dpYear(record.ValidFrom),
+			validTo:   dpYear(record.ValidTo),
 		}
 	}
 	return results

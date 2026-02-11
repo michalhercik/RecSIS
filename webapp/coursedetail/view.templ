@@ -183,9 +183,9 @@ templ details(course *course, t text) {
 		role="tablist"
 		id="details-nav-tabs"
 		class="nav nav-tabs justify-content-center justify-content-md-start">
-		@tabButton(fmt.Sprintf("%s-desc-tab-pane", course.code), t.description, true)
-		@tabButton(fmt.Sprintf("%s-survey-tab-pane", course.code), t.survey, false)
-		@tabButton(fmt.Sprintf("%s-detail-tab-pane", course.code), t.detail, false)
+		@tabButton(fmt.Sprintf("%s-desc-tab-pane", course.code), t.description, t.description, true)
+		@tabButton(fmt.Sprintf("%s-survey-tab-pane", course.code), t.survey, t.survey, false)
+		@tabButton(fmt.Sprintf("%s-detail-tab-pane", course.code), t.detail, t.detailSm, false)
 	</ul>
 	<div
 		class="tab-content"
@@ -203,7 +203,7 @@ templ details(course *course, t text) {
 	</div>
 }
 
-templ tabButton(target, text string, active bool) {
+templ tabButton(target, text, textSm string, active bool) {
 	<li class="nav-item" role="presentation">
 		<button
 			id={ fmt.Sprintf("%s-btn", target) }
@@ -215,7 +215,8 @@ templ tabButton(target, text string, active bool) {
 			role="tab"
 			aria-controls={ fmt.Sprintf("%s", target) }
 			aria-selected={ fmt.Sprintf("%t", active) }>
-			{ text }
+			<span class="d-sm-none">{ textSm }</span>
+			<span class="d-none d-sm-inline">{ text }</span>
 		</button>
 	</li>
 }

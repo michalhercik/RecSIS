@@ -201,7 +201,7 @@ templ tabs(dp *degreePlanPage, bpBtnRow PartialBlueprintAdd, t text) {
             role="tablist"
             id="dp-tabs"
             class="nav nav-tabs justify-content-center mb-3">
-            @tabButton(fmt.Sprintf("%s-desc-tab-pane", dp.code), t.tabDetail, t.tabDetail, true)
+            @tabButton(fmt.Sprintf("%s-desc-tab-pane", dp.code), t.tabDetail, t.tabDetailSm, true)
             if !dp.recommendedPlan.isEmpty() {
                 @tabButton(fmt.Sprintf("%s-survey-tab-pane", dp.code), t.tabRecommendedPlan, t.tabRecommendedPlanSm, false)
             }
@@ -210,6 +210,7 @@ templ tabs(dp *degreePlanPage, bpBtnRow PartialBlueprintAdd, t text) {
                     @tabButton(fmt.Sprintf("%s-detail-tab-pane", dp.code), t.tabReqMap, t.tabReqMap, false)
                 </span>
             }
+            @tabButton(fmt.Sprintf("%s-stats-tab-pane", dp.code), t.tabStats, t.tabStats, false)
         </ul>
         <div class="tab-content">
             @tabPane(fmt.Sprintf("%s-desc-tab-pane", dp.code), true) {
@@ -222,6 +223,9 @@ templ tabs(dp *degreePlanPage, bpBtnRow PartialBlueprintAdd, t text) {
                 @tabPane(fmt.Sprintf("%s-detail-tab-pane", dp.code), false) {
                     @requisiteGraph(dp.reqGraphData.String, t)
                 }
+            }
+            @tabPane(fmt.Sprintf("%s-stats-tab-pane", dp.code), false) {
+                @degreePlanStats(dp, t)
             }
         </div>
     }
@@ -399,6 +403,105 @@ templ legendNode(label string, colorClass string) {
         <span class={"d-inline-block dp-legend-node", colorClass}></span>
         <span>{ label }</span>
     </span>
+}
+
+templ degreePlanStats(dp *degreePlanPage, t text) {
+    <div class="d-flex flex-column gap-3">
+        <div>
+            <h5>{ fmt.Sprintf("%s:", t.creditsStats) }</h5>
+            <div class="d-flex flex-column gap-1">
+                <span>{ fmt.Sprintf("%s: ", t.totalCredits) }<span class="fw-semibold">{ fmt.Sprintf("%d", dp.totalCredits) }</span></span>
+                <span>{ fmt.Sprintf("%s: ", t.requiredCredits) }<span class="fw-semibold">{ fmt.Sprintf("%d", dp.requiredCredits) }</span></span>
+                <span>{ fmt.Sprintf("%s: ", t.requiredElectiveCredits) }<span class="fw-semibold">{ fmt.Sprintf("%d", dp.requiredElectiveCredits) }</span></span>
+            </div>
+        </div>
+        if !dp.studying.isEmpty() {
+            <div>
+                @studyingStats(dp.studying, t)
+            </div>
+        }
+        if !dp.graduates.isEmpty() {
+            <div>
+                @graduatesStats(dp.graduates, t)
+            </div>
+        }
+    </div>
+}
+
+templ studyingStats(studying StudyingSlice, t text) {
+    <h5>{ fmt.Sprintf("%s:", t.studyingStats) }</h5>
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    // year title
+                    <th scope="col">{ t.yearStat }</th>
+                    // specific years
+                    for _, s := range studying {
+                        <th scope="col" class="text-center">{ fmt.Sprintf("%d/%d", s.year, s.year + 1) }</th>
+                    }
+                    // total
+                    <th scope="col" class="text-center fst-italic">{ t.totalStat }</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    // count title
+                    <th scope="row">{ t.numberStat }</th>
+                    // specific counts
+                    for _, s := range studying {
+                        <td class="text-center">{ fmt.Sprintf("%d", s.count) }</td>
+                    }
+                    // total
+                    <td class="text-center fst-italic">{ fmt.Sprintf("%d", studying.totalStudying()) }</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+
+templ graduatesStats(graduates GraduatesSlice, t text) {
+    <h5>{ fmt.Sprintf("%s:", t.graduatesStats) }</h5>
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    // year title
+                    <th scope="col">{ t.yearStat }</th>
+                    // specific years
+                    for _, s := range graduates {
+                        <th scope="col" class="text-center">{ fmt.Sprintf("%d/%d", s.year, s.year + 1) }</th>
+                    }
+                    // total
+                    <th scope="col" class="text-center fst-italic">{ t.totalStat }</th>
+                </tr>
+            </thead>
+            <tbody>
+                // count row
+                <tr>
+                    // count title
+                    <th scope="row">{ t.numberStat }</th>
+                    // specific counts
+                    for _, s := range graduates {
+                        <td class="text-center">{ fmt.Sprintf("%d", s.count) }</td>
+                    }
+                    // total
+                    <td class="text-center fst-italic">{ fmt.Sprintf("%d", graduates.totalGraduates()) }</td>
+                </tr>
+                // average years to graduate row
+                <tr>
+                    // average years to graduate title
+                    <th scope="row">{ t.avgYearsToGraduate }</th>
+                    // specific average years to graduate
+                    for _, s := range graduates {
+                        <td class="text-center">{ fmt.Sprintf("%.2f", s.avgYears) }</td>
+                    }
+                    // total
+                    <td class="text-center fst-italic">{ fmt.Sprintf("%.2f", graduates.avgYearsToGraduate()) }</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 }
 
 templ filterCheckbox(id, label string) {
