@@ -18,10 +18,10 @@ We start with the most important part, which is the webapp. It consists of sever
 
 This package is really simple and serves as an extension to the standard library's string functions. If you need to define any custom string manipulation functions, this is the place to do it.
 
-Functions:
-
 - `Capitalize(string) string`
   > Capitalizes the first letter of the input string. Supports UTF-8 strings.
+- `SplitByLastSpace(s string) (string, string)`
+  > Splits the input string into two parts based on the last occurrence of a space character. Returns the part before the last space and the part after the last space. If there is no space in the input string, it returns the original string and an empty string.
 
 ### `language`
 
@@ -94,9 +94,10 @@ Logout and login pages (their templated HTML) can be seen in `view.templ` file. 
 
 This package provides structures that maps to database tables. The mapping is not necessary one to one, it can be used to combine multiple tables into one structure or to split one table into multiple structures. The main idea is to have only one existing mapping of column to structure field so that when any change to the name happens it can be easily resolved. This package should be used whenever relevant data are fetched from a database. After data are fetched from the database into `dbds` structures they should be remapped to local structures to depend on common structures as little as possible so that any change to `dbds` package can be easily resolved.
 
-This package creates mapping for the most common structures, which are structures for course and teacher. It is therefore divided into two files, where each file contains definitions relevant to its specific structure. The files are:
-- `course.go`: contains struct `Course` that represents a course in the system. It should be used whenever data related to courses is fetched from the database (as can be seen in pages-related `database.go` files). The file also contains another struct definitions related to course and if you want to learn more about them, please explore the file and its usage yourself, and explore the [Data Model](./data-model.md).
-- `teacher.go`: contains struct `Teacher` that represents a teacher in the system. It also defines alias for slice of teachers `TeacherSlice`. The slice is used in `Course` struct, but also in some `database.go` files. For better understanding, please explore the structs usage yourself, and explore the [Data Model](./data-model.md).
+This package creates mapping for the most common structures, which are structures for course,  teacher and degree plan. It is therefore divided into three files, where each file contains definitions relevant to its specific structure. The files are:
+- `course.go`: contains struct `Course` that represents a course in the system. It should be used whenever data related to courses is fetched from the database (as can be seen in pages-related `database.go` files). The file also contains another struct definitions related to course and if you want to learn more about them, please explore the file and its usage yourself, and explore the [Data Model](#data-model).
+- `teacher.go`: contains struct `Teacher` that represents a teacher in the system. It also defines alias for slice of teachers `TeacherSlice`. The slice is used in `Course` struct, but also in some `database.go` files. For better understanding, please explore the structs usage yourself, and explore the [Data Model](#data-model).
+- `plan.go`: contains struct `DegreePlan` that represents a degree plan in the system. It should be used whenever data related to degree plans metadata is fetched from the database. For better understanding, please explore the structs usage yourself, and explore the [Data Model](#data-model).
 
 Typical usage of this package can be demonstrated on `database.go` file from `courses` package. You can see that the `dbds` package is imported
 ```go
@@ -107,9 +108,9 @@ import (
 and the `dbds.Course` struct is used in internal database `courses` struct slice, which represent courses fetched from the database. You can see that `dbds` is used for the most common structures, and you can embed them anywhere you need relevant data from the database.
 ```go
 type courses []struct {
-	dbds.Course
-	BlueprintSemesters pq.BoolArray `db:"semesters"`
-	InDegreePlan       bool         `db:"in_degree_plan"`
+  dbds.Course
+  BlueprintSemesters pq.BoolArray `db:"semesters"`
+  InDegreePlan       bool         `db:"in_degree_plan"`
 }
 ```
 `courses()` method then fetch courses from the database which are automatically mapped to the `courses` struct. However, the Search page (`courses` package) uses its own internal `course` representation which can be seen in `model.go` file (`courses` package) and the fetched courses are then manually mapped to this representation using `intoCourses()` and other functions as seen in the file.
@@ -163,7 +164,7 @@ This package works as follows:
 Typical usage of this package can be demonstrated on `server.go` and `database.go` files from `courses` package. You can see the `errorx` package imported in both files.
 ```go
 import (
-	"github.com/michalhercik/RecSIS/errorx"
+  "github.com/michalhercik/RecSIS/errorx"
 )
 ```
 In the `server.go` file, there is a `Server` struct that expect an implementation of the `Error` interface, which is satisfied by the `ErrorHandler` instance injected into it in `main.go`.
@@ -171,15 +172,15 @@ In the `server.go` file, there is a `Server` struct that expect an implementatio
 Now, when a new HTTP error occurs, as seen in `database.go` file,
 ```go
 if err := ...; err != nil {
-	return nil, errorx.NewHTTPErr(
-		errorx.AddContext(
-			fmt.Errorf("sqlquery.Courses: %w", err),
-			errorx.P("courseCodes", strings.Join(courseCodes, ",")),
-			errorx.P("lang", lang),
-		),
-		http.StatusInternalServerError,
-		texts[lang].errCannotLoadCourses,
-	)
+  return nil, errorx.NewHTTPErr(
+    errorx.AddContext(
+      fmt.Errorf("sqlquery.Courses: %w", err),
+      errorx.P("courseCodes", strings.Join(courseCodes, ",")),
+      errorx.P("lang", lang),
+    ),
+    http.StatusInternalServerError,
+    texts[lang].errCannotLoadCourses,
+  )
 }
 ```
 it is wrapped with `errorx.NewHTTPErr()` function. This function takes an error, the HTTP status code, which you must provide, and a user-friendly error message, typically stored in `texts.go` file (which must be, for now, correctly localized), and returns a new `HTTPError` instance. The occurred error can be wrapped in context using `errorx.AddContext()` function which takes the original error and any relevant public parameters (we consider `userID` to be a secret). The parameters are created using `errorx.P()` function.
@@ -187,7 +188,7 @@ it is wrapped with `errorx.NewHTTPErr()` function. This function takes an error,
 This error then bubbles through the application. When it is rereturned it should be again wrapped in context using `errorx.AddContext()` function, as seen in `search()` method in `server.go` file,
 ```go
 if err != nil {
-	return result, errorx.AddContext(err)
+  return result, errorx.AddContext(err)
 }
 ```
 for adding the function/method context, which is however optional. Finally, when the error reaches any rendering method, it must be unwrapped using `errorx.UnwrapError()` function, which will extract the HTTP status code, and user message. If the error was not an `appError` it will be treated as a generic internal server error.
@@ -258,7 +259,9 @@ Functions:
 - `SkipEmptyFacet(iter.Seq2[int, FacetValue]) iter.Seq2[int, FacetValue]`
   > If the value has zero count given the search query, it is skipped. Used for displaying survey filters.
 
-1. Inject filters into a server using `filters.MakeFilters` in `main.go`. As `source`, database with filter categories and their values should be used. `id` should be the `filter_id` of the filter category. That can be found in the database, see the [Data Model](./data-model.md). As we currently have filters for courses and surveys, you can see in `main.go` that we use `courses` and `course-surveys` as `id`.
+This package works as follows:
+
+1. Inject filters into a server using `filters.MakeFilters` in `main.go`. As `source`, database with filter categories and their values should be used. `id` should be the `filter_id` of the filter category. That can be found in the database, see the [Data Model](#data-model). As we currently have filters for courses and surveys, you can see in `main.go` that we use `courses` and `course-surveys` as `id`.
 2. In `server.go`, the injected filters must be initialized using `s.Filters.Init()` method. This will fetch the corresponding filter categories and their values from the database.
 3. Then you would make search request to MeiliSearch (which we use for [filtering](https://www\.meilisearch\.com/docs/learn/filtering_and_sorting/filter_expression_reference)). In the request, you must specify for which fields you want facets to be generated. You can get the list of fields using `s.Filters.Facets()` method. It is also possible to filter the search by parsing URL query parameters using `s.Filters.ParseURLQuery(r.URL.Query(), lang)` method. It will return a filter expression that can be used in MeiliSearch search request.
 4. Part of the MeiliSearch search response are `FacetsDistribution` which is a mapping of Category>Value>Count in other words it is `Facets` type. 
@@ -297,13 +300,13 @@ This package works as follows:
 The usage of this package can be demonstrated on the `courses` package. In `main.go`, the courses server is injected with an instance of `bpbtn.Add`.
 ```go
 courses := courses.Server{
-	BpBtn: bpbtn.Add{
-		DB:    db,
-		Templ: bpbtn.AddBtn,
-		Options: bpbtn.Options{
-			HxPostBase: coursesRoot,
-		},
-	},
+  BpBtn: bpbtn.Add{
+    DB:    db,
+    Templ: bpbtn.AddBtn,
+    Options: bpbtn.Options{
+      HxPostBase: coursesRoot,
+    },
+  },
   ...
 }
 ```
@@ -314,30 +317,30 @@ router.HandleFunc(s.BpBtn.Endpoint(), s.addCourseToBlueprint)
 with the following handler function:
 ```go
 func (s Server) addCourseToBlueprint(w http.ResponseWriter, r *http.Request) {
-	lang := language.FromContext(r.Context())
-	t := texts[lang]
-	userID := s.Auth.UserID(r)
-	courseCodes, year, semester, err := s.BpBtn.ParseRequest(r, nil)
-	if err != nil {
-		...
-	}
-	if len(courseCodes) != 1 {
-		...
-	}
-	courseCode := courseCodes[0]
-	_, err = s.BpBtn.Action(userID, year, semester, lang, courseCode)
-	if err != nil {
-		...
-	}
-	course, err := s.Data.courses(userID, []string{courseCode}, lang)
-	if err != nil {
-		...
-	}
-	btn := s.BpBtn.PartialComponent(lang)
-	err = CourseCard(&course[0], t, btn).Render(r.Context(), w)
-	if err != nil {
-		...
-	}
+  lang := language.FromContext(r.Context())
+  t := texts[lang]
+  userID := s.Auth.UserID(r)
+  courseCodes, year, semester, err := s.BpBtn.ParseRequest(r, nil)
+  if err != nil {
+    ...
+  }
+  if len(courseCodes) != 1 {
+    ...
+  }
+  courseCode := courseCodes[0]
+  _, err = s.BpBtn.Action(userID, year, semester, lang, courseCode)
+  if err != nil {
+    ...
+  }
+  course, err := s.Data.courses(userID, []string{courseCode}, lang)
+  if err != nil {
+    ...
+  }
+  btn := s.BpBtn.PartialComponent(lang)
+  err = CourseCard(&course[0], t, btn).Render(r.Context(), w)
+  if err != nil {
+    ...
+  }
 }
 ```
 The `s.BpBtn.ParseRequest()` method parses the request to extract course code, year and semester. There are no extra courses to add (`nil` parameter for the method) as on the courses page, each button corresponds to a single course. Then the `s.BpBtn.Action()` method is called to add the course to the user's blueprint. Finally, the partial component for the button is created using the `s.BpBtn.PartialComponent()` method which is then rendered in the response. When the partial component is passed to the model, it is used to render the button in the appropriate place within the page template.
@@ -364,29 +367,29 @@ Now for the packages that are actually *seen*. That means that their are rendere
 
 This package provides the page layout and structure for the application. Specifically, it defines the page header with navigation bar and a footer. All the contents of our pages are inserted into this layout which creates the final look.
 
-The `page` API is not interesting, and so, the package will be documented through its usage. If you would like to create a new page using this package, please refer to [Add new page](./how-to-extend.md#add-new-page) part.
+The `page` API is not interesting, and so, the package will be documented through its usage. If you would like to create a new page using this package, please refer to [Add new page](#add-new-page) part.
 
 In `main.go`, a `Page` instance is created and configured with the necessary parameters.
 ```go
 pageTempl := page.Page{
-	Error: errorHandler,
-	Home:  homeRoot,
-	NavItems: []page.NavItem{
-		{Title: language.MakeLangString("Domů", "Home"), Path: homeRoot, Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
-		{Title: language.MakeLangString("Hledání", "Search"), Path: coursesRoot, Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
-		{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: blueprintRoot, Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
-		{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: degreePlanRoot, Skeleton: degreeplan.Skeleton, Indicator: "#degreeplan-skeleton"},
-	},
-	Search: page.MeiliSearch{
-		Client: meiliClient,
-		Index:  "courses",
-		Limit:  5,
-	},
-	Param:          "search",
-	SearchEndpoint: coursesRoot,
-	ResultsDetailEndpoint: func(code string) string {
-		return courseDetailRoot + code
-	},
+  Error: errorHandler,
+  Home:  homeRoot,
+  NavItems: []page.NavItem{
+    {Title: language.MakeLangString("Domů", "Home"), Path: homeRoot, Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
+    {Title: language.MakeLangString("Hledání", "Search"), Path: coursesRoot, Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
+    {Title: language.MakeLangString("Blueprint", "Blueprint"), Path: blueprintRoot, Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
+    {Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: degreePlanDetailRoot, Skeleton: degreeplandetail.Skeleton, Indicator: "#degreeplan-skeleton"},
+  },
+  Search: page.MeiliSearch{
+    Client: meiliClient,
+    Index:  "courses",
+    Limit:  5,
+  },
+  Param:          "search",
+  SearchEndpoint: coursesRoot,
+  ResultsDetailEndpoint: func(code string) string {
+    return courseDetailRoot + code
+  },
 }
 pageTempl.Init()
 ```
@@ -394,23 +397,27 @@ pageTempl.Init()
 
 The result is than injected into every page server. Servers either use the `Page` instance directly or wrap it in `PageWithNoFiltersAndForgetsSearchQueryOnRefresh` which does exactly what its name suggests. Both `Page` and `PageWithNoFiltersAndForgetsSearchQueryOnRefresh` have `View()` method, which is responsible for rendering the page and its content. Difference between the two methods can be seen in `page.go` file directly. They both use the same private method which created a page model from provided parameters and returns template for the page which can be rendered. The most important parameter is template `templ.Component` for the content of the page.
 
-The `View()` method is used in `server.go` files for rendering pages. For more information, please refer to the `server.go` file. The server always provide content for the page.
+The `View()` method is used in `server.go` files for rendering pages. For more information, please refer to any `server.go` file. The servers always provide content for the page.
 
 #### Specific pages
 
-In our application, we currently have five specific pages:
+In our application, we currently have six (or seven) specific pages:
 
 1. Home page
 2. Blueprint page
 3. Courses page
 4. Course detail page - there is a course detail page for each course, but they all share the same template
-5. Degree plan page
+5. Degree plan search page
+6. Degree plan detail page - there is a degree plan detail page for each degree plan, but they all share the same template
+7. (can be seen as a part of 5.) Degree plan compare page
 
 Their structure is similar, but each page has its own specific content and functionality. An overview of how to pages work can be seen in the following diagram:
 
+> NOTE: All degree plan related pages are squashed into a single section, as we expect to do exactly that in the future. Specifically, the degree plan search, detail, and compare pages will be grouped together into a single server with multiple sub-servers. This is already somehow done in `degreeplans` package where compare server is sub-server of search server.
+
 ![Pages structure diagram](pages.svg)
 
-Every page has a server structure `Server` located in `server.go` file. These structures consists of interfaces which are implemented by the packages that are described above through dependency injection and some internal structures that are also injected with dependencies. The structure and interfaces of each server can be seen in the `server.go` files.
+Every page has a server structure `Server` located in `server.go` file. These structures consists of interfaces which are implemented by the packages that are described above through dependency injection and some internal structures that are also injected with dependencies. The structure and interfaces of each server can be seen in the corresponding `server.go` file.
 
 Each `server.go` file also contains router, specific for each page. Every path has defined its own handler.
 
@@ -428,7 +435,7 @@ Some packages have some extra files, specific for their functionality:
 - `sanitizer.go` - sanitize and transform texts seen on the course detail page. For more information, please refer to the file itself.
 - `search.go` - implements search functionality using Meilisearch client. For more information, please refer to the file itself or [Meilisearch API documentation](https://www.meilisearch.com/docs/reference/api).
 
-If you want to learn how to pages and servers work in greater detail, please read the [Add new page](./how-to-extend.md#add-new-page) part.
+If you want to learn how to pages and servers work in greater detail, please read the [Add new page](#add-new-page) part.
 
 ### Connecting the packages
 
@@ -440,7 +447,7 @@ Apart from packages, the `webapp` directory contains:
 - `Dockerfile` for building the application container
 - `go.mod` and `go.sum` files for Go module management
 - `main.go` file
-- `main_test.go` file containing integration tests, for more see [Testing](./testing.md)
+- `main_test.go` file containing integration tests, for more see [Testing](#testing)
 
 ## Bert
 
@@ -453,6 +460,7 @@ The endpoint expects JSON body with a single field `text` which is a text to be
 embedded. Response then contains single field `embedding` which is an array of
 float32 numbers representing the embedding.
 
+
 ## Cert
 
 `cert` directory contains `server.crt` and `server.key` files used self-signed SSL certificate for the application.
@@ -463,7 +471,7 @@ float32 numbers representing the embedding.
 
 ## ELT
 
-We would also like to give you an high level overview of how the ELT process
+We would also like to give you a high level overview of how the ELT process
 works.  We decided to implement it using Go and SQL. The entire process is
 simple and we didn't feel the need to use any sophisticated tools. Most of the
 logic is implemented in SQL. Go serves mainly as orchestrator of the process.
@@ -473,23 +481,7 @@ therefore running ELT deletes all the data in the database and repopulates it
 from scratch. The entire ELT process takes few minutes and doing anything more
 sophisticated would be overkill at this time.
 
-As the name suggest ELT consists of Extract, Load and Transform steps - we also
-added fourth step which is migration. The first two steps (extract and load) are
-pretty straightforward and each table is extracted in parallel into local
-database. The only caveat was related to bulk insert and you can read more about
-it in [this
-article](https://klotzandrew.com/blog/postgres-passing-65535-parameter-limit/).
-It also worth noting that before loading course descriptions into database we
-had to remove null bytes as the PostgreSQL doesn't support it. The extract
-and load process for each table is defined in structure (one structure for each
-source table) implementing `operation` interface (see below). The last tricky
-extraction was related to degree plans. We don't have access to list of degree
-plans (see [Data Model](./data-model.md)) with appropriate years and to fetch degree
-plan from SIS database we need degree plan code and year. We did a dirty
-workaround by taking studies in ten year window, drop duplicates and for each
-degree plan code extracted variant for every year. We don't know how good or bad
-the solution is because we don't know much about the degree plans but we believe
-this solution works.
+As the name suggest ELT consists of Extract, Load and Transform steps - we also added fourth step which is migration. The first two steps (extract and load) are pretty straightforward and each table is extracted in parallel into local database. The only caveat was related to bulk insert and you can read more about it in [this article](https://klotzandrew.com/blog/postgres-passing-65535-parameter-limit/). It also worth noting that before loading course descriptions into database we had to remove null bytes as the PostgreSQL doesn't support it. The extract and load process for each table is defined in structure (one structure for each source table) implementing `operation` interface (see below). The last tricky extraction was related to degree plans. It loads a list of degree plans, their courses, metadata, fields and statistics. The metadata is stored in one table and the courses in another table. For more detail see [Data Model](#data-model).
 
 ```go
 type operation interface {
@@ -499,15 +491,21 @@ type operation interface {
 }
 ```
 
-The third step (transform) can be a bit harder to follow. Some transformations
-can run in parallel but not all since some of them depend on the previous ones.
-Each transformation takes table and produces another table. Each transformation
-is defined as instance of `transformation` structure (see below).
+The third step (transform) can be a bit harder to follow. Some transformations can run in parallel but not all since some of them depend on the previous ones. Each standart transformation takes table and produces another table. Each standart transformation is defined as instance of `transformation` structure (see below).
 
 ```go
 type transformation struct {
     name  string // for logging purposes
     query string
+}
+```
+
+For transformations that are impossible to be made using just SQL, we use `goTransformation` structure (see below). As it implements the same `runner` interface as `transformation`, it can be used in the same way as `transformation` in the ELT process.
+
+```go
+type goTransformation struct {
+    name string // for logging purposes
+    run  func(*sqlx.DB) error
 }
 ```
 
@@ -523,6 +521,16 @@ Scripts that are used for initializing the local database. They are run when the
 postgres container is started for the first time. The scripts are run in
 lexicographical order.
 
+## Migrates
+
+This package contains SQL queries for migrating the database from v0-alpha, which is created by init_db scripts, to the v1-alpha version. In future we expect to have more versions and more migration queries.
+
+`elt-tables` directory contains SQL queries for creating tables and privileges needed for ELT process. After running those queries, you must rerun the ELT process to populate the tables with data. The queries are run in lexicographical order.
+
+`v1-alpha` directory contains SQL queries for migrating user tables to v1-alpha version. All relevant user data is saved, but some dependencies via foreign keys might be broken and these cases must be handled manually. We plan to improve this in the future.
+
+For running the migration, please refer to [How to run RecSIS](#how-to-run-recsis) part.
+
 ## Mock_cas
 
 Very simple service that mimics the Central Authentication Service (CAS) server.
@@ -536,4 +544,4 @@ documentation](https://apereo.github.io/cas/).
 
 ## Scripts
 
-This directory contains various scripts for managing the application. Their usage is explained in [How to run RecSIS](./how-to-run.md).
+This directory contains various scripts for managing the application. They all have been introduced in the [How to run RecSIS](#how-to-run-recsis) part.

@@ -14,13 +14,13 @@ templ Content(dp *degreePlanSearchPage, t text) {
         x-data="{ smallScreen: window.innerWidth < 768 }"
         @resize.window="smallScreen = window.innerWidth < 768"
     >   
-        @searchBar(dp.searchQuery, dp.selectedPlan, t)
-        @filterResults(dp, t)
+        @searchBar(dp.searchQuery, t)
+        @FilterResults(dp, t)
         @scripts()
     </div>
 }
 
-templ searchBar(searchQuery string, selectedPlan selectedPlan, t text) {
+templ searchBar(searchQuery string, t text) {
     <div class="position-relative" x-data="{ searchInput: '' }" x-init={ fmt.Sprintf("searchInput = '%s';", searchQuery) }>
         <input
             id="degreeplan-search-input"
@@ -30,12 +30,9 @@ templ searchBar(searchQuery string, selectedPlan selectedPlan, t text) {
             placeholder={ t.searchPlaceholder }
             hx-get={ t.language.LocalizeURL("/degreeplans/search") }
             hx-trigger="keyup changed delay:250ms, reload-search from:#degreeplan-search-content"
-            hx-target="#degreeplan-search-content"
+            hx-target="#degreeplan-filters-results"
             hx-swap="outerHTML"
             hx-include="#filter-form"
-            if selectedPlan.isAnySelected {
-                hx-vals={ fmt.Sprintf(`"%s": "%s"`, CompareUrlParam, selectedPlan.code) }
-            }
             autocomplete="off"
             x-model="searchInput"
             x-ref="searchInput">
@@ -49,7 +46,7 @@ templ searchBar(searchQuery string, selectedPlan selectedPlan, t text) {
     </div>
 }
 
-templ filterResults(dp *degreePlanSearchPage, t text) {
+templ FilterResults(dp *degreePlanSearchPage, t text) {
     <div id="degreeplan-filters-results" class="row mx-0" x-init="initializeTooltips()">
         <div id="dp-filter-section" class="col-12 col-md px-1 pb-3 px-md-3">
             @filterSection(dp, t)
@@ -66,12 +63,9 @@ templ filterSection(dp *degreePlanSearchPage, t text) {
         <form
             id="filter-form"
             hx-get={ t.language.LocalizeURL("/degreeplans/search") }
-            hx-target="#degreeplan-search-content"
+            hx-target="#degreeplan-filters-results"
             hx-swap="outerHTML"
             hx-include="#degreeplan-search-input"
-            if dp.selectedPlan.isAnySelected {
-                hx-vals={ fmt.Sprintf(`"%s": "%s"`, CompareUrlParam, dp.selectedPlan.code) }
-            }
             hx-trigger="change, filters-changed from:#degreeplan-search-content"
             x-data="{ showFilters: window.innerWidth > 767.5, expandedFilters: JSON.parse(sessionStorage.getItem('dp-expanded-filters')) || false }"
             @resize.window="showFilters = window.innerWidth > 767.5"
@@ -85,6 +79,7 @@ templ filterSection(dp *degreePlanSearchPage, t text) {
                         @filterList(dp.filters[languageFacetID], t)
                         @filterDropdown(dp.filters[validityFacetID], false, t)
                         @filterDropdown(dp.filters[fieldFacetID], true, t)
+                        @filterCompare(dp.selectedPlan)
                     </div>
                 </div>
                 <div class="d-flex d-md-none justify-content-center py-2 position-sticky bottom-0 bg-dp-filters-buttons rounded-5 shadow-md">
@@ -190,6 +185,12 @@ templ dropdownValue(name, value, label, desc string, count int, showCount bool, 
 	</li>
 }
 
+templ filterCompare(selectedPlan selectedPlan) {
+    if selectedPlan.isAnySelected {
+        <input type="hidden" name={ CompareUrlParam } value={ selectedPlan.code } />
+    }
+}
+
 templ activeFilters(dp *degreePlanSearchPage, t text) {
     <div id="active-filters">
         {{ anyActive := false }}
@@ -220,7 +221,7 @@ templ activeFilters(dp *degreePlanSearchPage, t text) {
             <button
                 class="btn btn-link text-secondary p-0 pb-3"
                 hx-get={ t.language.LocalizeURL("/degreeplans/search") }
-                hx-target="#degreeplan-search-content"
+                hx-target="#degreeplan-filters-results"
                 hx-swap="outerHTML show:window:top"
                 if dp.selectedPlan.isAnySelected {
                     hx-vals={ fmt.Sprintf(`"%s": "%s"`, CompareUrlParam, dp.selectedPlan.code) }
@@ -350,8 +351,9 @@ templ unselectForCompareButton(mobile bool, t text) {
         data-bs-delay={ fmt.Sprintf(`{ "show": 300, "hide": 0 }`) }
         data-bs-title={ t.unselectForCompare }
         hx-get={ templ.SafeURL(t.language.LocalizeURL("/degreeplans/search")) }
-        hx-target="#degreeplan-search-content"
+        hx-target="#degreeplan-filters-results"
         hx-include="#degreeplan-search-input, #filter-form"
+        hx-vals={ fmt.Sprintf(`"%s": ""`, CompareUrlParam) }
         hx-swap="outerHTML"
         @click="reloadTooltips()">
         <i class="bi bi-bookmark-check-fill"></i>
@@ -392,7 +394,7 @@ templ selectForCompareButton(code string, mobile bool, t text) {
         data-bs-delay={ fmt.Sprintf(`{ "show": 300, "hide": 0 }`) }
         data-bs-title={ t.selectForCompare }
         hx-get={ templ.SafeURL(t.language.LocalizeURL("/degreeplans/search")) }
-        hx-target="#degreeplan-search-content"
+        hx-target="#degreeplan-filters-results"
         hx-include="#degreeplan-search-input, #filter-form"
         hx-vals={ fmt.Sprintf(`"%s": "%s"`, CompareUrlParam, code) }
         hx-swap="outerHTML"

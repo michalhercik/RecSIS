@@ -92,13 +92,53 @@ you need access to Acheron server to run ELT.
 
 ### Clone repository
 
+The project provides two tagged releases:
+
+- **v0-alpha** – version before the Degree Plans page update  
+- **v1-alpha** – version after the update
+
+> The `main` branch may change in the future.  
+> To run a specific version of the system, always checkout a release tag instead of relying on `main`.
+
 **Prerequisites:**
- - Member of RecSIS repo.
- - Set up SSH for GitHub account (see [github docs](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)).
+- Configure SSH access to GitHub (see [GitHub documentation](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account))
 
 **Steps:**
-```
+
+Clone the repository:
+
+```bash
 git clone git@github.com:michalhercik/RecSIS.git
+cd RecSIS
+```
+
+List available releases:
+
+```bash
+git tag
+```
+
+Checkout a specific version:
+
+```bash
+# Version BEFORE degree plans page update
+git checkout v0-alpha
+
+# Version WITH new degree plans page
+git checkout v1-alpha
+```
+
+> On newer Git versions you can also use:
+>
+> ```bash
+> git switch v1-alpha
+> ```
+
+Alternatively, if you already cloned the repository in the past, your main branch is probably up to date with v0-alpha. If you want to run v1-alpha, you have to pull from origin and then you can just switch to the tag as shown above. If you want to run v0-alpha, you can just stay on the main branch, but make sure it is up to date with the latest changes:
+
+```bash
+git pull origin main
+git checkout v1-alpha
 ```
 
 ### Run
@@ -115,54 +155,98 @@ git clone git@github.com:michalhercik/RecSIS.git
     - The requirement can be ignored if you don't mind RecSIS without any SIS
     data.
 
-Before running the RecSIS you need to set environment variables required by
-`docker-compose.yml` and webapp. The easiest way is to create a file named
-`docker.env` with the required variables and load it in your terminal whenever
-you are working with `docker compose`. All `.env` files are not tracked so don't
-be afraid of password exposure. Variables needed to be set can be found in
-`docker-compose.yml` file under *environment* field of each service.
-Alternatively if you run the command `docker compose` it will warn you about
-missing variables.
+Before running the RecSIS you need to set environment variables required by `docker-compose.yml` and webapp. The easiest way is to create a file named `docker.env` with the required variables and load it in your terminal whenever you are working with `docker compose` or the webapp in general. All `.env` files are not tracked so don't be afraid of password exposure. Variables needed to be set can be found in `docker-compose.yml` file under *environment* field of each service. Alternatively if you run the command `docker compose` it will warn you about missing variables.
 
-All environment variables with `_PASS` suffix (except `SIS_DB_PASS`) and `MEILI_MASTER_KEY` can be set to any string you want. The string will be used as a password for the corresponding service. Same goes for `POSTGRES_USER` and `POSTGRES_PASSWORD`. `SIS_DB_USER`, `SIS_DB_PASS` and `ACHERON_USER` must be set correctly and if you need them, please contact us at [recsis@email.cz](mailto:recsis@email.cz).
+All environment variables with `_PASS` suffix (except `SIS_DB_PASS`) and `MEILI_MASTER_KEY` can be set to any string you want. The string will be used as a password for the corresponding service. Same goes for `POSTGRES_USER` and `POSTGRES_PASSWORD`. `POSTGRES_OWNER` must be set to `postgres`. `SIS_DB_USER`, `SIS_DB_PASS` and `ACHERON_USER` must be set correctly and if you need them, please contact us at [recsis@email.cz](mailto:recsis@email.cz). For ELT you might want to also set `ELT_MAX_OPEN_CONNS`, `ELT_MAX_IDLE_CONNS`, and `ELT_CONN_MAX_LIFETIME`, first two should be numbers, and the last one should be a duration string parsable by Go's `time.ParseDuration()` function. Although, we have fallback values for these three variables in case they are not set, so you can ignore them if you don't know what to set them to or you don't need ELT process.
 
 You can then load it in your terminal with the following command:
 
 For **Windows**:
 
-```
+```shell
 scripts\init-env.ps1 [.env file path]
 ```
 
 For **Linux**:
 
-```
+```bash
 source [.env file path]
 export $(cut -d= -f1 [.env file path])
 ```
 
-The next step is to run the `docker compose` command. This will build and run
-the necessary containers. The command will also automatically download the
-required images if they are not already present on your system.
+The next step depends on which version you started and which version you want to run. If you already have v0-alpha running and you want to run v0-alpha, do nothing.
 
-> NOTE: If you skipped the Acheron SSH setup step you should **not** run the
-**elt** service.
+If you started with v0-alpha and you want to run v1-alpha, you need to migrate the database to v1-alpha version. Then you need to rebuild the elt container to have data compatible with v1-alpha. You can do it with the following commands:
+
+> NOTE: If you skipped the Acheron SSH setup step you should **not** run the **elt** service.
 
 **Steps:**
+
+For **Windows**
+```shell
+# migrate tables populated by ELT
+.\scripts\migrate.ps1 -MigrationsDir .\migrates\elt-tables -Container recsis-postgres
+# Migrate user tables (without losing user data)
+.\scripts\migrate.ps1 -MigrationsDir .\migrates\v1-alpha -Container recsis-postgres
+
+docker compose up --build elt
 ```
+
+For **Linux**
+```bash
+# migrate tables populated by ELT
+./scripts/migrate.sh ./migrates/elt-tables recsis-postgres
+# Migrate user tables (without losing user data)
+./scripts/migrate.sh ./migrates/v1-alpha recsis-postgres
+
+docker compose up --build elt
+```
+
+If you cloned the repository for the first time and you want to run v0-alpha, you can just run the command `docker compose` as shown in the next step. This will build and run the necessary containers. The command will also automatically download the required images if they are not already present on your system.
+
+> NOTE: If you skipped the Acheron SSH setup step you should **not** run the **elt** service.
+
+**Steps:**
+```bash
 docker compose up -d postgres meilisearch elt bert mockcas adminer
 ```
 
-Now that Meilisearch is running you need to configure it using script. The
-script will set aliases, filterable, sortable and searchable attributes.
+If you want to run v1-alpha, you must switch to v1-alpha version as shown in the [Clone](#clone-repository) step and then run the command `docker compose` as shown above but without the elt service.
+
+Then you have to migrate to v1-alpha version as shown in the previous variant. Finally you have to build and run the elt service to populate the database with data from SIS.
+
+> NOTE: If you skipped the Acheron SSH setup step you should **not** run the **elt** service.
+
+**Steps:**
+```bash
+docker compose up -d postgres meilisearch bert mockcas adminer
+```
 
 For **Windows**
+```shell
+.\scripts\migrate.ps1 -MigrationsDir .\migrates\elt-tables -Container recsis-postgres
+.\scripts\migrate.ps1 -MigrationsDir .\migrates\v1-alpha -Container recsis-postgres
 ```
+
+For **Linux**
+```bash
+./scripts/migrate.sh ./migrates/elt-tables recsis-postgres
+./scripts/migrate.sh ./migrates/v1-alpha recsis-postgres
+```
+
+```bash
+docker compose up --build elt
+```
+
+For any version, now that Meilisearch is running you need to configure it using script. The script will set aliases, filterable, sortable and searchable attributes.
+
+For **Windows**
+```shell
 .\scripts\init-meili.ps1
 ```
 
 For **Linux**
-```
+```bash
 ./scripts/init-meili.sh
 ```
 
@@ -171,7 +255,7 @@ which is responsible for generating HTML templates from `.templ` files
 and [wgo](https://github.com/bokwoon95/wgo) which watches live changes in the source files and rebuilds the webapp.
 
 **Steps:**
-```
+```bash
 go install github.com/a-h/templ/cmd/templ@v0.2.793
 go install github.com/bokwoon95/wgo@latest
 ```
@@ -181,12 +265,12 @@ script will automatically rebuild the webapp whenever you change any of the
 source files. It also always generates HTML templates.
 
 For **Windows**
-```
+```shell
 .\scripts\watch.ps1
 ```
 
 For **Linux**
-```
+```bash
 ./scripts/watch.sh
 ```
 
@@ -197,15 +281,25 @@ If everything went well you should be able to access the webapp at
 
 For **Windows**:
 
-```
+```shell
 # Clone RecSIS repo
 git clone git@github.com:michalhercik/RecSIS.git
+
+# Switch to the desired version
+git switch v1-alpha
 
 # Load environment variables
 scripts\init-env.ps1 [.env file path]
 
 # Build & run containers
-docker compose up -d postgres meilisearch elt bert mockcas adminer
+docker compose up -d postgres meilisearch bert mockcas adminer
+
+# Migrate database to v1-alpha version
+.\scripts\migrate.ps1 -MigrationsDir .\migrates\elt-tables -Container recsis-postgres
+.\scripts\migrate.ps1 -MigrationsDir .\migrates\v1-alpha -Container recsis-postgres
+
+# Populate database with data from SIS
+docker compose up --build elt
 
 # Init Meilisearch
 .\scripts\init-meili.ps1
@@ -220,16 +314,26 @@ go install github.com/bokwoon95/wgo@latest
 
 For **Linux**:
 
-```
+```bash
 # Clone RecSIS repo
 git clone git@github.com:michalhercik/RecSIS.git
+
+# Switch to the desired version
+git switch v1-alpha
 
 # Load environment variables
 source [.env file path]
 export $(cut -d= -f1 [.env file path])
 
 # Build & run containers
-docker compose up -d postgres meilisearch elt bert mockcas adminer
+docker compose up -d postgres meilisearch bert mockcas adminer
+
+# Migrate database to v1-alpha version
+./scripts/migrate.sh ./migrates/elt-tables recsis-postgres
+./scripts/migrate.sh ./migrates/v1-alpha recsis-postgres
+
+# Populate database with data from SIS
+docker compose up --build elt
 
 # Init Meilisearch
 ./scripts/init-meili.sh
@@ -255,10 +359,10 @@ We start with the most important part, which is the webapp. It consists of sever
 
 This package is really simple and serves as an extension to the standard library's string functions. If you need to define any custom string manipulation functions, this is the place to do it.
 
-Functions:
-
 - `Capitalize(string) string`
   > Capitalizes the first letter of the input string. Supports UTF-8 strings.
+- `SplitByLastSpace(s string) (string, string)`
+  > Splits the input string into two parts based on the last occurrence of a space character. Returns the part before the last space and the part after the last space. If there is no space in the input string, it returns the original string and an empty string.
 
 #### `language`
 
@@ -331,9 +435,10 @@ Logout and login pages (their templated HTML) can be seen in `view.templ` file. 
 
 This package provides structures that maps to database tables. The mapping is not necessary one to one, it can be used to combine multiple tables into one structure or to split one table into multiple structures. The main idea is to have only one existing mapping of column to structure field so that when any change to the name happens it can be easily resolved. This package should be used whenever relevant data are fetched from a database. After data are fetched from the database into `dbds` structures they should be remapped to local structures to depend on common structures as little as possible so that any change to `dbds` package can be easily resolved.
 
-This package creates mapping for the most common structures, which are structures for course and teacher. It is therefore divided into two files, where each file contains definitions relevant to its specific structure. The files are:
+This package creates mapping for the most common structures, which are structures for course,  teacher and degree plan. It is therefore divided into three files, where each file contains definitions relevant to its specific structure. The files are:
 - `course.go`: contains struct `Course` that represents a course in the system. It should be used whenever data related to courses is fetched from the database (as can be seen in pages-related `database.go` files). The file also contains another struct definitions related to course and if you want to learn more about them, please explore the file and its usage yourself, and explore the [Data Model](#data-model).
 - `teacher.go`: contains struct `Teacher` that represents a teacher in the system. It also defines alias for slice of teachers `TeacherSlice`. The slice is used in `Course` struct, but also in some `database.go` files. For better understanding, please explore the structs usage yourself, and explore the [Data Model](#data-model).
+- `plan.go`: contains struct `DegreePlan` that represents a degree plan in the system. It should be used whenever data related to degree plans metadata is fetched from the database. For better understanding, please explore the structs usage yourself, and explore the [Data Model](#data-model).
 
 Typical usage of this package can be demonstrated on `database.go` file from `courses` package. You can see that the `dbds` package is imported
 ```go
@@ -608,24 +713,24 @@ The `page` API is not interesting, and so, the package will be documented throug
 In `main.go`, a `Page` instance is created and configured with the necessary parameters.
 ```go
 pageTempl := page.Page{
-	Error: errorHandler,
-	Home:  homeRoot,
-	NavItems: []page.NavItem{
-		{Title: language.MakeLangString("Domů", "Home"), Path: homeRoot, Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
-		{Title: language.MakeLangString("Hledání", "Search"), Path: coursesRoot, Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
-		{Title: language.MakeLangString("Blueprint", "Blueprint"), Path: blueprintRoot, Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
-		{Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: degreePlanRoot, Skeleton: degreeplan.Skeleton, Indicator: "#degreeplan-skeleton"},
-	},
-	Search: page.MeiliSearch{
-		Client: meiliClient,
-		Index:  "courses",
-		Limit:  5,
-	},
-	Param:          "search",
-	SearchEndpoint: coursesRoot,
-	ResultsDetailEndpoint: func(code string) string {
-		return courseDetailRoot + code
-	},
+  Error: errorHandler,
+  Home:  homeRoot,
+  NavItems: []page.NavItem{
+    {Title: language.MakeLangString("Domů", "Home"), Path: homeRoot, Skeleton: home.Skeleton, Indicator: "#home-skeleton"},
+    {Title: language.MakeLangString("Hledání", "Search"), Path: coursesRoot, Skeleton: courses.Skeleton, Indicator: "#courses-skeleton"},
+    {Title: language.MakeLangString("Blueprint", "Blueprint"), Path: blueprintRoot, Skeleton: blueprint.Skeleton, Indicator: "#blueprint-skeleton"},
+    {Title: language.MakeLangString("Studijní plán", "Degree plan"), Path: degreePlanDetailRoot, Skeleton: degreeplandetail.Skeleton, Indicator: "#degreeplan-skeleton"},
+  },
+  Search: page.MeiliSearch{
+    Client: meiliClient,
+    Index:  "courses",
+    Limit:  5,
+  },
+  Param:          "search",
+  SearchEndpoint: coursesRoot,
+  ResultsDetailEndpoint: func(code string) string {
+    return courseDetailRoot + code
+  },
 }
 pageTempl.Init()
 ```
@@ -633,23 +738,27 @@ pageTempl.Init()
 
 The result is than injected into every page server. Servers either use the `Page` instance directly or wrap it in `PageWithNoFiltersAndForgetsSearchQueryOnRefresh` which does exactly what its name suggests. Both `Page` and `PageWithNoFiltersAndForgetsSearchQueryOnRefresh` have `View()` method, which is responsible for rendering the page and its content. Difference between the two methods can be seen in `page.go` file directly. They both use the same private method which created a page model from provided parameters and returns template for the page which can be rendered. The most important parameter is template `templ.Component` for the content of the page.
 
-The `View()` method is used in `server.go` files for rendering pages. For more information, please refer to the `server.go` file. The server always provide content for the page.
+The `View()` method is used in `server.go` files for rendering pages. For more information, please refer to any `server.go` file. The servers always provide content for the page.
 
 ##### Specific pages
 
-In our application, we currently have five specific pages:
+In our application, we currently have six (or seven) specific pages:
 
 1. Home page
 2. Blueprint page
 3. Courses page
 4. Course detail page - there is a course detail page for each course, but they all share the same template
-5. Degree plan page
+5. Degree plan search page
+6. Degree plan detail page - there is a degree plan detail page for each degree plan, but they all share the same template
+7. (can be seen as a part of 5.) Degree plan compare page
 
 Their structure is similar, but each page has its own specific content and functionality. An overview of how to pages work can be seen in the following diagram:
 
+> NOTE: All degree plan related pages are squashed into a single section, as we expect to do exactly that in the future. Specifically, the degree plan search, detail, and compare pages will be grouped together into a single server with multiple sub-servers. This is already somehow done in `degreeplans` package where compare server is sub-server of search server.
+
 ![Pages structure diagram](pages.svg)
 
-Every page has a server structure `Server` located in `server.go` file. These structures consists of interfaces which are implemented by the packages that are described above through dependency injection and some internal structures that are also injected with dependencies. The structure and interfaces of each server can be seen in the `server.go` files.
+Every page has a server structure `Server` located in `server.go` file. These structures consists of interfaces which are implemented by the packages that are described above through dependency injection and some internal structures that are also injected with dependencies. The structure and interfaces of each server can be seen in the corresponding `server.go` file.
 
 Each `server.go` file also contains router, specific for each page. Every path has defined its own handler.
 
@@ -713,23 +822,7 @@ therefore running ELT deletes all the data in the database and repopulates it
 from scratch. The entire ELT process takes few minutes and doing anything more
 sophisticated would be overkill at this time.
 
-As the name suggest ELT consists of Extract, Load and Transform steps - we also
-added fourth step which is migration. The first two steps (extract and load) are
-pretty straightforward and each table is extracted in parallel into local
-database. The only caveat was related to bulk insert and you can read more about
-it in [this
-article](https://klotzandrew.com/blog/postgres-passing-65535-parameter-limit/).
-It also worth noting that before loading course descriptions into database we
-had to remove null bytes as the PostgreSQL doesn't support it. The extract
-and load process for each table is defined in structure (one structure for each
-source table) implementing `operation` interface (see below). The last tricky
-extraction was related to degree plans. We don't have access to list of degree
-plans (see [Data Model](#data-model)) with appropriate years and to fetch degree
-plan from SIS database we need degree plan code and year. We did a dirty
-workaround by taking studies in ten year window, drop duplicates and for each
-degree plan code extracted variant for every year. We don't know how good or bad
-the solution is because we don't know much about the degree plans but we believe
-this solution works.
+As the name suggest ELT consists of Extract, Load and Transform steps - we also added fourth step which is migration. The first two steps (extract and load) are pretty straightforward and each table is extracted in parallel into local database. The only caveat was related to bulk insert and you can read more about it in [this article](https://klotzandrew.com/blog/postgres-passing-65535-parameter-limit/). It also worth noting that before loading course descriptions into database we had to remove null bytes as the PostgreSQL doesn't support it. The extract and load process for each table is defined in structure (one structure for each source table) implementing `operation` interface (see below). The last tricky extraction was related to degree plans. It loads a list of degree plans, their courses, metadata, fields and statistics. The metadata is stored in one table and the courses in another table. For more detail see [Data Model](#data-model).
 
 ```go
 type operation interface {
@@ -739,15 +832,21 @@ type operation interface {
 }
 ```
 
-The third step (transform) can be a bit harder to follow. Some transformations
-can run in parallel but not all since some of them depend on the previous ones.
-Each transformation takes table and produces another table. Each transformation
-is defined as instance of `transformation` structure (see below).
+The third step (transform) can be a bit harder to follow. Some transformations can run in parallel but not all since some of them depend on the previous ones. Each standart transformation takes table and produces another table. Each standart transformation is defined as instance of `transformation` structure (see below).
 
 ```go
 type transformation struct {
     name  string // for logging purposes
     query string
+}
+```
+
+For transformations that are impossible to be made using just SQL, we use `goTransformation` structure (see below). As it implements the same `runner` interface as `transformation`, it can be used in the same way as `transformation` in the ELT process.
+
+```go
+type goTransformation struct {
+    name string // for logging purposes
+    run  func(*sqlx.DB) error
 }
 ```
 
@@ -762,6 +861,16 @@ migration of data into search engine. This should be addressed in the future.
 Scripts that are used for initializing the local database. They are run when the
 postgres container is started for the first time. The scripts are run in
 lexicographical order.
+
+### Migrates
+
+This package contains SQL queries for migrating the database from v0-alpha, which is created by init_db scripts, to the v1-alpha version. In future we expect to have more versions and more migration queries.
+
+`elt-tables` directory contains SQL queries for creating tables and privileges needed for ELT process. After running those queries, you must rerun the ELT process to populate the tables with data. The queries are run in lexicographical order.
+
+`v1-alpha` directory contains SQL queries for migrating user tables to v1-alpha version. All relevant user data is saved, but some dependencies via foreign keys might be broken and these cases must be handled manually. We plan to improve this in the future.
+
+For running the migration, please refer to [How to run RecSIS](#how-to-run-recsis) part.
 
 ### Mock_cas
 
@@ -782,7 +891,7 @@ This directory contains various scripts for managing the application. They all h
 
 ### Source
 
-The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the the schema is also used by another application with different needs we don't use all the synonyms. Below are a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
+The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the schema is also used by another application with different needs we don't use all the synonyms. Below are a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
 
  - UCIT - Basic info about teachers.
  - FAK - Basic info about faculty. 
@@ -793,7 +902,8 @@ The source data model is already partially preprocessed SIS data model. It is pr
  - ANKECY - Written survey results with anonymized data about author.
  - PKLAS - Maps course to classification.
  - PTRIDA - Maps course to class.
- - PREQ - Maps course to different types of requisites. The requisites are usually simple course codes. But they can be also something more complicated. For example course NPRG041 has disjunctive prerequisites. In the table it is still represented as single course code N#IA028. N#IA028 also exists in table POVINN. Currently we don't know to translate such requisite correctly.
+ - PREQ - Maps course to its requisites.
+ - PSKUP - Maps group requisites to its definition. Can be recursive. If a requisite is a group can be found in povinn.pskupina column.
  - JAZYK - Maps language code to label.
  - KLAS - Maps Classification code to label.
  - TRIDA - Maps Class code to label and faculty.
@@ -805,8 +915,16 @@ The source data model is already partially preprocessed SIS data model. It is pr
  - ZSEM - Maps semester code to label.
  - PVYUC - Maps course state (taught/cancelled/...) to label.
  - TYPMEM - Maps course description (annotation, ...) type code to label.
- - OBOR - Basic info about study field. 
- - STUDPLAN - This is an Oracle database package. By providing degree plan code and academic year it returns degree plan. For example `SELECT * FROM TABLE(study_plan.stud_plan('NISD23N', 2023));`. The RecSIS currently doesn't work with BLOC_GRADE column which indicates recommended year of study. It is possible that in the results are more useful columns that are currently not used. It would be great to investigate it more and implement more features related to degree plan in RecSIS. 
+ - STUPR - Info about study programs.
+ - OBOR - Basic info about study fields. 
+ - NOBOR - Basic info about another layer of study fields.
+ - PLANY - Basic info about degree plans.
+ - FDOPARAM - Metadata about fields such as validity.
+ - STUDPLAN - This is an Oracle database package. By providing degree plan code and academic year it returns degree plan courses with many details. For example `SELECT * FROM TABLE(study_plan.stud_plan('NISD23N', 2026));` returns the selected plan variant in selected year. It also provides `stud_plan_tree`, `stud_plan_exams` and `stud_plan_validation` functions. We do not use them at the moment as the data in them do not reflect reality or are not important for our application, but they might be useful in the future.
+ - MFFSTUD10 - Statistics about current students studying plans, fields, programs, ...
+ - MFFABS10 - Statistics about graduates based on plans, fields, programs, ...
+ - MFFZMEN10 - Statistics about students changing their plans, fields, programs, ...
+ - MFFPOSTUP10 - Statistics about students progression to higher levels of study based on plans, fields, programs, ... (e.g. from Bc to Mgr).
 
 We have also access to two more tables which will be useful in the future for more advanced recommendation engine.
  - STUDIUM - Anonymized basic info about student study.
@@ -822,15 +940,37 @@ There are two target models. One is stored in PostgreSQL and the second one in M
 
 ### MeiliSearch
 
-The degree_plans index is used to search in degree plans. The surveys index is used to search in surveys. Both degree_plans and surveys indices has all the data needed to display search results. Exact configuration (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1). Below are examples of documents stored in each index.
+The degree_plans index is used to search and filter degree plans. It has majority of the data necessary to provide search results but we still take them from database, as it is more friendly for future changes. The surveys index is used to search in surveys. It has all the data needed to display search results. Exact configuration (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1) scripts. Below are examples of documents stored in each index.
 
 **degree_plans**  
 ```json
 {
   "id": "number - unique identifier",
   "code": "string - degree plan code",
+  "title": {
+    "cs": "string - degree plan title in czech",
+    "en": "string - degree plan title in english"
+  },
+  "faculty": "string - faculty code",
+  "section": "string - section code (represents informatics/mathematics/...)",
+  "field": {
+    "code": "string - study field code",
+    "sims-code": "string - study field code used in SIMS system",
+    "sims-title": {
+      "cs": "string - SIMS study field title in czech",
+      "en": "string - SIMS study field title in english"
+    },
+    "title": {
+      "cs": "string - study field title in czech",
+      "en": "string - study field title in english"
+    }
+  },
   "study_type": "string - Bc, NMgr, ...",
-  "title": "string - title of of associated study field",
+  "teaching_lang": "string - teaching language code",
+  "validity": {
+    "from": "number - academic year when the degree plan becomes valid",
+    "to": "number - academic year when the degree plan becomes invalid"
+  }
 }
 ```
 
@@ -859,6 +999,7 @@ The degree_plans index is used to search in degree plans. The surveys index is u
     "name": {
       "cs": "string - study type name in czech",
       "en": "string - study type name in english"
+    }
   },
   "teacher": {
     "id": "number - SIS id",
@@ -943,9 +1084,12 @@ The degree_plans index is used to search in degree plans. The surveys index is u
 
 ### PostgreSQL
 
-Data model of PostgreSQL is bit more complex but still fairly simple as can be seen in the diagram below. It's definition can be seen in [30-create-tables.sql](../init_db/30-create-tables.sql). The tables populated by elt are courses, filters, filter_categories, filter_values, degree_plans, degree_plan_list and degree_plan_years. In those tables are stored data about courses and degree plans. Those tables are not expected to be updated by any other part of the system. we tried make those tables as simple as possible since we do not update them and most of the values are only to be viewed by users. Other tables are on the other hand updated only by the webapp. Their purpose is to store application specific data such as courses added to blueprint, course ratings and user sessions.
+Data model of PostgreSQL is bit more complex but still fairly simple as can be seen in the diagram below. It's definition can be seen in [30-create-tables.sql](../init_db/30-create-tables.sql) for version v0-alpha. For v1-alpha, you can see the definition in migrates, elt tables in [elt-tables/10-webapp-schema.sql](../migrates/elt-tables/10-webapp-schema.sql) and user table alternation in [v1-alpha/10-webapp-schema.sql](../migrates/v1-alpha/10-webapp-schema.sql). The tables populated by elt are courses, filters, filter_categories, filter_values, degree_plans, degree_plan_list and degree_plan_courses. In those tables are stored data about filters, courses and degree plans. Those tables are not expected to be updated by any other part of the system. we tried make those tables as simple as possible since we do not update them and most of the values are only to be viewed by users. Other tables are on the other hand updated only by the webapp. Their purpose is to store application specific data (user data) such as courses added to blueprint, course ratings and user sessions.
 
-![](./recsis-data-model.png)
+![](./data-model.svg)
+
+> Made with [dbdiagram.io](https://dbdiagram.io/) from SQL dump.
+
 
 #### Course 
 
@@ -959,8 +1103,8 @@ Blueprint data are properly normalized across these tables. The motivation behin
 
 #### Degree plan
 
-**Relevant tables:** *degree_plans, degree_plan_list, degree_plan_years*  
-Degree plan is stored also denormalized to allow easier querying. To ensure valid degree plans stored in *studies* plan we created *degree_plan_list* and *degree_plan_years* tables. The first one stores all valid degree plans and the second one stores all valid academic years. This allows us to validate user input when user selects his/her degree plan and academic year.
+**Relevant tables:** *degree_plans, degree_plan_list, degree_plan_courses*  
+Degree plan is stored as denormalized courses to allow easier querying. All metadata is stored in *degree_plans* table. To ensure valid degree plans stored in *studies* plan we created *degree_plan_list* table. It stores all valid degree plans. This allows us to validate user input when user selects their degree plan.
 
 #### Session
 
@@ -970,7 +1114,7 @@ To store session key used to authenticate logged users. The token references tok
 #### Studies
 
 **Relevant tables:** *studies*  
-To store studies related information about a user. This includes study plan and year of enrollment.
+To store studies related information about a user. This includes study plan.
 
 #### Rating
 
@@ -985,8 +1129,8 @@ One important note is that you need to define environment variables for the test
 
 ```json
 "go.testEnvVars": {
-  "RECSIS_WEBAPP_DB_PASS": "your_password_defined_in_env",
-  "MEILI_MASTER_KEY": "your_meili_master_key_defined_in_env"
+  "RECSIS_WEBAPP_DB_PASS": "[your_password_defined_in_env]",
+  "MEILI_MASTER_KEY": "[your_meili_master_key_defined_in_env]"
 },
 ```
 
