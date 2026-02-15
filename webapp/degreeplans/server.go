@@ -133,7 +133,7 @@ func (s Server) searchContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("HX-Push-Url", s.parseUrl(r.URL.Query(), lang))
-	content := Content(degreePlanSearchContent, t)
+	content := FilterResults(degreePlanSearchContent, t)
 	err = content.Render(r.Context(), w)
 	if err != nil {
 		s.Error.CannotRenderComponent(w, r, errorx.AddContext(err), lang)

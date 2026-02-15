@@ -17,7 +17,7 @@
 
 ## Source
 
-The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the the schema is also used by another application with different needs we don't use all the synonyms. Below are a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
+The source data model is already partially preprocessed SIS data model. It is presented to us in form of Oracle synonyms and tables. Because the schema is also used by another application with different needs we don't use all the synonyms. Below are a list of synonyms, tables and one package which are currently used by RecSIS (The names are meaningful acronyms in czech language).  
 
  - UCIT - Basic info about teachers.
  - FAK - Basic info about faculty. 
@@ -28,7 +28,8 @@ The source data model is already partially preprocessed SIS data model. It is pr
  - ANKECY - Written survey results with anonymized data about author.
  - PKLAS - Maps course to classification.
  - PTRIDA - Maps course to class.
- - PREQ - Maps course to different types of requisites. The requisites are usually simple course codes. But they can be also something more complicated. For example course NPRG041 has disjunctive prerequisites. In the table it is still represented as single course code N#IA028. N#IA028 also exists in table POVINN. Currently we don't know to translate such requisite correctly. 
+ - PREQ - Maps course to its requisites.
+ - PSKUP - Maps group requisites to its definition. Can be recursive. If a requisite is a group can be found in povinn.pskupina column.
  - JAZYK - Maps language code to label.
  - KLAS - Maps Classification code to label.
  - TRIDA - Maps Class code to label and faculty.
@@ -40,8 +41,16 @@ The source data model is already partially preprocessed SIS data model. It is pr
  - ZSEM - Maps semester code to label.
  - PVYUC - Maps course state (taught/cancelled/...) to label.
  - TYPMEM - Maps course description (annotation, ...) type code to label.
- - OBOR - Basic info about study field. 
- - STUDPLAN - This is an Oracle database package. By providing degree plan code and academic year it returns degree plan. For example `SELECT * FROM TABLE(study_plan.stud_plan('NISD23N', 2023));`. The RecSIS currently doesn't work with BLOC_GRADE column which indicates recommended year of study. It is possible that in the results are more useful columns that are currently not used. It would be great to investigate it more and implement more features related to degree plan in RecSIS. 
+ - STUPR - Info about study programs.
+ - OBOR - Basic info about study fields. 
+ - NOBOR - Basic info about another layer of study fields.
+ - PLANY - Basic info about degree plans.
+ - FDOPARAM - Metadata about fields such as validity.
+ - STUDPLAN - This is an Oracle database package. By providing degree plan code and academic year it returns degree plan courses with many details. For example `SELECT * FROM TABLE(study_plan.stud_plan('NISD23N', 2026));` returns the selected plan variant in selected year. It also provides `stud_plan_tree`, `stud_plan_exams` and `stud_plan_validation` functions. We do not use them at the moment as the data in them do not reflect reality or are not important for our application, but they might be useful in the future.
+ - MFFSTUD10 - Statistics about current students studying plans, fields, programs, ...
+ - MFFABS10 - Statistics about graduates based on plans, fields, programs, ...
+ - MFFZMEN10 - Statistics about students changing their plans, fields, programs, ...
+ - MFFPOSTUP10 - Statistics about students progression to higher levels of study based on plans, fields, programs, ... (e.g. from Bc to Mgr).
 
 We have also access to two more tables which will be useful in the future for more advanced recommendation engine.
  - STUDIUM - Anonymized basic info about student study.
@@ -55,21 +64,43 @@ We have also access to two more tables which will be useful in the future for mo
 
 There are two target models. One is stored in PostgreSQL and the second one in MeiliSearch. The later is used only for searching courses, degree plans and surveys. There is no synchronization between the two models. The data in MeiliSearch cannot be changed by webapp and are only updated by ELT process. The MeiliSearch data model consists of three indices - courses, degree_plans and surveys. The courses index is used to search in courses and only to retrieve relevant course codes. Rest of the data is then fetched from PostgreSQL - call to PostgreSQL would have to been made anyway since blueprint is stored there and by this we don't have to combine results from the two sources.
 
-### MeiliSearch
+## MeiliSearch
 
-The degree_plans index is used to search in degree plans. The surveys index is used to search in surveys. Both degree_plans and surveys indices has all the data needed to display search results. Exact configuration (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1). Below are examples of documents stored in each index.
+The degree_plans index is used to search and filter degree plans. It has majority of the data necessary to provide search results but we still take them from database, as it is more friendly for future changes. The surveys index is used to search in surveys. It has all the data needed to display search results. Exact configuration (including synonyms definition, filterable values and others) can be seen in [init-meili](../scripts/init-meili.ps1) scripts. Below are examples of documents stored in each index.
 
-#### degree_plans 
+**degree_plans**  
 ```json
 {
   "id": "number - unique identifier",
   "code": "string - degree plan code",
+  "title": {
+    "cs": "string - degree plan title in czech",
+    "en": "string - degree plan title in english"
+  },
+  "faculty": "string - faculty code",
+  "section": "string - section code (represents informatics/mathematics/...)",
+  "field": {
+    "code": "string - study field code",
+    "sims-code": "string - study field code used in SIMS system",
+    "sims-title": {
+      "cs": "string - SIMS study field title in czech",
+      "en": "string - SIMS study field title in english"
+    },
+    "title": {
+      "cs": "string - study field title in czech",
+      "en": "string - study field title in english"
+    }
+  },
   "study_type": "string - Bc, NMgr, ...",
-  "title": "string - title of of associated study field",
+  "teaching_lang": "string - teaching language code",
+  "validity": {
+    "from": "number - academic year when the degree plan becomes valid",
+    "to": "number - academic year when the degree plan becomes invalid"
+  }
 }
 ```
 
-#### survey  
+**survey**  
 ```json
 {
   "id": "number - unique identifier",
@@ -94,6 +125,7 @@ The degree_plans index is used to search in degree plans. The surveys index is u
     "name": {
       "cs": "string - study type name in czech",
       "en": "string - study type name in english"
+    }
   },
   "teacher": {
     "id": "number - SIS id",
@@ -105,7 +137,7 @@ The degree_plans index is used to search in degree plans. The surveys index is u
 }
 ```
 
-#### courses  
+**courses**  
 ```json
 {
   "id": "number - SIS id",
@@ -176,38 +208,41 @@ The degree_plans index is used to search in degree plans. The surveys index is u
 }
 ```
 
-### PostgreSQL
+## PostgreSQL
 
-Data model of PostgreSQL is bit more complex but still fairly simple as can be seen in the diagram below. It's definition can be seen in [30-create-tables.sql](../init_db/30-create-tables.sql). The tables populated by elt are courses, filters, filter_categories, filter_values, degree_plans, degree_plan_list and degree_plan_years. In those tables are stored data about courses and degree plans. Those tables are not expected to be updated by any other part of the system. we tried make those tables as simple as possible since we do not update them and most of the values are only to be viewed by users. Other tables are on the other hand updated only by the webapp. Their purpose is to store application specific data such as courses added to blueprint, course ratings and user sessions.
+Data model of PostgreSQL is bit more complex but still fairly simple as can be seen in the diagram below. It's definition can be seen in [30-create-tables.sql](../init_db/30-create-tables.sql) for version v0-alpha. For v1-alpha, you can see the definition in migrates, elt tables in [elt-tables/10-webapp-schema.sql](../migrates/elt-tables/10-webapp-schema.sql) and user table alternation in [v1-alpha/10-webapp-schema.sql](../migrates/v1-alpha/10-webapp-schema.sql). The tables populated by elt are courses, filters, filter_categories, filter_values, degree_plans, degree_plan_list and degree_plan_courses. In those tables are stored data about filters, courses and degree plans. Those tables are not expected to be updated by any other part of the system. we tried make those tables as simple as possible since we do not update them and most of the values are only to be viewed by users. Other tables are on the other hand updated only by the webapp. Their purpose is to store application specific data (user data) such as courses added to blueprint, course ratings and user sessions.
 
-![](./recsis-data-model.png)
+![](./data-model.svg)
 
-#### Course 
+> Made with [dbdiagram.io](https://dbdiagram.io/) from SQL dump.
+
+
+### Course 
 
 **Relevant tables:** courses  
 All data about courses are stored in a single table. Each language variant (cs, en) is stored on a single row - meaning each course is represented by two rows. Denormalization with PostgreSQL support for storing JSONB data allows us to keep all course-related information in together, making it easier to manage and query. The disadvantage of this approach is that in case of extending the RecSIS by richer support for teachers the data model may need to be re-evaluated to reflect better the usage of the data. 
 
-#### Blueprint
+### Blueprint
 
 **Relevant tables:** *blueprint_years, blueprint_semesters, blueprint_courses*  
 Blueprint data are properly normalized across these tables. The motivation behind this design is to allow for flexible querying and reporting on the blueprint structure. We also decided to store unassigned courses in this table structure under *blueprint_years.academic_year = 0*. So every user will have at least one record in *blueprint_years* table to represent unassigned blueprint courses. 
 
-#### Degree plan
+### Degree plan
 
-**Relevant tables:** *degree_plans, degree_plan_list, degree_plan_years*  
-Degree plan is stored also denormalized to allow easier querying. To ensure valid degree plans stored in *studies* plan we created *degree_plan_list* and *degree_plan_years* tables. The first one stores all valid degree plans and the second one stores all valid academic years. This allows us to validate user input when user selects his/her degree plan and academic year.
+**Relevant tables:** *degree_plans, degree_plan_list, degree_plan_courses*  
+Degree plan is stored as denormalized courses to allow easier querying. All metadata is stored in *degree_plans* table. To ensure valid degree plans stored in *studies* plan we created *degree_plan_list* table. It stores all valid degree plans. This allows us to validate user input when user selects their degree plan.
 
-#### Session
+### Session
 
 **Relevant tables:** *sessions*  
 To store session key used to authenticate logged users. The token references token used when authenticating user via CAS. To learn more about it see [CAS documentation](https://apereo.github.io/cas/).
 
-#### Studies
+### Studies
 
 **Relevant tables:** *studies*  
-To store studies related information about a user. This includes study plan and year of enrollment.
+To store studies related information about a user. This includes study plan.
 
-#### Rating
+### Rating
 
 **Relevant tables:** *course_ratings, course_rating_categories_domain, course_rating_categories, course_overall_ratings*  
 Table *course_overall_ratings* stores like/dislike from a user for a specific course. Tables *course_ratings*, *course_rating_categories_domain*, and *course_rating_categories* store rating for a specific category for a course. Table *course_rating_categories_domain* is preparation for supporting different rating ranges for distinct rating categories.
