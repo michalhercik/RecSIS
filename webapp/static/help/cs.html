@@ -82,10 +82,20 @@
 							<a class="nav-link fw-bold mb-1" href="#degreeplan-page">Stránka Studijní plán</a>
 							<nav class="nav nav-pills flex-column ms-3">
 								<a class="nav-link fw-semibold" href="#degreeplan-overview">Přehled</a>
+								<nav class="nav nav-pills flex-column ms-3">
+									<a class="nav-link" href="#degreeplan-basics">Základní informace</a>
+									<a class="nav-link" href="#degreeplan-search">Vyhledávání a filtrování studijních plánů</a>
+									<a class="nav-link" href="#degreeplan-compare">Porovnávání studijních plánů</a>
+									<a class="nav-link" href="#degreeplan-detail">Detail studijního plánu</a>
+								</nav>
 								<a class="nav-link fw-semibold mb-1" href="#degreeplan-usecases">Typické scénáře použití</a>
 								<nav class="nav nav-pills flex-column ms-3">
-									<a class="nav-link" href="#degreeplan-check-progress">Kontrola plnění studijního plánu</a>
-									<a class="nav-link" href="#degreeplan-change-user-plan">Změna uživatelského studijního plánu</a>
+									<a class="nav-link" href="#degreeplan-uc-check-progress">Kontrola plnění studijního plánu</a>
+									<a class="nav-link" href="#degreeplan-uc-search">Vyhledávání a filtrování studijních plánů</a>
+									<a class="nav-link" href="#degreeplan-uc-compare">Porovnávání studijních plánů</a>
+									<a class="nav-link" href="#degreeplan-uc-add">Uložení zvoleného studijního plánu</a>
+									<a class="nav-link" href="#degreeplan-uc-remove">Odstranění zvoleného studijního plánu</a>
+									<a class="nav-link" href="#degreeplan-uc-to-bp">Vložení doporučeného průchodu studiem do Blueprintu</a>
 								</nav>
 							</nav>
 						</nav>
@@ -96,7 +106,7 @@
 					data-bs-spy="scroll" data-bs-smooth-scroll="true" data-bs-target="#navigation" tabindex="0">
 						<div class="text-center my-3">
 							<h1>RecSIS - Uživatelská příručka</h1>
-							<p class="mb-0">8. července 2025</p>
+							<p class="mb-0">15. února 2026</p>
 						</div>
 						<div id="intro">
 							<h1>Úvod</h1>
@@ -110,7 +120,7 @@
 								V tomto dokumentu jsou popsané jednotlivé části aplikace, se kterými může uživatel interagovat a jsou zde předvedeny typické scénáře použití. Tento dokument odpovídá primárně desktopové verzi stránek a je možné, že se zobrazení stránek a jejich obsahu na mobilních zařízeních bude lišit.
 							</p>
 							<div id="instructional-video">
-								<h2>Instruktážní video</h2>
+								<h2>Instruktážní video</h2> <!-- TODO: udelat nove video -->
 								<p>
 									Toto video je krátký a stručný tutoriál, jak aplikaci RecSIS používat. Jsou zde představeny klíčové koncepty, hlavní stránky a typický příklad používaní aplikace.
 								</p>
@@ -411,7 +421,7 @@
 									Každou skupinu předmětů lze sbalit a rozbalit pomocí tlačítka (obr. <a href="#fig-blueprint" data-reference-type="ref" data-reference="fig-blueprint">23</a>, D) vedle názvu skupiny. Na název všech skupin (kromě nezařazených) lze najet myší a tím se uživateli zobrazí statistika kreditů.
 								</p>
 								<p>
-									Některé předměty mají v řádku ikonu červeného vykřičníku (obr. <a href="#fig-blueprint" data-reference-type="ref" data-reference="fig-blueprint">23</a>, E). Ten značí varování, specificky: jestli je předmět zařazen ve špatném semestru (vyučuje se v jiném) nebo jestli je zařazen ve více semestrech (skupinách). Text varování se zobrazí při najetí na ikonu vykřičníku.
+									Některé předměty mají v řádku ikonu červeného vykřičníku (obr. <a href="#fig-blueprint" data-reference-type="ref" data-reference="fig-blueprint">23</a>, E). Ten značí varování, specificky: jestli je předmět zařazen ve špatném semestru (vyučuje se v jiném), jestli je zařazen ve více semestrech (skupinách) nebo jestli nemá splněné předmětové závislosti. Text varování se zobrazí při najetí na ikonu vykřičníku.
 								</p>
 								<figure id="fig-blueprint" class="text-center">
 									<img src="img/blueprint.png" style="width:90%"/>
@@ -589,30 +599,120 @@
 						<div id="degreeplan-page">
 							<h1>Stránka <em>Studijní plán</em></h1>
 							<p>
-								Stránka se studijním plánem nabízí uživateli kontrolu plnění svého studijního plánu a přímého přidávání předmětů do Blueprintu, aby si mohl naplánovat předměty, které musí splnit. Uživatel si může zvolit svůj studijní plán, či si prohlížet jiné a kontrolovat, které předměty má zařazené v Blueprintu a tím pádem, které skupiny má plně naplánované.
+								Stránka se studijním plánem nabízí uživateli kontrolu plnění svého studijního plánu a přímého přidávání předmětů do Blueprintu, aby si mohl naplánovat předměty, které musí splnit. Uživatel si může zvolit svůj studijní plán, či si prohlížet jiné a kontrolovat, které předměty má zařazené v Blueprintu a tím pádem, které skupiny má plně naplánované. Také je možné plány porovnávat. Dále si může u detailu studijního plánu prohlédnout doporučený průběh studia, statistiky, předmětové závislosti a další informace, které mu pomohou s plánováním svého studia. Níže jsou popsány jednotlivé části stránky a typické scénáře použití.
 							</p>
 							<div id="degreeplan-overview">
 								<h2>Přehled</h2>
 								<p>
-									Stránka se studijním plánem je velmi přímočará. V pravém horním rohu je tlačítko (obr. <a href="#fig-dp" data-reference-type="ref" data-reference="fig-dp">44</a>, A) na zobrazení studijního plánu, uprostřed je kód zobrazeného jiného studijního plánu a rok zápisu studenta (obr. <a href="#fig-dp" data-reference-type="ref" data-reference="fig-dp">44</a>, B), a zbytek obrazovky zabírá daný studijní plán (obr. <a href="#fig-dp" data-reference-type="ref" data-reference="fig-dp">44</a> sekce C).
+									Stránka nabízí několik různých pohledů na studijní plány. Ty budou popsány v této sekci.
 								</p>
-								<figure id="fig-dp" class="text-center">
-									<img src="img/dp.png" style="width:80%"/>
-									<figcaption>Obr. 44: Stránka <em>Studijní plán</em></figcaption>
-								</figure>
-								<p>
-									Studijní plán je rozdělený do skupin. Každá skupina má název, vedle názvu je ikona, která značí, zdali je skupina úspěšně přiřazena v Blueprintu nebo ne (ano - ikona modrého košíku, ne - ikona červeného <code>X</code>), což se odvíjí od počtu potřebných kreditů za skupinu. Nad názvem je pak odznak, který znázorňuje, kolik kreditů má uživatel v Blueprintu lomeno kolik v dané skupině potřebuje. Pokud má uživatel nějaké předměty v nezařazené skupině v Blueprintu, které ale nejsou v žádném semestru v Blueprintu, tak se v odznaku také zobrazí menší zašedlý součet, který sčítá i nezařazené předměty. Takové předměty jsou v tabulce označeny ikonou červeného vykřičníku, podobně jako varování v Blueprintu.
-								</p>
-								<p>
-									Každá skupina pak obsahuje tabulku předmětů, specificky zleva zaškrtávací políčko, jejich kód, název, počet kreditů, rozsah přednášky a cvičení s examinací v zimním a následně letním semestru, garanty a tlačítko na přidání předmětu do Blueprintu. Více o přiřazování předmětů do Blueprintu je napsáno v sekci <a href="#blueprint-add-course">Přidávání předmětů do Blueprintu</a>. Po kliknutí na kód či název předmětu se zobrazí <a href="#detail-page">detail</a> daného předmětu. Pokud je název předmětu napsaný tučně, pak je předmět povinný.
-								</p>
+								<div id="degreeplan-basics">
+									<h3>Základní informace</h3>
+									<p>
+										Stránka se studijním plánem nabízí uživateli dva přístupy k práci se studijními plány. První přístup je explorativní, kdy si uživatel vyhledává, prohlíží a porovnává různé studijní plány aby se rozhodl, který ideálně vyhovuje jeho požadavkům. Druhý přístup je plánovací, kdy uživatel pracuje s konkrétním studijním plánem, který si zvolil, a přidává předměty do Blueprintu, aby naplánoval své studium. K tomu může využít data o doporučeném průchodu studia.
+									</p>
+									<p>
+										Po kliknutí na záložku <em>Studijní plán</em> se uživateli zobrazí buď možnost studijní plány vyhledávat (obr. <a href="#fig-dp-search-page" data-reference-type="ref" data-reference="fig-dp-search-page">44</a>), a to pokud nemá zvolený žádný plán.
+									</p>
+									<figure id="fig-dp-search-page" class="text-center">
+										<img src="img/dp-search-page.png" style="width:80%"/>
+										<figcaption>Obr. 44: Stránka vyhledávání studijních plánů</figcaption>
+									</figure>
+									<p>
+										Pokud naopak má zvolený nějaký plán, zobrazí se mu detail tohoto plánu (obr. <a href="#fig-dp-detail-page" data-reference-type="ref" data-reference="fig-dp-detail-page">45</a>).
+									</p>
+									<figure id="fig-dp-detail-page" class="text-center">
+										<img src="img/dp-detail-page.png" style="width:80%"/>
+										<figcaption>Obr. 45: Detail studijního plánu</figcaption>
+									</figure>
+								</div>
+								<div id="degreeplan-search">
+									<h3>Vyhledávání a filtrování studijních plánů</h3>
+									<p>
+										Toto je standardní stránka pro nové uživatele, kteří ještě nemají zvolený žádný studijní plán. Uživatel může vyhledávat plány pomocí vyhledávacího pole (obr. <a href="#fig-dp-search-detail" data-reference-type="ref" data-reference="fig-dp-search-detail">46</a>, A), které podporuje vyhledávání podle názvu a kódu plánu. Plány lze také filtrovat podle různých kritérií, jako je například fakulta, sekce, forma studia, jazyk výuky a další pomocí filtrů na boku stránky (obr. <a href="#fig-dp-search-detail" data-reference-type="ref" data-reference="fig-dp-search-detail">46</a>, sekce B). Po zadání hledaného výrazu a případném nastavení filtrů se zobrazí seznam plánů (obr. <a href="#fig-dp-search-detail" data-reference-type="ref" data-reference="fig-dp-search-detail">46</a>, sekce C), které odpovídají zadaným kritériím. Uživatel si může prohlédnout <a href="#degreeplan-detail">detail</a> každého plánu kliknutím na jeho kód nebo název.
+									</p>
+									<figure id="fig-dp-search-detail" class="text-center">
+										<img src="img/dp-search-detail.png" style="width:80%"/>
+										<figcaption>Obr. 46: Detail vyhledávání plánů</figcaption>
+									</figure>
+									<p>
+										Řádek s výsledky nabízí několik informací o plánu. Zleva je to kód plánu, název plánu, druh studia, jeho platnost od-do a tlačítko pro porovnání dvou plánů. Pokud chybí rok platnosti do, tak je plán aktuálně platný. Celkový počet plánů je malý, a tak stránka nenabízí žádné stránkování. Pro porovnání dvou plánů uživatel klikne na tlačítko <code>Vybrat k porovnání</code> (ikona záložky) (obr. <a href="#fig-dp-compare-btn" data-reference-type="ref" data-reference="fig-dp-compare-btn">47</a>) u prvního plánu. To se změní na tlačítko záložky s fajfkou (obr. <a href="#fig-dp-compare-selected" data-reference-type="ref" data-reference="fig-dp-compare-selected">48</a>, A), které značí, že plán je vybraný k porovnání. Po kliknutí na něj se plán odznačí. U druhého plánu uživatel klikne na tlačítko <code>Porovnat s vybraným</code> (ikona dokumentu s <code>+-</code>) (obr. <a href="#fig-dp-compare-btn" data-reference-type="ref" data-reference="fig-dp-compare-btn">48</a>, B) a tím se dostane na stránku <a href="#degreeplan-compare">porovnání</a> vybraných plánů.
+									</p>
+									<figure id="fig-dp-compare-btn" class="text-center">
+										<img src="img/dp-compare-btn.png" style="width:80%"/>
+										<figcaption>Obr. 47: Tlačítko pro porovnání plánů</figcaption>
+									</figure>
+									<figure id="fig-dp-compare-selected" class="text-center">
+										<img src="img/dp-compare-selected.png" style="width:80%"/>
+										<figcaption>Obr. 48: Vybraný plán pro porovnání</figcaption>
+									</figure>
+								</div>
+								<div id="degreeplan-compare">
+									<h3>Porovnání studijních plánů</h3>
+									<p>
+										Stránka porovnání plánů zobrazuje oba plány vedle sebe a zvýrazňuje rozdíly mezi nimi. Uživatel může snadno vidět, které předměty jsou v jednom plánu, ale nejsou v druhém, a naopak. To mu pomáhá rozhodnout se, který plán je pro něj vhodnější. Vlevo (obr. <a href="#fig-dp-compare-detail" data-reference-type="ref" data-reference="fig-dp-compare-detail">49</a>, sekce A) je zobrazený první plán a vpravo (obr. <a href="#fig-dp-compare-detail" data-reference-type="ref" data-reference="fig-dp-compare-detail">49</a>, sekce B) je zobrazený druhý plán. Je možné plány prohodit pomocí tlačítka se <code>Prohodit plány</code> dvěma šipkami (obr. <a href="#fig-dp-compare-detail" data-reference-type="ref" data-reference="fig-dp-compare-detail">49</a>, C).
+									</p>
+									<figure id="fig-dp-compare-detail" class="text-center">
+										<img src="img/dp-compare-detail.png" style="width:80%"/>
+										<figcaption>Obr. 49: Detail porovnání plánů</figcaption>
+									</figure>
+									<p>
+										Předměty, které jsou v prvním plánu, ale nejsou v druhém, jsou zvýrazněné červeně. Předměty, které jsou v obou plánech a mají stejnou povinnost, jsou zobrazené normálně. Předměty, které jsou v obou plánech, ale mají jinou povinnost jsou zvýrazněny žlutě. Předměty, které jsou v druhém plánu, ale nejsou v prvním, jsou zvýrazněné zeleně. Pro předměty, které jsou v obou plánech je možné kliknout na ikonu lokace (obr. <a href="#fig-dp-compare-locate" data-reference-type="ref" data-reference="fig-dp-compare-locate">50</a>), která uživatele přesměruje stejný předmět v druhém plánu a na chvilku ho podbarví modře. V horní části (obr. <a href="#fig-dp-compare-detail" data-reference-type="ref" data-reference="fig-dp-compare-detail">49</a>, sekce D) je pak možné vypnout zobrazení rozdílných respektive stejných předmětů.
+									</p>
+									<figure id="fig-dp-compare-locate" class="text-center">
+										<img src="img/dp-compare-locate.png" style="width:80%"/>
+										<figcaption>Obr. 50: Ikona lokace předmětu v porovnání plánů</figcaption>
+									</figure>
+									<p>
+										Uživatel může kliknout na kód či název předmětu a zobrazit si jeho <a href="#detail-page">detail</a>. Stejně tak může kliknout na název plánu a zobrazit si jeho <a href="#degreeplan-detail">detail</a>.
+									</p>
+								</div>
+								<div id="degreeplan-detail">
+									<h3>Detail studijního plánu</h3>
+									<p>
+										Detail studijního plánu je téměř identický pro zvolený uživatelův plán i pro libovolný jiný plán, který si uživatel zobrazí. Jediný rozdíl je v tom, že u zvoleného plánu se zobrazí ikona akademické čepice (obr. <a href="#fig-dp-detail-detail" data-reference-type="ref" data-reference="fig-dp-detail-detail">51</a>, A), která značí, že se jedná o zvolený plán. Detail plánu je rozdělený do několika sekcí, specificky přehled (detail) (obr. <a href="#fig-dp-detail-detail" data-reference-type="ref" data-reference="fig-dp-detail-detail">51</a>, C), doporučený průběh studia (obr. <a href="#fig-dp-detail-detail" data-reference-type="ref" data-reference="fig-dp-detail-detail">51</a>, D), předmětové závislosti (obr. <a href="#fig-dp-detail-detail" data-reference-type="ref" data-reference="fig-dp-detail-detail">51</a>, E) a statistiky (obr. <a href="#fig-dp-detail-detail" data-reference-type="ref" data-reference="fig-dp-detail-detail">51</a>, F). Pokud u plánu libovolná sekce není, znamená to, že nejsou data pro tuto sekci. Níže jsou jednotlivé sekce popsány podrobněji.
+									</p>
+									<figure id="fig-dp-detail-detail" class="text-center">
+										<img src="img/dp-detail-detail.png" style="width:80%"/>
+										<figcaption>Obr. 51: Detail studijního plánu</figcaption>
+									</figure>
+									<p>
+										Krom sekcí nabízí detail plánu i nabídku (obr. <a href="#fig-dp-detail-menu" data-reference-type="ref" data-reference="fig-dp-detail-menu">52</a>), které se zobrazí vpravo po kliknutí na tři horizontální čáry (obr. <a href="#fig-dp-detail-detail" data-reference-type="ref" data-reference="fig-dp-detail-detail">52</a>, B).
+									</p>
+									<figure id="fig-dp-detail-menu" class="text-center">
+										<img src="img/dp-detail-menu.png" style="width:40%"/>
+										<figcaption>Obr. 52: Nabídka detailu studijního plánu</figcaption>
+									</figure>
+									<p>
+										Zde může uživatel nastavit daný plán jako zvolený pomocí tlačítka <code>Uložit studijní plán</code>, což se uloží do databáze a uživatel bude přesměrován na svůj plán. Po kliknutí na záložku <code>Studijní plán</code> se pak vždy zobrazí tento plán. Pro zrušení uložení stačí kliknout na možnost <code>Odstranit uložený studijní plán</code>, čímž se zruší zvolený plán a uživatel bude přesměrován na stránku detailu daného plánu. Pro přístup k <a href="#degreeplan-search">vyhledávání a filtrování</a> lze kliknout na tlačítko <code>Vyhledat studijní plán</code>. Pro vložení doporučeného průchodu studia plánu do Blueprintu slouží tlačítko <code>Vložit doporučený průběh do blueprintu</code>. Po kliknutí na něj se zobrazí nabídka (obr. <a href="#fig-dp-detail-menu-bp" data-reference-type="ref" data-reference="fig-dp-detail-menu-bp">53</a>), kde si uživatel může zvolit, jestli chce blueprint přepsat (ten se vymaže a vloží se jen doporučený průběh) nebo jestli chce doporučený průběh sloučit s blueprintem (stávající předměty v blueprintu zůstanou, a kolize se vyřeší automaticky). Poslední možností v nabídce je <code>Porovnat tento plán</code>, která přesměruje uživatele na stránku <a href="#degreeplan-search">vyhledávání a filtrování</a> plánů, kde bude daný plán označený jako zvolený pro porovnání.
+									</p>
+									<figure id="fig-dp-detail-menu-bp" class="text-center">
+										<img src="img/dp-detail-menu-bp.png" style="width:40%"/>
+										<figcaption>Obr. 53: Možnost volby vložení doporučeného průběhu do blueprintu</figcaption>
+									</figure>
+									<p>
+										Samotný studijní plán je úvodní stránka detailu plánu a je pod záložkou <code>Detail plánu</code>. Zde jsou zobrazeny předměty rozdělené do skupin. Každá skupina má název, vedle názvu je ikona, která značí, zdali je skupina úspěšně přiřazena v Blueprintu nebo ne (ano - ikona modrého košíku, ne - ikona červeného <code>X</code>), což se odvíjí od počtu potřebných kreditů za skupinu. Nad názvem je pak odznak, který znázorňuje, kolik kreditů má uživatel v Blueprintu lomeno kolik v dané skupině potřebuje. Pokud má uživatel nějaké předměty v nezařazené skupině v Blueprintu, které ale nejsou v žádném semestru v Blueprintu, tak se v odznaku také zobrazí menší zašedlý součet, který sčítá i nezařazené předměty. Takové předměty jsou v tabulce označeny ikonou červeného vykřičníku, podobně jako varování v Blueprintu.
+									</p>
+									<p>
+										Každá skupina pak obsahuje tabulku předmětů, specificky zleva zaškrtávací políčko, jejich kód, název, počet kreditů, rozsah přednášky a cvičení s examinací v zimním a následně letním semestru, garanty a tlačítko na přidání předmětu do Blueprintu. Více o přiřazování předmětů do Blueprintu je napsáno v sekci <a href="#blueprint-add-course">Přidávání předmětů do Blueprintu</a>. Po kliknutí na kód či název předmětu se zobrazí <a href="#detail-page">detail</a> daného předmětu. Pokud je název předmětu napsaný tučně, pak je předmět povinný.
+									</p>
+									<p>
+										Další je záložka <code>Doporučený průběh studia</code>, která zobrazuje doporučený průběh studia daného plánu, podobně jako v Oranžové Karolínce. Tato sekce je rozdělena na tabulky předmětů podle semestrů. Každá tabulka obsahuje stejné informace jako u detailu plánu. Po kliknutí na kód či název předmětu se zobrazí <a href="#detail-page">detail</a> daného předmětu.
+									</p>
+									<p>
+										Následující záložka je <code>Mapa předmětových závislostí</code>, která zobrazuje předmětové závislosti daného plánu jako orientovaný graf. Zde jsou zobrazeny všechny předměty, které se v plánu nachází, a jejich závislosti. Závislosti jsou zobrazeny pomocí šipek mezi předměty. Po kliknutí na uzel předmětu v grafu se zobrazí <a href="#detail-page">detail</a> daného předmětu. Význam uzlů a hran je popsaný v legendě nad grafem.
+									</p>
+									<p>
+										Poslední záložka jsou <code>Statistiky</code>, která zobrazuje statistiky o daném plánu. Specificky kreditové statistiky (počet povinných kreditů, počet povinně volitelných kreditů a celkový počet kreditů) a statistiky o studentech (počet studujících daný plán, počet absolventů daného plánu a průměrný počet let studia pro absolventy daného plánu).
+									</p>
+								</div>
 							</div>
 							<div id="degreeplan-usecases">
 								<h2>Typické scénáře použití</h2>
 								<p>
 									Tato sekce představí typické scénáře použití stránky <em>Studijní plán</em>.
 								</p>
-								<div id="degreeplan-check-progress">
+								<div id="degreeplan-uc-check-progress">
 									<h3>Kontrola plnění studijního plánu</h3>
 									<p>
 										Ke kontrole plnění daného studijního plánu slouží několik barevných indikátorů.
@@ -624,24 +724,49 @@
 										Ostatní indikátory indikují splnění skupin. U názvu každé skupiny je ikona, které znázorňuje jestli má uživatel v Blueprintu přiřazeno dostatečné množství předmětů z dané skupiny (z hlediska kreditů). Pokud ano, objeví se zde ikona modrého košíku, pokud ne, objeví se ikona červeného <code>X</code>. Nad každou skupinou je také odznak s názvem <code>Blueprint</code> a dvěma, respektive čtyřmi čísly <code>X/Y</code> a <code>Z/Y</code>. Druhá dvojice čísel se objeví jen v případě, že má uživatel nějaké předměty z dané skupiny nezařazené v Blueprintu. <code>X</code> pak značí součet kreditů všech předmětů dané skupiny, které má uživatel zařazené v Blueprintu (jen v semestrech, ne mezi nezařazenými předmětů) a <code>Y</code> značí minimální počet kreditů, který je potřeba v dané skupině získat. <code>Z</code> značí součet kreditů všech předmětů dané skupiny, které jsou kdekoliv v Blueprintu (nezařazené i v semestrech).
 									</p>
 								</div>
-								<div id="degreeplan-change-user-plan">
-									<h3>Změna uživatelského studijního plánu</h3>
+								<div id="degreeplan-uc-search">
+									<h3>Vyhledávání a filtrování studijních plánů</h3>
 									<p>
-										Pro změnu uživatelského studijního plánu je nezbytné kliknou na tlačítko pro výběr studijního plánu (obr. <a href="#fig-dp" data-reference-type="ref" data-reference="fig-dp">44</a>, A). Zobrazí se modální okno s jednoduchým formulářem (obr. <a href="#fig-dp-form" data-reference-type="ref" data-reference="fig-dp-form">45</a>). Zde je potřeba do vyhledávacího pole vlevo (obr. <a href="#fig-dp-form" data-reference-type="ref" data-reference="fig-dp-form">45</a>, A) zadat kód hledaného studijního plánu a vpravo (obr. <a href="#fig-dp-form" data-reference-type="ref" data-reference="fig-dp-form">45</a>, B) vybrat rok, kdy by měl daný studijní plán platit. V zobrazených výsledcích je potřeba vybrat ten, který odpovídá zadanému kódu (obr. <a href="#fig-dp-form" data-reference-type="ref" data-reference="fig-dp-form">45</a>, C).
+										Pro možnost vyhledávání a filtrování studijních plánů je třeba se nejprve odnavigovat na stránku <a href="#degreeplan-search">vyhledávání a filtrování</a>. K tomu slouží záložka <code>Studijní plán</code> v navigační liště. Pokud nemá uživatel zvolený žádný studijní plán, bude přesměrován přímo na tuto stránku. Pokud má zvolený nějaký plán, bude přesměrován na detail tohoto plánu. Zde stačí kliknout na možnosti (tři horizontální čáry) a zvolit možnost <code>Vyhledat studijní plán</code>, čímž se uživatel dostane na stránku vyhledávání a filtrování.
 									</p>
-									<figure id="fig-dp-form" class="text-center">
-										<img src="img/dp-form.png" style="width:50%"/>
-										<figcaption>Obr. 45: Formulář na hledání studijního plánu</figcaption>
-									</figure>
 									<p>
-										Po kliknutí na kód či název výsledku se zobrazí daný studijní plán. V pravém horním rohu se pak zobrazí tlačítko (obr. <a href="#fig-dp-save" data-reference-type="ref" data-reference="fig-dp-save">46</a>) na uložení studijního plánu jako studijního plánu daného uživatele.
+										Na této stránce může uživatel využít vyhledávací pole pro hledání plánů podle názvu a kódu. Dále může využít filtry pro zúžení výsledků podle různých kritérií, jako je fakulta, sekce, forma studia, jazyk výuky, rok platnosti plánu a obor. Po zadání hledaného výrazu a nastavení filtrů se zobrazí seznam plánů, které odpovídají zadaným kritériím. Uživatel si může prohlédnout detail každého plánu kliknutím na jeho kód nebo název.
 									</p>
-									<figure id="fig-dp-save" class="text-center">
-										<img src="img/dp-save.png" style="width:80%"/>
-										<figcaption>Obr. 46: Tlačítko na uložení studijního plánu</figcaption>
-									</figure>
+								</div>
+								<div id="degreeplan-uc-compare">
+									<h3>Porovnání studijních plánů</h3>
 									<p>
-										Typický případ tohoto scénáře je, že si uživatel nastaví svůj studijní plán. K tomu stačí zadat kód svého studijního plánu, který nalezne v <code>SIS</code> v záložce <code>Osobní údaje a nastavení</code> v položce <code>Studijní plán</code> za názvem v závorce. Jako rok pak musí zadat rok svého zápisu do studia, který nalezne taktéž v <code>SIS</code> v záložce <code>Osobní údaje a nastavení</code> v položce <code>Datum zápisu</code>.
+										Pro porovnání dvou studijních plánů je třeba nejprve zvolit první plán k porovnání. To se provede kliknutím na tlačítko <code>Vybrat k porovnání</code> (ikona záložky) u daného plánu ve vyhledávání plánů. Alternativně je možné u libovolného detailu plánu kliknout na možnosti (tři horizontální čáry) a zvolit možnost <code>Porovnat tento plán</code>, čímž se daný plán označí jako zvolený pro porovnání. Poté je třeba kliknout na tlačítko <code>Porovnat s vybraným</code> (ikona dokumentu s <code>+-</code>) u druhého plánu, který chceme porovnat a to také ve vyhledávání plánů. Tím se uživatel dostane na stránku porovnání, kde jsou oba plány zobrazeny vedle sebe a jsou zvýrazněné rozdíly mezi nimi. 
+									</p>
+								</div>
+								<div id="degreeplan-uc-add">
+									<h3>Uložení zvoleného studijního plánu</h3>
+									<p>
+										Pro uložení plánu je potřeba se nejprve dostat do detailu daného plánu. To lze provést buď z vyhledávání plánů kliknutím na kód či název plánu, nebo z porovnání plánů kliknutím na kód či název plánu v jednom z porovnávaných plánů.
+									</p>
+									<p>
+										Po načtení detailu plánu klikne uživatel na možnosti (tři horizontální čáry) a zvolí možnost <code>Uložit studijní plán</code>. Tím se tento plán uloží jako zvolený do databáze a uživatel bude přesměrován na svůj plán. Od této chvíle se mu při každém kliknutí na záložku <code>Studijní plán</code> zobrazí tento zvolený plán.
+									</p>
+									<p>
+										Pokud má uživatel již zvolený nějaký plán a chce ho změnit, stačí zvolit jiný plán a kliknout na možnost <code>Uložit studijní plán</code> u tohoto plánu. Tím se nový plán uloží jako zvolený a nahradí ten předchozí. Uživatel bude přesměrován na svůj nový zvolený plán.
+									</p>
+								</div>
+								<div id="degreeplan-uc-remove">
+									<h3>Odstranění zvoleného studijního plánu</h3>
+									<p>
+										Toto je přesně opačný scénář než uložení plánu. Každopádně má identický postup. Nejprve se uživatel musí dostat do detailu zvoleného plánu, což lze provést kliknutím na záložku <code>Studijní plán</code>, protože se mu zobrazí tento zvolený plán. Poté klikne na možnosti (tři horizontální čáry) a zvolí možnost <code>Odstranit uložený studijní plán</code>. Tím se zruší zvolený plán a uživatel bude přesměrován na detail tohoto plánu, ale již nebude označen jako zvolený.
+									</p>
+								</div>
+								<div id="degreeplan-uc-to-bp">
+									<h3>Vložení doporučeného průchodu studiem do Blueprintu</h3>
+									<p>
+										Pro vložení doporučeného průchodu studiem do Blueprintu je potřeba se nejprve dostat do detailu daného plánu. To lze provést buď z vyhledávání plánů kliknutím na kód či název plánu, nebo z porovnání plánů kliknutím na kód či název plánu v jednom z porovnávaných plánů nebo kliknutím na záložku <code>Studijní plán</code>, pokud uživatel již má zvolený tento plán.
+									</p>
+									<p>
+										Zde je praktické si doporučený průběh studia prohlédnout v záložce <code>Doporučený průběh studia</code>, aby uživatel věděl, co přesně se do Blueprintu vloží. To je důležité, jelikož vložení doporučeného průběhu studia do Blueprintu je nevratné (automaticky, ručně smazat lze). 
+									</p>
+									<p>
+										Pro samotné vložení doporučeného průběhu studia do Blueprintu slouží tlačítko <code>Vložit doporučený průběh do blueprintu</code> v nabídce detailu plánu. Po kliknutí na něj se zobrazí nabídka, kde si uživatel může zvolit, jestli chce blueprint přepsat (ten se vymaže a vloží se jen doporučený průběh) nebo jestli chce doporučený průběh sloučit s blueprintem (stávající předměty v blueprintu zůstanou, a kolize se vyřeší automaticky).
 									</p>
 								</div>
 							</div>
