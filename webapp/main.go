@@ -179,6 +179,7 @@ func homeServer(db *sqlx.DB, conf config, errorHandler home.Error, pageTempl pag
 			DB:           db,
 			Endpoint:     fmt.Sprintf("http://%s:%d/recommended", conf.Recommender.Host, conf.Recommender.Port),
 			AlgoEndpoint: fmt.Sprintf("http://%s:%d/algorithms", conf.Recommender.Host, conf.Recommender.Port),
+			FitEndpoint: fmt.Sprintf("http://%s:%d/fit", conf.Recommender.Host, conf.Recommender.Port),
 		},
 		Data: home.DBManager{
 			DB: db,

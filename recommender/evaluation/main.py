@@ -4,12 +4,18 @@ from ast import literal_eval
 from datetime import datetime, timedelta
 
 import pandas as pd
+from progress import print_progress_bar
 from scores import avg_prec_at_k, precision_at_k, recall_at_k
 from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, "..")
 from data_repository import DataRepository
-from elsaexp import ElsaExp
+from elsaexp import (
+    ElsaCurrentExp,
+    ElsaFinishedBachelorsExp,
+    ElsaFinishedExp,
+    ElsaFinishedMastersExp,
+)
 from embedder import (
     EmbedderAnnotationExp,
     EmbedderExp1,
@@ -42,9 +48,9 @@ def main():
     train, validate = train_test_split(
         train, test_size=TEST_SIZE, random_state=RND_STATE
     )
-    # print(train.shape)
-    # print(validate.shape)
-    # print(test.shape)
+    print(train.shape)
+    print(validate.shape)
+    print(test.shape)
     data_repository = DataRepository()
     train_data = df[df["soident"].isin(train)].reset_index(drop=True)
     validate_data = df[df["soident"].isin(validate)].reset_index(drop=True)
@@ -52,7 +58,6 @@ def main():
     print(train_data.shape)
     print(validate_data.shape)
     print(test_data.shape)
-    exit()
     embedder_experiments = [
         # EmbedderExp1(data_repository),
         # EmbedderExp2(data_repository),
@@ -60,7 +65,12 @@ def main():
         # EmbedderAnnotationExp(data_repository),
         # EmbedderSyllabusExp(data_repository),
     ]
-    elsa_experiments = [ElsaExp(data_repository, train_data, validate_data)]
+    elsa_experiments = [
+        # ElsaFinishedExp(data_repository, train_data, validate_data),
+        ElsaFinishedBachelorsExp(data_repository, train_data, validate_data),
+        ElsaFinishedMastersExp(data_repository, train_data, validate_data),
+        # ElsaCurrentExp(data_repository, train_data, validate_data),
+    ]
     for exp in elsa_experiments:
         print()
         print(50 * "=")
@@ -87,7 +97,7 @@ def elsa_do(exp, data, safe=True):
             for k in [3, 10, 20, 50]:
                 results.append(
                     [
-                        id,
+                        sample["soident"],
                         sample["sdruh"],
                         sample["zroc"],
                         sample["zsem"],
@@ -103,7 +113,7 @@ def elsa_do(exp, data, safe=True):
     out = pd.DataFrame(
         data=results,
         columns=[
-            "id",
+            "soident",
             "sdruh",
             "zroc",
             "zsem",
@@ -116,7 +126,8 @@ def elsa_do(exp, data, safe=True):
             "predicted",
         ],
     )
-    out.to_csv(out_file_path(exp.name), index=False)
+    if safe:
+        out.to_csv(out_file_path(exp.name), index=False)
     desc = (
         out.groupby(["target", "k"])
         .describe()[
@@ -156,17 +167,6 @@ def do(experiment, eval_data):
         relevant_true = sample["relevant"]
         next_true = sample["next_semester"]
         id = sample["soident"]
-        # prefix = "{0}-year student in a {1}’s program in {2}.".format(
-        #     (
-        #         "First"
-        #         if sample["zroc"] == 1
-        #         else "Second"
-        #         if sample["zroc"] == 2
-        #         else "Third"
-        #     ),
-        #     ("Bachelor" if sample["sdruh"] == "B" else "Master"),
-        #     sample["sobor"],
-        # )
         try:
             y_pred = experiment.get(
                 X,
@@ -261,38 +261,6 @@ def do(experiment, eval_data):
 def out_file_path(name):
     datetime_tag = datetime.now().strftime("%y%m%d-%H%M%S")
     return f"{OUT_PATH}/{name}-{datetime_tag}.csv"
-
-
-# Print iterations progress
-def print_progress_bar(
-    iteration,
-    total,
-    prefix="",
-    suffix="",
-    decimals=1,
-    length=100,
-    fill="█",
-    printEnd="\r",
-):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + "-" * (length - filledLength)
-    print(f"\r{prefix} |{bar}| {iteration}/{total} {suffix}", end=printEnd)
-    # Print New Line on Complete
-    if iteration == total:
-        print()
 
 
 if __name__ == "__main__":

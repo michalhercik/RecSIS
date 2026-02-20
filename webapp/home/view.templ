@@ -24,67 +24,114 @@ templ Content(hp *homePage, t text) {
 }
 
 templ Recommended(model recommendedModel, t text) {
-	<div
-		class="container pt-3"
-		>
-		<div class="d-flex align-items-center gap-2 mb-2">
-			<form x-ref="algoForm" method="get" action={ templ.SafeURL(t.language.LocalizeURL("/recommended")) }
-			>
-				<div class="d-flex align-items-center gap-2 mb-2">
-					<label for="algo" class="form-label mb-0 ms-2">Algorithm:</label>
-					<select name="algo" class="form-select">
-						<option></option>
-						for _, algo := range model.algoSuggestions {
-							<option selected?={ model.algo == algo } value={ algo }>{ algo }</option>
-						}
-					</select>
-					<label for="limit" class="form-label mb-0 ms-2">Limit:</label>
-					<input 
-						name="limit" 
-						type="number" 
-						min="5"
-						max="30"
-						step="5"
-						value={ fmt.Sprintf("%d", model.limit) }
-						class="form-control" 
-					>
-					<div><input type="submit" class="btn btn-primary"></div>
-				</div>
-			</form>
-		</div>
-		<div class="d-flex gap-2 mb-2">
-			for _, testAccount := range model.testAccounts {
-				<a 
-					href={ templ.SafeURL(fmt.Sprintf("/recommended/%s", testAccount)) } 
-					class="btn btn-secondary"
-					hx-include="[name=limit],[name=algo]"
-					>
-						{ testAccount[5:] }
-					</a>
-			}
-		</div>
-		<div class="row row-cols-3 row-cols-md-4 row-cols-xl-5 row-cols-xxl-6 g-0">
-			for _, c := range model.courses {
-				<div class="card small-card">
-					<div class="card-header lh-1 py-1">
-						<div class="d-flex justify-content-between w-100">
-							<h6 class="mb-0">{ c.Code }</h6>
-							<small>{ fmt.Sprintf("%s: %d", t.credits, c.Credits) }</small>
-						</div>
-						<div class="text-center w-100">
-							<small>{ fmt.Sprintf("%s %s, %s", c.Semester.string(t), c.hoursString(), c.ExamType) }</small>
-						</div>
-					</div>
-					<div class="card-body justify-content-between d-flex flex-column h-100">
-						<h6 class="card-title pb-1">
-							@titleCourseLink(c.Code, c.Title, t)
-						</h6>
-						<h6 class="card-subtitle text-muted">{ c.Guarantors.string(t) }</h6>
-					</div>
-				</div>
-			}
+	<div class="container pt-3">
+		@controlForm(model, t)
+		<div class="row">
+			@courseSection("Finished", model.finished, []bool{}, t)
+			@courseSection("Recommended", model.courses, model.target, t)
+			@courseSection("Expected", model.expected, []bool{}, t)
 		</div>
 	</div>
+}
+
+templ controlForm(model recommendedModel, t text) {
+	<div class="d-flex align-items-center gap-2 mb-2">
+		<form x-ref="algoForm" method="get" action={ templ.SafeURL(t.language.LocalizeURL("/recommended")) }
+		>
+			<div class="d-flex align-items-center gap-2 mb-2">
+				<label for="student" class="form-label mb-0 ms-2">Student:</label>
+				<input type="text" class="form-control" name="student" value={ model.student } >
+				<label for="algo" class="form-label mb-0 ms-2">Algorithm:</label>
+				<select name="algo" class="form-select">
+					<option></option>
+					for i, algo := range model.algoSuggestions {
+						<option selected?={ model.algo == algo } value={ algo }>{ fmt.Sprintf("%s (%t)", algo, model.algoFit[i]) }</option>
+					}
+				</select>
+				<label for="limit" class="form-label mb-0 ms-2">Limit:</label>
+				<input
+					name="limit"
+					type="number"
+					min="5"
+					max="30"
+					step="5"
+					value={ fmt.Sprintf("%d", model.limit) }
+					class="form-control"
+				>
+				<div><input type="submit" class="btn btn-primary"></div>
+			</div>
+		</form>
+	<div class="d-flex gap-2 mb-2">
+		<div>
+		<a
+			class="btn btn-primary"
+			hx-post={ templ.SafeURL(t.language.LocalizeURL("/fit")) }
+			hx-include="[name=algo]"
+			hx-target="#fitResult"
+			hx-swap="innerHTML"
+			hx-indicator="#fit-processing"
+		>
+			Fit
+		</a>
+		</div>
+		<div><span id="fitResult"></span><span id="fit-processing" class="htmx-indicator">Processing...</span></div>
+	</div>
+	</div>
+	<div class="d-flex gap-2 mb-2">
+		for _, testAccount := range model.testAccounts {
+			<a
+				href={ templ.SafeURL(fmt.Sprintf("/recommended/%s", testAccount)) }
+				class="btn btn-secondary"
+				hx-include="[name=limit],[name=algo]"
+				>
+					{ testAccount[5:] }
+				</a>
+		}
+	</div>
+}
+
+templ courseSection(title string, courses []course, target []bool, t text){
+	<div class="col">
+		<h3>{ title }</h3>
+		<ul class="list-group list-group-flush">
+			for i, c := range courses {
+				if len(target) > 0 {
+					@courseRow(c, target[i], t)
+				} else {
+					@courseRow(c, false, t)
+				}
+			}
+		</ul>
+	</div>
+}
+
+// list-group-item-success
+templ courseRow(course course, success bool, t text) {
+	{{
+		bgColor := ""
+		txtColor := ""
+		if success {
+			bgColor = " bg-success"
+			txtColor = " text-white-50"
+		}
+	}}
+  <li class={ "list-group-item d-flex justify-content-between align-items-start" + bgColor }>
+  	<div class="w-100">
+      <div class="d-flex justify-content-between">
+  	    <div class="fw-bold">@titleCourseLinkWithColor(course.Code, course.Title, txtColor, t)</div>
+        <div class={ "text-muted" + txtColor }>{ fmt.Sprintf("%s %s, %s", course.Semester.string(t), course.hoursString(), course.ExamType) }</div>
+      </div>
+      <div class="d-flex justify-content-between">
+	    <div class={ "text-muted" + txtColor }>{ course.Code }</div>
+	    <div class={ "text-muted" + txtColor }>{ course.Guarantors.string(t) }</div>
+	    <div class={ "text-muted" + txtColor }>Kr.: { course.Credits }</div>
+      </div>
+   </div>
+  </li>
+}
+
+templ Fit(success bool) {
+    Done
 }
 
 templ courseCardsRow(ID string, courses []course, t text) {
@@ -115,9 +162,18 @@ templ courseCardsRow(ID string, courses []course, t text) {
 	</div>
 }
 
+templ titleCourseLinkWithColor(code, title string, txtColor string, t text) {
+	<a
+		class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover" + txtColor }
+		href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }
+	>
+		{ title }
+	</a>
+}
+
 templ titleCourseLink(code, title string, t text) {
 	<a
-		class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover"
+		class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover"}
 		href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }
 	>
 		{ title }

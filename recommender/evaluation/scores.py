@@ -26,7 +26,10 @@ def recall_at_k(y_true, y_pred, k):
 def avg_prec_at_k(y_true, y_pred, k, normalize=False):
     result = 0
     counter = 0
-    for i in range(k):
+    iterate_over = min(len(y_pred), k)
+    # if iterate_over == len(y_pred):
+    #     print("WARNING: len(y_pred) <", k)
+    for i in range(iterate_over):
         if y_pred[i] in y_true:
             counter += 1
             result += counter / (i + 1)

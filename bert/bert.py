@@ -85,21 +85,28 @@ def bert_embed(texts):
 
 # Explicit SBERT architecture (tokenizer + transformer + pooling)
 
-# word_embedding_model = models.Transformer("sentence-transformers/all-MiniLM-L6-v2") # super fast
+word_embedding_model = models.Transformer(
+    "sentence-transformers/all-MiniLM-L6-v2"
+)  # super fast
 # word_embedding_model = models.Transformer(
 #     "sentence-transformers/all-mpnet-base-v2"
 # )  # crashes - ~8GB not enough memory (exit 247)? maybe just because running batches
 # word_embedding_model = models.Transformer("sentence-transformers/all-distilroberta-v1")
-# pooling_model = models.Pooling(
-#     word_embedding_model.get_word_embedding_dimension(), pooling_mode_mean_tokens=True
-# )
+# word_embedding_model = models.Transformer(
+#     "sentence-transformers/all-MiniLM-L12-v2"
+# )  # super fast
+pooling_model = models.Pooling(
+    word_embedding_model.get_word_embedding_dimension(), pooling_mode_mean_tokens=True
+)
 
 sbert = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
 
 def sbert_embed(texts):
     with torch.no_grad():
-        embeddings = sbert.encode(texts, convert_to_tensor=True)
+        embeddings = sbert.encode(
+            texts, convert_to_tensor=True, normalize_embeddings=True
+        )
     return embeddings
 
 

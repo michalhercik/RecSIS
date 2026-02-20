@@ -12,7 +12,7 @@ from data_repository import DataRepository
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-class ElsaRelevantExp:
+class ElsaFinishedExp:
     """
     Results
         - On test data for k=3,10,20,50 is
@@ -100,21 +100,131 @@ class ElsaRelevantExp:
         return X
 
 
-class ElsaPrevExp:
+class ElsaFinishedMastersExp(ElsaFinishedExp):
     """
     Results
+        - no significant change
 
+    Train
+                          precision                         recall                         avg_prec
+                          mean   std   25%   50%   75%   mean   std   25%   50%   75%     mean   std   25%   50%   75%
+    target        k
+    next_semester 3       0.13  0.26  0.00  0.00  0.00   0.08  0.17  0.00  0.00  0.00     0.17  0.33  0.00  0.00  0.00
+                  10      0.10  0.16  0.00  0.00  0.20   0.20  0.31  0.00  0.00  0.33     0.18  0.28  0.00  0.00  0.31
+                  20      0.08  0.11  0.00  0.00  0.15   0.28  0.37  0.00  0.00  0.60     0.18  0.26  0.00  0.00  0.29
+                  50      0.04  0.05  0.00  0.02  0.08   0.39  0.41  0.00  0.20  0.83     0.17  0.24  0.00  0.05  0.26
+    relevant      3       0.65  0.40  0.33  0.67  1.00   0.13  0.15  0.04  0.09  0.16     0.70  0.41  0.33  1.00  1.00
+                  10      0.58  0.36  0.30  0.60  1.00   0.34  0.26  0.14  0.30  0.50     0.69  0.36  0.42  0.86  1.00
+                  20      0.48  0.33  0.20  0.40  0.80   0.52  0.33  0.25  0.50  0.82     0.65  0.34  0.39  0.79  0.96
+                  50      0.25  0.18  0.10  0.24  0.40   0.66  0.33  0.40  0.70  1.00     0.61  0.33  0.34  0.70  0.91
+
+    Validate
+                          precision                         recall                         avg_prec
+                          mean   std   25%   50%   75%   mean   std   25%   50%   75%     mean   std   25%   50%   75%
+    target        k
+    next_semester 3       0.10  0.23  0.00  0.00  0.00   0.06  0.14  0.00  0.00  0.00     0.14  0.31  0.00  0.00  0.00
+                  10      0.08  0.14  0.00  0.00  0.10   0.14  0.24  0.00  0.00  0.22     0.15  0.26  0.00  0.00  0.20
+                  20      0.06  0.09  0.00  0.00  0.10   0.22  0.31  0.00  0.00  0.40     0.15  0.24  0.00  0.00  0.20
+                  50      0.04  0.05  0.00  0.02  0.06   0.33  0.36  0.00  0.17  0.67     0.14  0.21  0.00  0.04  0.20
+    relevant      3       0.55  0.40  0.00  0.67  1.00   0.10  0.13  0.00  0.07  0.13     0.62  0.43  0.00  0.83  1.00
+                  10      0.48  0.32  0.20  0.50  0.80   0.25  0.19  0.12  0.21  0.38     0.61  0.36  0.32  0.76  0.92
+                  20      0.38  0.25  0.15  0.40  0.65   0.38  0.25  0.21  0.35  0.59     0.56  0.32  0.31  0.68  0.82
+                  50      0.22  0.15  0.08  0.24  0.34   0.55  0.27  0.37  0.58  0.77     0.50  0.28  0.28  0.58  0.73
+
+    Test
+                          precision                         recall                         avg_prec
+                          mean   std   25%   50%   75%   mean   std   25%   50%   75%     mean   std   25%   50%   75%
+    target        k
+    next_semester 3       0.10  0.22  0.00  0.00  0.00   0.05  0.11  0.00  0.00  0.00     0.13  0.30  0.00  0.00  0.00
+                  10      0.08  0.14  0.00  0.00  0.10   0.13  0.23  0.00  0.00  0.17     0.15  0.26  0.00  0.00  0.20
+                  20      0.06  0.09  0.00  0.00  0.10   0.20  0.29  0.00  0.00  0.33     0.14  0.23  0.00  0.00  0.18
+                  50      0.04  0.05  0.00  0.02  0.06   0.30  0.34  0.00  0.14  0.57     0.13  0.20  0.00  0.04  0.17
+    relevant      3       0.48  0.40  0.00  0.33  1.00   0.07  0.08  0.00  0.06  0.12     0.56  0.43  0.00  0.58  1.00
+                  10      0.43  0.32  0.10  0.40  0.70   0.22  0.19  0.08  0.17  0.32     0.54  0.36  0.20  0.61  0.89
+                  20      0.35  0.26  0.10  0.30  0.55   0.34  0.25  0.17  0.29  0.52     0.50  0.33  0.20  0.56  0.79
+                  50      0.20  0.14  0.08  0.20  0.32   0.48  0.28  0.30  0.47  0.69     0.45  0.29  0.18  0.48  0.69
     """
 
     def __init__(self, data: DataRepository, train, validate):
-        self.name = "ElsaPrev"
+        train = self._filter_masters(train)
+        validate = self._filter_masters(validate)
+        super().__init__(data, train, validate)
+        self.name = "ElsaFinishedMastersExp"
 
-        X = train[["prev"]].explode("prev")
-        X = pd.crosstab(X.index, X["prev"])
+    def _filter_masters(self, df):
+        return df[(df["sdruh"] == "N") | (df["zroc"] > 3)]
+
+
+class ElsaFinishedBachelorsExp(ElsaFinishedExp):
+    """
+    Results
+        - no significant change
+
+    Train
+                          precision                         recall                         avg_prec
+                          mean   std   25%   50%   75%   mean   std   25%   50%   75%     mean   std   25%   50%   75%
+    target        k
+    next_semester 3       0.18  0.28  0.00  0.00  0.33   0.09  0.16  0.00  0.00  0.14     0.24  0.37  0.00  0.00  0.50
+                  10      0.17  0.18  0.00  0.10  0.30   0.28  0.29  0.00  0.22  0.50     0.27  0.30  0.00  0.19  0.46
+                  20      0.15  0.13  0.00  0.15  0.25   0.46  0.37  0.00  0.50  0.78     0.26  0.26  0.00  0.21  0.42
+                  50      0.08  0.07  0.00  0.08  0.14   0.65  0.41  0.00  0.86  1.00     0.24  0.23  0.00  0.20  0.37
+    relevant      3       0.73  0.39  0.67  1.00  1.00   0.13  0.12  0.07  0.11  0.16     0.77  0.39  0.58  1.00  1.00
+                  10      0.69  0.37  0.40  0.90  1.00   0.37  0.21  0.25  0.37  0.50     0.76  0.35  0.60  0.98  1.00
+                  20      0.60  0.35  0.25  0.75  0.90   0.61  0.27  0.47  0.65  0.81     0.74  0.34  0.57  0.93  0.99
+                  50      0.35  0.24  0.14  0.36  0.50   0.82  0.27  0.80  0.91  1.00     0.70  0.33  0.50  0.87  0.95
+
+    Validate
+                          precision                         recall                         avg_prec
+                          mean   std   25%   50%   75%   mean   std   25%   50%   75%     mean   std   25%   50%   75%
+    target        k
+    next_semester 3       0.16  0.26  0.00  0.00  0.33   0.08  0.15  0.00  0.00  0.12     0.22  0.36  0.00  0.00  0.33
+                  10      0.16  0.18  0.00  0.10  0.30   0.24  0.26  0.00  0.20  0.43     0.25  0.28  0.00  0.17  0.41
+                  20      0.13  0.13  0.00  0.10  0.25   0.39  0.34  0.00  0.40  0.67     0.24  0.25  0.00  0.18  0.38
+                  50      0.07  0.06  0.00  0.06  0.12   0.56  0.40  0.00  0.67  0.90     0.22  0.22  0.00  0.17  0.34
+    relevant      3       0.64  0.40  0.33  0.67  1.00   0.11  0.12  0.05  0.09  0.14     0.70  0.41  0.33  1.00  1.00
+                  10      0.60  0.35  0.30  0.70  0.90   0.30  0.18  0.20  0.29  0.40     0.69  0.35  0.45  0.84  0.99
+                  20      0.50  0.31  0.20  0.55  0.75   0.48  0.23  0.35  0.49  0.65     0.66  0.33  0.43  0.80  0.94
+                  50      0.30  0.21  0.12  0.32  0.40   0.68  0.25  0.58  0.73  0.86     0.60  0.31  0.36  0.72  0.85
+
+    Test
+                          precision                         recall                         avg_prec
+                          mean   std   25%   50%   75%   mean   std   25%   50%   75%     mean   std   25%   50%   75%
+    target        k
+    next_semester 3       0.17  0.27  0.00  0.00  0.33   0.08  0.13  0.00  0.00  0.14     0.22  0.34  0.00  0.00  0.50
+                  10      0.17  0.18  0.00  0.10  0.30   0.26  0.26  0.00  0.22  0.44     0.26  0.28  0.00  0.20  0.42
+                  20      0.15  0.13  0.00  0.15  0.25   0.43  0.35  0.00  0.50  0.71     0.25  0.25  0.00  0.22  0.41
+                  50      0.08  0.07  0.00  0.08  0.14   0.60  0.39  0.00  0.75  1.00     0.23  0.22  0.00  0.20  0.36
+    relevant      3       0.66  0.40  0.33  1.00  1.00   0.10  0.09  0.05  0.09  0.14     0.71  0.41  0.33  1.00  1.00
+                  10      0.60  0.36  0.30  0.70  0.90   0.30  0.18  0.20  0.30  0.39     0.70  0.36  0.44  0.87  1.00
+                  20      0.51  0.32  0.20  0.55  0.80   0.48  0.23  0.37  0.52  0.64     0.66  0.34  0.42  0.80  0.95
+                  50      0.30  0.21  0.12  0.30  0.44   0.68  0.26  0.60  0.75  0.86     0.61  0.32  0.37  0.71  0.87
+    """
+
+    def __init__(self, data: DataRepository, train, validate):
+        train = self._filter_bachelors(train)
+        validate = self._filter_bachelors(validate)
+        super().__init__(data, train, validate)
+        self.name = "ElsaFinishedBachelorsExp"
+
+    def _filter_bachelors(self, df):
+        return df[(df["sdruh"] == "B")]
+
+
+class ElsaCurrentExp:
+    """
+    Results
+        - complete fail - 0 in all scores
+    """
+
+    def __init__(self, data: DataRepository, train, validate):
+        self.name = "ElsaCurrent"
+
+        X = train[["current"]].explode("current")
+        X = pd.crosstab(X.index, X["current"])
         self.columns = X.columns
         X = csr_matrix(X.values)
 
-        val = self.transform(validate, "prev")
+        val = self.transform(validate, "current")
 
         factors = 256
         num_epochs = 5
@@ -131,7 +241,7 @@ class ElsaPrevExp:
         )
 
     def get(self, X, limit):
-        X = self.transform(X, "prev")
+        X = self.transform(X, "current")
         y_pred = self.model.predict(X, self.batch_size)
         topk = torch.topk(y_pred, limit, sorted=True)
         return list(map(lambda indices: self.columns[indices].to_list(), topk.indices))
@@ -140,7 +250,7 @@ class ElsaPrevExp:
         ids = X.index
         X = X[[column_name]].explode(column_name)
         X = X[X[column_name].isin(self.columns)]
-        X = pd.crosstab(X.index, X["prev"])
+        X = pd.crosstab(X.index, X["current"])
         X = X.reindex(ids, columns=self.columns, fill_value=0)
         X = csr_matrix(X.values)
         return X

@@ -9,9 +9,14 @@ import (
 )
 
 type recommendedModel struct {
+	student         string
 	courses         []course
+	finished        []course
+	expected        []course
+	target          []bool
 	algo            string
 	algoSuggestions []string
+	algoFit         []bool
 	limit           int
 	testAccounts    []string
 }

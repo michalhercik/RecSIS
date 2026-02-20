@@ -3,6 +3,7 @@ package home
 import (
 	"net/http"
 	"strconv"
+	"fmt"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/errorx"
@@ -54,8 +55,9 @@ type Recommender interface {
 }
 
 type RecommenderWithAlgoSwitch interface {
-	Recommend(userID string, algoName string, limit int) ([]string, error)
-	Algorithms() ([]string, error)
+	Recommend(userID, student, algoName string, limit int) ([]string, []string, []string, []bool, error)
+	Algorithms() ([]string, []bool, error)
+	Fit(algo string) error
 }
 
 //================================================================================
@@ -73,12 +75,27 @@ func (s *Server) Init() {
 	router.HandleFunc("/", s.pageNotFound)
 	router.HandleFunc("GET /recommended/{userID}", s.recommendedPage)
 	router.HandleFunc("GET /recommended", s.recommendedPage)
+	router.HandleFunc("POST /fit", s.fit)
 	s.router = router
 }
 
 //================================================================================
 // Handlers
 //================================================================================
+
+func (s Server) fit(w http.ResponseWriter, r *http.Request) {
+	algo := r.FormValue("algo")
+	if algo == "" {
+		http.Error(w, "algo is required", http.StatusBadRequest)
+		return
+	}
+	err := s.Experiment.Fit(algo)
+	if err != nil {
+		fmt.Println("error")
+		s.Error.Log(errorx.AddContext(err))
+	}
+	Fit(err != nil).Render(r.Context(), w)
+}
 
 func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
@@ -127,6 +144,7 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 		}
 		userID = r.PathValue("userID")
 	}
+	student := r.URL.Query().Get("student")
 	algo := r.URL.Query().Get("algo")
 	limit := 10
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
@@ -139,9 +157,12 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	var experiment []course
+	var finished []course
+	var expected []course
+	var target []bool
 	if len(algo) > 0 {
 		var err error
-		experiment, err = s.experiment(userID, algo, limit, lang)
+		finished, experiment, expected, target, err = s.experiment(userID, student, algo, limit, lang)
 		if err != nil {
 			code, userMsg := errorx.UnwrapError(err, lang)
 			s.Error.Log(errorx.AddContext(err))
@@ -149,7 +170,7 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	algoSuggestions, err := s.Experiment.Algorithms()
+	algoSuggestions, algoFit, err := s.Experiment.Algorithms()
 	if err != nil {
 		code, userMsg := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -164,9 +185,14 @@ func (s Server) recommendedPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	model := recommendedModel{
+		student:         student,
 		courses:         experiment,
+		finished:        finished,
+		expected:        expected,
+		target:          target,
 		algo:            algo,
 		algoSuggestions: algoSuggestions,
+		algoFit:         algoFit,
 		limit:           limit,
 		testAccounts:    testAccounts,
 	}
@@ -207,21 +233,30 @@ func (s Server) newest(userID string, lang language.Language) ([]course, error) 
 	return newestCourses, nil
 }
 
-func (s Server) experiment(userID string, algoName string, limit int, lang language.Language) ([]course, error) {
-	courses, err := s.Experiment.Recommend(userID, algoName, limit)
+func (s Server) experiment(userID, student, algoName string, limit int, lang language.Language) ([]course, []course, []course, []bool, error) {
+	finished, recommended, expected, target, err := s.Experiment.Recommend(userID, student, algoName, limit)
 	if err != nil {
 		// TODO: add context
-		return nil, err
+		return nil, nil, nil, nil, err
 	}
-	var newestCourses []course
 	// if len(courses) > 0 {
-	newestCourses, err = s.Data.courses(userID, courses, lang)
+	finishedCourses, err := s.Data.courses(userID, finished, lang)
 	if err != nil {
 		// TODO: add context
-		return nil, err
+		return nil, nil, nil, nil, err
+	}
+	recommendedCourses, err := s.Data.courses(userID, recommended, lang)
+	if err != nil {
+		// TODO: add context
+		return nil, nil, nil, nil, err
+	}
+	expectedCourses, err := s.Data.courses(userID, expected, lang)
+	if err != nil {
+		// TODO: add context
+		return nil, nil, nil, nil, err
 	}
 	// }
-	return newestCourses, nil
+	return finishedCourses, recommendedCourses, expectedCourses, target, nil
 }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
