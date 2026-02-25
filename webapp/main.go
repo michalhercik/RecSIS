@@ -24,6 +24,7 @@ import (
 	"github.com/michalhercik/RecSIS/courses"
 	"github.com/michalhercik/RecSIS/degreeplan"
 	"github.com/michalhercik/RecSIS/home"
+	"github.com/michalhercik/RecSIS/receval"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -102,6 +103,7 @@ func setupHandler(conf config) http.Handler {
 		coursedetailServer: courseDetailServer(db, errorHandler, pageTempl, meiliClient),
 		coursesServer:      coursesServer(db, errorHandler, pageTempl, meiliClient),
 		degreePlanServer:   degreePlanServer(db, errorHandler, pageTempl, meiliClient),
+		recevalServer:      receval.NewServer(db, errorHandler, pageTempl, conf.Recommender.Host, conf.Recommender.Port),
 		static:             http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "static"))),
 	}
 	handler := protectedHandler(s)
@@ -173,13 +175,6 @@ func homeServer(db *sqlx.DB, conf config, errorHandler home.Error, pageTempl pag
 		},
 		Newest: recommend.NewCourses{
 			DB: db,
-		},
-		Experiment: recommend.RestCallWithAlgoSwitch{
-			Client:       &http.Client{},
-			DB:           db,
-			Endpoint:     fmt.Sprintf("http://%s:%d/recommended", conf.Recommender.Host, conf.Recommender.Port),
-			AlgoEndpoint: fmt.Sprintf("http://%s:%d/algorithms", conf.Recommender.Host, conf.Recommender.Port),
-			FitEndpoint: fmt.Sprintf("http://%s:%d/fit", conf.Recommender.Host, conf.Recommender.Port),
 		},
 		Data: home.DBManager{
 			DB: db,
@@ -273,6 +268,7 @@ func protectedHandler(s servers) http.Handler {
 	handle(protectedRouter, courseDetailRoot, s.coursedetailServer)
 	handle(protectedRouter, coursesRoot, s.coursesServer)
 	handle(protectedRouter, degreePlanRoot, s.degreePlanServer)
+	handle(protectedRouter, recevalRoot, s.recevalServer)
 	protectedRouter.Handle("GET /logo.svg", s.static)
 	protectedRouter.Handle("GET /style.css", s.static)
 	protectedRouter.Handle("GET /js/", s.static)
@@ -327,6 +323,7 @@ type servers struct {
 	coursesServer      http.Handler
 	degreePlanServer   http.Handler
 	static             http.Handler
+	recevalServer      http.Handler
 }
 
 const (
@@ -336,6 +333,7 @@ const (
 	courseDetailRoot = "/course/"
 	coursesRoot      = "/courses/"
 	degreePlanRoot   = "/degreeplan/"
+	recevalRoot      = "/receval/"
 )
 
 const (

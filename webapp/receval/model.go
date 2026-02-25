@@ -1,4 +1,4 @@
-package home
+package receval
 
 import (
 	"database/sql"
@@ -8,6 +8,7 @@ import (
 	"unicode/utf8"
 	"github.com/michalhercik/RecSIS/recommend"
 )
+
 
 type recommendedModel struct {
 	student         string
@@ -20,12 +21,12 @@ type recommendedModel struct {
 	algoFit         []bool
 	limit           int
 	testAccounts    []string
+	savedStudents   []savedStudent
 }
 
-type homePage struct {
-	recommendedCourses []course
-	newCourses         []course
-	experimentCourses  []course
+type savedStudent struct {
+	ID string  `db:"student_id"`
+	Title string `db:"title"`
 }
 
 type course struct {

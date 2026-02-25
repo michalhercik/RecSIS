@@ -21,7 +21,7 @@ class TrainData(Algorithm):
         with_expr = """
             WITH istudium AS (
                 SELECT
-                    soident, sident, sdruh, srokp, sobor, o.nazev sobor_nazev
+                    soident, sident, sdruh, srokp, sobor, o.nazev sobor_nazev, splan
                 FROM studium s
                 LEFT JOIN obor o ON s.sobor = o.kod
                 WHERE s.sobor like 'I%'
@@ -75,7 +75,7 @@ class TrainData(Algorithm):
 
         interaction = interaction.merge(user[["sident", "user_id"]], on="sident")
         interaction = interaction.merge(povinn[["povinn", "course_id"]], on="povinn")
-        interaction = interaction[["user_id", "course_id", "zskr"]]
+        interaction = interaction[["user_id", "course_id", "zskr", "zroc"]]
 
         return user, interaction, povinn
 

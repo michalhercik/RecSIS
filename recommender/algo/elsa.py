@@ -3,7 +3,7 @@ import torch
 from elsa import ELSA
 
 from algo.train import TrainData
-from algo.base import Recommendation
+from algo.base import Result, Recommendation
 from data_repository import DataRepository
 from user import User
 
@@ -52,12 +52,14 @@ class Elsa(TrainData):
         self.finished_val = val
         self.povinn = povinn
 
+# 909953
 
-    def recommend(self, user: User, limit: int) -> Recommendation:
+    def recommend(self, user: User, limit: int) -> Result:
         if user.fetch:
-            bp_im, finished, dp_code, expected = self.interaction_matrix_from_train_data(user)
+            bp_im, finished, dp_code, expected, user_id, sobor, sdruh, zroc = self.interaction_matrix_from_train_data(user)
         else:
             bp_im, finished, dp_code  = self.interaction_matrix_from_user(user)
+            user_id = user.id
             expected = list()
 
         predictions = self.model.predict(bp_im.values, batch_size=1)
@@ -69,10 +71,25 @@ class Elsa(TrainData):
         dp = self.data.stud_plan
         dp = dp[dp["plan_code"] == dp_code]
         dp = dp["code"].unique().tolist()
-        predictions = [i for i in predictions if i not in set(dp)]
+        # predictions = [i for i in predictions if i not in set(dp)]
         predictions = predictions[:limit]
         target = [True if i in set(expected) else False for i in predictions]
-        return Recommendation(predictions, target, finished, expected)
+        result = Result(
+            soident=user_id,
+            sobor=sobor,
+            degree_plan=dp_code,
+            year_of_study=zroc,
+            type="Bachelor" if sdruh == "B" else "Master",
+            finished=finished,
+            finished_in_degree_plan=[True if i in set(dp) else False for i in finished],
+            recommended_in_degree_plan=[True if i in set(dp) else False for i in predictions],
+            expected_in_degree_plan=[True if i in set(dp) else False for i in expected]
+        ).recommended_and_expected(
+                recommended=predictions,
+                expected=expected
+            )
+        return result
+        # return Recommendation(predictions, target, finished, expected)
 
     def interaction_matrix(self, user, finished, povinn):
         im = pd.crosstab(finished["user_id"], finished["course_id"])
@@ -92,7 +109,7 @@ class Elsa(TrainData):
         expected = self.finished_val[self.finished_val["user_id"] == user_id["user_id"].iloc[0]]
         expected = expected.merge(self.povinn, on="course_id")
         bp_im = self.interaction_matrix(user_id, finished, self.povinn)
-        return bp_im, finished["povinn"].to_list(), user.degree_plan, expected["povinn"].to_list()
+        return bp_im, finished["povinn"].to_list(), user_id["splan"].iloc[0], expected["povinn"].to_list(), user.id, user_id["sobor_nazev"].iloc[0], user_id["sdruh"].iloc[0], finished["zroc"].max()
 
     def interaction_matrix_from_user(self, user: User):
         bp = user.blueprint_to_df()
@@ -102,4 +119,4 @@ class Elsa(TrainData):
         bp_im = bp_im.reindex(
             index=bp_im.index, columns=self.povinn["course_id"], fill_value=0
         )
-        return bp_im, bp["course"].to_list(), user.degree_plan, list()
+        return bp_im, bp["course"].to_list(), user.degree_plan

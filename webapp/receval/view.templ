@@ -1,0 +1,222 @@
+package receval
+
+import "fmt"
+
+func mapColorsSingle(flags []bool, colorClass string) []string {
+	var result []string = make([]string, len(flags))
+	for i, flag := range flags {
+		if !flag {
+			result[i] = colorClass
+		}
+	}
+	return result
+}
+
+func mapColorsDouble(flags1, flags2 []bool, colorClass1, colorClass2, andClass string) []string {
+	var result []string = make([]string, len(flags1))
+	for i, f1 := range flags1 {
+		f2 := flags2[i]
+		if f1 && f2 {
+			result[i] = andClass
+		} else if f1 {
+			result[i] = colorClass1
+		} else if f2 {
+			result[i] = colorClass2
+		}
+	}
+	return result
+}
+
+templ Recommended(model recommendedModel, t text) {
+	<div class="container pt-3">
+		@controlForm(model, t)
+		@SavedStudents(model.savedStudents)
+		if model.recommendation.UserID != "" {
+			@studentInfo(model, t)
+			<div class="row">
+				@courseSection("Finished", model.finished, mapColorsSingle(model.recommendation.FinishedInDegreePlan, "list-group-item-primary"), t) {
+					<li class="list-group-item list-group-item-primary p-0 pl-2">Finished - NOT in degree plan</li>
+					<li class="invisible list-group-item p-0 pl-2">Placeholder</li>
+					<li class="invisible list-group-item p-0 pl-2">Placeholder</li>
+				}
+				@courseSection("Recommended", model.courses, mapColorsDouble(model.recommendation.RecommendedTruePos, model.recommendation.RecommendedInDegreePlan, "list-group-item-success", "list-group-item-warning", "list-group-item-info"), t) {
+					<li class="list-group-item list-group-item-success p-0 pl-2">Succesful recommendation - NOT in degree plan</li>
+					<li class="list-group-item list-group-item-info p-0 pl-2">Succesful recommendation - in degree plan</li>
+					<li class="list-group-item list-group-item-warning p-0 pl-2">Not expected - in degree plan</li>
+				}
+				@courseSection("Expected", model.expected, mapColorsDouble(model.recommendation.ExpectedFalseNeg, model.recommendation.ExpectedInDegreePlan, "list-group-item-danger", "list-group-item-info", "list-group-item-warning"), t) {
+					<li class="list-group-item list-group-item-info p-0 pl-2">Succesful recommendation - in degree plan</li>
+					<li class="list-group-item list-group-item-warning p-0 pl-2">Not recommended - in degree plan</li>
+					<li class="list-group-item list-group-item-danger p-0 pl-2">Not recommended - NOT in degree plan</li>
+				}
+			</div>
+		}
+	</div>
+}
+
+templ SavedStudents(savedStudents []savedStudent) {
+	<div id="saved-students" class="d-flex gap=2 mb-2">
+		for _, s := range savedStudents {
+			<div class="btn-group" role="group">
+				<a
+					class="btn btn-secondary"
+					href={ templ.SafeURL(fmt.Sprintf("/receval/student/%s", s.ID)) }
+					hx-include="[name=limit],[name=algo]"
+					>
+						{ s.ID } { s.Title }
+				</a>
+				<button
+					type="button"
+					class="btn btn-danger"
+					aria-label="Close"
+					hx-delete={ templ.URL(fmt.Sprintf("/receval/student/%s", s.ID)) }
+					hx-target="#saved-students"
+					hx-swap="outerHTML"
+					>
+						X
+					</button>
+			</div>
+		}
+	</div>
+}
+
+templ studentInfo(model recommendedModel, t text) {
+	<h3>Recomendation for</h3>
+	<div class="d-flex align-items-center gap-2 mb-2">
+		<div>
+			<div>ID: { model.recommendation.UserID }</div>
+			<div>{ model.recommendation.Type } of { model.recommendation.Field }</div>
+			<div>Degree Plan: <a
+				href={ templ.URL(t.language.LocalizeURL("/degreeplan/" + model.recommendation.DegreePlan)) + "?search-dp-year=2025" }
+			> { model.recommendation.DegreePlan }</a></div>
+			<div>Year: { model.recommendation.YearOfStudy }</div>
+		</div>
+		// <form hx-post={ templ.SafeURL("/receval/student")} hx-target="#saved-students" hx-swap="outerHTML">
+		// <form method="post" action={ templ.SafeURL("/receval/student")} hx-target="#saved-students" hx-swap="outerHTML">
+		<div class="d-flex align-items-center gap-2 mb-2">
+			<input type="hidden" name="student-id" value={ model.recommendation.UserID }>
+			<label for="title" class="form-label mb-0 ms-2">Title:</label>
+			<input type="text" class="form-control" name="title">
+			<input
+				type="button"
+				class="btn btn-primary"
+				hx-post={ templ.SafeURL("/receval/student") }
+				hx-target="#saved-students"
+				hx-swap="outerHTML"
+				hx-include="[name=student-id],[name=title]"
+				value="Save User"
+			>
+		</div>
+	</div>
+}
+
+templ controlForm(model recommendedModel, t text) {
+	<div class="d-flex align-items-center gap-2 mb-2">
+		<form x-ref="algoForm" method="get" action={ templ.SafeURL(t.language.LocalizeURL("/receval")) }
+		>
+			<div class="d-flex align-items-center gap-2 mb-2">
+				<label for="student" class="form-label mb-0 ms-2">Student:</label>
+				<input type="text" class="form-control" name="student" value={ model.student } >
+				<label for="algo" class="form-label mb-0 ms-2">Algorithm:</label>
+				<select name="algo" class="form-select">
+					<option></option>
+					for i, algo := range model.algoSuggestions {
+						<option selected?={ model.algo == algo } value={ algo }>{ fmt.Sprintf("%s (%t)", algo, model.algoFit[i]) }</option>
+					}
+				</select>
+				<label for="limit" class="form-label mb-0 ms-2">Limit:</label>
+				<input
+					name="limit"
+					type="number"
+					min="5"
+					max="30"
+					step="5"
+					value={ fmt.Sprintf("%d", model.limit) }
+					class="form-control"
+				>
+				<div><input type="submit" class="btn btn-primary"></div>
+			</div>
+		</form>
+		<div>
+			<div>
+				<a
+					class="btn btn-primary"
+					href={ templ.SafeURL(t.language.LocalizeURL("receval/student/random")) }
+					hx-include="[name=algo],[name=limit]"
+				>
+					Random
+				</a>
+			</div>
+		</div>
+	<div class="d-flex gap-2 mb-2">
+		<div>
+		<a
+			class="btn btn-primary"
+			hx-post={ templ.SafeURL(t.language.LocalizeURL("receval/fit")) }
+			hx-include="[name=algo]"
+			hx-target="#fitResult"
+			hx-swap="innerHTML"
+			hx-indicator="#fit-processing"
+		>
+			Fit
+		</a>
+		</div>
+		<div><span id="fitResult"></span><span id="fit-processing" class="htmx-indicator">Processing...</span></div>
+	</div>
+	</div>
+	<div class="d-flex gap-2 mb-2">
+		for _, testAccount := range model.testAccounts {
+			<a
+				href={ templ.SafeURL(fmt.Sprintf("/recommended/%s", testAccount)) }
+				class="btn btn-secondary"
+				hx-include="[name=limit],[name=algo]"
+				>
+					{ testAccount[5:] }
+				</a>
+		}
+	</div>
+}
+
+templ courseSection(title string, courses []course, color []string, t text){
+	<div class="col">
+		<h3>{ fmt.Sprintf("%s (%d)", title, len(courses)) }</h3>
+		<ul class="list-group list-group-flush pl-1 pr-4">
+			{ children... }
+		</ul>
+		<hr>
+		<ul class="list-group list-group-flush">
+			for i, c := range courses {
+				@courseRow(c, color[i], t)
+			}
+		</ul>
+	</div>
+}
+
+templ courseRow(course course, color string, t text) {
+  <li class={ "list-group-item d-flex justify-content-between align-items-start " + color }>
+  	<div class="w-100">
+      <div class="d-flex justify-content-between">
+  	    <div class="fw-bold">@titleCourseLink(course.Code, course.Title, t)</div>
+        <div class={ "text-muted" }>{ fmt.Sprintf("%s %s, %s", course.Semester.string(t), course.hoursString(), course.ExamType) }</div>
+      </div>
+      <div class="d-flex justify-content-between">
+	    <div class={ "text-muted" }>{ course.Code }</div>
+	    <div class={ "text-muted" }>{ course.Guarantors.string(t) }</div>
+	    <div class={ "text-muted" }>Kr.: { course.Credits }</div>
+      </div>
+   </div>
+  </li>
+}
+
+templ Fit(success bool) {
+    Done
+}
+
+templ titleCourseLink(code, title string, t text) {
+	<a
+		class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover"}
+		href={ templ.SafeURL(t.language.LocalizeURL("/course/" + code)) }
+	>
+		{ title }
+	</a>
+}

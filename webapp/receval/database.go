@@ -1,4 +1,4 @@
-package home
+package receval
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/michalhercik/RecSIS/dbds"
 	"github.com/michalhercik/RecSIS/errorx"
-	"github.com/michalhercik/RecSIS/home/internal/sqlquery"
+	"github.com/michalhercik/RecSIS/receval/internal/sqlquery"
 	"github.com/michalhercik/RecSIS/language"
 )
 
@@ -22,17 +22,66 @@ type DBManager struct {
 	DB *sqlx.DB
 }
 
+func (m DBManager) saveStudent(studentID string, title string) (error) {
+	_, err := m.DB.Exec(sqlquery.SaveStudent, studentID, title)
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.saveStudent: %w", err), errorx.P("studentID", studentID), errorx.P("title", title)),
+			http.StatusInternalServerError,
+			"Cannot save student",
+		)
+	}
+	return nil
+}
+
+func (m DBManager) deleteStudent(studentID string) (error) {
+	_, err := m.DB.Exec(sqlquery.DeleteStudent, studentID)
+	if err != nil {
+		return errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.deleteStudent: %w", err), errorx.P("studentID", studentID)),
+			http.StatusInternalServerError,
+			"Cannot delete student",
+		)
+	}
+	return nil
+}
+
+func (m DBManager) savedStudents() ([]savedStudent, error) {
+	var result []savedStudent
+	err := m.DB.Select(&result, sqlquery.SelectSavedStudents)
+	if err != nil {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.selectSavedStudent: %w", err)),
+			http.StatusInternalServerError,
+			"Cannot load saved students",
+		)
+	}
+	return result, nil
+}
+
 func (m DBManager) courses(userID string, courseCodes []string, lang language.Language) ([]course, error) {
 	var result courses
 	if err := m.DB.Select(&result, sqlquery.Courses, userID, pq.Array(courseCodes), lang); err != nil {
 		return nil, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("sqlquery.Courses: %w", err), errorx.P("courseCodes", strings.Join(courseCodes, ",")), errorx.P("lang", lang)),
 			http.StatusInternalServerError,
-			texts[lang].errCannotLoadCourses,
+			"Cannot load courses",
 		)
 	}
 	courses := intoCourses(result)
 	return courses, nil
+}
+
+func (m DBManager) testAccounts() ([]string, error) {
+	var result []string
+	if err := m.DB.Select(&result, sqlquery.TestAccounts); err != nil {
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("sqlquery.TestAccounts: %w", err)),
+			http.StatusInternalServerError,
+			"Cannot load test accounts",
+		)
+	}
+	return result, nil
 }
 
 func intoCourses(from courses) []course {

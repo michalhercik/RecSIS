@@ -89,6 +89,22 @@ class RecommendRequest(BaseModel):
     #     }
     # }
 
+class RecommendedCourseResponse(BaseModel):
+    code: str
+    true_positive: bool
+
+class ExpectedCourseResponse(BaseModel):
+    code: str
+    false_negative: bool
+
+class RecommendResponse(BaseModel):
+    soident: str
+    year_of_study: int
+    type: str
+    degree_plan: str
+    finished: list[str]
+    recommended: list[RecommendedCourseResponse]
+    expected: list[ExpectedCourseResponse]
 
 @app.post("/recommended")
 async def recommended(req: RecommendRequest):
@@ -103,8 +119,25 @@ async def recommended(req: RecommendRequest):
             user.fetch = True
         result = algo_class.recommend(user, req.limit)
     else:
-        result = Recommendation(None, None)
-    return JSONResponse(content={"recommended": result.rec, "target": result.target, "finished": result.finished, "expected": result.expected})
+        result = Result()
+
+    res = {
+        "soident": str(result.soident),
+        "sobor": str(result.sobor),
+        "year_of_study": int(result.year_of_study),
+        "type": str(result.type),
+        "degree_plan": str(result.degree_plan),
+        "finished": result.finished,
+        "finished_in_degree_plan": result.finished_in_degree_plan,
+        "recommended": result.recommended,
+        "recommended_true_positive": result.recommended_true_positive,
+        "recommended_in_degree_plan": result.recommended_in_degree_plan,
+        "expected": result.expected,
+        "expected_false_negative": result.expected_false_negative,
+        "expected_in_degree_plan": result.expected_in_degree_plan
+    }
+    return JSONResponse(content=res)
+    # return JSONResponse(content={"recommended": result.rec, "target": result.target, "finished": result.finished, "expected": result.expected})
 
 
 @app.post("/fit")

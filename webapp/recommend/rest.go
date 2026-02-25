@@ -20,6 +20,23 @@ type recRequest struct {
 	Blueprint      string
 }
 
+
+type Recommendation struct {
+	UserID 	string `json:"soident"`
+	Field	string `json:"sobor"`
+    YearOfStudy int `json:"year_of_study"`
+    Type 		string `json:"type"`
+    DegreePlan 	string `json:"degree_plan"`
+	Finished    []string `json:"finished"`
+	FinishedInDegreePlan []bool `json:"finished_in_degree_plan"`
+	Recommended []string `json:"recommended"`
+	RecommendedTruePos []bool `json:"recommended_true_positive"`
+	RecommendedInDegreePlan []bool `json:"recommended_in_degree_plan"`
+	Expected    []string `json:"expected"`
+	ExpectedFalseNeg []bool `json:"expected_false_negative"`
+	ExpectedInDegreePlan []bool `json:"expected_in_degree_plan"`
+}
+
 func (r recRequest) MarshalJSON() ([]byte, error) {
 	body := `{
 		"algo": 	"%s",
@@ -60,7 +77,7 @@ func (c RestCallWithAlgoSwitch) Algorithms() ([]string, []bool, error) {
 	return body.Algorithms, body.Fit, nil
 }
 
-func (c RestCallWithAlgoSwitch) Recommend(userID, student, algo string, limit int) ([]string, []string, []string, []bool, error) {
+func (c RestCallWithAlgoSwitch) Recommend(userID, student, algo string, limit int) (Recommendation, error) {
 	req := recRequest{
 		Algo:   algo,
 		Limit:  limit,
@@ -72,18 +89,18 @@ func (c RestCallWithAlgoSwitch) Recommend(userID, student, algo string, limit in
 	if student == "" {
 		req.Blueprint, err = c.blueprint(userID)
 		if err != nil {
-			return nil, nil, nil, nil, err
+			return Recommendation{}, err
 		}
 		req.DegreePlan, req.EnrollmentYear, err = c.studyInfo(userID)
 		if err != nil {
-			return nil, nil, nil, nil, err
+			return Recommendation{}, err
 		}
 	}
-	finished, recommended, expected, target, err := c.call(req)
+	result, err := c.call(req)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return Recommendation{}, err
 	}
-	return finished, recommended, expected, target, nil
+	return result, nil
 }
 
 func (c RestCallWithAlgoSwitch) Fit(algo string) error {
@@ -167,28 +184,30 @@ func (c RestCallWithAlgoSwitch) studyInfo(userID string) (string, int, error) {
 	return degreePlan, enrollmentYear, nil
 }
 
-func (c RestCallWithAlgoSwitch) call(reqParams recRequest) ([]string, []string, []string, []bool, error) {
+func (c RestCallWithAlgoSwitch) call(reqParams recRequest) (Recommendation, error) {
 	req, err := c.buildRequest(reqParams)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return Recommendation{}, err
 	}
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return Recommendation{}, err
 	}
 	defer resp.Body.Close()
 	rawBody, _ := io.ReadAll(resp.Body)
-	body := struct {
-		Recommended []string `json:"recommended"`
-		Finished []string `json:"finished"`
-		Expected []string `json:"expected"`
-		Target []bool `json:"target"`
-	}{}
+	// body := struct {
+	// 	Recommended []string `json:"recommended"`
+	// 	Finished []string `json:"finished"`
+	// 	Expected []string `json:"expected"`
+	// 	Target []bool `json:"target"`
+	// }{}
+	body := Recommendation{}
 	if err := json.Unmarshal(rawBody, &body); err != nil {
-		return nil, nil, nil, nil, err
+		return Recommendation{}, err
 	}
+	return body, nil
 	// TODO
-	return body.Finished, body.Recommended, body.Expected, body.Target, nil
+	// return body.Finished, body.Recommended, body.Expected, body.Target, nil
 }
 
 func (c RestCallWithAlgoSwitch) buildRequest(reqParams recRequest) (*http.Request, error) {
