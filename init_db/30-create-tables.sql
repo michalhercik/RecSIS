@@ -152,7 +152,7 @@ CREATE TABLE studies (
 CREATE TABLE sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id VARCHAR(8),
-    ticket VARCHAR(42) NOT NULL,
+    ticket VARCHAR(256) NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
