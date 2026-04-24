@@ -1,8 +1,71 @@
 import sys
 
 sys.path.insert(0, "..")
-from algo.embedder import Embedder, EmbedderAnnotation, EmbedderSyllabus
+
+import numpy as np
+import pandas as pd
+from algo.embedder import MeiliSearchKNNWithAnnotation  # , EmbedderSyllabus
 from data_repository import DataRepository
+from graph import dataset, eval, split
+from progress import print_progress_bar
+
+
+def main():
+    VAL_RATIO = 0.2
+    LIMIT = 50
+    user, finished, povinn = dataset()
+    train, val, test = split(finished, VAL_RATIO, 2024)
+
+    data_repository = DataRepository()
+    model = MeiliSearchKNNWithAnnotation(data_repository)
+    model.fit()
+
+    data = pd.merge(
+        val.merge(povinn, left_on="course_id", right_index=True)
+        .groupby("user_id")
+        .agg({"user_id": "first", "course_id": list, "povinn": list})
+        .rename(columns={"course_id": "val_course_id", "povinn": "val_povinn"})
+        .reset_index(drop=True),
+        train.merge(povinn, left_on="course_id", right_index=True)
+        .groupby("user_id")
+        .agg({"user_id": "first", "course_id": list, "povinn": list})
+        .rename(columns={"course_id": "train_course_id", "povinn": "train_povinn"})
+        .reset_index(drop=True),
+        on="user_id",
+        how="left",
+    )
+    povinn = povinn.set_index("povinn")
+    assert data.shape[0] == val["user_id"].nunique()
+    data["train_povinn"] = data["train_povinn"].fillna("").apply(list)
+    results = []
+    for i, sample in data.iterrows():
+        if i % 5 == 0 or i == data.shape[0]:
+            print_progress_bar(
+                i, data.shape[0], prefix="Progress:", suffix="", length=25
+            )
+
+        blueprint = sample["train_povinn"]
+        query = model.build_query(blueprint)
+        filter = model.build_filter(blueprint)
+        pred = model.fetch_similar(query, filter, LIMIT)
+        results.append([sample["user_id"], pred, sample["val_povinn"]])
+
+    results = pd.DataFrame(results, columns=["user_id", "pred", "val_povinn"])
+    results["target"] = results.apply(
+        lambda x: [1 if i in x["val_povinn"] else 0 for i in x["pred"]], axis=1
+    )
+    results["target"] = results.apply(
+        lambda x: x["target"] + [1 for i in x["val_povinn"] if i not in x["pred"]],
+        axis=1,
+    )
+    results["pred"] = results["target"].apply(lambda x: np.ones(len(x)))
+    results["target"] = results["target"].apply(np.array)
+    results_description = eval(user, results)
+    print(results_description)
+
+
+if __name__ == "__main__":
+    main()
 
 
 class EmbedderExp1:

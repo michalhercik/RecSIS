@@ -1,55 +1,102 @@
+import os
+
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
 import torch_geometric.transforms as T
+from algo.base import Result
+from algo.train import TrainData, cached
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import SAGEConv, to_hetero
-
-from algo.train import TrainData
 from user import User
 
 RND_STATE = 42
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-class GraphSage(TrainData):
+class GCN(TrainData):
     def fit(self):
         LOSS_FN = bpr_loss
         VAL_RATIO = 0.2
         lr = 1e-2
-        epochs = 1
+        epochs = 300
 
-        user, finished, povinn = self.dataset()
-        train, val, test = self.split(finished, VAL_RATIO)
-        neg_train, neg_val, neg_test = negative_split(
-            train, val, test, finished, val_ratio=-1, train_ratio=1
+        super().fit()
+
+        self.id_to_povinn = dict(zip(self.povinn["course_id"], self.povinn["povinn"]))
+
+        neg_train, neg_val, _ = negative_split(
+            self.train, self.val, None, self.finished, val_ratio=-1, train_ratio=1
         )
-        train, val, test = graph_data(
-            user, povinn, train, val, test, neg_train, neg_val, neg_test
+        self.train_graph, self.val_graph, _ = graph_data(
+            self.user, self.povinn, self.train, self.val, None, neg_train, neg_val, None
         )
 
-        self.model = Model(train, hidden_channels=32, out_channels=32).to(device)
+        self.model = Model(self.train_graph, hidden_channels=32, out_channels=32).to(
+            device
+        )
 
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr)
-        train_model(self.model, optimizer, train, val, LOSS_FN, epochs)
+        if os.path.exists("gcn.pth"):
+            self.model.load_state_dict(torch.load("gcn.pth", weights_only=True))
+        else:
+            optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr)
+            train_model(
+                self.model, optimizer, self.train_graph, self.val_graph, LOSS_FN, epochs
+            )
+
+            u = User("random", "NISD23N", 2023, [])
+            u.fetch = True
+            _ = self.recommend(u, 10)  # init lazy loaded params
+
+            torch.save(self.model.state_dict(), "gcn.pth")
+
+        self.model.eval()
 
     def recommend(self, user: User, limit: int) -> list[str]:
-        # TODO: implement
-        results = predict(model, eval_data, LOSS_FN)
+        result = Result()
+        result.soident = self.get_user_soident(user)
+        result.type, result.sobor, result.degree_plan = self.get_user_info(
+            user, result.soident
+        )
+        result.year_of_study, result.finished = self.get_year_finished(
+            user, result.soident
+        )
+        result.expected = self.get_expected(user, result.soident)
 
-        results = results.groupby("user_id").agg({"pred": list, "target": list})
-        results["target"] = results["target"].apply(np.array)
-        results["pred"] = results["pred"].apply(np.array)
-        results["sort_ids"] = results["pred"].apply(lambda x: x.argsort())
-        results["target"] = results.apply(
-            lambda x: x["target"][x["sort_ids"][::-1]], axis=1
+        uid = self.get_user_id(user, result.soident)
+        with torch.no_grad():
+            pred = self.model(
+                self.val_graph.x_dict,
+                self.val_graph.edge_index_dict,
+                self.val_graph["user", "course"].edge_label_index,
+            )
+        user_id = self.val_graph["user", "course"].edge_label_index[0].cpu().numpy()
+        course_id = self.val_graph["user", "course"].edge_label_index[1].cpu().numpy()
+        results = pd.DataFrame(
+            {
+                "user_id": user_id,
+                "course_id": course_id,
+                "pred": pred.sigmoid().cpu().numpy(),
+            }
         )
-        results["pred"] = results.apply(
-            lambda x: x["pred"][x["sort_ids"][::-1]], axis=1
-        )
-        results = results.drop(columns=["sort_ids"])
-        results = results.reset_index()
+        results = results[results["user_id"] == uid]
+        results = results.groupby("user_id").agg({"pred": list, "course_id": list})
+        if results.empty:
+            pred = []
+        else:
+            pred_ranking = results["pred"].iloc[0]
+            pred = results["course_id"].iloc[0]
+            order = np.array(pred_ranking).argsort()[::-1]
+            pred = np.array(pred)[order]
+
+        pred = [self.id_to_povinn.get(cid) for cid in pred if cid in self.id_to_povinn]
+        pred = self.filter_out_finished(pred, result.finished)
+        result.recommended = pred[:limit]
+        dp_courses = self.get_degree_plan_courses(result.degree_plan)
+        result.generate_masks(dp_courses)
+
+        return result
 
 
 def predict(model, test_data, loss_fn):
@@ -187,7 +234,6 @@ def train_model(model, optimizer, train_data, val_data, loss_fn, epochs):
             f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_loss:.4f}, "
             f"Val: {val_loss:.4f}"
         )
-    torch.save(model.state_dict(), "model.pth")
 
 
 def negative_split(
@@ -238,7 +284,9 @@ def negative_split(
 
     neg_train = negative(train, all_interaction, train_ratio)
     neg_val = negative(val, all_interaction, val_ratio)
-    neg_test = negative(test, all_interaction, test_ratio)
+    neg_test = None
+    if test is not None:
+        neg_test = negative(test, all_interaction, test_ratio)
 
     return neg_train, neg_val, neg_test
 
@@ -296,11 +344,14 @@ def graph_data(
     edge_index, _ = index_label(pos_train, pd.DataFrame())
     train_index, train_label = index_label(pos_train, neg_train)
     val_index, val_label = index_label(pos_val, neg_val)
-    test_index, test_label = index_label(pos_test, neg_test)
 
     hdb = hetero_data_builder(user_features, course_features, edge_index)
     train = hdb(train_index, train_label)
     val = hdb(val_index, val_label)
-    test = hdb(test_index, test_label)
+
+    test = None
+    if test is not None:
+        test_index, test_label = index_label(pos_test, neg_test)
+        test = hdb(test_index, test_label)
 
     return train, val, test

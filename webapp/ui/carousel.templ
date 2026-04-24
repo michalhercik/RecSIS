@@ -1,0 +1,193 @@
+package ui
+
+import (
+	"strings"
+	"github.com/michalhercik/RecSIS/language"
+	"github.com/michalhercik/RecSIS/i18n"
+)
+
+type Carousel struct {
+	T func(i18n.Translatable) string
+	Lang language.Language
+	Title string
+	ViewAllURL string
+	Courses []Course
+}
+
+type Course struct {
+	Code string
+	Title string
+	Guarantors []string
+	Semester string
+	Credits int
+	URL string
+}
+
+
+templ VerticalCarousel(model Carousel) { //title string, viewAllURL string, courses []Course) {
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .category {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .scroll-container {
+      position: relative;
+    }
+
+    .course-list {
+      max-height: 260px;
+      overflow: hidden; /* hide native scroll */
+      scroll-behavior: smooth;
+    }
+
+    .course-inner {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .course-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .course-item:last-child {
+      border-bottom: none;
+    }
+
+    .course-item:hover {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    .course-code {
+      font-size: 0.8rem;
+      color: #6c757d;
+      font-weight: 600;
+    }
+
+    .course-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .course-meta {
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+
+    .course-right {
+      text-align: right;
+      min-width: 70px;
+    }
+
+    .scroll-btn {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: #6c757d;
+      padding: 4px;
+      transition: background 0.2s;
+    }
+
+    .scroll-btn:hover {
+      background: #f1f3f5;
+    }
+
+    .scroll-btn i {
+      font-size: 1.2rem;
+    }
+  </style>
+	<div class="container py-4">
+	  <div class="row g-4">
+
+	    <div class="col-lg-6">
+	      <div class="category">
+
+	        <div class="category-header">
+          <h6 class="fw-semibold mb-0">{ model.Title }</h6>
+	          <a href={ templ.URL(model.ViewAllURL) } class="small text-decoration-none">{ model.T(i18n.ViewAll) }</a>
+	        </div>
+
+	        <div class="scroll-container">
+
+	          <!-- UP -->
+	          <button class="scroll-btn" onclick="scrollList('recList', -300)">
+	            <i class="bi bi-chevron-up"></i>
+	          </button>
+
+	          <!-- LIST -->
+	          <div class="course-list" id="recList">
+	            <div class="course-inner">
+	              <!-- items -->
+	              for _, course := range model.Courses {
+	              	@carouselItem(course)
+	              }
+	            </div>
+	          </div>
+
+	          <!-- DOWN -->
+	          <button class="scroll-btn" onclick="scrollList('recList', 300)">
+	            <i class="bi bi-chevron-down"></i>
+	          </button>
+
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	<script>
+	function scrollList(id, amount) {
+	  document.getElementById(id).scrollBy({
+	    top: amount,
+	    behavior: 'smooth'
+	  });
+	}
+	</script>
+}
+
+templ carouselItem(course Course) {
+	 <div class="course-item">
+	   <div>
+	     <div class="course-code">{ course.Code }</div>
+	     <div class="course-title">@titleCourseLink(course)</div>
+	     <div class="course-meta">{ strings.Join(course.Guarantors, ", ")}</div>
+	   </div>
+	   <div class="course-right">
+	     <div class="badge bg-light text-dark">{ course.Semester }</div>
+	     <div class="small text-muted">{ course.Credits } cr</div>
+	   </div>
+	 </div>
+}
+
+
+templ titleCourseLink(course Course) {
+	<a
+		class={ "link-body-emphasis link-underline-opacity-0 link-underline-opacity-75-hover" }
+		href={ templ.SafeURL(course.URL) }
+	>
+		{ course.Title }
+	</a>
+}

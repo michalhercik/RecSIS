@@ -1,9 +1,9 @@
 package receval
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
-	"fmt"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/errorx"
@@ -50,9 +50,9 @@ type Page interface {
 }
 
 type RecommenderWithAlgoSwitch interface {
-	Recommend(userID, student, algoName string, limit int) (recommend.Recommendation, error)
+	Recommend(userID, student string, algoName []string, limit int) (recommend.Recommendation, error)
 	Algorithms() ([]string, []bool, error)
-	Fit(algo string) error
+	Fit(algo []string) error
 }
 
 //================================================================================
@@ -74,7 +74,6 @@ func (s *Server) Init() {
 	router.HandleFunc("GET /student/{studentID}", s.studentPage)
 	router.HandleFunc("DELETE /student/{studentID}", s.deleteStudent)
 
-
 	s.router = router
 }
 
@@ -82,13 +81,14 @@ func (s *Server) Init() {
 // Handlers
 //================================================================================
 
-func (s Server) studentPage (w http.ResponseWriter, r *http.Request) {
+func (s Server) studentPage(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
 	t := texts[lang]
 
 	userID := s.Auth.UserID(r)
 	student := r.PathValue("studentID")
-	algo := r.URL.Query().Get("algo")
+	// algo := r.URL.Query().Get("algo")
+	algo := r.URL.Query()["algo"]
 	limit := 10
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 		var err error
@@ -99,7 +99,7 @@ func (s Server) studentPage (w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	var experiment []course
+	var experiment [][]course
 	var finished []course
 	var expected []course
 	var recommendation recommend.Recommendation
@@ -155,7 +155,6 @@ func (s Server) studentPage (w http.ResponseWriter, r *http.Request) {
 		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
 	}
 }
-
 
 func (s Server) saveStudent(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())
@@ -201,8 +200,9 @@ func (s Server) deleteStudent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) fit(w http.ResponseWriter, r *http.Request) {
-	algo := r.FormValue("algo")
-	if algo == "" {
+	r.ParseForm()
+	algo := r.PostForm["algo"]
+	if len(algo) == 0 {
 		http.Error(w, "algo is required", http.StatusBadRequest)
 		return
 	}
@@ -227,7 +227,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 		userID = r.PathValue("userID")
 	}
 	student := r.URL.Query().Get("student")
-	algo := r.URL.Query().Get("algo")
+	algo := r.URL.Query()["algo"]
 	limit := 10
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 		var err error
@@ -238,7 +238,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	var experiment []course
+	var experiment [][]course
 	var finished []course
 	var expected []course
 	var recommendation recommend.Recommendation
@@ -295,10 +295,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s Server) experiment(userID, student, algoName string, limit int, lang language.Language) ([]course, []course, []course, recommend.Recommendation, error) {
+func (s Server) experiment(userID, student string, algoName []string, limit int, lang language.Language) ([]course, [][]course, []course, recommend.Recommendation, error) {
 	recommendation, err := s.Experiment.Recommend(userID, student, algoName, limit)
-	if err != nil {
-		// TODO: add context
 		return nil, nil, nil, recommendation, err
 	}
 	// if len(courses) > 0 {
@@ -307,10 +305,21 @@ func (s Server) experiment(userID, student, algoName string, limit int, lang lan
 		// TODO: add context
 		return nil, nil, nil, recommendation, err
 	}
-	recommendedCourses, err := s.Data.courses(userID, recommendation.Recommended, lang)
-	if err != nil {
-		// TODO: add context
-		return nil, nil, nil, recommendation, err
+	var recommendedCourses [][]course
+	for _, recommended := range recommendation.Recommended {
+		rc, err := s.Data.courses(userID, recommended.Pred, lang)
+		if err != nil {
+			// TODO: add context
+			return nil, nil, nil, recommendation, err
+		}
+		recommendedCourses = append(recommendedCourses, rc)
+		// rcGrouped := [][]course{}
+		// ptr := 0
+		// for _, group := range recommended.Recommended {
+		// 	rcGrouped = append(rcGrouped, rc[ptr:ptr+len(group)])
+		// 	ptr += len(group)
+		// }
+		// recommendedCourses = append(recommendedCourses, rcGrouped)
 	}
 	expectedCourses, err := s.Data.courses(userID, recommendation.Expected, lang)
 	if err != nil {

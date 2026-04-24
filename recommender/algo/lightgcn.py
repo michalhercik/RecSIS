@@ -1,98 +1,129 @@
 import numpy as np
 import pandas as pd
 import torch
-from torch_geometric.nn.models import LightGCN
+from algo.base import Result
+from algo.embedder import UserKNN
+from algo.train import cached
+from torch_geometric.nn.models import LightGCN as TorchLightGCN
 from torch_geometric.utils import negative_sampling
-
-from algo.base import Algorithm
-from algo.train import TrainData
 from user import User
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # TODO: can recommned only for already seen data
 
-# class LightGCN(Algorithm):
-# def fit(self):
-#     VAL_RATIO = 0.2
-#     epochs = 1
-#     lr = 1e-2
 
-#     user, finished, povinn = self.dataset()
-#     povinn["course_id"] = povinn["course_id"] + user.shape[0]
-#     finished["course_id"] = finished["course_id"] + user.shape[0]
-#     train, val, test = self.split(finished, VAL_RATIO, 2024)
+class LightGCN(UserKNN):
+    def fit(self):
+        VAL_RATIO = 0.2
+        epochs = 10
+        lr = 1e-2
 
-#     val_results = pd.merge(
-#         train.groupby("user_id")
-#         .agg({"course_id": set})
-#         .rename(columns={"course_id": "train_courses"}),
-#         val.groupby("user_id")
-#         .agg({"course_id": list})
-#         .rename(columns={"course_id": "val_courses"}),
-#         on="user_id",
-#     ).reset_index()
+        super().fit()
 
-#     num_nodes = user.shape[0] + povinn.shape[0]
-#     self.model = LightGCN(num_nodes=num_nodes, embedding_dim=64, num_layers=3).to(device)
+        self.povinn["course_id"] = self.povinn["course_id"] + self.user.shape[0]
+        self.train["course_id"] = self.train["course_id"] + self.user.shape[0]
+        self.val["course_id"] = self.val["course_id"] + self.user.shape[0]
 
-#     edge_index_homo = torch.stack(
-#         [
-#             torch.tensor(train["user_id"].values),
-#             torch.tensor(train["course_id"].values),
-#         ],
-#         dim=0,
-#     )
-#     edge_index_homo = torch.cat([edge_index_homo, edge_index_homo.flip(0)], dim=1)
+        self.id_to_povinn = dict(zip(self.povinn["course_id"], self.povinn["povinn"]))
 
-#     edge_index_homo = edge_index_homo
-#     num_nodes = num_nodes
-#     train = train
+        val_results = pd.merge(
+            self.train.groupby("user_id")
+            .agg({"course_id": set})
+            .rename(columns={"course_id": "train_courses"}),
+            self.val.groupby("user_id")
+            .agg({"course_id": list})
+            .rename(columns={"course_id": "val_courses"}),
+            on="user_id",
+        ).reset_index()
 
-#     optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr)
+        num_nodes = self.user.shape[0] + self.povinn.shape[0]
 
-#     def train_step():
-#         self.model.train()
-#         optimizer.zero_grad()
+        self.edge_index_homo = torch.stack(
+            [
+                torch.tensor(self.train["user_id"].values),
+                torch.tensor(self.train["course_id"].values),
+            ],
+            dim=0,
+        )
+        self.edge_index_homo = torch.cat(
+            [self.edge_index_homo, self.edge_index_homo.flip(0)], dim=1
+        )
 
-#         neg_edge_index = negative_sampling(
-#             edge_index=edge_index_homo,
-#             num_nodes=num_nodes,
-#             num_neg_samples=edge_index_homo.size(1) // 2,
-#         )
+        # num_nodes = num_nodes
+        #
 
-#         pos_u, pos_i = edge_index_homo[:, : train.shape[0]]
-#         _, neg_i = neg_edge_index
+        def train_model():
+            model = TorchLightGCN(
+                num_nodes=num_nodes, embedding_dim=64, num_layers=3
+            ).to(device)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
-#         emb = self.model.get_embedding(edge_index_homo)
+            def train_step():
+                model.train()
+                optimizer.zero_grad()
 
-#         u_emb = emb[pos_u]
-#         pos_emb = emb[pos_i]
-#         neg_emb = emb[neg_i]
+                neg_edge_index = negative_sampling(
+                    edge_index=self.edge_index_homo,
+                    num_nodes=num_nodes,
+                    num_neg_samples=self.edge_index_homo.size(1) // 2,
+                )
 
-#         pos_scores = (u_emb * pos_emb).sum(dim=1)
-#         neg_scores = (u_emb * neg_emb).sum(dim=1)
+                pos_u, pos_i = self.edge_index_homo[:, : self.train.shape[0]]
+                _, neg_i = neg_edge_index
 
-#         loss = self.model.recommendation_loss(
-#             pos_scores,
-#             neg_scores,
-#             node_id=torch.cat([pos_u, pos_i, neg_i]),
-#             lambda_reg=1e-4,
-#         )
-#         loss.backward()
-#         optimizer.step()
+                emb = model.get_embedding(self.edge_index_homo)
 
-#         return float(loss.detach())
+                u_emb = emb[pos_u]
+                pos_emb = emb[pos_i]
+                neg_emb = emb[neg_i]
 
-#     for epoch in range(1, self.epochs + 1):
-#         loss = train_step()
-#         print(f"Epoch {epoch:03d} | Loss: {loss:.4f}")
+                pos_scores = (u_emb * pos_emb).sum(dim=1)
+                neg_scores = (u_emb * neg_emb).sum(dim=1)
 
-#     self.model.eval()
+                loss = model.recommendation_loss(
+                    pos_scores,
+                    neg_scores,
+                    node_id=torch.cat([pos_u, pos_i, neg_i]),
+                    lambda_reg=1e-4,
+                )
+                loss.backward()
+                optimizer.step()
 
-# def recommend(self, user: User, limit: int) -> list[str]:
-#     top_items = self.model.recommend(
-#         edge_index=self.edge_index_homo,
-#         src_index=torch.tensor(val_results["user_id"].values),
-#         k=povinn.shape[0],
-#     )
+                return float(loss.detach())
+
+            for epoch in range(1, epochs + 1):
+                loss = train_step()
+                print(f"Epoch {epoch:03d} | Loss: {loss:.4f}")
+
+            model.eval()
+            return model
+
+        self.model = cached(train_model, "lightgcn.pickle")
+
+    def recommend(self, user: User, limit: int) -> list[str]:
+        result = Result()
+        result.soident = self.get_user_soident(user)
+        result.type, result.sobor, result.degree_plan = self.get_user_info(
+            user, result.soident
+        )
+        result.year_of_study, result.finished = self.get_year_finished(
+            user, result.soident
+        )
+        result.expected = self.get_expected(user, result.soident)
+
+        uid = self.get_user_id(user, result.soident)
+
+        pred = self.model.recommend(
+            edge_index=self.edge_index_homo,
+            src_index=torch.tensor(uid),
+            k=self.povinn.shape[0],
+        )
+        pred = pred.detach().cpu().tolist()
+        pred = [self.id_to_povinn.get(cid) for cid in pred if cid in self.id_to_povinn]
+        pred = self.filter_out_finished(pred, result.finished)
+
+        result.recommended = pred[:limit]
+        dp_courses = self.get_degree_plan_courses(result.degree_plan)
+        result.generate_masks(dp_courses)
+        return result

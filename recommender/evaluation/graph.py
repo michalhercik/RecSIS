@@ -24,9 +24,6 @@ from torch_geometric.nn import SAGEConv, to_hetero
 #    N   65.0  0.4493  0.2325  0.0  0.3333  0.4167  0.6111  1.0000      65.0  0.0188  0.0293  0.0  0.0000  0.0000  0.0200  0.1200   65.0  0.1748  0.1558  0.0  0.0542  0.1102  0.2760  0.8769
 # -  -  118.5  0.3208  0.1840  0.0  0.1928  0.3188  0.4311  0.8964     118.5  0.1649  0.1730  0.0  0.0213  0.0938  0.2944  0.5938  118.5  0.3480  0.2616  0.0  0.1223  0.3228  0.5581  0.9550
 
-user, finished, povinn = user_interaction_povinn()
-print(user)
-print(finished)
 # df = finished.groupby("soident").agg({"povinn": list})
 # me = df[
 #     df["povinn"].apply(
@@ -433,19 +430,21 @@ def negative_split(
 
         negative_per_user = pd.Series(
             user_interaction_count.apply(
-                lambda x: course[
-                    ~course.isin(
-                        all_interaction[all_interaction["user_id"] == x["user_id"]][
-                            "course_id"
-                        ]
+                lambda x: (
+                    course[
+                        ~course.isin(
+                            all_interaction[all_interaction["user_id"] == x["user_id"]][
+                                "course_id"
+                            ]
+                        )
+                    ]
+                    .sample(
+                        x["count"] if x["count"] > 0 else None,
+                        frac=(None if x["count"] > 0 else 1),
+                        random_state=RND_STATE,
                     )
-                ]
-                .sample(
-                    x["count"] if x["count"] > 0 else None,
-                    frac=(None if x["count"] > 0 else 1),
-                    random_state=RND_STATE,
-                )
-                .tolist(),
+                    .tolist()
+                ),
                 axis=1,
             ).values,
             index=user_interaction_count["user_id"],

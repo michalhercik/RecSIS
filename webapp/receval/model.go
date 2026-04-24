@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
+
 	"github.com/michalhercik/RecSIS/recommend"
 )
 
-
 type recommendedModel struct {
 	student         string
-	courses         []course
+	courses         [][]course
 	finished        []course
 	expected        []course
 	recommendation  recommend.Recommendation
-	algo            string
+	algo            []string
 	algoSuggestions []string
 	algoFit         []bool
 	limit           int
@@ -25,7 +25,7 @@ type recommendedModel struct {
 }
 
 type savedStudent struct {
-	ID string  `db:"student_id"`
+	ID    string `db:"student_id"`
 	Title string `db:"title"`
 }
 

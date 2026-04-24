@@ -11,17 +11,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func NewServer(db *sqlx.DB, errorHandler Error, pageTempl page.Page, host string, port int ) http.Handler {
+func NewServer(db *sqlx.DB, errorHandler Error, pageTempl page.Page, host string, port int) http.Handler {
 	result := &Server{
-		Auth: cas.UserIDFromContext{},
+		Auth:  cas.UserIDFromContext{},
 		Error: errorHandler,
-		Page: page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		Experiment: recommend.RestCallWithAlgoSwitch{
 			Client:       &http.Client{},
 			DB:           db,
-			Endpoint:     fmt.Sprintf("http://%s:%d/recommended", host, port),
-			AlgoEndpoint: fmt.Sprintf("http://%s:%d/algorithms", host, port),
-			FitEndpoint: fmt.Sprintf("http://%s:%d/fit", host, port),
+			Endpoint:     fmt.Sprintf("http://%s:%d/eval/recommended", host, port),
+			AlgoEndpoint: fmt.Sprintf("http://%s:%d/eval/algorithms", host, port),
+			FitEndpoint:  fmt.Sprintf("http://%s:%d/eval/fit", host, port),
 		},
 		Data: DBManager{DB: db},
 	}

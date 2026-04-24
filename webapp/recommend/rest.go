@@ -11,7 +11,7 @@ import (
 )
 
 type recRequest struct {
-	Algo           string
+	Algo           []string
 	Limit          int
 	UserID         string
 	Student        string
@@ -20,26 +20,56 @@ type recRequest struct {
 	Blueprint      string
 }
 
+type CourseGroup [][]string
+
+func (cg CourseGroup) Flatten() []string {
+	result := []string{}
+	for _, group := range cg {
+		result = append(result, group...)
+	}
+	return result
+}
+
+type AlgoRecommendation struct {
+	Pred                    []string `json:"pred"`
+	RecommendedTruePos      []bool   `json:"true_positive"`
+	RecommendedInDegreePlan []bool   `json:"in_degree_plan"`
+	ExpectedFalseNeg        []bool   `json:"false_negative"`
+	Groups                  [][]int  `json:"groups"`
+}
 
 type Recommendation struct {
-	UserID 	string `json:"soident"`
-	Field	string `json:"sobor"`
-    YearOfStudy int `json:"year_of_study"`
-    Type 		string `json:"type"`
-    DegreePlan 	string `json:"degree_plan"`
-	Finished    []string `json:"finished"`
-	FinishedInDegreePlan []bool `json:"finished_in_degree_plan"`
-	Recommended []string `json:"recommended"`
-	RecommendedTruePos []bool `json:"recommended_true_positive"`
-	RecommendedInDegreePlan []bool `json:"recommended_in_degree_plan"`
-	Expected    []string `json:"expected"`
-	ExpectedFalseNeg []bool `json:"expected_false_negative"`
-	ExpectedInDegreePlan []bool `json:"expected_in_degree_plan"`
+	UserID               string               `json:"soident"`
+	Field                string               `json:"sobor"`
+	YearOfStudy          int                  `json:"year_of_study"`
+	Type                 string               `json:"type"`
+	DegreePlan           string               `json:"degree_plan"`
+	Finished             []string             `json:"finished"`
+	FinishedInDegreePlan []bool               `json:"finished_in_degree_plan"`
+	Recommended          []AlgoRecommendation `json:"recommended"`
+	Expected             []string             `json:"expected"`
+	ExpectedInDegreePlan []bool               `json:"expected_in_degree_plan"`
 }
+
+// type Recommendation struct {
+// 	UserID                  string   `json:"soident"`
+// 	Field                   string   `json:"sobor"`
+// 	YearOfStudy             int      `json:"year_of_study"`
+// 	Type                    string   `json:"type"`
+// 	DegreePlan              string   `json:"degree_plan"`
+// 	Finished                []string `json:"finished"`
+// 	FinishedInDegreePlan    []bool   `json:"finished_in_degree_plan"`
+// 	Recommended             []string `json:"recommended"`
+// 	RecommendedTruePos      []bool   `json:"recommended_true_positive"`
+// 	RecommendedInDegreePlan []bool   `json:"recommended_in_degree_plan"`
+// 	Expected                []string `json:"expected"`
+// 	ExpectedFalseNeg        []bool   `json:"expected_false_negative"`
+// 	ExpectedInDegreePlan    []bool   `json:"expected_in_degree_plan"`
+// }
 
 func (r recRequest) MarshalJSON() ([]byte, error) {
 	body := `{
-		"algo": 	"%s",
+		"algo": 	  %s,
 		"limit":      %d,
 		"user_id":    "%s",
 		"student":    "%s",
@@ -47,7 +77,11 @@ func (r recRequest) MarshalJSON() ([]byte, error) {
 		"degree_plan": "%s",
 		"enrollment_year": %d
 	}`
-	body = fmt.Sprintf(body, r.Algo, r.Limit, r.UserID, r.Student, r.Blueprint, r.DegreePlan, r.EnrollmentYear)
+	algo, err := json.Marshal(r.Algo)
+	if err != nil {
+		return nil, err
+	}
+	body = fmt.Sprintf(body, string(algo), r.Limit, r.UserID, r.Student, r.Blueprint, r.DegreePlan, r.EnrollmentYear)
 	return []byte(body), nil
 }
 
@@ -77,12 +111,12 @@ func (c RestCallWithAlgoSwitch) Algorithms() ([]string, []bool, error) {
 	return body.Algorithms, body.Fit, nil
 }
 
-func (c RestCallWithAlgoSwitch) Recommend(userID, student, algo string, limit int) (Recommendation, error) {
+func (c RestCallWithAlgoSwitch) Recommend(userID, student string, algo []string, limit int) (Recommendation, error) {
 	req := recRequest{
-		Algo:   algo,
-		Limit:  limit,
-		UserID: userID,
-		Student: student,
+		Algo:      algo,
+		Limit:     limit,
+		UserID:    userID,
+		Student:   student,
 		Blueprint: "null",
 	}
 	var err error
@@ -103,9 +137,9 @@ func (c RestCallWithAlgoSwitch) Recommend(userID, student, algo string, limit in
 	return result, nil
 }
 
-func (c RestCallWithAlgoSwitch) Fit(algo string) error {
+func (c RestCallWithAlgoSwitch) Fit(algo []string) error {
 	payload, err := json.Marshal(struct {
-		Algo string `json:"algo"`
+		Algo []string `json:"algo"`
 	}{
 		Algo: algo,
 	})
@@ -195,13 +229,7 @@ func (c RestCallWithAlgoSwitch) call(reqParams recRequest) (Recommendation, erro
 	}
 	defer resp.Body.Close()
 	rawBody, _ := io.ReadAll(resp.Body)
-	// body := struct {
-	// 	Recommended []string `json:"recommended"`
-	// 	Finished []string `json:"finished"`
-	// 	Expected []string `json:"expected"`
-	// 	Target []bool `json:"target"`
-	// }{}
-	body := Recommendation{}
+	var body Recommendation
 	if err := json.Unmarshal(rawBody, &body); err != nil {
 		return Recommendation{}, err
 	}

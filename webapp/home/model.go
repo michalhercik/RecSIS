@@ -4,9 +4,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"unicode/utf8"
+
 	"github.com/michalhercik/RecSIS/recommend"
+	"github.com/michalhercik/RecSIS/ui"
 )
 
 type recommendedModel struct {
@@ -26,6 +29,25 @@ type homePage struct {
 	recommendedCourses []course
 	newCourses         []course
 	experimentCourses  []course
+}
+
+func (hp *homePage) newCoursesToCarouselItems() []ui.Course {
+	result := make([]ui.Course, len(hp.newCourses))
+	for i, c := range hp.newCourses {
+		guarantors := make([]string, len(c.Guarantors))
+		for i, g := range c.Guarantors {
+			guarantors[i] = g.string()
+		}
+		result[i] = ui.Course{
+			Code:       c.Code,
+			Title:      c.Title,
+			Guarantors: guarantors,
+			Semester:   strconv.Itoa(int(c.Semester)),
+			Credits:    c.Credits,
+			URL:        "/course/" + c.Code,
+		}
+	}
+	return result
 }
 
 type course struct {

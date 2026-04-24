@@ -54,7 +54,7 @@ def main(args):
     )
     model.fit(
         train_im.values,
-        batch_size=train.shape[0],  # TODO: Batch size of train data size
+        batch_size=train.shape[0],
         epochs=args.epochs,
         shuffle=False,
     )
