@@ -1852,3 +1852,81 @@ var degreePlanYears = transformation{
 		FROM stud_plan
 	`,
 }
+
+var povinnCategories = transformation{
+	name: "povinn_categories",
+	query: `--sql
+		DROP TABLE IF EXISTS povinn_categories;
+		CREATE TABLE povinn_categories (
+			povinn VARCHAR(10),
+			trida_kod JSONB,
+			trida_nazev JSONB,
+			klas_kod JSONB,
+			klas_nazev JSONB,
+			klas_anazev JSONB
+		);
+		INSERT INTO povinn_categories
+		WITH klas_json AS (
+			SELECT
+				pk.povinn,
+				json_agg(k.kod) klas_kod,
+				json_agg(k.nazev) klas_nazev,
+				json_agg(k.anazev) klas_anazev
+			FROM pklas pk
+			LEFT JOIN klas k ON k.kod = pk.pklas
+			GROUP BY pk.povinn
+		), trida_json AS (
+			SELECT
+				pt.povinn,
+				json_agg(t.kod) trida_kod,
+				json_agg(t.nazev) trida_nazev
+			FROM ptrida pt
+			LEFT JOIN trida t ON t.kod = pt.ptrida
+			GROUP BY pt.povinn
+		)
+		SELECT
+			p.povinn,
+            t.trida_kod, t.trida_nazev,
+            k.klas_kod, k.klas_nazev, k.klas_anazev
+		FROM povinn p
+        LEFT JOIN trida_json t on t.povinn = p.povinn
+		LEFT JOIN klas_json k ON k.povinn = p.povinn
+        WHERE (
+        	trida_nazev IS NOT null
+         	OR klas_nazev IS NOT NULL
+        );
+	`,
+}
+
+var filteredTrida = transformation{
+	name: "filtered_trida",
+	query: `--sql
+		DROP TABLE IF EXISTS filtered_trida;
+		CREATE TABLE filtered_trida AS
+			SELECT
+				p.povinn,
+				t.kod,
+				t.nazev
+			FROM povinn p
+			LEFT JOIN ptrida pt ON pt.povinn = p.povinn
+			LEFT JOIN trida t ON t.kod = pt.ptrida
+			WHERE t.kod IS NOT NULL
+	`,
+}
+
+var filteredKlas = transformation{
+	name: "filtered_klas",
+	query: `--sql
+		DROP TABLE IF EXISTS filtered_klas;
+		CREATE TABLE filtered_klas AS
+			SELECT
+				p.povinn,
+				k.kod,
+				k.nazev,
+				k.anazev
+			FROM povinn p
+			LEFT JOIN pklas pk ON pk.povinn = p.povinn
+			LEFT JOIN klas k ON k.kod = pk.pklas
+			WHERE k.kod IS NOT NULL
+	`,
+}

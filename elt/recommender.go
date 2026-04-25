@@ -88,6 +88,28 @@ func migratePovinn(tx *sqlx.Tx) error {
 	return nil
 }
 
+func migratePovinnCategories(tx *sqlx.Tx) error {
+	var err error
+	_, err = tx.Exec(`--sql
+		DELETE FROM recommender.povinn_categories WHERE TRUE;
+		INSERT INTO recommender.povinn_categories (
+			povinn,
+			class_nazev,
+			classification_nazev, classification_anazev,
+			classification_base_nazev, classification_base_anazev,
+		) SELECT
+		povinn,
+			class_nazev,
+			classification_nazev, classification_anazev,
+			classification_base_nazev, classification_base_anazev,
+		FROM povinn_categories
+	`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func migrateStudium(tx *sqlx.Tx) error {
 	var err error
 	_, err = tx.Exec(`--sql
@@ -153,6 +175,42 @@ func migrateStudPlan(tx *sqlx.Tx) error {
 			plan_code,
 			plan_year
 		FROM stud_plan
+	`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func migrateTrida(tx *sqlx.Tx) error {
+	var err error
+	_, err = tx.Exec(`--sql
+		DELETE FROM recommender.trida WHERE TRUE;
+		INSERT INTO recommender.trida (
+			povinn,
+			kod, nazev
+		) SELECT
+			povinn,
+			kod, nazev
+		FROM filtered_trida
+	`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func migrateKlas(tx *sqlx.Tx) error {
+	var err error
+	_, err = tx.Exec(`--sql
+		DELETE FROM recommender.klas WHERE TRUE;
+		INSERT INTO recommender.klas (
+			povinn, kod,
+			nazev, anazev
+		) SELECT
+			povinn, kod,
+			nazev, anazev
+		FROM filtered_klas
 	`)
 	if err != nil {
 		return err
