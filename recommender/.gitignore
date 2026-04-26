@@ -2,3 +2,4 @@
 **/venv/
 *.pickle
 *.pth
+*.pkl
