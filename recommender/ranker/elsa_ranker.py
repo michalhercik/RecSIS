@@ -1,11 +1,8 @@
-import numpy as np
 import pandas as pd
 import torch
 from data import TrainData
 from elsa import ELSA
 from ranker.ranker import Ranker
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
 from user import User
 
 
@@ -32,52 +29,6 @@ class Elsa(Ranker):
             shuffle=False,
         )
 
-        self.clusters = self.cluster()
-
-    def cluster(self):
-        emb_matrix = self.model.get_items_embeddings(as_numpy=True)
-        embeddings = pd.DataFrame(
-            {
-                "povinn": self.train_data.povinn["povinn"],
-                "pnazev": self.train_data.povinn["pnazev"],
-                "embedding": list(emb_matrix),
-            }
-        )
-
-        orig_dim = emb_matrix.shape[1]
-        if orig_dim > 50:
-            pca = PCA(n_components=50, random_state=42)
-            reduced_emb = pca.fit_transform(emb_matrix)
-        else:
-            reduced_emb = emb_matrix.copy()
-
-        # also keep reduced embeddings in the dataframe for later inspection
-        embeddings["reduced_embedding"] = list(reduced_emb)
-
-        # Build a matrix of embeddings (n_items x n_dims)
-        # emb_matrix = np.vstack(embeddings["embedding"].values)
-        n_items = emb_matrix.shape[0]
-
-        # Heuristic for number of clusters: at least 1, otherwise sqrt(n_items)
-        if n_items <= 1:
-            n_clusters = 1
-        else:
-            n_clusters = max(2, int(n_items**0.5))
-
-        # Run k-means clustering on the item embeddings
-        if n_clusters == 1:
-            labels = np.zeros(n_items, dtype=int)
-            cluster_centers = reduced_emb.copy()
-        else:
-            kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-            labels = kmeans.fit_predict(reduced_emb)
-            cluster_centers = kmeans.cluster_centers_
-
-        # Attach cluster labels to the embeddings dataframe
-        embeddings["cluster"] = labels
-
-        return embeddings
-
     def rank(self, user: User) -> list[str]:
         bp_im = self.__interaction_matrix_from(user)
         pred = self.model.predict(bp_im.values, batch_size=1)
@@ -85,8 +36,14 @@ class Elsa(Ranker):
         pred = self.train_data.povinn["povinn"].iloc[topk.indices[0]].to_list()
         return pred
 
-    def explain(self, courses: list[str]):
-        pass
+    def explain(self, user: User, courses: list[str]):
+        povinn = self.train_data.povinn
+        candidates = povinn[povinn["povinn"].isin(courses)].index
+        sim = self.model.similar_items(
+            N=3, batch_size=3, sources=courses, candidates=candidates
+        )
+        # TODO: find similar klas, trida, teacher, department
+        # select most common feature and use it as explaination
 
     def set_train_params(
         self, factors, num_epochs, batch_size, learning_rate, device=torch.device("cpu")
@@ -128,7 +85,3 @@ class Elsa(Ranker):
             fill_value=0,
         )
         return im
-
-
-if __name__ == "__main__":
-    main()

@@ -13,6 +13,8 @@ class TrainData:
     stud_plan: pd.DataFrame
     val: pd.DataFrame
     test: pd.DataFrame
+    trida: pd.DataFrame
+    klas: pd.DataFrame
 
     rand_soident_counter: int = 0
 
@@ -34,7 +36,7 @@ class TrainData:
             self.__dict__.update(data)
             return
 
-        user, finished, povinn, stud_plan = self.dataset()
+        user, finished, povinn, stud_plan, klas, trida = self.dataset()
         train, val, test = self.split(finished, self.VAL_RATIO, 2024)
 
         data = {
@@ -44,6 +46,8 @@ class TrainData:
             "train": train,
             "finished": finished,
             "stud_plan": stud_plan,
+            "klas": klas,
+            "trida": trida,
         }
 
         self.__dict__.update(data)
@@ -167,11 +171,15 @@ class TrainData:
         interactions = load_df("interactions")
         povinn = load_df("povinn")
         stud_plan = sql_builder("", conn)("stud_plan")
+        klas = sql_builder("", conn)("klas")
+        trida = sql_builder("", conn)("trida")
         conn.close()
-        return user, interactions, povinn, stud_plan
+        return user, interactions, povinn, stud_plan, klas, trida
 
     def dataset(self):
-        user, interaction, povinn, stud_plan = self.user_interaction_povinn()
+        user, interaction, povinn, stud_plan, klas, trida = (
+            self.user_interaction_povinn()
+        )
 
         user = user.reset_index().rename(columns={"index": "user_id"})
         # user["sobor_embed"] = list(sbert_embed(user["sobor_nazev"]))
@@ -182,7 +190,7 @@ class TrainData:
         interaction = interaction.merge(povinn[["povinn", "course_id"]], on="povinn")
         interaction = interaction[["user_id", "course_id", "zskr", "zroc"]]
 
-        return user, interaction, povinn, stud_plan
+        return user, interaction, povinn, stud_plan, klas, trida
 
     def split(self, interaction, val_ratio, split_year=2024):
         # Train data are all interactions before split_year
