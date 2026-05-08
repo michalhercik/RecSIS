@@ -2,7 +2,7 @@ from data import TrainData
 from user import User
 
 
-class Masker:
+class FittableMasker:
     def __init__(self, train_data: TrainData):
         self.train_data = train_data
 
@@ -13,7 +13,15 @@ class Masker:
         raise NotImplementedError()
 
 
-class TruePositivesMasker(Masker):
+class Masker:
+    def mask(self, reference: list[str], values: list[str]) -> list[bool]:
+        """
+        keep order of values
+        """
+        raise NotImplementedError()
+
+
+class TruePositivesMasker(FittableMasker):
     def fit(self, user: User):
         self.expected = []
         if user.fetch:
@@ -24,7 +32,7 @@ class TruePositivesMasker(Masker):
         return mask
 
 
-class DegreePlanMasker(Masker):
+class DegreePlanMasker(FittableMasker):
     def fit(self, user: User):
         dp = []
         if user.fetch:
@@ -38,12 +46,13 @@ class DegreePlanMasker(Masker):
         return mask
 
 
-class FalseNegativeMasker(Masker):
-    def fit(self, user: User):
-        self.expected = []
-        if user.fetch:
-            self.expected = set(self.train_data.get_expected(user.id))
+class InMasker(Masker):
+    def mask(self, reference: list[str], values: list[str]) -> list[bool]:
+        mask = [course in reference for course in values]
+        return mask
 
-    def mask(self, courses: list[str]) -> list[bool]:
-        mask = [course not in courses for course in self.expected]
+
+class NotInMasker(InMasker):
+    def mask(self, reference: list[str], values: list[str]) -> list[bool]:
+        mask = [not m for m in super().mask(reference, values)]
         return mask

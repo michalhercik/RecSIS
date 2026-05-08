@@ -1,6 +1,9 @@
 import re
 
+import numpy as np
+import pandas as pd
 from data import TrainData
+from explainer.gcn import Categories
 
 
 class Grouper:
@@ -79,9 +82,46 @@ class SyntaxGrouper(Grouper):
                 "pro mírně pokročilé",
                 "pro středně pokročilé",
                 "pro pokročilé",
+                "Pokročilé",
             ]
         )
         for w in stop_words:
             s = s.replace(w, "")
         s = re.sub(r"\s+", " ", s).strip()  # collapse whitespace
         return s
+
+
+class Categorizer:
+    def __init__(self, train_data: TrainData):
+        self.train_data = train_data
+
+    def categorize(self, courses: list[str]) -> tuple[list[str], list[list[str]]]:
+        raise NotImplementedError()
+
+
+class RankCategorizer(Categorizer):
+    def categorize(self, courses: list[str]) -> tuple[list[str], list[list[str]]]:
+        ips = Categories(self.train_data).ips()
+        courses = courses[:50]
+        pred = pd.DataFrame({"povinn": courses, "rank": range(len(courses))})
+        pred = pred.merge(self.train_data.categories, on="povinn")
+        pred["rank"] = 1 / np.log1p(pred["rank"] + 1)
+        categories = pred.groupby("nazev", as_index=False).agg({"rank": "sum"})
+        categories = categories.merge(ips, on="nazev")
+        categories["ips"] = categories["ips"].pow(0.7)
+        categories["result"] = categories["rank"] * categories["ips"]
+
+        # print(pred.sort_values(by="rank").head(10))
+        # print(categories.sort_values(by="result", ascending=False).head(7))
+
+        top_categories = (
+            categories.sort_values(by="result", ascending=False)
+            .head(5)["nazev"]
+            .to_list()
+        )
+        cat_courses = [
+            pred[pred["nazev"] == cat].sort_values(by="rank")["povinn"].to_list()
+            for cat in top_categories
+        ]
+
+        return top_categories, cat_courses

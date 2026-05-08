@@ -1,3 +1,6 @@
+import typing
+
+import numpy as np
 import pandas as pd
 import torch
 from data import TrainData
@@ -36,14 +39,21 @@ class Elsa(Ranker):
         pred = self.train_data.povinn["povinn"].iloc[topk.indices[0]].to_list()
         return pred
 
-    def explain(self, user: User, courses: list[str]):
-        povinn = self.train_data.povinn
-        candidates = povinn[povinn["povinn"].isin(courses)].index
-        sim = self.model.similar_items(
-            N=3, batch_size=3, sources=courses, candidates=candidates
+    def similar_items(
+        self,
+        N: int,
+        batch_size: int,
+        sources: typing.Union[np.ndarray, torch.Tensor] = None,
+        candidates: typing.Union[np.ndarray, torch.Tensor] = None,
+        verbose: bool = True,
+    ) -> tuple:
+        return self.model.similar_items(
+            N=N,
+            batch_size=batch_size,
+            sources=sources,
+            candidates=candidates,
+            verbose=verbose,
         )
-        # TODO: find similar klas, trida, teacher, department
-        # select most common feature and use it as explaination
 
     def set_train_params(
         self, factors, num_epochs, batch_size, learning_rate, device=torch.device("cpu")

@@ -8,6 +8,7 @@ import psycopg2
 
 class TrainData:
     user: pd.DataFrame
+    finished: pd.DataFrame
     povinn: pd.DataFrame
     train: pd.DataFrame
     stud_plan: pd.DataFrame
@@ -15,6 +16,8 @@ class TrainData:
     test: pd.DataFrame
     trida: pd.DataFrame
     klas: pd.DataFrame
+    ucit: pd.DataFrame
+    categories: pd.DataFrame
 
     rand_soident_counter: int = 0
 
@@ -36,18 +39,23 @@ class TrainData:
             self.__dict__.update(data)
             return
 
-        user, finished, povinn, stud_plan, klas, trida = self.dataset()
+        user, finished, povinn, stud_plan, klas, trida, ucit, categories = (
+            self.dataset()
+        )
         train, val, test = self.split(finished, self.VAL_RATIO, 2024)
 
         data = {
             "user": user,
             "povinn": povinn,
             "val": val,
+            "test": test,
             "train": train,
             "finished": finished,
             "stud_plan": stud_plan,
             "klas": klas,
             "trida": trida,
+            "ucit": ucit,
+            "categories": categories,
         }
 
         self.__dict__.update(data)
@@ -55,11 +63,14 @@ class TrainData:
             pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     def get_finished(self, soident: str) -> list[str]:
+        finished = self.finished_df(soident)["povinn"].to_list()
+        return finished
+
+    def finished_df(self, soident: str) -> pd.DataFrame:
         user_id = self.user[self.user["soident"] == int(soident)]["user_id"].iloc[0]
         finished_df = self.train[self.train["user_id"] == user_id]
         finished_df = finished_df.merge(self.povinn, on="course_id")
-        finished = finished_df["povinn"].to_list()
-        return finished
+        return finished_df.drop(columns=["user_id", "zskr", "zroc"])
 
     def degree_plan_courses_by_soident(self, soident: str) -> list[str]:
         degree_plan = self.user[self.user["soident"] == int(soident)]["splan"].iloc[0]
@@ -107,6 +118,9 @@ class TrainData:
         year = finished_df["zroc"].max()
         return year
 
+    def get_user(self, soident: str) -> pd.DataFrame:
+        return self.user[self.user["soident"] == soident]
+
     def rand_soident_from_dev(self) -> str:
         uid = (
             self.val["user_id"]
@@ -153,10 +167,39 @@ class TrainData:
             ),
             povinn AS (
                 SELECT DISTINCT
-                    p.povinn, p.pnazev, panazev, p.pgarant
+                    p.povinn, p.pnazev, panazev, p.pgarant, vucit1, vucit2, vucit3
                 FROM interactions i
                 LEFT JOIN povinn p ON i.povinn = p.povinn
+                WHERE p.pgarant != '32-STUD'
                 ORDER BY p.povinn
+            ),
+            filtered_klas AS (
+                SELECT povinn, kod, nazev FROM klas
+                --WHERE nazev NOT IN ('Předměty obecného základu')
+            ),
+            filtered_trida AS (
+                SELECT * FROM trida
+                WHERE nazev NOT LIKE 'M Bc.%'
+                AND nazev NOT LIKE 'M Mgr.%'
+                --AND nazev NOT IN ('Informatika Bc.', 'Informatika Mgr. - volitelný', 'volitelný', 'Všeobecné')
+            ),
+            ucit AS (
+                SELECT * FROM (
+                    SELECT povinn, vucit1 kod, vucit1 nazev FROM povinn
+                    UNION
+                    SELECT povinn, vucit2 kod, vucit2 nazev FROM povinn
+                    UNION
+                    SELECT povinn, vucit3 kod, vucit3 nazev FROM povinn
+                ) WHERE kod IS NOT NULL
+            ),
+            categories AS (
+                SELECT * FROM filtered_klas
+                UNION
+                SELECT * FROM filtered_trida
+                UNION
+                SELECT povinn, pgarant kod, pgarant nazev FROM povinn
+                UNION
+                SELECT * FROM ucit
             )
         """
         conn = psycopg2.connect(
@@ -171,13 +214,15 @@ class TrainData:
         interactions = load_df("interactions")
         povinn = load_df("povinn")
         stud_plan = sql_builder("", conn)("stud_plan")
-        klas = sql_builder("", conn)("klas")
-        trida = sql_builder("", conn)("trida")
+        klas = load_df("klas")
+        trida = load_df("filtered_trida")
+        ucit = load_df("ucit")
+        categories = load_df("categories")
         conn.close()
-        return user, interactions, povinn, stud_plan, klas, trida
+        return user, interactions, povinn, stud_plan, klas, trida, ucit, categories
 
     def dataset(self):
-        user, interaction, povinn, stud_plan, klas, trida = (
+        user, interaction, povinn, stud_plan, klas, trida, ucit, categories = (
             self.user_interaction_povinn()
         )
 
@@ -190,7 +235,7 @@ class TrainData:
         interaction = interaction.merge(povinn[["povinn", "course_id"]], on="povinn")
         interaction = interaction[["user_id", "course_id", "zskr", "zroc"]]
 
-        return user, interaction, povinn, stud_plan, klas, trida
+        return user, interaction, povinn, stud_plan, klas, trida, ucit, categories
 
     def split(self, interaction, val_ratio, split_year=2024):
         # Train data are all interactions before split_year

@@ -270,5 +270,4 @@ async def eval_fit(req: FitRequest):
 @eval_router.get("/algorithms")
 async def algorithms():
     result = eval_recommender.algorithms()
-    print(result, flush=True)
     return JSONResponse(content=result)

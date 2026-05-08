@@ -1,13 +1,19 @@
 from data import TrainData
+from explainer.elsa import ElsaExplainer
+from explainer.explainer import EmptyExplainer, Explainer
 from filterer import FinishedFilter
-from grouper import IdentityGrouper, SyntaxGrouper
+from grouper import IdentityGrouper, RankCategorizer, SyntaxGrouper
 from masker import (
     DegreePlanMasker,
-    FalseNegativeMasker,
+    InMasker,
+    NotInMasker,
     TruePositivesMasker,
 )
-from ranker.elsa import Elsa
+from ranker.elsa_ranker import Elsa
 from ranker.embedder import MeiliSearch
+from ranker.gcn import GCNRanker
+from ranker.lightgcn import LightGCNRanker
+from ranker.ranker import Ranker
 from user import User
 
 RND_STATE = 67564
@@ -39,18 +45,58 @@ class Recommender:
         self.ranker.fit()
 
 
+class Model(Ranker, Explainer):
+    def __init__(self, ranker: Ranker, explainer: Explainer):
+        self.ranker = ranker
+        self.explainer = explainer
+
+    def fit(self) -> None:
+        self.ranker.fit()
+        self.explainer.fit()
+
+    def rank(self, user: User) -> list[str]:
+        return self.ranker.rank(user)
+
+    def explain(self, user: User, courses: list[str]) -> list[str]:
+        return self.explainer.explain(user, courses)
+
+
+class ModelFactory:
+    def __init__(self, train_data: TrainData):
+        self.train_data = train_data
+
+    def elsa(self):
+        ranker = Elsa(self.train_data)
+        explainer = ElsaExplainer(ranker, self.train_data)
+        return Model(ranker, explainer)
+
+    def gcn(self):
+        ranker = GCNRanker(self.train_data)
+        explainer = EmptyExplainer()
+        return Model(ranker, explainer)
+
+    def light_gcn(self):
+        ranker = LightGCNRanker(self.train_data)
+        explainer = EmptyExplainer()
+        return Model(ranker, explainer)
+
+
 class EvalRecommender:
     def __init__(self):
         self.train_data = TrainData(rnd_state=RND_STATE)
-        self.ranker = {
-            "Elsa": Elsa(self.train_data),
-            # "MeiliSearch": MeiliSearch(self.train_data),
+        modelFactory = ModelFactory(self.train_data)
+        self.model = {
+            "Elsa": modelFactory.elsa(),
+            "GCN": modelFactory.gcn(),
+            "LightGCN": modelFactory.light_gcn(),
         }
         self.finished = FinishedFilter(self.train_data)
         self.grouper = SyntaxGrouper(self.train_data)
         self.true_pos = TruePositivesMasker(self.train_data)
         self.degree_plan = DegreePlanMasker(self.train_data)
-        self.false_neg = FalseNegativeMasker(self.train_data)
+        self.notin_masker = NotInMasker()
+        self.in_masker = InMasker()
+        self.categorizer = RankCategorizer(self.train_data)
 
         self.train_data.fit()
         self.grouper.fit()
@@ -58,7 +104,7 @@ class EvalRecommender:
         self.ranker_fitted = set()
 
     def algorithms(self):
-        algos = list(self.ranker.keys())
+        algos = list(self.model.keys())
         fitted = [True if algo in self.ranker_fitted else False for algo in algos]
         return {"algorithms": algos, "fit": fitted}
 
@@ -71,29 +117,39 @@ class EvalRecommender:
 
         self.true_pos.fit(user)
         self.degree_plan.fit(user)
-        self.false_neg.fit(user)
+
+        expected = self.train_data.get_expected(user.id)
 
         recommended = []
         for algo in algos:
-            ranking = self.ranker[algo].rank(user)
+            model = self.model[algo]
+            ranking = model.rank(user)
             ranking = self.finished.filter(user, ranking)
             groups = self.grouper.group(ranking, limit)
             limit = sum([len(group) for group in groups])
             pred = ranking[:limit]
+            explain = model.explain(user, pred)
+            cat_names, cat_values = self.categorizer.categorize(ranking)
+            cat_groups = [self.grouper.group(c) for c in cat_values]
             recommended.append(
                 {
                     "pred": pred,
                     "groups": groups,
-                    "true_positive": self.true_pos.mask(pred),
+                    "true_positive": self.in_masker.mask(expected, pred),
                     "in_degree_plan": self.degree_plan.mask(pred),
-                    "false_negative": self.false_neg.mask(pred),
+                    "false_negative": self.notin_masker.mask(pred, expected),
+                    "categories": {
+                        "names": cat_names,
+                        "pred": cat_values,
+                        "groups": cat_groups,
+                    },
+                    "explanations": explain,
                 }
             )
 
         finished = self.train_data.get_finished(user.id)
-        expected = self.train_data.get_expected(user.id)
         result = {
-            "soident": user.id,
+            "soident": str(user.id),
             "type": self.train_data.get_type(user.id),
             "sobor": self.train_data.get_sobor(user.id),
             "degree_plan": self.train_data.get_degree_plan(user.id),
@@ -103,23 +159,23 @@ class EvalRecommender:
             "finished_in_degree_plan": self.degree_plan.mask(finished),
             "expected_in_degree_plan": self.degree_plan.mask(expected),
         }
-        import json
+        # import json
 
-        print(json.dumps(result, indent=4), flush=True)
+        # print(json.dumps(result, indent=4), flush=True)
         return result
 
     def fit(self, algos: list[str]):
         if not self.__is_known_algo(algos):
             return
         for algo in algos:
-            self.ranker[algo].fit()
+            self.model[algo].fit()
             self.ranker_fitted.add(algo)
 
     def __is_known_algo(self, algos: list[str]) -> bool:
         return len(self.__unknown_algos(algos)) == 0
 
     def __unknown_algos(self, algos: list[str]) -> list[str]:
-        return [algo for algo in algos if algo not in self.ranker]
+        return [algo for algo in algos if algo not in self.model]
 
 
 # class RecStudentInfo:
