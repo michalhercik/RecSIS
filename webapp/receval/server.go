@@ -99,13 +99,11 @@ func (s Server) studentPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	var experiment [][]course
-	var finished []course
-	var expected []course
+	var course map[string]course
 	var recommendation recommend.Recommendation
 	if len(algo) > 0 {
 		var err error
-		finished, experiment, expected, recommendation, err = s.experiment(userID, student, algo, limit, lang)
+		recommendation, course, err = s.experiment(userID, student, algo, limit, lang)
 		if err != nil {
 			code, userMsg := errorx.UnwrapError(err, lang)
 			s.Error.Log(errorx.AddContext(err))
@@ -136,9 +134,7 @@ func (s Server) studentPage(w http.ResponseWriter, r *http.Request) {
 	}
 	model := recommendedModel{
 		student:         student,
-		courses:         experiment,
-		finished:        finished,
-		expected:        expected,
+		courses:         course,
 		recommendation:  recommendation,
 		algo:            algo,
 		algoSuggestions: algoSuggestions,
@@ -238,13 +234,11 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	var experiment [][]course
-	var finished []course
-	var expected []course
+	var course map[string]course
 	var recommendation recommend.Recommendation
 	if len(algo) > 0 {
 		var err error
-		finished, experiment, expected, recommendation, err = s.experiment(userID, student, algo, limit, lang)
+		recommendation, course, err = s.experiment(userID, student, algo, limit, lang)
 		if err != nil {
 			code, userMsg := errorx.UnwrapError(err, lang)
 			s.Error.Log(errorx.AddContext(err))
@@ -275,9 +269,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 	model := recommendedModel{
 		student:         student,
-		courses:         experiment,
-		finished:        finished,
-		expected:        expected,
+		courses:         course,
 		recommendation:  recommendation,
 		algo:            algo,
 		algoSuggestions: algoSuggestions,
@@ -295,39 +287,50 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s Server) experiment(userID, student string, algoName []string, limit int, lang language.Language) ([]course, [][]course, []course, recommend.Recommendation, error) {
+func (s Server) experiment(userID, student string, algoName []string, limit int, lang language.Language) (recommend.Recommendation, map[string]course, error) {
 	recommendation, err := s.Experiment.Recommend(userID, student, algoName, limit)
-		return nil, nil, nil, recommendation, err
-	}
-	// if len(courses) > 0 {
-	finishedCourses, err := s.Data.courses(userID, recommendation.Finished, lang)
 	if err != nil {
-		// TODO: add context
-		return nil, nil, nil, recommendation, err
+		return recommendation, nil, err
 	}
-	var recommendedCourses [][]course
-	for _, recommended := range recommendation.Recommended {
-		rc, err := s.Data.courses(userID, recommended.Pred, lang)
-		if err != nil {
-			// TODO: add context
-			return nil, nil, nil, recommendation, err
-		}
-		recommendedCourses = append(recommendedCourses, rc)
-		// rcGrouped := [][]course{}
-		// ptr := 0
-		// for _, group := range recommended.Recommended {
-		// 	rcGrouped = append(rcGrouped, rc[ptr:ptr+len(group)])
-		// 	ptr += len(group)
-		// }
-		// recommendedCourses = append(recommendedCourses, rcGrouped)
-	}
-	expectedCourses, err := s.Data.courses(userID, recommendation.Expected, lang)
+	allCourses, err := s.Data.courses(userID, recommendation.AllCourses(), lang)
 	if err != nil {
-		// TODO: add context
-		return nil, nil, nil, recommendation, err
+		return recommendation, nil, err
 	}
+	courses := make(map[string]course, len(allCourses))
+	for _, course := range allCourses {
+		courses[course.Code] = course
+	}
+	return recommendation, courses, nil
+
+	// // if len(courses) > 0 {
+	// finishedCourses, err := s.Data.courses(userID, recommendation.Finished, lang)
+	// if err != nil {
+	// 	// TODO: add context
+	// 	return nil, nil, nil, recommendation, err
 	// }
-	return finishedCourses, recommendedCourses, expectedCourses, recommendation, nil
+	// var recommendedCourses [][]course
+	// for _, recommended := range recommendation.Recommended {
+	// 	rc, err := s.Data.courses(userID, recommended.Pred, lang)
+	// 	if err != nil {
+	// 		// TODO: add context
+	// 		return nil, nil, nil, recommendation, err
+	// 	}
+	// 	recommendedCourses = append(recommendedCourses, rc)
+	// 	// rcGrouped := [][]course{}
+	// 	// ptr := 0
+	// 	// for _, group := range recommended.Recommended {
+	// 	// 	rcGrouped = append(rcGrouped, rc[ptr:ptr+len(group)])
+	// 	// 	ptr += len(group)
+	// 	// }
+	// 	// recommendedCourses = append(recommendedCourses, rcGrouped)
+	// }
+	// expectedCourses, err := s.Data.courses(userID, recommendation.Expected, lang)
+	// if err != nil {
+	// 	// TODO: add context
+	// 	return nil, nil, nil, recommendation, err
+	// }
+	// // }
+	// return finishedCourses, recommendedCourses, expectedCourses, recommendation, nil
 }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {

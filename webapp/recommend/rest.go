@@ -30,12 +30,45 @@ func (cg CourseGroup) Flatten() []string {
 	return result
 }
 
+type Category struct {
+	Names  []string   `json:"names"`
+	Values [][]string `json:"pred"`
+	Groups [][][]int  `json:"groups"`
+}
+
 type AlgoRecommendation struct {
-	Pred                    []string `json:"pred"`
-	RecommendedTruePos      []bool   `json:"true_positive"`
-	RecommendedInDegreePlan []bool   `json:"in_degree_plan"`
-	ExpectedFalseNeg        []bool   `json:"false_negative"`
-	Groups                  [][]int  `json:"groups"`
+	Pred                    []string          `json:"pred"`
+	RecommendedTruePos      []bool            `json:"true_positive"`
+	RecommendedInDegreePlan []bool            `json:"in_degree_plan"`
+	ExpectedFalseNeg        []bool            `json:"false_negative"`
+	Groups                  [][]int           `json:"groups"`
+	Categories              Category          `json:"categories"`
+	Explanation             map[string]string `json:"explanations"`
+}
+
+func (r Recommendation) AllCourses() []string {
+	unique := map[string]struct{}{}
+	for _, v := range r.Finished {
+		unique[v] = struct{}{}
+	}
+	for _, v := range r.Expected {
+		unique[v] = struct{}{}
+	}
+	for _, p := range r.Recommended {
+		for _, v := range p.Pred {
+			unique[v] = struct{}{}
+		}
+		for _, cat := range p.Categories.Values {
+			for _, v := range cat {
+				unique[v] = struct{}{}
+			}
+		}
+	}
+	result := make([]string, len(unique))
+	for k, _ := range unique {
+		result = append(result, k)
+	}
+	return result
 }
 
 type Recommendation struct {

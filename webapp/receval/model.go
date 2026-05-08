@@ -12,9 +12,7 @@ import (
 
 type recommendedModel struct {
 	student         string
-	courses         [][]course
-	finished        []course
-	expected        []course
+	courses         map[string]course
 	recommendation  recommend.Recommendation
 	algo            []string
 	algoSuggestions []string
