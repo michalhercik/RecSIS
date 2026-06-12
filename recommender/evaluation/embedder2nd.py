@@ -42,15 +42,22 @@ def main(args):
     user, finished, povinn = dataset()
     train, val, test = split(finished, VAL_RATIO, 2024)
 
-    pamela = DataRepository().pamela
-    pamela = pamela[
-        (pamela["jazyk"] == "ENG") & (pamela["typ"].isin(["A", "S"]))
-    ].pivot_table(index="povinn", columns="typ", values="memo", aggfunc="first")
-    povinn = povinn.merge(pamela, on="povinn")
-    embed_src = povinn.apply(lambda x: f"{x['panazev']}: {x['A']}\n{x['S']}", axis=1)
-    povinn["embed"] = list(sbert_embed(embed_src))
+    # pamela = DataRepository().pamela
+    # pamela = pamela[
+    #     (pamela["jazyk"] == "ENG") & (pamela["typ"].isin(["A", "S"]))
+    # ].pivot_table(index="povinn", columns="typ", values="memo", aggfunc="first")
+    # povinn = povinn.merge(pamela, on="povinn")
+    # embed_src = povinn.apply(lambda x: f"{x['panazev']}: {x['A']}\n{x['S']}", axis=1)
+    # povinn["embed"] = list(sbert_embed(embed_src))
 
     val_results = (
+        val.groupby("user_id")
+        .agg({"course_id": list})
+        .rename(columns={"course_id": "val_courses"})
+        .reset_index()
+    )
+
+    test_results = (
         val.groupby("user_id")
         .agg({"course_id": list})
         .rename(columns={"course_id": "val_courses"})
@@ -71,7 +78,8 @@ def main(args):
         .reset_index(drop=True)
     )
     # TODO: inner join -> only users having both train and val courses included
-    results = pd.merge(results, val_results, on="user_id")
+    # results = pd.merge(results, val_results, on="user_id")
+    results = pd.merge(results, test_results, on="user_id")
 
     if args.mode == Mode.COURSE:
         results["pred"] = results.apply(lambda x: similar(povinn, x["embed"]), axis=1)

@@ -2,10 +2,10 @@ package receval
 
 import (
 	"fmt"
-	"slices"
-	"github.com/michalhercik/RecSIS/ui"
 	"github.com/michalhercik/RecSIS/i18n"
 	"github.com/michalhercik/RecSIS/recommend"
+	"github.com/michalhercik/RecSIS/ui"
+	"slices"
 )
 
 func mapColorsSingle(flags []bool, colorClass string) []string {
@@ -64,15 +64,15 @@ templ Recommended(model recommendedModel, t text) {
 		if model.recommendation.UserID != "" {
 			@studentInfo(model, t)
 			<ul class="nav nav-tabs" id="myTab" role="tablist">
-			  <li class="nav-item" role="presentation">
-			    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Home</button>
-			  </li>
-			  <li class="nav-item" role="presentation">
-			    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Vertical Carousel</button>
-			  </li>
-			  <li class="nav-item" role="presentation">
-			    <button class="nav-link" id="carousel-tab" data-bs-toggle="tab" data-bs-target="#carousel" type="button" role="tab" aria-controls="carousel" aria-selected="false">Horizontal Carousel</button>
-			  </li>
+				<li class="nav-item" role="presentation">
+					<button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Home</button>
+				</li>
+				<li class="nav-item" role="presentation">
+					<button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Vertical Carousel</button>
+				</li>
+				<li class="nav-item" role="presentation">
+					<button class="nav-link" id="carousel-tab" data-bs-toggle="tab" data-bs-target="#carousel" type="button" role="tab" aria-controls="carousel" aria-selected="false">Horizontal Carousel</button>
+				</li>
 			</ul>
 			<div class="tab-content" id="myTabContent">
 				<div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
@@ -101,22 +101,22 @@ templ horizontalCategories(model recommendedModel, t text) {
 				for i, code := range model.recommendation.Recommended[0].Categories.Values[i] {
 					course := model.courses[code]
 					carouselCourses[i] = ui.Course{
-						Code: course.Code,
-						Title: course.Title,
+						Code:       course.Code,
+						Title:      course.Title,
 						Guarantors: []string{course.Guarantors.string(t)},
-						Semester: course.Semester.string(t),
-						Credits: course.Credits,
-						URL: "/course/"+course.Code,
+						Semester:   course.Semester.string(t),
+						Credits:    course.Credits,
+						URL:        "/course/" + course.Code,
 					}
 				}
 			}}
 			@ui.HorizontalCarousel(ui.Carousel{
-				T: i18n.TranslatorFunc(t.language),
-				Lang: t.language,
-				Title: cat_name,
+				T:          i18n.TranslatorFunc(t.language),
+				Lang:       t.language,
+				Title:      cat_name,
 				ViewAllURL: "/courses",
-				Courses: carouselCourses,
-				})
+				Courses:    carouselCourses,
+			})
 		}
 	</div>
 }
@@ -129,22 +129,22 @@ templ categories(model recommendedModel, t text) {
 				for i, code := range model.recommendation.Recommended[0].Categories.Values[i] {
 					course := model.courses[code]
 					carouselCourses[i] = ui.Course{
-						Code: course.Code,
-						Title: course.Title,
+						Code:       course.Code,
+						Title:      course.Title,
 						Guarantors: []string{course.Guarantors.string(t)},
-						Semester: course.Semester.string(t),
-						Credits: course.Credits,
-						URL: "/course/"+course.Code,
+						Semester:   course.Semester.string(t),
+						Credits:    course.Credits,
+						URL:        "/course/" + course.Code,
 					}
 				}
 			}}
 			@ui.VerticalCarousel(ui.Carousel{
-				T: i18n.TranslatorFunc(t.language),
-				Lang: t.language,
-				Title: cat_name,
+				T:          i18n.TranslatorFunc(t.language),
+				Lang:       t.language,
+				Title:      cat_name,
 				ViewAllURL: "/courses",
-				Courses: carouselCourses,
-				})
+				Courses:    carouselCourses,
+			})
 		}
 	</div>
 }
@@ -321,7 +321,7 @@ templ controlForm(model recommendedModel, t text) {
 	<div class="d-flex gap-2 mb-2">
 		for _, testAccount := range model.testAccounts {
 			<a
-				href={ templ.SafeURL(fmt.Sprintf("/recommended/%s", testAccount)) }
+				href={ templ.SafeURL(fmt.Sprintf("/receval/recommended/%s", testAccount)) }
 				class="btn btn-secondary"
 				hx-include="[name=limit],[name=algo]"
 			>

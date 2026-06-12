@@ -49,6 +49,16 @@ def main(args):
         on="user_id",
     ).reset_index()
 
+    test_results = pd.merge(
+        train.groupby("user_id")
+        .agg({"course_id": set})
+        .rename(columns={"course_id": "train_courses"}),
+        test.groupby("user_id")
+        .agg({"course_id": list})
+        .rename(columns={"course_id": "val_courses"}),
+        on="user_id",
+    ).reset_index()
+
     model = ELSA(
         n_items=povinn.shape[0], device=device, n_dims=args.factors, lr=args.lr
     )
@@ -70,7 +80,20 @@ def main(args):
             ),
         }
     )
-    results = val_results.merge(results, on="user_id")
+
+    # results = val_results.merge(results, on="user_id")
+    # results["pred"] = results.apply(
+    #     lambda x: [i for i in x["pred"] if i not in x["train_courses"]], axis=1
+    # )
+    # results["pred"] = results["pred"].apply(np.array)
+    # results["target"] = results.apply(
+    #     lambda x: [1 if i in x["val_courses"] else 0 for i in x["pred"]], axis=1
+    # )
+    # results["target"] = results["target"].apply(np.array)
+    # results_description = eval(user, results)
+    # print(results_description)
+
+    results = test_results.merge(results, on="user_id")
     results["pred"] = results.apply(
         lambda x: [i for i in x["pred"] if i not in x["train_courses"]], axis=1
     )

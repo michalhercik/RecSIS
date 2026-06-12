@@ -10,7 +10,7 @@ from masker import (
     TruePositivesMasker,
 )
 from ranker.elsa_ranker import Elsa
-from ranker.embedder import MeiliSearch
+from ranker.embedder import ContentKNN, UserKNN
 from ranker.gcn import GCNRanker
 from ranker.lightgcn import LightGCNRanker
 from ranker.ranker import Ranker
@@ -68,6 +68,7 @@ class ModelFactory:
     def elsa(self):
         ranker = Elsa(self.train_data)
         explainer = ElsaExplainer(ranker, self.train_data)
+        # explainer = EmptyExplainer()
         return Model(ranker, explainer)
 
     def gcn(self):
@@ -89,10 +90,11 @@ class EvalRecommender:
             "Elsa": modelFactory.elsa(),
             "GCN": modelFactory.gcn(),
             "LightGCN": modelFactory.light_gcn(),
+            "UserKNN": Model(UserKNN(self.train_data), EmptyExplainer()),
+            "ContentKNN": Model(ContentKNN(self.train_data), EmptyExplainer()),
         }
         self.finished = FinishedFilter(self.train_data)
         self.grouper = SyntaxGrouper(self.train_data)
-        self.true_pos = TruePositivesMasker(self.train_data)
         self.degree_plan = DegreePlanMasker(self.train_data)
         self.notin_masker = NotInMasker()
         self.in_masker = InMasker()
@@ -112,13 +114,16 @@ class EvalRecommender:
         if not self.__is_known_algo(algos):
             return
 
-        if user.id.lower() == "random":
-            user.id = self.train_data.rand_soident_from_dev()
+        expected = []
+        finished = user.blueprint_to_df()["course"].to_list()
+        if user.fetch:
+            if user.id.lower() == "random":
+                user.id = self.train_data.rand_soident_from_dev()
 
-        self.true_pos.fit(user)
+            expected = self.train_data.get_expected(user.id)
+            finished = self.train_data.get_finished(user.id)
+
         self.degree_plan.fit(user)
-
-        expected = self.train_data.get_expected(user.id)
 
         recommended = []
         for algo in algos:
@@ -147,21 +152,19 @@ class EvalRecommender:
                 }
             )
 
-        finished = self.train_data.get_finished(user.id)
         result = {
             "soident": str(user.id),
-            "type": self.train_data.get_type(user.id),
-            "sobor": self.train_data.get_sobor(user.id),
-            "degree_plan": self.train_data.get_degree_plan(user.id),
+            "degree_plan": user.degree_plan,
             "finished": finished,
             "expected": expected,
             "recommended": recommended,
             "finished_in_degree_plan": self.degree_plan.mask(finished),
             "expected_in_degree_plan": self.degree_plan.mask(expected),
         }
-        # import json
-
-        # print(json.dumps(result, indent=4), flush=True)
+        if user.fetch:
+            result["type"] = self.train_data.get_type(user.id)
+            result["sobor"] = self.train_data.get_sobor(user.id)
+            result["degree_plan"] = self.train_data.get_degree_plan(user.id)
         return result
 
     def fit(self, algos: list[str]):

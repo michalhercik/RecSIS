@@ -2,8 +2,10 @@ import os
 import pickle
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import psycopg2
+from evaluation.embedder import sbert_embed
 
 
 class TrainData:
@@ -18,6 +20,7 @@ class TrainData:
     klas: pd.DataFrame
     ucit: pd.DataFrame
     categories: pd.DataFrame
+    no_history_user_embed: np.ndarray
 
     rand_soident_counter: int = 0
 
@@ -44,6 +47,44 @@ class TrainData:
         )
         train, val, test = self.split(finished, self.VAL_RATIO, 2024)
 
+        user = user.merge(
+            train.merge(povinn[["course_id", "embed"]], on="course_id")
+            .groupby("user_id")
+            .agg(
+                {
+                    "user_id": "first",
+                    "course_id": set,
+                    "embed": lambda x: np.mean(x.values, axis=0),
+                }
+            )[["user_id", "embed"]],
+            left_on="user_id",
+            right_index=True,
+            how="left",
+        )[
+            [
+                "user_id",
+                "soident",
+                "sident",
+                "sdruh",
+                "srokp",
+                "sobor",
+                "sobor_nazev",
+                "splan",
+                "embed",
+            ]
+        ]
+        no_history_user_embed = list(sbert_embed([""]))[0]
+
+        def _fill_embed(x):
+            na = pd.isna(x)
+            if isinstance(na, (np.ndarray, list, pd.Series)):
+                na = bool(np.all(na))
+            if na:
+                return no_history_user_embed
+            return x
+
+        user["embed"] = user["embed"].apply(_fill_embed)
+
         data = {
             "user": user,
             "povinn": povinn,
@@ -56,6 +97,7 @@ class TrainData:
             "trida": trida,
             "ucit": ucit,
             "categories": categories,
+            "no_history_user_embed": no_history_user_embed,
         }
 
         self.__dict__.update(data)
@@ -83,22 +125,14 @@ class TrainData:
         return dp
 
     def get_expected(self, soident: str) -> list[str]:
-        user_id = self.user[self.user["soident"] == int(soident)]["user_id"].iloc[0]
+        user_id = self.user[self.user["soident"] == int(soident)]["user_id"]
+        if user_id.empty:
+            return []
+        user_id = user_id.iloc[0]
         expected_df = self.val[self.val["user_id"] == user_id]
         expected_df = expected_df.merge(self.povinn, on="course_id")
         expected = expected_df["povinn"].to_list()
         return expected
-
-    # def get_user_info(self, user: User, soident: str):
-    #     type = ""
-    #     sobor = ""
-    #     degree_plan = user.degree_plan
-    #     if user.fetch:
-    #         df = self.train_data.user[self.train_data.user["soident"] == int(soident)]
-    #         type = df["sdruh"].iloc[0]
-    #         sobor = df["sobor_nazev"].iloc[0]
-    #         degree_plan = df["splan"].iloc[0]
-    #     return type, sobor, degree_plan
 
     def get_type(self, soident: str) -> str:
         df = self.user[self.user["soident"] == int(soident)]
@@ -173,6 +207,12 @@ class TrainData:
                 WHERE p.pgarant != '32-STUD'
                 ORDER BY p.povinn
             ),
+            pamela AS (
+                SELECT pamela.povinn, pamela.typ, pamela.memo
+                FROM povinn
+                LEFT JOIN pamela ON pamela.povinn = povinn.povinn
+                where pamela.jazyk = 'ENG' and pamela.typ in ('A', 'S')
+            ),
             filtered_klas AS (
                 SELECT povinn, kod, nazev FROM klas
                 --WHERE nazev NOT IN ('Předměty obecného základu')
@@ -218,18 +258,36 @@ class TrainData:
         trida = load_df("filtered_trida")
         ucit = load_df("ucit")
         categories = load_df("categories")
+        pamela = load_df("pamela")
         conn.close()
-        return user, interactions, povinn, stud_plan, klas, trida, ucit, categories
+        return (
+            user,
+            interactions,
+            povinn,
+            stud_plan,
+            klas,
+            trida,
+            ucit,
+            categories,
+            pamela,
+        )
 
     def dataset(self):
-        user, interaction, povinn, stud_plan, klas, trida, ucit, categories = (
+        user, interaction, povinn, stud_plan, klas, trida, ucit, categories, pamela = (
             self.user_interaction_povinn()
         )
 
         user = user.reset_index().rename(columns={"index": "user_id"})
-        # user["sobor_embed"] = list(sbert_embed(user["sobor_nazev"]))
         povinn = povinn.reset_index().rename(columns={"index": "course_id"})
-        # povinn["pnazev_embed"] = list(sbert_embed(povinn["pnazev"]))
+
+        pamela = pamela.pivot_table(
+            index="povinn", columns="typ", values="memo", aggfunc="first"
+        )
+        povinn = povinn.merge(pamela, on="povinn", how="left")
+        embed_src = povinn.apply(
+            lambda x: f"{x['panazev']}: {x['A']}\n{x['S']}", axis=1
+        )
+        povinn["embed"] = list(sbert_embed(embed_src))
 
         interaction = interaction.merge(user[["sident", "user_id"]], on="sident")
         interaction = interaction.merge(povinn[["povinn", "course_id"]], on="povinn")

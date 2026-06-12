@@ -13,7 +13,7 @@ class Elsa(Ranker):
     def __init__(self, train_data: TrainData):
         super().__init__(train_data)
         self.set_train_params(
-            factors=256, num_epochs=5, learning_rate=1e-2, batch_size=128
+            factors=16, num_epochs=10, learning_rate=1e-2, batch_size=128
         )
 
     def fit(self) -> None:

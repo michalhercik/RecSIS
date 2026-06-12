@@ -74,7 +74,7 @@ class GCNRanker(Ranker):
             None,
         )
 
-        self.model = Model(self.train_graph, hidden_channels=32, out_channels=32).to(
+        self.model = Model(self.train_graph, hidden_channels=64, out_channels=32).to(
             device
         )
 
@@ -100,17 +100,22 @@ class GCNRanker(Ranker):
         self.model.eval()
 
     def rank(self, user: User) -> list[str]:
-        uid = self.train_data.user[self.train_data.user["soident"] == int(user.id)][
-            "user_id"
-        ].iloc[0]
+        if user.fetch:
+            uid = self.train_data.user[self.train_data.user["soident"] == int(user.id)][
+                "user_id"
+            ].iloc[0]
+            graph = self.val_graph
+        else:
+            uid, graph = self.graph_with_user(user)
+
         with torch.no_grad():
             pred = self.model(
-                self.val_graph.x_dict,
-                self.val_graph.edge_index_dict,
-                self.val_graph["user", "course"].edge_label_index,
+                graph.x_dict,
+                graph.edge_index_dict,
+                graph["user", "course"].edge_label_index,
             )
-        user_id = self.val_graph["user", "course"].edge_label_index[0].cpu().numpy()
-        course_id = self.val_graph["user", "course"].edge_label_index[1].cpu().numpy()
+        user_id = graph["user", "course"].edge_label_index[0].cpu().numpy()
+        course_id = graph["user", "course"].edge_label_index[1].cpu().numpy()
         results = pd.DataFrame(
             {
                 "user_id": user_id,
@@ -132,7 +137,97 @@ class GCNRanker(Ranker):
 
         return pred
 
-    def set_train_params(self, lr=1e-2, epochs=300, loss_fn=bpr_loss):
+    def graph_with_user(self, user: User) -> tuple[int, HeteroData]:
+        uid = self.train_data.user.shape[0]
+        finished = user.blueprint_to_df()
+        finished["user_id"] = uid
+        finished["zskr"] = None
+        finished["zroc"] = None
+        finished = finished.merge(
+            self.train_data.povinn[["course_id", "povinn", "embed"]],
+            left_on="course",
+            right_on="povinn",
+            how="inner",
+        )
+
+        user_df = pd.DataFrame(
+            [
+                [
+                    uid,
+                    user.id,
+                    None,  # sident
+                    None,  # sdruh
+                    user.enrollment_year,
+                    None,  # sobor
+                    None,  # sobor_nazev
+                    user.degree_plan,
+                    finished["embed"].values.mean(axis=0)
+                    if not finished.empty
+                    else self.train_data.no_history_user_embed,
+                ]
+            ],
+            index=[uid],
+            columns=self.train_data.user.columns,
+        )
+        user_features = get_user_features(user_df, self.train_data.user)
+        edge_index = torch.stack(
+            [
+                torch.tensor(finished["user_id"].values, dtype=torch.long),
+                torch.tensor(finished["course_id"].values, dtype=torch.long),
+            ]
+        )
+        graph = HeteroData()
+        graph["user"].x = torch.cat([self.train_graph["user"].x, user_features], dim=0)
+        graph["course"].x = self.train_graph["course"].x
+        graph["user", "finished", "course"].edge_index = torch.stack(
+            [
+                torch.cat(
+                    [
+                        self.train_graph["user", "finished", "course"].edge_index[0],
+                        edge_index[0],
+                    ],
+                    dim=0,
+                ),
+                torch.cat(
+                    [
+                        self.train_graph["user", "finished", "course"].edge_index[1],
+                        edge_index[1],
+                    ],
+                    dim=0,
+                ),
+            ]
+        )
+        graph["user", "finished", "course"].edge_label_index = torch.stack(
+            [
+                torch.full([self.train_data.povinn["course_id"].shape[0]], uid),
+                torch.tensor(self.train_data.povinn["course_id"].values),
+            ]
+        )
+        graph["course", "rev_finished", "user"].edge_index = torch.stack(
+            [
+                torch.cat(
+                    [
+                        self.train_graph["course", "rev_finished", "user"].edge_index[
+                            0
+                        ],
+                        edge_index[1],
+                    ],
+                    dim=0,
+                ),
+                torch.cat(
+                    [
+                        self.train_graph["course", "rev_finished", "user"].edge_index[
+                            1
+                        ],
+                        edge_index[0],
+                    ],
+                    dim=0,
+                ),
+            ]
+        )
+        return uid, graph
+
+    def set_train_params(self, lr=1e-2, epochs=30, loss_fn=bpr_loss):
         self.loss_fn = loss_fn
         self.lr = lr
         self.epochs = epochs
@@ -164,13 +259,20 @@ class GNNEncoder(torch.nn.Module):
 class EdgeDecoder(torch.nn.Module):
     def __init__(self, hidden_channels):
         super().__init__()
-        self.lin1 = torch.nn.Linear(2 * hidden_channels, hidden_channels)
-        self.dropout = torch.nn.Dropout(p=0.1)
+        self.lin1 = torch.nn.Linear(3 * hidden_channels, hidden_channels)
+        self.dropout = torch.nn.Dropout(p=0.3)
         self.lin2 = torch.nn.Linear(hidden_channels, 1)
 
     def forward(self, z_dict, edge_label_index):
         row, col = edge_label_index
-        z = torch.cat([z_dict["user"][row], z_dict["course"][col]], dim=-1)
+        z = torch.cat(
+            [
+                z_dict["user"][row],
+                z_dict["course"][col],
+                z_dict["user"][row] * z_dict["course"][col],
+            ],
+            dim=-1,
+        )
 
         z = self.lin1(z)
         z = z.relu()
@@ -181,11 +283,47 @@ class EdgeDecoder(torch.nn.Module):
 class Model(torch.nn.Module):
     def __init__(self, data, hidden_channels, out_channels):
         super().__init__()
+        # self.node_emb = torch.nn.ModuleDict(
+        #     {
+        #         "user": torch.nn.Embedding(
+        #             num_embeddings=data["user"].num_nodes, embedding_dim=hidden_channels
+        #         ),
+        #         "course": torch.nn.Embedding(
+        #             num_embeddings=data["course"].num_nodes,
+        #             embedding_dim=hidden_channels,
+        #         ),
+        #     }
+        # )
+        self.user_proj = torch.nn.Sequential(
+            torch.nn.Linear(data["user"].x.size(1), hidden_channels),
+            torch.nn.ReLU(),
+            torch.nn.LayerNorm(hidden_channels),
+            torch.nn.Dropout(p=0.2),
+        )
+        self.course_proj = torch.nn.Sequential(
+            torch.nn.Linear(data["course"].x.size(1), hidden_channels),
+            torch.nn.ReLU(),
+            torch.nn.LayerNorm(hidden_channels),
+            torch.nn.Dropout(p=0.2),
+        )
         self.encoder = GNNEncoder(hidden_channels, out_channels, data.metadata())
         self.decoder = EdgeDecoder(out_channels)
 
     def forward(self, x_dict, edge_index_dict, edge_label_index):
-        z_dict = self.encoder(x_dict, edge_index_dict)
+        # x_dict = {
+        #     "user": self.node_emb["user"].weight,
+        #     "course": self.node_emb["course"].weight,
+        # }
+        #
+
+        user_emb = self.user_proj(x_dict["user"])
+        course_emb = self.course_proj(x_dict["course"])
+
+        user_emb = torch.nn.functional.normalize(user_emb, dim=-1)
+        course_emb = torch.nn.functional.normalize(course_emb, dim=-1)
+
+        x_proj = {"user": user_emb, "course": course_emb}
+        z_dict = self.encoder(x_proj, edge_index_dict)
         return self.decoder(z_dict, edge_label_index)
 
 
@@ -282,6 +420,52 @@ def negative_split(
     return neg_train, neg_val, neg_test
 
 
+def get_user_features(user: pd.DataFrame, all_users: pd.DataFrame) -> torch.Tensor:
+    # # User
+    # study_type = pd.get_dummies(user["sdruh"])
+    # study_type = torch.from_numpy(study_type.values).to(torch.float)
+    # field = pd.get_dummies(user["sobor"])
+    # field = torch.from_numpy(field.values).to(torch.float)
+    # # field_embed = torch.tensor(user["sobor_embed"].tolist())
+    # user_features = torch.cat([study_type, field], dim=-1)
+    #
+
+    print(user)
+    study_type = pd.crosstab(user["user_id"], user["sdruh"])
+    study_type = study_type.reindex(
+        index=user["user_id"],
+        columns=all_users["sdruh"].sort_values().unique(),
+        fill_value=0,
+    )
+    study_type = torch.from_numpy(study_type.values).to(torch.float)
+    field = pd.crosstab(user["user_id"], user["sobor"])
+    field = field.reindex(
+        index=user["user_id"],
+        columns=all_users["sobor"].sort_values().unique(),
+        fill_value=0,
+    )
+    field = torch.from_numpy(field.values).to(torch.float)
+    emebed = torch.tensor(user["embed"].tolist())
+    user_features = torch.cat([emebed, study_type, field], dim=-1)
+    return user_features
+
+
+def get_course_features(course: pd.DataFrame) -> torch.Tensor:
+    # department = pd.get_dummies(course["pgarant"])
+    # department = torch.from_numpy(department.values).to(torch.float)
+    # # name = course["pnazev_embed"]
+    # # name = torch.tensor(name.tolist())
+    # # name_embed = torch.tensor(course["pnazev_embed"].tolist())
+    # course_features = torch.cat([department], dim=-1)
+
+    # department = pd.get_dummies(course["pgarant"])
+    # department = torch.from_numpy(department.values).to(torch.float)
+    embed = torch.tensor(course["embed"].tolist())
+    course_features = torch.cat([embed], dim=-1)
+
+    return course_features
+
+
 def graph_data(
     user, course, pos_train, pos_val, pos_test, neg_train, neg_val, neg_test
 ):
@@ -315,21 +499,8 @@ def graph_data(
 
         return hetero_data
 
-    # User
-    study_type = pd.get_dummies(user["sdruh"])
-    study_type = torch.from_numpy(study_type.values).to(torch.float)
-    field = pd.get_dummies(user["sobor"])
-    field = torch.from_numpy(field.values).to(torch.float)
-    # field_embed = torch.tensor(user["sobor_embed"].tolist())
-    user_features = torch.cat([study_type, field], dim=-1)
-
-    # Course
-    department = pd.get_dummies(course["pgarant"])
-    department = torch.from_numpy(department.values).to(torch.float)
-    # name = course["pnazev_embed"]
-    # name = torch.tensor(name.tolist())
-    # name_embed = torch.tensor(course["pnazev_embed"].tolist())
-    course_features = torch.cat([department], dim=-1)
+    user_features = get_user_features(user, user)
+    course_features = get_course_features(course)
 
     # Edge
     edge_index, _ = index_label(pos_train, pd.DataFrame())

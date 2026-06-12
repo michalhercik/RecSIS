@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from data import TrainData
+from explainer.elsa import ElsaExplainer
 from filterer import FinishedFilter
-from ranker.elsa_ranker import Elsa, ElsaExplain
+from ranker.elsa_ranker import Elsa
 from sklearn.cluster import HDBSCAN, KMeans
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -19,9 +20,6 @@ def main():
     user = User(train_data.rand_soident_from_dev(), "", 0, None)
     user.fetch = True
 
-    print(train_data.get_expected("843583"))
-    exit()
-
     # print(train_data.klas["nazev"].value_counts())
     # print(train_data.klas["nazev"].drop_duplicates().shape)
     # print(train_data.trida["nazev"].value_counts().head(50))
@@ -30,7 +28,7 @@ def main():
 
     model = Elsa(train_data)
     model.set_train_params(
-        factors=256, num_epochs=10, learning_rate=1e-2, batch_size=128
+        factors=16, num_epochs=50, learning_rate=1e-2, batch_size=128
     )
     model.fit()
 

@@ -1,28 +1,19 @@
 import argparse
 import os
+import sys
 
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
 import torch_geometric.transforms as T
+from embedder import sbert_embed
 from retrieve import user_interaction_povinn
 from torch_geometric.data import HeteroData
-from torch_geometric.nn import SAGEConv, to_hetero
+from torch_geometric.nn import HeteroConv, SAGEConv
 
-# python .\graph.py -t -e 300 -lr 1e-2
-# Eval Loss: 0.4599
-#      Recall                                                      Precision                                                          AP
-#       count    mean     std  min     25%     50%     75%     max     count    mean     std  min     25%     50%     75%     max  count    mean     std  min     25%     50%     75%     max
-# 5  B  172.0  0.1727  0.1419  0.0  0.0692  0.1818  0.2500  1.0000     172.0  0.4140  0.3424  0.0  0.0000  0.4000  0.8000  1.0000  172.0  0.5791  0.3948  0.0  0.2000  0.6896  0.9500  1.0000
-#    N   65.0  0.0528  0.0994  0.0  0.0000  0.0000  0.0667  0.5714      65.0  0.1046  0.1662  0.0  0.0000  0.0000  0.2000  0.8000   65.0  0.1654  0.2449  0.0  0.0000  0.0000  0.2500  1.0000
-# 10 B  172.0  0.3311  0.2049  0.0  0.1818  0.3333  0.4706  1.0000     172.0  0.3436  0.3153  0.0  0.1000  0.2000  0.6250  1.0000  172.0  0.5549  0.3349  0.0  0.2482  0.6222  0.8553  1.0000
-#    N   65.0  0.1014  0.1473  0.0  0.0000  0.0526  0.1667  0.8000      65.0  0.0769  0.1260  0.0  0.0000  0.0000  0.1000  0.5000   65.0  0.1815  0.2212  0.0  0.0000  0.1000  0.3028  1.0000
-# 20 B  172.0  0.5174  0.2420  0.0  0.3333  0.5714  0.6667  1.0000     172.0  0.2142  0.2181  0.0  0.0500  0.1000  0.4000  0.6500  172.0  0.5057  0.2942  0.0  0.2475  0.5325  0.8191  0.9924
-#    N   65.0  0.1745  0.1756  0.0  0.0000  0.1739  0.2667  0.8000      65.0  0.0454  0.0722  0.0  0.0000  0.0000  0.0500  0.3000   65.0  0.1814  0.1927  0.0  0.0000  0.1026  0.3026  0.8769
-# 50 B  172.0  0.7670  0.2281  0.0  0.6250  0.8209  0.9506  1.0000     172.0  0.1020  0.1144  0.0  0.0200  0.0500  0.1600  0.3800  172.0  0.4416  0.2543  0.0  0.2286  0.4254  0.7091  0.8936
-#    N   65.0  0.4493  0.2325  0.0  0.3333  0.4167  0.6111  1.0000      65.0  0.0188  0.0293  0.0  0.0000  0.0000  0.0200  0.1200   65.0  0.1748  0.1558  0.0  0.0542  0.1102  0.2760  0.8769
-# -  -  118.5  0.3208  0.1840  0.0  0.1928  0.3188  0.4311  0.8964     118.5  0.1649  0.1730  0.0  0.0213  0.0938  0.2944  0.5938  118.5  0.3480  0.2616  0.0  0.1223  0.3228  0.5581  0.9550
+sys.path.insert(0, "..")
+from data_repository import DataRepository
 
 # df = finished.groupby("soident").agg({"povinn": list})
 # me = df[
@@ -53,13 +44,41 @@ def main(args):
     neg_train, neg_val, neg_test = negative_split(
         train, val, test, finished, val_ratio=-1, train_ratio=1
     )
+
+    user = user.merge(
+        train.merge(povinn[["course_id", "embed"]], on="course_id")
+        .groupby("user_id")
+        .agg(
+            {
+                "user_id": "first",
+                "course_id": set,
+                "embed": lambda x: np.mean(x.values, axis=0),
+            }
+        )[["user_id", "embed"]],
+        left_on="user_id",
+        right_index=True,
+        how="left",
+    )
+    empty = list(sbert_embed([""]))[0]
+
+    def _fill_embed(x):
+        na = pd.isna(x)
+        if isinstance(na, (np.ndarray, list, pd.Series)):
+            na = bool(np.all(na))
+        if na:
+            return empty
+        return x
+
+    user["embed"] = user["embed"].apply(_fill_embed)
+
     train, val, test = graph_data(
         user, povinn, train, val, test, neg_train, neg_val, neg_test
     )
+
     print(train)
     print(val if not args.eval else test)
 
-    model = Model(train, hidden_channels=32, out_channels=32).to(device)
+    model = Model(train, hidden_channels=64, out_channels=32).to(device)
     print(model)
 
     if os.path.exists("model.pth") and not args.train:
@@ -81,59 +100,51 @@ def main(args):
     results["pred"] = results.apply(lambda x: x["pred"][x["sort_ids"][::-1]], axis=1)
     results = results.drop(columns=["sort_ids"])
     results = results.reset_index()
-    metrics = []
-    for k in [5, 10, 20, 50]:
-        r = results.apply(lambda x: recall(x["pred"], x["target"], k), axis=1)
-        p = results.apply(lambda x: precision(x["pred"], x["target"], k), axis=1)
-        m = results.apply(lambda x: map(x["pred"], x["target"], k), axis=1)
-        metrics.append(
-            pd.DataFrame(
-                {
-                    "user_id": results["user_id"],
-                    "k": k,
-                    "Recall": r,
-                    "Precision": p,
-                    "AP": m,
-                }
-            )
-        )
 
-    results = pd.concat(metrics)
-    results = results.merge(
-        user[["user_id", "soident", "sdruh", "sobor"]], on="user_id"
-    )
-
-    describe = results.groupby(["k", "sdruh"])[["Recall", "Precision", "AP"]].describe()
-    describe_all = (
-        describe.mean().to_frame().T.set_index([pd.Index(["-"]), pd.Index(["-"])])
-    )
-    describe = pd.concat([describe, describe_all]).round(4)
-    print(describe)
+    results_description = eval(user, results)
+    print(results_description)
 
 
 class GNNEncoder(torch.nn.Module):
-    def __init__(self, hidden_channels, out_channels):
+    def __init__(self, hidden_channels, out_channels, metadata):
         super().__init__()
-        self.conv1 = SAGEConv((-1, -1), hidden_channels)
-        self.conv2 = SAGEConv((-1, -1), out_channels)
+        # metadata[1] contains edge types as tuples: (src, rel, dst)
+        convs1 = {}
+        convs2 = {}
+        for src, rel, dst in metadata[1]:
+            # Create a SAGEConv for each relation for two layers
+            convs1[(src, rel, dst)] = SAGEConv((-1, -1), hidden_channels)
+            convs2[(src, rel, dst)] = SAGEConv((-1, -1), out_channels)
 
-    def forward(self, x, edge_index):
-        x = self.conv1(x, edge_index)
-        x = x.relu()
-        x = self.conv2(x, edge_index)
-        return x
+        self.conv1 = HeteroConv(convs1, aggr="sum")
+        self.conv2 = HeteroConv(convs2, aggr="sum")
+
+    def forward(self, x_dict, edge_index_dict):
+        # conv1 -> relu per node type -> conv2
+        x_dict = self.conv1(x_dict, edge_index_dict)
+        # apply relu to every node type tensor
+        x_dict = {k: v.relu() for k, v in x_dict.items()}
+        x_dict = self.conv2(x_dict, edge_index_dict)
+        return x_dict
 
 
 class EdgeDecoder(torch.nn.Module):
     def __init__(self, hidden_channels):
         super().__init__()
-        self.lin1 = torch.nn.Linear(2 * hidden_channels, hidden_channels)
-        self.dropout = torch.nn.Dropout(p=0.1)
+        self.lin1 = torch.nn.Linear(3 * hidden_channels, hidden_channels)
+        self.dropout = torch.nn.Dropout(p=0.3)
         self.lin2 = torch.nn.Linear(hidden_channels, 1)
 
     def forward(self, z_dict, edge_label_index):
         row, col = edge_label_index
-        z = torch.cat([z_dict["user"][row], z_dict["course"][col]], dim=-1)
+        z = torch.cat(
+            [
+                z_dict["user"][row],
+                z_dict["course"][col],
+                z_dict["user"][row] * z_dict["course"][col],
+            ],
+            dim=-1,
+        )
 
         z = self.lin1(z)
         z = z.relu()
@@ -144,11 +155,25 @@ class EdgeDecoder(torch.nn.Module):
 class Model(torch.nn.Module):
     def __init__(self, data, hidden_channels, out_channels):
         super().__init__()
-        self.encoder = GNNEncoder(hidden_channels, out_channels)
-        self.encoder = to_hetero(self.encoder, data.metadata(), aggr="sum")
+        self.node_emb = torch.nn.ModuleDict(
+            {
+                "user": torch.nn.Embedding(
+                    num_embeddings=data["user"].num_nodes, embedding_dim=hidden_channels
+                ),
+                "course": torch.nn.Embedding(
+                    num_embeddings=data["course"].num_nodes,
+                    embedding_dim=hidden_channels,
+                ),
+            }
+        )
+        self.encoder = GNNEncoder(hidden_channels, out_channels, data.metadata())
         self.decoder = EdgeDecoder(out_channels)
 
     def forward(self, x_dict, edge_index_dict, edge_label_index):
+        x_dict = {
+            "user": self.node_emb["user"].weight,
+            "course": self.node_emb["course"].weight,
+        }
         z_dict = self.encoder(x_dict, edge_index_dict)
         return self.decoder(z_dict, edge_label_index)
 
@@ -183,7 +208,8 @@ def map(pred, target, k=-1):
 
 def eval(user: pd.DataFrame, results: pd.DataFrame):
     metrics = []
-    for k in [5, 10, 20, 50]:
+    # for k in [5, 10, 20, 50]:
+    for k in [5, 24, 50]:
         r = results.apply(lambda x: recall(x["pred"], x["target"], k), axis=1)
         p = results.apply(lambda x: precision(x["pred"], x["target"], k), axis=1)
         m = results.apply(lambda x: map(x["pred"], x["target"], k), axis=1)
@@ -204,7 +230,9 @@ def eval(user: pd.DataFrame, results: pd.DataFrame):
         user[["user_id", "soident", "sdruh", "sobor"]], on="user_id"
     )
 
-    describe = results.groupby(["k", "sdruh"])[["Recall", "Precision", "AP"]].describe()
+    # describe = results.groupby(["k", "sdruh"])[["Recall", "Precision", "AP"]].describe()
+    # describe = results.groupby(["k", "sdruh"])[["Recall", "AP"]].describe()
+    describe = results.groupby(["k"])[["Recall", "AP"]].describe()
     describe_all = (
         describe.mean().to_frame().T.set_index([pd.Index(["-"]), pd.Index(["-"])])
     )
@@ -360,9 +388,17 @@ def dataset(force_load=True):
         user, interaction, povinn = user_interaction_povinn()
 
         user = user.reset_index().rename(columns={"index": "user_id"})
-        # user["sobor_embed"] = list(sbert_embed(user["sobor_nazev"]))
+
         povinn = povinn.reset_index().rename(columns={"index": "course_id"})
-        # povinn["pnazev_embed"] = list(sbert_embed(povinn["pnazev"]))
+        pamela = DataRepository().pamela
+        pamela = pamela[
+            (pamela["jazyk"] == "ENG") & (pamela["typ"].isin(["A", "S"]))
+        ].pivot_table(index="povinn", columns="typ", values="memo", aggfunc="first")
+        povinn = povinn.merge(pamela, on="povinn", how="left")
+        embed_src = povinn.apply(
+            lambda x: f"{x['panazev']}: {x['A']}\n{x['S']}", axis=1
+        )
+        povinn["embed"] = list(sbert_embed(embed_src))
 
         interaction = interaction.merge(user[["sident", "user_id"]], on="sident")
         interaction = interaction.merge(povinn[["povinn", "course_id"]], on="povinn")
@@ -370,26 +406,98 @@ def dataset(force_load=True):
 
         return user, interaction, povinn
 
+    # look for separated files: metadata + embeddings
+    meta_path = "povinn_meta.pkl"
+    emb_path = "povinn_emb.npy"
+
     if (
         os.path.exists("user.csv")
-        and os.path.exists("povinn.pkl")
+        and os.path.exists(meta_path)
+        and os.path.exists(emb_path)
         and os.path.exists("interaction.csv")
         and not force_load
     ):
         user = pd.read_csv("user.csv")
-        povinn = pd.read_pickle("povinn.pkl")
-        # povinn["pnazev_embed"] = povinn["pnazev_embed"].apply(torch.tensor)
+        povinn = pd.read_pickle(meta_path)
+        # load embeddings matrix and attach back as rows (numpy arrays)
+        embs = np.load(emb_path)
+        # make sure lengths match
+        if len(embs) != len(povinn):
+            raise RuntimeError(
+                "Embeddings file length does not match povinn metadata length"
+            )
+        povinn["embed"] = list(embs)
         interaction = pd.read_csv("interaction.csv")
     else:
         user, interaction, povinn = from_db()
-        user.to_csv("user.csv")
-        serializable_povinn = povinn
-        # serializable_povinn["pnazev_embed"] = serializable_povinn["pnazev_embed"].apply(
-        #     lambda x: x.numpy()
-        # )
-        serializable_povinn.to_pickle("povinn.pkl")
-        interaction.to_csv("interaction.csv")
+        user.to_csv("user.csv", index=False)
+
+        # make a serializable copy: convert torch tensors to numpy if needed
+        serializable_povinn = povinn.copy()
+        serializable_povinn["embed"] = serializable_povinn["embed"].apply(
+            lambda x: x.numpy() if hasattr(x, "numpy") else np.asarray(x)
+        )
+
+        # stack embeddings into a single 2D array and save as .npy (float32)
+        embs = np.vstack(serializable_povinn["embed"].values).astype(np.float32)
+        np.save(emb_path, embs)
+
+        # save metadata without the embedding column
+        meta = serializable_povinn.drop(columns=["embed"])
+        meta.to_pickle(meta_path)
+
+        interaction.to_csv("interaction.csv", index=False)
+
+        # restore original povinn (with embeddings) to return
+        povinn = meta.copy()
+        povinn["embed"] = list(embs)
+
     return user, interaction, povinn
+
+
+# def dataset(force_load=True):
+#     def from_db():
+#         user, interaction, povinn = user_interaction_povinn()
+
+#         user = user.reset_index().rename(columns={"index": "user_id"})
+
+#         povinn = povinn.reset_index().rename(columns={"index": "course_id"})
+#         pamela = DataRepository().pamela
+#         pamela = pamela[
+#             (pamela["jazyk"] == "ENG") & (pamela["typ"].isin(["A", "S"]))
+#         ].pivot_table(index="povinn", columns="typ", values="memo", aggfunc="first")
+#         povinn = povinn.merge(pamela, on="povinn", how="left")
+#         embed_src = povinn.apply(
+#             lambda x: f"{x['panazev']}: {x['A']}\n{x['S']}", axis=1
+#         )
+#         povinn["embed"] = list(sbert_embed(embed_src))
+
+#         interaction = interaction.merge(user[["sident", "user_id"]], on="sident")
+#         interaction = interaction.merge(povinn[["povinn", "course_id"]], on="povinn")
+#         interaction = interaction[["user_id", "course_id", "zskr"]]
+
+#         return user, interaction, povinn
+
+#     if (
+#         os.path.exists("user.csv")
+#         and os.path.exists("povinn.pkl")
+#         and os.path.exists("interaction.csv")
+#         and not force_load
+#     ):
+#         user = pd.read_csv("user.csv")
+#         povinn = pd.read_pickle("povinn.pkl")
+#         povinn["embed"] = povinn["embed"].apply(torch.tensor)
+#         interaction = pd.read_csv("interaction.csv")
+#     else:
+#         user, interaction, povinn = from_db()
+#         user.to_csv("user.csv")
+#         serializable_povinn = povinn
+#         serializable_povinn["embed"] = serializable_povinn["embed"].apply(
+#             lambda x: x.numpy()
+#         )
+#         serializable_povinn.to_pickle("povinn.pkl")
+#         interaction.to_csv("interaction.csv")
+#     return user, interaction, povinn
 
 
 def split(interaction, val_ratio, split_year=2024):
@@ -504,16 +612,16 @@ def graph_data(
     study_type = torch.from_numpy(study_type.values).to(torch.float)
     field = pd.get_dummies(user["sobor"])
     field = torch.from_numpy(field.values).to(torch.float)
-    # field_embed = torch.tensor(user["sobor_embed"].tolist())
-    user_features = torch.cat([study_type, field], dim=-1)
+    print(user.shape)
+    print(user["embed"])
+    emebed = torch.tensor(user["embed"].tolist())
+    user_features = torch.cat([emebed, study_type, field], dim=-1)
 
     # Course
     department = pd.get_dummies(course["pgarant"])
     department = torch.from_numpy(department.values).to(torch.float)
-    # name = course["pnazev_embed"]
-    # name = torch.tensor(name.tolist())
-    # name_embed = torch.tensor(course["pnazev_embed"].tolist())
-    course_features = torch.cat([department], dim=-1)
+    embed = torch.tensor(course["embed"].tolist())
+    course_features = torch.cat([embed], dim=-1)
 
     # Edge
     edge_index, _ = index_label(pos_train, pd.DataFrame())

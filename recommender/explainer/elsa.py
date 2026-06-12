@@ -19,11 +19,13 @@ class ElsaExplainer(Explainer):
         courses = povinn[povinn["povinn"].isin(courses)].assign(
             _order=lambda df: df["povinn"].map(order)
         )
-        finished = self.train_data.get_finished(user.id)
+        finished = user.blueprint_to_df()["course"].to_list()
+        if user.fetch:
+            finished = self.train_data.get_finished(user.id)
         finished = povinn[povinn["povinn"].isin(finished)]
 
         sim = self.model.similar_items(
-            N=5,
+            N=min(5, len(finished)),
             batch_size=3,
             sources=courses["course_id"].values,
             candidates=finished["course_id"].values,

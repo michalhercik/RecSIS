@@ -252,9 +252,10 @@ async def fit():
 @eval_router.post("/recommended")
 async def eval_recommend(req: EvalRecommendRequest):
     user = User(req.user_id, req.degree_plan, req.enrollment_year, req.blueprint)
-    if req.student is not None:
+    if req.student is not None and len(req.student) > 0:
         user.id = req.student
         user.fetch = True
+
     limit = req.limit
     algo = req.algo
     result = eval_recommender.recommend(user, algo, limit)

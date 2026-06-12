@@ -43,8 +43,18 @@ def main(args):
         on="user_id",
     ).reset_index()
 
+    test_results = pd.merge(
+        train.groupby("user_id")
+        .agg({"course_id": set})
+        .rename(columns={"course_id": "train_courses"}),
+        test.groupby("user_id")
+        .agg({"course_id": list})
+        .rename(columns={"course_id": "val_courses"}),
+        on="user_id",
+    ).reset_index()
+
     num_nodes = user.shape[0] + povinn.shape[0]
-    model = LightGCN(num_nodes=num_nodes, embedding_dim=64, num_layers=3).to(device)
+    model = LightGCN(num_nodes=num_nodes, embedding_dim=16, num_layers=2).to(device)
 
     edge_index_homo = torch.stack(
         [
@@ -96,16 +106,28 @@ def main(args):
 
     model.eval()
 
+    # top_items = model.recommend(
+    #     edge_index=edge_index_homo,
+    #     src_index=torch.tensor(val_results["user_id"].values),
+    #     k=povinn.shape[0],
+    # )
+    # results = pd.merge(
+    #     val_results,
+    #     pd.DataFrame({"user_id": val_results["user_id"], "pred": top_items.tolist()}),
+    #     on=["user_id"],
+    # )
+
     top_items = model.recommend(
         edge_index=edge_index_homo,
-        src_index=torch.tensor(val_results["user_id"].values),
+        src_index=torch.tensor(test_results["user_id"].values),
         k=povinn.shape[0],
     )
     results = pd.merge(
-        val_results,
-        pd.DataFrame({"user_id": val_results["user_id"], "pred": top_items.tolist()}),
+        test_results,
+        pd.DataFrame({"user_id": test_results["user_id"], "pred": top_items.tolist()}),
         on=["user_id"],
     )
+
     results["pred"] = results.apply(
         lambda x: [i for i in x["pred"] if i not in x["train_courses"]], axis=1
     )
