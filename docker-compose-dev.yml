@@ -1,0 +1,124 @@
+services:
+  elt:
+    build:
+      dockerfile: Dockerfile
+      context: ./elt/
+      target: dev-stage
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+      meilisearch:
+        condition: service_healthy
+        restart: true
+    environment:
+      - ACHERON_USER=${ACHERON_USER:-}
+      - SIS_DB_USER=${SIS_DB_USER}
+      - SIS_DB_PASS=${SIS_DB_PASS}
+      - RECSIS_ELT_DB_PASS=${RECSIS_ELT_DB_PASS}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+    networks:
+      - recsis-network
+    volumes:
+      - ~/.ssh/id_ed25519:/root/.ssh/id_rsa
+      - ~/.ssh/id_rsa:/root/.ssh/id_rsa
+  webapp:
+    build:
+      dockerfile: Dockerfile
+      context: ./webapp/
+      target: deploy-stage
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+      meilisearch:
+        condition: service_healthy
+    ports:
+      - 443:8000
+    environment:
+      - RECSIS_WEBAPP_DB_PASS=${RECSIS_WEBAPP_DB_PASS}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+    networks:
+      - recsis-network
+    volumes:
+      - /var/recsis-cert/:/app/recsis-cert/:ro
+      - ./cert/:/app/recsis-cert/:ro
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      RECSIS_ELT_DB_PASS: ${RECSIS_ELT_DB_PASS}
+      RECSIS_WEBAPP_DB_PASS: ${RECSIS_WEBAPP_DB_PASS}
+      RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
+      PGDATA: /data/postgres
+    volumes:
+      - ./init_db:/docker-entrypoint-initdb.d
+      - ./postgres_data:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - recsis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h postgres -U ${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 1s
+  adminer:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - recsis-network
+  meilisearch:
+    image: getmeili/meilisearch:v1.16
+    environment:
+      MEILI_MASTER_KEY: MASTER_KEY
+      MEILI_HTTP_PAYLOAD_SIZE_LIMIT: "200MB"
+    volumes:
+      - ./meili_data:/meili_data
+    ports:
+      - 7700:7700
+    networks:
+      - recsis-network
+    healthcheck:
+      test: set -o pipefail;curl -fsS http://meilisearch:7700/health | grep -q '{"status":"available"}'
+      interval: 1s
+      timeout: 5s
+      retries: 10
+  bert:
+    build:
+      dockerfile: Dockerfile
+      context: ./bert/
+      target: builder
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+    ports:
+      - 8003:8003
+    networks:
+      - recsis-network
+  mockcas:
+    build:
+      dockerfile: Dockerfile
+      context: ./mock_cas/
+      target: dev-stage
+    volumes:
+      - ./cert/:/app/cert/
+    ports:
+      - 8001:8001
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - recsis-network
+
+networks:
+  recsis-network:
+    driver: bridge
