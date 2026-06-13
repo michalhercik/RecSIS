@@ -1,14 +1,12 @@
 import random
-import torch
-from transformers import BertTokenizer, BertModel
-from sklearn.metrics.pairwise import cosine_similarity
-from flask import Flask, jsonify, request
 
-RandomSeed = 52
-random.seed(RandomSeed)
-torch.manual_seed(RandomSeed)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(RandomSeed)
+import torch
+from flask import Flask, jsonify, request
+from sentence_transformers import SentenceTransformer, models
+from transformers import (
+    BertModel,
+    BertTokenizer,
+)
 
 app = Flask(__name__)
 
@@ -16,31 +14,27 @@ app = Flask(__name__)
 def embedding():
     r = request.get_json()
     text = r.get("text", "")
-    embedding = bert_embed(text)
-    response = jsonify({"embedding": embedding.flatten().tolist()})
+    input = [text] if isinstance(text, str) else text
+    embedding = sbert_embed(input)
+    if isinstance(text, str):
+        embedding = embedding.flatten()
+    response = jsonify({"embedding": embedding.tolist()})
     return response
 
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased')
-
-def bert_embed(text: str):
-    encoding = tokenizer.batch_encode_plus(
-        [text],                	
-        padding=True,          	
-        truncation=True,       	
-        return_tensors='pt',  	
-        add_special_tokens=True
-    )
-    
-    token_ids = encoding['input_ids']  
-    attentionMask = encoding['attention_mask']  
-
+word_embedding_model = models.Transformer(
+    "sentence-transformers/all-MiniLM-L6-v2"
+)
+pooling_model = models.Pooling(
+    word_embedding_model.get_word_embedding_dimension(), pooling_mode_mean_tokens=True
+)
+sbert = SentenceTransformer(modules=[word_embedding_model, pooling_model])
+def sbert_embed(texts):
     with torch.no_grad():
-        outputs = model(token_ids, attention_mask=attentionMask)
-        word_embeddings = outputs.last_hidden_state  
-        sentence_embedding = word_embeddings.mean(dim=1)
+        embeddings = sbert.encode(
+            texts, convert_to_tensor=True, normalize_embeddings=True
+        )
+    return embeddings
 
-    return sentence_embedding
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8003, debug=True)
