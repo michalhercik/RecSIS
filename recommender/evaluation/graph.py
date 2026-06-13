@@ -231,7 +231,8 @@ def eval(user: pd.DataFrame, results: pd.DataFrame):
     )
 
     # describe = results.groupby(["k", "sdruh"])[["Recall", "Precision", "AP"]].describe()
-    # describe = results.groupby(["k", "sdruh"])[["Recall", "AP"]].describe()
+    describe = results.groupby(["k", "sdruh"])[["Recall", "AP"]].describe()
+    print(describe)
     describe = results.groupby(["k"])[["Recall", "AP"]].describe()
     describe_all = (
         describe.mean().to_frame().T.set_index([pd.Index(["-"]), pd.Index(["-"])])

@@ -13,13 +13,10 @@ class LightGCNRanker(Ranker):
     def __init__(self, train_data: TrainData):
         super().__init__(train_data)
         self.set_train_params(
-            embedding_dim=64, num_layers=3, num_epochs=3, learning_rate=1e-2
+            embedding_dim=16, num_layers=2, num_epochs=50, learning_rate=1e-2
         )
 
     def fit(self):
-        # epochs = 3
-        # lr = 1e-2
-
         self.edge_index_homo, self.id_to_povinn = self.edge_index(
             self.train_data.user.copy(),
             self.train_data.train.copy(),
@@ -30,80 +27,8 @@ class LightGCNRanker(Ranker):
             lambda: self.fit_with(
                 num_nodes, self.edge_index_homo, self.train_data.train.shape[0]
             ),
-            "lightgcn.pickle",
+            "lightgcn_ranker.pickle",
         )
-
-        # def increment(df):
-        #     df["course_id"] = df["course_id"] + self.train_data.user.shape[0]
-
-        # increment(self.train_data.povinn)
-        # increment(self.train_data.train)
-        # increment(self.train_data.val)
-
-        # self.id_to_povinn = dict(
-        #     zip(self.train_data.povinn["course_id"], self.train_data.povinn["povinn"])
-        # )
-
-        # num_nodes = self.train_data.user.shape[0] + self.train_data.povinn.shape[0]
-
-        # self.edge_index_homo = torch.stack(
-        #     [
-        #         torch.tensor(self.train_data.train["user_id"].values),
-        #         torch.tensor(self.train_data.train["course_id"].values),
-        #     ],
-        #     dim=0,
-        # )
-        # self.edge_index_homo = torch.cat(
-        #     [self.edge_index_homo, self.edge_index_homo.flip(0)], dim=1
-        # )
-
-        # def train_model():
-        #     model = TorchLightGCN(
-        #         num_nodes=num_nodes, embedding_dim=64, num_layers=3
-        #     ).to(device)
-        #     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
-
-        #     def train_step():
-        #         model.train()
-        #         optimizer.zero_grad()
-
-        #         neg_edge_index = negative_sampling(
-        #             edge_index=self.edge_index_homo,
-        #             num_nodes=num_nodes,
-        #             num_neg_samples=self.edge_index_homo.size(1) // 2,
-        #         )
-
-        #         pos_u, pos_i = self.edge_index_homo[:, : self.train_data.train.shape[0]]
-        #         _, neg_i = neg_edge_index
-
-        #         emb = model.get_embedding(self.edge_index_homo)
-
-        #         u_emb = emb[pos_u]
-        #         pos_emb = emb[pos_i]
-        #         neg_emb = emb[neg_i]
-
-        #         pos_scores = (u_emb * pos_emb).sum(dim=1)
-        #         neg_scores = (u_emb * neg_emb).sum(dim=1)
-
-        #         loss = model.recommendation_loss(
-        #             pos_scores,
-        #             neg_scores,
-        #             node_id=torch.cat([pos_u, pos_i, neg_i]),
-        #             lambda_reg=1e-4,
-        #         )
-        #         loss.backward()
-        #         optimizer.step()
-
-        #         return float(loss.detach())
-
-        #     for epoch in range(1, epochs + 1):
-        #         loss = train_step()
-        #         print(f"Epoch {epoch:03d} | Loss: {loss:.4f}")
-
-        #     model.eval()
-        #     return model
-
-        # self.model = cached(train_model, "lightgcn.pickle")
 
     def rank(self, user: User) -> list[str]:
         u = self.train_data.get_user(user.id)
@@ -130,8 +55,8 @@ class LightGCNRanker(Ranker):
             results = self.train_data.povinn.copy()
 
             results["score"] = torch.matmul(
-                torch.tensor(course_emb, dtype=torch.float32),
-                torch.tensor(u_emb, dtype=torch.float32),
+                course_emb,
+                u_emb,
             )
             results = results.sort_values("score", ascending=False)
             pred = results["povinn"].tolist()

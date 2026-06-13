@@ -13,7 +13,9 @@ class Elsa(Ranker):
     def __init__(self, train_data: TrainData):
         super().__init__(train_data)
         self.set_train_params(
-            factors=16, num_epochs=10, learning_rate=1e-2, batch_size=128
+            factors=16,
+            num_epochs=50,
+            learning_rate=1e-2,
         )
 
     def fit(self) -> None:
@@ -30,6 +32,7 @@ class Elsa(Ranker):
             batch_size=self.train_data.train.shape[0],
             epochs=self.num_epochs,
             shuffle=False,
+            verbose=False,
         )
 
     def rank(self, user: User) -> list[str]:
@@ -56,11 +59,10 @@ class Elsa(Ranker):
         )
 
     def set_train_params(
-        self, factors, num_epochs, batch_size, learning_rate, device=torch.device("cpu")
+        self, factors, num_epochs, learning_rate, device=torch.device("cpu")
     ):
         self.factors = factors
         self.num_epochs = num_epochs
-        self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.device = device
 

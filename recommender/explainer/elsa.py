@@ -26,9 +26,10 @@ class ElsaExplainer(Explainer):
 
         sim = self.model.similar_items(
             N=min(5, len(finished)),
-            batch_size=3,
+            batch_size=self.train_data.train.shape[0],
             sources=courses["course_id"].values,
             candidates=finished["course_id"].values,
+            verbose=False,
         )[0].numpy()
 
         expl = (

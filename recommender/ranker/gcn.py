@@ -375,7 +375,9 @@ def negative_split(
                 interaction.groupby("user_id")["course_id"].count() * ratio
             ).round()
         else:
-            user_interaction_count = interaction.groupby("user_id").apply(lambda x: -1)
+            user_interaction_count = pd.Series(
+                -1, index=pd.Index(interaction["user_id"].unique(), name="user_id")
+            )
         user_interaction_count = (
             user_interaction_count.rename("count").reset_index().astype(int)
         )
@@ -421,16 +423,6 @@ def negative_split(
 
 
 def get_user_features(user: pd.DataFrame, all_users: pd.DataFrame) -> torch.Tensor:
-    # # User
-    # study_type = pd.get_dummies(user["sdruh"])
-    # study_type = torch.from_numpy(study_type.values).to(torch.float)
-    # field = pd.get_dummies(user["sobor"])
-    # field = torch.from_numpy(field.values).to(torch.float)
-    # # field_embed = torch.tensor(user["sobor_embed"].tolist())
-    # user_features = torch.cat([study_type, field], dim=-1)
-    #
-
-    print(user)
     study_type = pd.crosstab(user["user_id"], user["sdruh"])
     study_type = study_type.reindex(
         index=user["user_id"],
@@ -445,22 +437,19 @@ def get_user_features(user: pd.DataFrame, all_users: pd.DataFrame) -> torch.Tens
         fill_value=0,
     )
     field = torch.from_numpy(field.values).to(torch.float)
-    emebed = torch.tensor(user["embed"].tolist())
-    user_features = torch.cat([emebed, study_type, field], dim=-1)
+    embed = np.stack(user["embed"], axis=0)
+    embed = embed.astype(np.float32)
+    embed = torch.from_numpy(embed)
+    user_features = torch.cat([embed, study_type, field], dim=-1)
     return user_features
 
 
 def get_course_features(course: pd.DataFrame) -> torch.Tensor:
     # department = pd.get_dummies(course["pgarant"])
     # department = torch.from_numpy(department.values).to(torch.float)
-    # # name = course["pnazev_embed"]
-    # # name = torch.tensor(name.tolist())
-    # # name_embed = torch.tensor(course["pnazev_embed"].tolist())
-    # course_features = torch.cat([department], dim=-1)
-
-    # department = pd.get_dummies(course["pgarant"])
-    # department = torch.from_numpy(department.values).to(torch.float)
-    embed = torch.tensor(course["embed"].tolist())
+    embed = np.stack(course["embed"], axis=0)
+    embed = embed.astype(np.float32)
+    embed = torch.from_numpy(embed)
     course_features = torch.cat([embed], dim=-1)
 
     return course_features

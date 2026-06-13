@@ -57,39 +57,18 @@ class Model(Ranker, Explainer):
     def rank(self, user: User) -> list[str]:
         return self.ranker.rank(user)
 
-    def explain(self, user: User, courses: list[str]) -> list[str]:
+    def explain(self, user: User, courses: list[str]) -> dict[str, str]:
         return self.explainer.explain(user, courses)
-
-
-class ModelFactory:
-    def __init__(self, train_data: TrainData):
-        self.train_data = train_data
-
-    def elsa(self):
-        ranker = Elsa(self.train_data)
-        explainer = ElsaExplainer(ranker, self.train_data)
-        # explainer = EmptyExplainer()
-        return Model(ranker, explainer)
-
-    def gcn(self):
-        ranker = GCNRanker(self.train_data)
-        explainer = EmptyExplainer()
-        return Model(ranker, explainer)
-
-    def light_gcn(self):
-        ranker = LightGCNRanker(self.train_data)
-        explainer = EmptyExplainer()
-        return Model(ranker, explainer)
 
 
 class EvalRecommender:
     def __init__(self):
         self.train_data = TrainData(rnd_state=RND_STATE)
-        modelFactory = ModelFactory(self.train_data)
+        elsa = Elsa(self.train_data)
         self.model = {
-            "Elsa": modelFactory.elsa(),
-            "GCN": modelFactory.gcn(),
-            "LightGCN": modelFactory.light_gcn(),
+            "Elsa": Model(elsa, ElsaExplainer(elsa, self.train_data)),
+            "GCN": Model(GCNRanker(self.train_data), EmptyExplainer()),
+            "LightGCN": Model(LightGCNRanker(self.train_data), EmptyExplainer()),
             "UserKNN": Model(UserKNN(self.train_data), EmptyExplainer()),
             "ContentKNN": Model(ContentKNN(self.train_data), EmptyExplainer()),
         }
@@ -179,82 +158,3 @@ class EvalRecommender:
 
     def __unknown_algos(self, algos: list[str]) -> list[str]:
         return [algo for algo in algos if algo not in self.model]
-
-
-# class RecStudentInfo:
-#     soident: str
-#     type: str
-#     sobor: str
-#     degree_plan: str
-#     year_of_study: int
-#     finished: list[str]
-#     expected: list[str]
-
-
-# class GeneralInfo:
-#     counter: int = 0
-
-#     def __init__(self, train_data: TrainData):
-#         self.train_data = train_data
-
-#     def get(self, user: User) -> dict:
-#         result = {}
-#         result["soident"] = user.id
-#         result["type"], result["sobor"], result["degree_plan"] = self.get_user_info(
-#             user, user.id
-#         )
-#         result["year_of_study"] = self.get_year_finished(user)
-#         return result
-
-#     # def get_user_soident(self, user: User):
-#     #     soident = user.id
-#     #     if user.fetch:
-#     #         if user.id.lower() == "random":
-#     #             uid = (
-#     #                 self.train_data.val["user_id"]
-#     #                 .drop_duplicates()
-#     #                 .sample(1, random_state=RND_STATE + self.counter)
-#     #                 .iloc[0]
-#     #             )
-#     #             soident = self.train_data.user[self.train_data.user["user_id"] == uid][
-#     #                 "soident"
-#     #             ].iloc[0]
-#     #             self.counter += 1
-#     #     else:
-#     #         soident = ""
-#     #     return soident
-
-#     def get_user_info(self, user: User, soident: str):
-#         type = ""
-#         sobor = ""
-#         degree_plan = user.degree_plan
-#         if user.fetch:
-#             df = self.train_data.user[self.train_data.user["soident"] == int(soident)]
-#             type = df["sdruh"].iloc[0]
-#             sobor = df["sobor_nazev"].iloc[0]
-#             degree_plan = df["splan"].iloc[0]
-#         return type, sobor, degree_plan
-
-#     def get_year_finished(self, user: User):
-#         year = -1
-#         if user.fetch:
-#             user_id = self.train_data.user[
-#                 self.train_data.user["soident"] == int(user.id)
-#             ]["user_id"].iloc[0]
-#             finished_df = self.train_data.val[self.train_data.val["user_id"] == user_id]
-#             finished_df = finished_df.merge(self.train_data.povinn, on="course_id")
-#             year = finished_df["zroc"].max()
-
-#         return year
-
-#     def get_expected(self, user: User, soident: str):
-#         expected = []
-#         if user.fetch:
-#             user_id = self.train_data.user[
-#                 self.train_data.user["soident"] == int(soident)
-#             ]["user_id"].iloc[0]
-#             expected_df = self.train_data.val[self.train_data.val["user_id"] == user_id]
-#             expected_df = expected_df.merge(self.train_data.povinn, on="course_id")
-#             expected = expected_df["povinn"].to_list()
-
-#         return expected
