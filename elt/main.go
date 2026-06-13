@@ -53,7 +53,7 @@ func main() {
 	err = uploadToMeili(recsis, meili, []meiliUpload{
 		{table: "povinn2searchable", index: "courses"},
 		{table: "ankecy2searchable", index: "survey"},
-		{table: "studplan2searchable", index: "degree-plans"},
+		// {table: "studplan2searchable", index: "degree-plans"},
 	})
 	elapsed = time.Since(start)
 	report = makeReport(err, elapsed)
@@ -91,7 +91,7 @@ func extract(sis, recsis *sqlx.DB) error {
 	extract.add(&Ciselnik{Table: "pvyuc"})
 	extract.add(&Ciselnik{Table: "typmem"})
 	extract.add(&Ciselnik{Table: "obor", KodSize: 12, NazevSize: 250})
-	extract.add(&extractStudPlan{})
+	// extract.add(&extractStudPlan{})
 
 	err := extract.run()
 	return err
@@ -120,18 +120,18 @@ func transform(recsis *sqlx.DB) error {
 			pklas2JSON,
 			povinn2jazykAgg,
 			ankecy2JSON,
-			studmetadata2intermediate,
+			// studmetadata2intermediate,
 		},
 		parallelRunner{
 			povinn2courses,
-			studplan2lang,
-			studobor2lang,
-			studmetadata2lang,
+			// studplan2lang,
+			// studobor2lang,
+			// studmetadata2lang,
 		},
 		parallelRunner{
 			preq2coursesRequisites,
 			povinn2searchable,
-			studplan2searchable,
+			// studplan2searchable,
 		},
 		parallelRunner{
 			ankecy2searchable,
@@ -153,15 +153,15 @@ func transform(recsis *sqlx.DB) error {
 			createFilterValuesForSurveyStudyYears,
 			createFilterValuesForSurveyTargetTypes,
 			createFilterValuesForSurveyAcademicYears,
-			createFilterValuesForDegreePlanFaculties,
-			createFilterValuesForDegreePlanSections,
-			createFilterValuesForDegreePlanFields,
-			createFilterValuesForDegreePlanLanguages,
-			createFilterValuesForDegreePlanValid,
-			createFilterValuesForDegreePlanStudyTypes,
+			// createFilterValuesForDegreePlanFaculties,
+			// createFilterValuesForDegreePlanSections,
+			// createFilterValuesForDegreePlanFields,
+			// createFilterValuesForDegreePlanLanguages,
+			// createFilterValuesForDegreePlanValid,
+			// createFilterValuesForDegreePlanStudyTypes,
 		},
-		fixDegreePlansCredits,
-		createRequisiteGraphData,
+		// fixDegreePlansCredits,
+		// createRequisiteGraphData,
 	}
 
 	err := runner.run(recsis)
@@ -185,18 +185,18 @@ func migrate(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	err = migrateStudPlanList(tx)
-	if err != nil {
-		return err
-	}
-	err = migrateStudPlans(tx)
-	if err != nil {
-		return err
-	}
-	err = migrateStudPlanCourses(tx)
-	if err != nil {
-		return err
-	}
+	// err = migrateStudPlanList(tx)
+	// if err != nil {
+	// 	return err
+	// }
+	// err = migrateStudPlans(tx)
+	// if err != nil {
+	// 	return err
+	// }
+	// err = migrateStudPlanCourses(tx)
+	// if err != nil {
+	// 	return err
+	// }
 	if err = tx.Commit(); err != nil {
 		return err
 	}
