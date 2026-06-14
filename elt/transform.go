@@ -2957,3 +2957,48 @@ var povinnCategories = transformation{
         );
 	`,
 }
+
+/*
+Prerequisites:
+  - povinn
+  - trida
+  - ptrida
+*/
+var filteredTrida = transformation{
+	name: "filtered_trida",
+	query: `--sql
+		DROP TABLE IF EXISTS filtered_trida;
+		CREATE TABLE filtered_trida AS
+			SELECT
+				p.povinn,
+				t.kod,
+				t.nazev
+			FROM povinn p
+			LEFT JOIN ptrida pt ON pt.povinn = p.povinn
+			LEFT JOIN trida t ON t.kod = pt.ptrida
+			WHERE t.kod IS NOT NULL
+	`,
+}
+
+/*
+Prerequisites:
+  - povinn
+  - klas
+  - pklas
+*/
+var filteredKlas = transformation{
+	name: "filtered_klas",
+	query: `--sql
+		DROP TABLE IF EXISTS filtered_klas;
+		CREATE TABLE filtered_klas AS
+			SELECT
+				p.povinn,
+				k.kod,
+				k.nazev,
+				k.anazev
+			FROM povinn p
+			LEFT JOIN pklas pk ON pk.povinn = p.povinn
+			LEFT JOIN klas k ON k.kod = pk.pklas
+			WHERE k.kod IS NOT NULL
+	`,
+}

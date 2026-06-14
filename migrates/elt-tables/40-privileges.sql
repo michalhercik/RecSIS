@@ -27,5 +27,8 @@ ON
     recommender.stud_plan,
     recommender.searchable_povinn,
     recommender.preq,
-    recommender.pamela
+    recommender.pamela,
+    recommender.obor,
+    recommender.trida,
+    recommender.klas
 TO elt;

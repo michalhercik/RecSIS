@@ -183,3 +183,21 @@ func migrateKlas(tx *sqlx.Tx) error {
 	}
 	return nil
 }
+
+func migrateObor(tx *sqlx.Tx) error {
+	var err error
+	_, err = tx.Exec(`--sql
+		DELETE FROM recommender.obor WHERE TRUE;
+		INSERT INTO recommender.obor (
+			kod,
+			nazev, anazev
+		) SELECT
+			kod,
+			nazev, anazev
+		FROM obor
+	`)
+	if err != nil {
+		return err
+	}
+	return nil
+}

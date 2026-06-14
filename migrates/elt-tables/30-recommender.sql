@@ -90,3 +90,28 @@ CREATE TABLE stud_plan (
     plan_code VARCHAR(15),
     plan_year INT
 );
+
+DROP TABLE IF EXISTS obor CASCADE;
+
+CREATE TABLE obor (
+    kod VARCHAR(12),
+    nazev VARCHAR(250),
+    anazev VARCHAR(250)
+);
+
+DROP TABLE IF EXISTS trida CASCADE;
+
+CREATE TABLE trida (
+    povinn VARCHAR(10),
+    kod VARCHAR(7),
+    nazev VARCHAR(50)
+);
+
+DROP TABLE IF EXISTS klas CASCADE;
+
+CREATE TABLE klas (
+    povinn VARCHAR(10),
+    kod VARCHAR(6),
+    nazev VARCHAR(60),
+    anazev VARCHAR(60)
+);

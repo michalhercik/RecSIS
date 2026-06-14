@@ -35,12 +35,12 @@ func main() {
 	var start time.Time
 	var elapsed time.Duration
 	// Extract
-	start = time.Now()
-	err = extract(sis, recsis)
-	elapsed = time.Since(start)
-	report = makeReport(err, elapsed)
-	log.Println("--------------------------------------------------")
-	log.Println(report)
+	// start = time.Now()
+	// err = extract(sis, recsis)
+	// elapsed = time.Since(start)
+	// report = makeReport(err, elapsed)
+	// log.Println("--------------------------------------------------")
+	// log.Println(report)
 	// Transform
 	start = time.Now()
 	err = transform(recsis)
@@ -102,6 +102,8 @@ func transform(recsis *sqlx.DB) error {
 	runner := sequentialRunner{
 		parallelRunner{
 			povinnCategories,
+			filteredTrida,
+			filteredKlas,
 			fak2JSON,
 			ustav2JSON,
 			ucit2JSON,
@@ -216,6 +218,18 @@ func migrate(db *sqlx.DB) error {
 		return err
 	}
 	err = migratePamela(tx)
+	if err != nil {
+		return err
+	}
+	err = migrateObor(tx)
+	if err != nil {
+		return err
+	}
+	err = migrateTrida(tx)
+	if err != nil {
+		return err
+	}
+	err = migrateKlas(tx)
 	if err != nil {
 		return err
 	}
