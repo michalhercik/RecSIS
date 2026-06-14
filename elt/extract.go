@@ -1437,7 +1437,7 @@ func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
 		SELECT
 			KOD,
 			NAZEV,
-			COALESCE(ANAZEV, NAZEV) AS ANAZEV, 
+			COALESCE(ANAZEV, NAZEV) AS ANAZEV,
 			LOD,
 			LDO,
 			FAKULTA,
@@ -1463,7 +1463,7 @@ func (ep *extractStudPlan) selectData(from *sqlx.DB, to *sqlx.DB) error {
 		WHERE O.KOD IN ('%s')
 	`
 	selectPlanQuery := `
-		SELECT 
+		SELECT
 			CODE,
 			NAME_CZ,
 			COALESCE(NAME_EN, NAME_CZ) AS NAME_EN,
@@ -1697,7 +1697,7 @@ func (ep *extractStudPlan) insertStudPlan(to *sqlx.DB) error {
 			code, name_cz, name_en, subject_status,
 			department, faculty,
 			semester_primary, semester_count, subject_type,
-			workload_primary1, workload_secondary1, workload_primary2, workload_secondary2, 
+			workload_primary1, workload_secondary1, workload_primary2, workload_secondary2,
 			workload_time_unit, credits,
 			interchangeability, recommended_year_from, recommended_year_to, recommended_semester,
 			bloc_subject_code, bloc_type, bloc_limit, bloc_name_cz, bloc_name_en,
@@ -1792,6 +1792,75 @@ func (ep *extractStudPlan) insertTransfers(to *sqlx.DB) error {
 		)
 	`
 	err := simpleInsert(to, drop, create, insert, ep.transfers)
+	if err != nil {
+		return fmt.Errorf("insertData: %w", err)
+	}
+	return nil
+}
+
+type extractZkous struct {
+	data []struct {
+		ZIDENT   int    `db:"ZIDENT"`
+		ZSKR     string `db:"ZSKR"`
+		ZSEM     string `db:"ZSEM"`
+		ZPOVINN  string `db:"ZPOVINN"`
+		ZMARX    string `db:"ZMARX"`
+		ZROC     int    `db:"ZROC"`
+		ZBODY    int    `db:"ZBODY"`
+		ZSPLCELK string `db:"ZSPLCELK"`
+	}
+}
+
+func (ep *extractZkous) name() string {
+	return "ZKOUS"
+}
+
+func (ep *extractZkous) selectData(from *sqlx.DB, to *sqlx.DB) error {
+	var query string
+	var err error
+	query = `
+		SELECT
+			ZIDENT, ZSKR, ZSEM, ZPOVINN,
+			ZMARX, ZROC, ZBODY, ZSPLCELK
+		FROM STUDIUM
+		LEFT JOIN ZKOUS ON ZIDENT = SIDENT
+		WHERE SPLAN IS NOT NULL
+		AND SSTAV IS NOT NULL
+		AND ZIDENT IS NOT NULL
+	`
+	err = from.Select(&ep.data, query)
+	if err != nil {
+		return fmt.Errorf("selectData: %w", err)
+	}
+	return err
+}
+
+func (ep *extractZkous) insertData(to *sqlx.DB) error {
+	drop := `--sql
+		DROP TABLE IF EXISTS zkous
+	`
+	create := `
+		CREATE TABLE zkous (
+			ZIDENT INT,
+			ZSKR VARCHAR(4),
+			ZSEM VARCHAR(1),
+			ZPOVINN VARCHAR(10),
+			ZMARX VARCHAR(5),
+			ZROC INT,
+			ZBODY INT,
+			ZSPLCELK VARCHAR(1)
+		)
+	`
+	insert := `
+		INSERT INTO zkous (
+			ZIDENT, ZSKR, ZSEM, ZPOVINN,
+			ZMARX, ZROC, ZBODY, ZSPLCELK
+		) SELECT * FROM unnest(
+			$1::int[], $2::text[], $3::text[], $4::text[],
+			$5::text[], $6::int[], $7::int[], $8::text[]
+		)
+	`
+	err := insertAsColumns(to, drop, create, insert, toColumns(ep.data))
 	if err != nil {
 		return fmt.Errorf("insertData: %w", err)
 	}

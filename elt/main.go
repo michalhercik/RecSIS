@@ -68,6 +68,7 @@ func main() {
 
 func extract(sis, recsis *sqlx.DB) error {
 	extract := makeExtract(sis, recsis)
+	extract.add(&extractZkous{})
 	extract.add(&extractPovinn{})
 	extract.add(&extractUcitRozvrh{})
 	extract.add(&extractUcit{})
@@ -100,6 +101,7 @@ func extract(sis, recsis *sqlx.DB) error {
 func transform(recsis *sqlx.DB) error {
 	runner := sequentialRunner{
 		parallelRunner{
+			povinnCategories,
 			fak2JSON,
 			ustav2JSON,
 			ucit2JSON,
@@ -197,6 +199,26 @@ func migrate(db *sqlx.DB) error {
 	// if err != nil {
 	// 	return err
 	// }
+	err = migrateZkous(tx)
+	if err != nil {
+		return err
+	}
+	err = migratePovinn(tx)
+	if err != nil {
+		return err
+	}
+	err = migrateSearchablePovinn(tx)
+	if err != nil {
+		return err
+	}
+	err = migratePreq(tx)
+	if err != nil {
+		return err
+	}
+	err = migratePamela(tx)
+	if err != nil {
+		return err
+	}
 	if err = tx.Commit(); err != nil {
 		return err
 	}
