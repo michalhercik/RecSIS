@@ -16,6 +16,8 @@ ON
     webapp.filters
 TO elt;
 
+GRANT SELECT, INSERT, DELETE, UPDATE ON ALL TABLES IN SCHEMA recommender TO recommender;
+
 GRANT USAGE ON SCHEMA recommender TO elt;
 GRANT
     DELETE,
