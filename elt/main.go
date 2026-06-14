@@ -35,12 +35,12 @@ func main() {
 	var start time.Time
 	var elapsed time.Duration
 	// Extract
-	// start = time.Now()
-	// err = extract(sis, recsis)
-	// elapsed = time.Since(start)
-	// report = makeReport(err, elapsed)
-	// log.Println("--------------------------------------------------")
-	// log.Println(report)
+	start = time.Now()
+	err = extract(sis, recsis)
+	elapsed = time.Since(start)
+	report = makeReport(err, elapsed)
+	log.Println("--------------------------------------------------")
+	log.Println(report)
 	// Transform
 	start = time.Now()
 	err = transform(recsis)
@@ -68,6 +68,7 @@ func main() {
 
 func extract(sis, recsis *sqlx.DB) error {
 	extract := makeExtract(sis, recsis)
+	extract.add(&extractStudium{})
 	extract.add(&extractZkous{})
 	extract.add(&extractPovinn{})
 	extract.add(&extractUcitRozvrh{})
@@ -206,6 +207,10 @@ func migrate(db *sqlx.DB) error {
 		return err
 	}
 	err = migratePovinn(tx)
+	if err != nil {
+		return err
+	}
+	err = migrateStudium(tx)
 	if err != nil {
 		return err
 	}
