@@ -1,0 +1,6 @@
+**/__pycache__/
+**/venv/
+*.pickle
+*.pth
+*.pkl
+train-data
