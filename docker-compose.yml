@@ -45,6 +45,25 @@ services:
       - recsis-network
     volumes:
       - /var/recsis-cert/:/app/recsis-cert/:ro
+  recommender:
+    build:
+      dockerfile: Dockerfile
+      context: ./recommender/
+      target: prod
+    ports:
+      - 8002:8002
+    environment:
+      RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./recommender:/app
+    networks:
+      - recsis-network
   postgres:
     container_name: recsis-postgres
     image: postgres
@@ -55,7 +74,7 @@ services:
       RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
       PGDATA: /data/postgres
     volumes:
-       - ./init_db:/docker-entrypoint-initdb.d
+      - ./init_db:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     networks:
@@ -117,7 +136,7 @@ services:
       context: ./mock_cas/
       target: dev-stage
     volumes:
-    - ./cert/:/app/cert/
+      - ./cert/:/app/cert/
     ports:
       - 8001:8001
     extra_hosts:

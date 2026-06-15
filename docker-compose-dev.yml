@@ -43,6 +43,25 @@ services:
     volumes:
       - /var/recsis-cert/:/app/recsis-cert/:ro
       - ./cert/:/app/recsis-cert/:ro
+  recommender:
+    build:
+      dockerfile: Dockerfile
+      context: ./recommender/
+      target: dev
+    ports:
+      - 8002:8002
+    environment:
+      RECSIS_RECOMMENDER_DB_PASS: ${RECSIS_RECOMMENDER_DB_PASS}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./recommender:/app
+    networks:
+      - recsis-network
   postgres:
     image: postgres
     environment:
