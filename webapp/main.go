@@ -25,6 +25,7 @@ import (
 	"github.com/michalhercik/RecSIS/degreeplandetail"
 	"github.com/michalhercik/RecSIS/degreeplans"
 	"github.com/michalhercik/RecSIS/home"
+	"github.com/michalhercik/RecSIS/receval"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -98,24 +99,9 @@ func setupHandler(conf config) http.Handler {
 
 	errorHandler.Page = page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl}
 
-	exePath, err := os.Executable()
-	if err != nil {
-		log.Fatalf("Failed to get executable path: %v", err)
-	}
-
-	s := servers{
-		pageTempl:              pageTempl.Router(),
-		homeServer:             homeServer(db, conf, errorHandler, pageTempl, meiliClient),
-		blueprintServer:        blueprintServer(db, errorHandler, pageTempl),
-		coursedetailServer:     courseDetailServer(db, errorHandler, pageTempl, meiliClient),
-		coursesServer:          coursesServer(db, errorHandler, pageTempl, meiliClient),
-		degreePlanDetailServer: degreePlanDetailServer(db, errorHandler, pageTempl),
-		degreePlansServer:      degreePlansServer(db, errorHandler, pageTempl, meiliClient),
-		static:                 http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "static"))),
-	}
-	handler := protectedHandler(s)
+	handler := protectedHandler(db, conf, errorHandler, pageTempl, meiliClient)
 	handler = authenticationHandler(handler, db, errorHandler, conf)
-	handler = unprotectedHandler(handler, s.static)
+	handler = unprotectedHandler(handler)
 	return handler
 }
 
@@ -282,18 +268,44 @@ func degreePlansServer(db *sqlx.DB, errorHandler degreeplans.Error, pageTempl pa
 	return degreePlans.Router()
 }
 
-func protectedHandler(s servers) http.Handler {
+
+func recEvalServer(db *sqlx.DB, conf config, errorHandler receval.Error, pageTempl page.Page) http.Handler {
+	result := &receval.Server{
+		Auth:  cas.UserIDFromContext{},
+		Error: errorHandler,
+		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
+		Experiment: recommend.RestCallWithAlgoSwitch{
+			Client:       &http.Client{},
+			DB:           db,
+			Endpoint:     fmt.Sprintf("http://%s:%d/eval/recommended", conf.Recommender.Host, conf.Recommender.Port),
+			AlgoEndpoint: fmt.Sprintf("http://%s:%d/eval/algorithms", conf.Recommender.Host, conf.Recommender.Port),
+			FitEndpoint:  fmt.Sprintf("http://%s:%d/eval/fit", conf.Recommender.Host, conf.Recommender.Port),
+		},
+		Data: receval.DBManager{DB: db},
+	}
+	result.Init()
+	return result.Router()
+}
+
+func protectedHandler(db *sqlx.DB, conf config, errorHandler errorx.ErrorHandler, pageTempl page.Page, meiliClient meilisearch.ServiceManager) http.Handler {
 	protectedRouter := http.NewServeMux()
-	protectedRouter.Handle(homeRoot, s.homeServer)
-	handle(protectedRouter, pageRoot, s.pageTempl)
-	handle(protectedRouter, blueprintRoot, s.blueprintServer)
-	handle(protectedRouter, courseDetailRoot, s.coursedetailServer)
-	handle(protectedRouter, coursesRoot, s.coursesServer)
-	handle(protectedRouter, degreePlanDetailRoot, s.degreePlanDetailServer)
-	handle(protectedRouter, degreePlansRoot, s.degreePlansServer)
-	protectedRouter.Handle("GET /logo.svg", s.static)
-	protectedRouter.Handle("GET /style.css", s.static)
-	protectedRouter.Handle("GET /js/", s.static)
+	protectedRouter.Handle(homeRoot, homeServer(db, conf, errorHandler, pageTempl, meiliClient))
+	handle(protectedRouter, pageRoot, pageTempl.Router())
+	handle(protectedRouter, blueprintRoot, blueprintServer(db, errorHandler, pageTempl))
+	handle(protectedRouter, courseDetailRoot, courseDetailServer(db, errorHandler, pageTempl, meiliClient))
+	handle(protectedRouter, coursesRoot, coursesServer(db, errorHandler, pageTempl, meiliClient))
+	handle(protectedRouter, degreePlanDetailRoot, degreePlanDetailServer(db, errorHandler, pageTempl))
+	handle(protectedRouter, degreePlansRoot, degreePlansServer(db, errorHandler, pageTempl, meiliClient))
+	if conf.Environment == developmentEnvironment {
+		handle(protectedRouter, recevalRoot, recEvalServer(db, conf, errorHandler, pageTempl))
+	}
+	exePath, err := os.Executable()
+	if err != nil {
+		log.Fatalf("Failed to get executable path: %v", err)
+	}
+	var static = http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "protected")))
+	protectedRouter.Handle("GET /style.css", static)
+	protectedRouter.Handle("GET /js/", static)
 
 	return protectedRouter
 }
@@ -312,9 +324,15 @@ func authenticationHandler(prev http.Handler, db *sqlx.DB, errorHandler cas.Erro
 	return authenticationHandler
 }
 
-func unprotectedHandler(prev http.Handler, static http.Handler) http.Handler {
+func unprotectedHandler(prev http.Handler) http.Handler {
 	unprotectedRouter := http.NewServeMux()
 	unprotectedRouter.Handle("/", prev)
+
+	exePath, err := os.Executable()
+	if err != nil {
+		log.Fatalf("Failed to get executable path: %v", err)
+	}
+	var static = http.FileServer(http.Dir(filepath.Join(filepath.Dir(exePath), "public")))
 	unprotectedRouter.Handle("GET /favicon.ico", static)
 	unprotectedRouter.Handle("GET /logo.svg", static)
 	unprotectedRouter.Handle("GET /help/", static)
@@ -337,17 +355,6 @@ func handle(router *http.ServeMux, prefix string, handler http.Handler) {
 	router.Handle(prefix, http.StripPrefix(prefix[:len(prefix)-1], handler))
 }
 
-type servers struct {
-	homeServer             http.Handler
-	pageTempl              http.Handler
-	blueprintServer        http.Handler
-	coursedetailServer     http.Handler
-	coursesServer          http.Handler
-	degreePlanDetailServer http.Handler
-	degreePlansServer      http.Handler
-	static                 http.Handler
-}
-
 const (
 	pageRoot             = "/page/"
 	homeRoot             = "/"
@@ -356,6 +363,7 @@ const (
 	coursesRoot          = "/courses/"
 	degreePlanDetailRoot = "/degreeplan/"
 	degreePlansRoot      = "/degreeplans/"
+	recevalRoot          = "/receval/"
 )
 
 const (
