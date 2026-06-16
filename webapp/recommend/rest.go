@@ -30,12 +30,6 @@ func (cg CourseGroup) Flatten() []string {
 	return result
 }
 
-type Category struct {
-	Names  []string   `json:"names"`
-	Values [][]string `json:"pred"`
-	Groups [][][]int  `json:"groups"`
-}
-
 type AlgoRecommendation struct {
 	Pred                    []string          `json:"pred"`
 	RecommendedTruePos      []bool            `json:"true_positive"`

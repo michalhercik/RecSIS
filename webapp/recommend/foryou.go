@@ -32,7 +32,7 @@ type ForYou struct {
 }
 
 func (fy ForYou) Recommend(userID string, limit int) (ForYouResponse, error) {
-	fy.RecommendWith(userID, limit, false, false)
+	return fy.RecommendWith(userID, limit, false, false)
 }
 
 func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool) (ForYouResponse, error) {
@@ -59,12 +59,12 @@ func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool
 	return result, nil
 }
 
-func (fy ForYou) call(req forYouRequest) (ForYouResponse, error) {
+func (fy ForYou) call(reqParams forYouRequest) (ForYouResponse, error) {
 	req, err := fy.prepareRequest(reqParams)
 	if err != nil {
 		return ForYouResponse{}, errorx.AddContext(err)
 	}
-	resp, err := c.Client.Do(req)
+	resp, err := fy.Client.Do(req)
 	if err != nil {
 		return ForYouResponse{}, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("do request: %w", err)),
@@ -89,7 +89,7 @@ func (fy ForYou) prepareRequest(reqParams forYouRequest) (*http.Request, error) 
 			"",
 		)
 	}
-	req, err := http.NewRequest(http.MethodPost, c.Endpoint, bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodPost, fy.Endpoint, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("create HTTP request: %w", err)),
@@ -136,10 +136,6 @@ func (r forYouRequest) MarshalJSON() ([]byte, error) {
 		"limit":      %d,
 		"blueprint":  %s,
 	}`
-	algo, err := json.Marshal(r.Algo)
-	if err != nil {
-		return nil, err
-	}
 	body = fmt.Sprintf(body, r.UserID, r.Limit, r.Blueprint)
 	return []byte(body), nil
 }

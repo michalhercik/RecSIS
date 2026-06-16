@@ -1,6 +1,8 @@
 package recommend
 
 import (
+	"fmt"
+	"net/http"
 	"github.com/michalhercik/RecSIS/errorx"
 
 	"github.com/jmoiron/sqlx"
@@ -10,7 +12,7 @@ type BlueprintFetcher struct {
 	DB *sqlx.DB
 }
 
-func (bp Blueprint) fetch(userID string) (string, error) {
+func (bf BlueprintFetcher) fetch(userID string) (string, error) {
 	query := `--sql
 		WITH course_per_semester AS (
 			-- 1️⃣ Gather courses for each academic year + semester
@@ -52,14 +54,13 @@ func (bp Blueprint) fetch(userID string) (string, error) {
 		FROM semester_pivot;
 	`
 	var encodedBlueprint string
-	err := bp.DB.QueryRow(query, userID).Scan(&encodedBlueprint)
+	err := bf.DB.QueryRow(query, userID).Scan(&encodedBlueprint)
 	if err != nil {
-		return nil, errorx.NewHTTPErr(
+		return "", errorx.NewHTTPErr(
 			errorx.AddContext(fmt.Errorf("Cannot fetch blueprint: %w", err)),
 			http.StatusInternalServerError,
 			"",
 		)
-		return nil, err
 	}
 	return encodedBlueprint, nil
 }
