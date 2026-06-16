@@ -78,11 +78,11 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 
 	userID := s.Auth.UserID(r)
 
-	recommended, err := s.recommended(userID, lang)
+	recommended, err := s.forYou(userID, lang)
 	if err != nil {
 		code, _ := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, t[lang].errForYou, t.pageTitle, userID, lang)
+		s.Error.RenderPage(w, r, code, t.errForYou, t.pageTitle, userID, lang)
 		return
 	}
 	newest, err := s.newest(userID, lang)
@@ -112,7 +112,7 @@ type ForYouRecommendation struct {
 }
 
 func (s Server) forYou(userID string, lang language.Language) ([]course, error) {
-	res, err := s.ForYou.Recommend(userID)
+	res, err := s.ForYou.Recommend(userID, 20)
 	if err != nil {
 		return nil, errorx.AddContext(err)
 	}
