@@ -28,7 +28,7 @@ type Category struct {
 type ForYou struct {
 	Client    *http.Client
 	Endpoint  string
-	blueprint BlueprintFetcher
+	Blueprint BlueprintFetcher
 }
 
 func (fy ForYou) Recommend(userID string, limit int) (ForYouResponse, error) {
@@ -36,7 +36,7 @@ func (fy ForYou) Recommend(userID string, limit int) (ForYouResponse, error) {
 }
 
 func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool) (ForYouResponse, error) {
-	blueprint, err := fy.blueprint.fetch(userID)
+	blueprint, err := fy.Blueprint.fetch(userID)
 	if err != nil {
 		return ForYouResponse{}, errorx.AddContext(
 			err,
