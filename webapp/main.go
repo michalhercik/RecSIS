@@ -160,12 +160,12 @@ func homeServer(db *sqlx.DB, conf config, errorHandler home.Error, pageTempl pag
 		Error: errorHandler,
 		Page:  page.PageWithNoFiltersAndForgetsSearchQueryOnRefresh{Page: pageTempl},
 		// Recommender: fmt.Sprintf("http://%s:%d", conf.Recommender.Host, conf.Recommender.Port),
-		ForYou: recommend.MeiliSearchSimilarToBlueprint{
-			Search:      meiliClient,
-			SearchIndex: meilisearch.IndexConfig{Uid: "courses"},
-			QueryPrefix: "Give me recommendations for similar courses like: ",
-			Embedder:    "bert",
-			DB:          db,
+		ForYou: recommend.ForYou{
+			Client:       &http.Client{},
+			Endpoint:     fmt.Sprintf("http://%s:%d/foryou", conf.Recommender.Host, conf.Recommender.Port),
+			blueprint recommend.BlueprintFetcher{
+				DB:           db,
+			}
 		},
 		Newest: recommend.NewCourses{
 			DB: db,
@@ -267,7 +267,6 @@ func degreePlansServer(db *sqlx.DB, errorHandler degreeplans.Error, pageTempl pa
 	degreePlans.Init()
 	return degreePlans.Router()
 }
-
 
 func recEvalServer(db *sqlx.DB, conf config, errorHandler receval.Error, pageTempl page.Page) http.Handler {
 	result := &receval.Server{
@@ -391,6 +390,7 @@ type config struct {
 	Recommender struct {
 		Host string `toml:"host"`
 		Port int    `toml:"port"`
+		ForYouPath string `toml:"foryou_path"`
 	} `toml:"recommender"`
 	CAS struct {
 		Host string `toml:"host"`

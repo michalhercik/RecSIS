@@ -19,6 +19,7 @@ type text struct {
 	errRecommenderUnavailable string
 	errCannotLoadCourses      string
 	errPageNotFound           string
+	errForYou                 string
 }
 
 var texts = map[language.Language]text{
@@ -37,6 +38,7 @@ var texts = map[language.Language]text{
 		errRecommenderUnavailable: "Nelze se připojit k doporučovacímu systému",
 		errCannotLoadCourses:      "Nelze načíst kurzy na stránce",
 		errPageNotFound:           "Stránka nenalezena",
+		errForYou:                 "Nelze načíst ForYou doporučení",
 	},
 	language.EN: {
 		pageTitle:                 "Home",
@@ -53,5 +55,6 @@ var texts = map[language.Language]text{
 		errRecommenderUnavailable: "Cannot connect to recommender system",
 		errCannotLoadCourses:      "Cannot load courses on the page",
 		errPageNotFound:           "Page not found",
+		errForYou:                 "Cannot load ForYou recommendations",
 	},
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/errorx"
 	"github.com/michalhercik/RecSIS/language"
+	"github.com/michalhercik/RecSIS/recommend"
 )
 
 //================================================================================
@@ -16,7 +17,7 @@ type Server struct {
 	Auth   Authentication
 	Error  Error
 	Page   Page
-	ForYou Recommender
+	ForYou recommend.ForYouRecommender
 	Newest Recommender
 	Data   DBManager
 	router http.Handler
@@ -79,9 +80,9 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 
 	recommended, err := s.recommended(userID, lang)
 	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
+		code, _ := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
+		s.Error.RenderPage(w, r, code, t[lang].errForYou, t.pageTitle, userID, lang)
 		return
 	}
 	newest, err := s.newest(userID, lang)
@@ -106,30 +107,30 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s Server) recommended(userID string, lang language.Language) ([]course, error) {
-	courses, err := s.ForYou.Recommend(userID)
+type ForYouRecommendation struct {
+	Courses []course
+}
+
+func (s Server) forYou(userID string, lang language.Language) ([]course, error) {
+	res, err := s.ForYou.Recommend(userID)
 	if err != nil {
-		// TODO: add context
-		return nil, err
+		return nil, errorx.AddContext(err)
 	}
-	similarCourses, err := s.Data.courses(userID, courses, lang)
+	courses, err := s.Data.courses(userID, courses, lang)
 	if err != nil {
-		// TODO: add context
-		return nil, err
+		return nil, errorx.AddContext(err)
 	}
-	return similarCourses, nil
+	return courses, nil
 }
 
 func (s Server) newest(userID string, lang language.Language) ([]course, error) {
 	courses, err := s.Newest.Recommend(userID)
 	if err != nil {
-		// TODO: add context
-		return nil, err
+		return nil, errorx.AddContext(err)
 	}
 	newestCourses, err := s.Data.courses(userID, courses, lang)
 	if err != nil {
-		// TODO: add context
-		return nil, err
+		return nil, errorx.AddContext(err)
 	}
 	return newestCourses, nil
 }
