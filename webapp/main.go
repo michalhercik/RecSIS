@@ -163,9 +163,9 @@ func homeServer(db *sqlx.DB, conf config, errorHandler home.Error, pageTempl pag
 		ForYou: recommend.ForYou{
 			Client:       &http.Client{},
 			Endpoint:     fmt.Sprintf("http://%s:%d/foryou", conf.Recommender.Host, conf.Recommender.Port),
-			blueprint recommend.BlueprintFetcher{
+			Blueprint: recommend.BlueprintFetcher{
 				DB:           db,
-			}
+			},
 		},
 		Newest: recommend.NewCourses{
 			DB: db,
