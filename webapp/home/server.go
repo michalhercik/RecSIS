@@ -116,7 +116,7 @@ func (s Server) forYou(userID string, lang language.Language) ([]course, error) 
 	if err != nil {
 		return nil, errorx.AddContext(err)
 	}
-	courses, err := s.Data.courses(userID, courses, lang)
+	courses, err := s.Data.courses(userID, res.Courses, lang)
 	if err != nil {
 		return nil, errorx.AddContext(err)
 	}
