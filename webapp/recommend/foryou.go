@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/michalhercik/RecSIS/errorx"
 	"io"
 	"net/http"
 )
@@ -37,7 +38,12 @@ func (fy ForYou) Recommend(userID string, limit int) (ForYouResponse, error) {
 func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool) (ForYouResponse, error) {
 	blueprint, err := fy.blueprint.fetch(userID)
 	if err != nil {
-		return ForYouResponse{}, err
+		return ForYouResponse{}, errorx.AddContext(
+			err,
+			errorx.P("limit", limit),
+			errorx.P("categories", categories),
+			errorx.P("groups", groups),
+		)
 	}
 	req := forYouRequest{
 		UserID:     userID,
@@ -48,7 +54,7 @@ func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool
 	}
 	result, err := fy.call(req)
 	if err != nil {
-		return ForYouResponse{}, err
+		return ForYouResponse{}, errorx.AddContext(err, errorx.P("limit", limit))
 	}
 	return result, nil
 }
@@ -56,16 +62,20 @@ func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool
 func (fy ForYou) call(req forYouRequest) (ForYouResponse, error) {
 	req, err := fy.prepareRequest(reqParams)
 	if err != nil {
-		return ForYouResponse{}, err
+		return ForYouResponse{}, errorx.AddContext(err)
 	}
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return ForYouResponse{}, err
+		return ForYouResponse{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("do request: %w", err)),
+			http.StatusInternalServerError,
+			"",
+		)
 	}
 	defer resp.Body.Close()
 	body, err := fy.parseResponse(resp)
 	if err != nil {
-		return ForYouResponse{}, err
+		return ForYouResponse{}, errorx.AddContext(err)
 	}
 	return body, nil
 }
@@ -73,11 +83,19 @@ func (fy ForYou) call(req forYouRequest) (ForYouResponse, error) {
 func (fy ForYou) prepareRequest(reqParams forYouRequest) (*http.Request, error) {
 	payload, err := reqParams.MarshalJSON()
 	if err != nil {
-		return nil, err
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("marshal json: %w", err)),
+			http.StatusInternalServerError,
+			"",
+		)
 	}
 	req, err := http.NewRequest(http.MethodPost, c.Endpoint, bytes.NewBuffer(payload))
 	if err != nil {
-		return nil, err
+		return nil, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("create HTTP request: %w", err)),
+			http.StatusInternalServerError,
+			"",
+		)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	return req, nil
@@ -86,11 +104,20 @@ func (fy ForYou) prepareRequest(reqParams forYouRequest) (*http.Request, error) 
 func (fy ForYou) parseResponse(resp *http.Response) (ForYouResponse, error) {
 	rawBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return ForYouResponse{}, err
+		return ForYouResponse{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("read io: %w", err)),
+			http.StatusInternalServerError,
+			"",
+		)
+
 	}
 	var body ForYouResponse
 	if err := json.Unmarshal(rawBody, &body); err != nil {
-		return ForYouResponse{}, err
+		return ForYouResponse{}, errorx.NewHTTPErr(
+			errorx.AddContext(fmt.Errorf("unmarshal: %w", err)),
+			http.StatusInternalServerError,
+			"",
+		)
 	}
 	return body, nil
 }
