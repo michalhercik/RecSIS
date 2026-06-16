@@ -8,6 +8,10 @@ import (
 	"net/http"
 )
 
+type ForYouRecommender interface {
+	Recommend(userID string, limit int) (ForYouResponse, error)
+}
+
 type ForYouResponse struct {
 	Courses    []string `json:"pred"`
 	Groups     [][]int  `json:"groups"`
@@ -26,7 +30,11 @@ type ForYou struct {
 	blueprint BlueprintFetcher
 }
 
-func (fy ForYou) Recommend(userID string, categories, groups bool, limit int) (ForYouResponse, error) {
+func (fy ForYou) Recommend(userID string, limit int) (ForYouResponse, error) {
+	fy.RecommendWith(userID, limit, false, false)
+}
+
+func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool) (ForYouResponse, error) {
 	blueprint, err := fy.blueprint.fetch(userID)
 	if err != nil {
 		return ForYouResponse{}, err
@@ -43,7 +51,6 @@ func (fy ForYou) Recommend(userID string, categories, groups bool, limit int) (F
 		return ForYouResponse{}, err
 	}
 	return result, nil
-
 }
 
 func (fy ForYou) call(req forYouRequest) (ForYouResponse, error) {
