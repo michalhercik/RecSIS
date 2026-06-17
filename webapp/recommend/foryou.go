@@ -89,6 +89,7 @@ func (fy ForYou) prepareRequest(reqParams forYouRequest) (*http.Request, error) 
 			"",
 		)
 	}
+	fmt.Println(string(payload))
 	req, err := http.NewRequest(http.MethodPost, fy.Endpoint, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, errorx.NewHTTPErr(
@@ -135,6 +136,8 @@ func (r forYouRequest) MarshalJSON() ([]byte, error) {
 		"user_id":    "%s",
 		"limit":      %d,
 		"blueprint":  %s,
+		"categories": false,
+		"groups":     false
 	}`
 	body = fmt.Sprintf(body, r.UserID, r.Limit, r.Blueprint)
 	return []byte(body), nil

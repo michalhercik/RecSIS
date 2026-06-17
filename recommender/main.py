@@ -15,8 +15,11 @@ from recommender import EvalRecommender, ProdRecommender
 pd.set_option("future.no_silent_downcasting", True)
 
 class RecommendRequest(BaseModel):
-    limit: int = 10
     user_id: str
+    limit: int = 10
+    blueprint: Optional[Any] = None
+    groups: bool = False
+    categories: bool = False
 
 
 class EvalRecommendRequest(BaseModel):
@@ -64,14 +67,15 @@ if config["env"] == "dev":
     app.mount("/eval", eval_router)
 
 recommender = ProdRecommender()
-eval_recommender = EvalRecommender()
+recommender.fit()
+# eval_recommender = EvalRecommender()
 
 
 @prod_router.post("/foryou")
 async def recommend(req: RecommendRequest):
-    user = User(req.user_id, req.degree_plan, req.enrollment_year, req.blueprint)
+    user = User(req.user_id, None, None, req.blueprint)
     limit = req.limit
-    result = recommender.recommend(user, limit)
+    result = recommender.recommend(user, req.limit, req.groups, req.categories)
     return JSONResponse(content=result)
 
 
@@ -80,26 +84,26 @@ async def fit():
     recommender.fit()
 
 
-@eval_router.post("/recommended")
-async def eval_recommend(req: EvalRecommendRequest):
-    user = User(req.user_id, req.degree_plan, req.enrollment_year, req.blueprint)
-    if req.student is not None and len(req.student) > 0:
-        user.id = req.student
-        user.fetch = True
+# @eval_router.post("/recommended")
+# async def eval_recommend(req: EvalRecommendRequest):
+#     user = User(req.user_id, req.degree_plan, req.enrollment_year, req.blueprint)
+#     if req.student is not None and len(req.student) > 0:
+#         user.id = req.student
+#         user.fetch = True
 
-    limit = req.limit
-    algo = req.algo
-    result = eval_recommender.recommend(user, algo, limit)
-    return JSONResponse(content=result)
-
-
-@eval_router.post("/fit")
-async def eval_fit(req: FitRequest):
-    algos = req.algo
-    eval_recommender.fit(algos)
+#     limit = req.limit
+#     algo = req.algo
+#     result = eval_recommender.recommend(user, algo, limit)
+#     return JSONResponse(content=result)
 
 
-@eval_router.get("/algorithms")
-async def algorithms():
-    result = eval_recommender.algorithms()
-    return JSONResponse(content=result)
+# @eval_router.post("/fit")
+# async def eval_fit(req: FitRequest):
+#     algos = req.algo
+#     eval_recommender.fit(algos)
+
+
+# @eval_router.get("/algorithms")
+# async def algorithms():
+#     result = eval_recommender.algorithms()
+#     return JSONResponse(content=result)

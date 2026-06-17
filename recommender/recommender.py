@@ -41,32 +41,37 @@ class ProdRecommender:
         self.categorizer = RankCategorizer(self.train_data)
 
 
-    def recommend(self, user: User, limit: int):
-        degree_plan = set(self.train_data.degree_plan_courses_by_code(user.degree_plan))
+    def recommend(self, user: User, limit: int, groups: bool, categories: bool):
+        result = dict()
+        # degree_plan = set(self.train_data.degree_plan_courses_by_code(user.degree_plan))
         finished = user.blueprint_to_df()["course"].to_list()
 
         ranking = self.model.rank(user)
         ranking = self.finished.filter(user, ranking)
-        groups = self.grouper.group(ranking, limit)
-        limit = sum([len(group) for group in groups])
-        pred = ranking[:limit]
-        explain = model.explain(user, pred)
-        cat_names, cat_values = self.categorizer.categorize(ranking)
-        cat_groups = [self.grouper.group(c) for c in cat_values]
-        result = {
-                "pred": pred,
-                "groups": groups,
-                "categories": {
-                    "names": cat_names,
-                    "pred": cat_values,
-                    "groups": cat_groups,
-                },
-                "explanations": explain,
+
+        if groups:
+            groups = self.grouper.group(ranking, limit)
+            result["groups"] = groups
+            limit = sum([len(group) for group in groups])
+            result["pred"] = ranking[:limit]
+        else:
+            result["pred"] = ranking[:limit]
+
+        # explain = model.explain(user, pred)
+        # result["explanations"] = explain
+
+        if categories:
+            cat_names, cat_values = self.categorizer.categorize(ranking)
+            cat_groups = [self.grouper.group(c) for c in cat_values]
+            result["categories"] = {
+                "names": cat_names,
+                "pred": cat_values,
+                "groups": cat_groups,
             }
         return result
 
-    def fit(self, algos: list[str]):
-        self.train_data.fit()
+    def fit(self, cache=False):
+        self.train_data.fit(cache=cache)
         self.grouper.fit()
         self.model.fit()
 
