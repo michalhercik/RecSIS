@@ -17,6 +17,7 @@ host = "http://localhost:7700"
 [recommender]
 host = "localhost"
 port = 8002
+foryou_path = "/foryou"
 
 [cas]
 host = "localhost:8001"
