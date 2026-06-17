@@ -136,9 +136,9 @@ func (r forYouRequest) MarshalJSON() ([]byte, error) {
 		"user_id":    "%s",
 		"limit":      %d,
 		"blueprint":  %s,
-		"categories": false,
-		"groups":     false
+		"categories": %t,
+		"groups":     %t
 	}`
-	body = fmt.Sprintf(body, r.UserID, r.Limit, r.Blueprint)
+	body = fmt.Sprintf(body, r.UserID, r.Limit, r.Blueprint, r.Categories, r.Groups)
 	return []byte(body), nil
 }
