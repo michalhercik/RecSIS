@@ -16,6 +16,7 @@ pd.set_option("future.no_silent_downcasting", True)
 
 class RecommendRequest(BaseModel):
     user_id: str
+    offset: int = 0
     limit: int = 10
     blueprint: Optional[Any] = None
     groups: bool = False
@@ -75,7 +76,7 @@ recommender.fit(cache=True)
 async def recommend(req: RecommendRequest):
     user = User(req.user_id, None, None, req.blueprint)
     limit = req.limit
-    result = recommender.recommend(user, req.limit, req.groups, req.categories)
+    result = recommender.recommend(user, req.offset, req.limit, req.groups, req.categories)
     return JSONResponse(content=result)
 
 

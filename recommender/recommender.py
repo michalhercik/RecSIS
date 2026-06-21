@@ -42,7 +42,7 @@ class ProdRecommender:
         self.categorizer = DepartmentCategorizer(self.train_data)
 
 
-    def recommend(self, user: User, limit: int, groups: bool, categories: bool):
+    def recommend(self, user: User, offset: int, limit: int, groups: bool, categories: bool):
         result = dict()
         # degree_plan = set(self.train_data.degree_plan_courses_by_code(user.degree_plan))
         finished = user.blueprint_to_df()["course"].to_list()
@@ -57,7 +57,7 @@ class ProdRecommender:
             limit = sum([len(group) for group in groups])
             result["pred"] = ranking[:limit]
         else:
-            result["pred"] = ranking[:limit]
+            result["pred"] = ranking[offset:offset+limit]
 
         all.extend(result["pred"])
 
