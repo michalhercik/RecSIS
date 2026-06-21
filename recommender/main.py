@@ -67,7 +67,7 @@ if config["env"] == "dev":
     app.mount("/eval", eval_router)
 
 recommender = ProdRecommender()
-recommender.fit()
+recommender.fit(cache=True)
 # eval_recommender = EvalRecommender()
 
 

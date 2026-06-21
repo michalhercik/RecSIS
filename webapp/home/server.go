@@ -78,7 +78,7 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 
 	userID := s.Auth.UserID(r)
 
-	recommended, err := s.forYou(userID, lang)
+	forYou, categories, err := s.forYou(userID, lang)
 	if err != nil {
 		code, _ := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
@@ -94,7 +94,8 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 
 	content := homePage{
-		recommendedCourses: recommended,
+		forYou: forYou,
+		categories: categories,
 		newCourses:         newest,
 	}
 
@@ -111,16 +112,35 @@ type ForYouRecommendation struct {
 	Courses []course
 }
 
-func (s Server) forYou(userID string, lang language.Language) ([]course, error) {
+func (s Server) forYou(userID string, lang language.Language) (map[string]course, []category, error) {
 	res, err := s.ForYou.Recommend(userID, 20)
 	if err != nil {
-		return nil, errorx.AddContext(err)
+		return nil, nil, errorx.AddContext(err)
 	}
-	courses, err := s.Data.courses(userID, res.Courses, lang)
+	allCourses, err := s.Data.courses(userID, res.All, lang)
 	if err != nil {
-		return nil, errorx.AddContext(err)
+		return nil, nil, errorx.AddContext(err)
 	}
-	return courses, nil
+	coursesMap := make(map[string]course, len(allCourses))
+	for _, course := range allCourses {
+		coursesMap[course.Code] = course
+	}
+	forYou := make(map[string]course, len(res.Courses))
+	for _, courseCode := range res.Courses {
+		forYou[courseCode] = coursesMap[courseCode]
+	}
+	categories := make([]category, len(res.Categories.Names))
+	for i, name := range res.Categories.Names {
+		catCourses := make(map[string]course, len(res.Categories.Values[i]))
+		for _, courseCode := range res.Categories.Values[i] {
+			catCourses[courseCode] = coursesMap[courseCode]
+		}
+		categories[i] = category{
+			name:   name,
+			courses: catCourses,
+		}
+	}
+	return forYou, categories, nil
 }
 
 func (s Server) newest(userID string, lang language.Language) ([]course, error) {

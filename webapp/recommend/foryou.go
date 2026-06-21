@@ -14,6 +14,7 @@ type ForYouRecommender interface {
 }
 
 type ForYouResponse struct {
+	All        []string `json:"all"`
 	Courses    []string `json:"pred"`
 	Groups     [][]int  `json:"groups"`
 	Categories Category `json:"categories"`
@@ -32,7 +33,7 @@ type ForYou struct {
 }
 
 func (fy ForYou) Recommend(userID string, limit int) (ForYouResponse, error) {
-	return fy.RecommendWith(userID, limit, false, false)
+	return fy.RecommendWith(userID, limit, true, false)
 }
 
 func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool) (ForYouResponse, error) {
@@ -89,7 +90,6 @@ func (fy ForYou) prepareRequest(reqParams forYouRequest) (*http.Request, error) 
 			"",
 		)
 	}
-	fmt.Println(string(payload))
 	req, err := http.NewRequest(http.MethodPost, fy.Endpoint, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, errorx.NewHTTPErr(

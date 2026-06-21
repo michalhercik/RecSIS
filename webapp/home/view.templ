@@ -1,6 +1,9 @@
 package home
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/michalhercik/RecSIS/ui"
+)
 
 templ Content(hp *homePage, t text) {
 	<div
@@ -11,25 +14,49 @@ templ Content(hp *homePage, t text) {
 		@load.window="setCardsWidth(); visibleCards = calculateVisibleCards();"
 		@resize.window="setCardsWidth(); visibleCards = calculateVisibleCards();"
 	>
-		<h4>{ t.welcome }</h4>
-		<p>{ t.recsisIntro }</p>
 		<div class="pb-4">
-			<h4>{ t.recommendedCourses }</h4>
-			@courseCardsRow("rec", hp.recommendedCourses, t)
+			@carousel("for-you", t.recommendedCourses, "TODO", hp.forYou, t)
 		</div>
 		<div class="pb-4">
-			<h4>{ t.newCourses }</h4>
-			@courseCardsRow("new", hp.newCourses, t)
+			for _, cat := range hp.categories {
+				@carousel(cat.name, cat.name, "", cat.courses, t)
+			}
 		</div>
 		@scripts()
 	</div>
 }
 
-templ courseCardsRow(ID string, courses []course, t text) {
+templ carousel(ID, title, viewAllURL string, courses map[string]course, t text) {
+	{{
+		carouselCourses := make([]ui.Course, len(courses))
+		i := 0
+		for _, course := range courses {
+			carouselCourses[i] = ui.Course{
+				Code:       course.Code,
+				Title:      course.Title,
+				Guarantors: []string{course.Guarantors.string(t)},
+				Semester:   course.Semester.string(t),
+				Credits:    course.Credits,
+				URL:        "/course/" + course.Code,
+			}
+			i++
+		}
+	}}
+	@ui.HorizontalCarousel(ui.Carousel{
+		ID:         ID,
+		Title:      title,
+		Lang:       t.language,
+		ViewAllURL: viewAllURL,
+		Courses:    carouselCourses,
+	})
+}
+
+templ courseCardsRow(ID string, courses map[string]course, t text) {
 	<div class="d-flex justify-content-between align-items-center pt-2">
 		@chevronLeftBtn(ID)
 		<div id={ fmt.Sprintf("course-cards-row-%s", ID) } class="d-flex flex-row flex-no-wrap overflow-hidden w-100 gap-1 px-1">
-			for i, c := range courses {
+			{{ i := 0 }}
+			for _, c := range courses {
 				<div class="card small-card" x-cloak x-show={ fmt.Sprintf("(%sVisibleOffset <= %d && %d < %sVisibleOffset + visibleCards)", ID, i, i, ID) }>
 					<div class="card-header lh-1 py-1">
 						<div class="d-flex justify-content-between w-100">
@@ -47,6 +74,7 @@ templ courseCardsRow(ID string, courses []course, t text) {
 						<h6 class="card-subtitle text-muted">{ c.Guarantors.string(t) }</h6>
 					</div>
 				</div>
+				{{ i = i + 1 }}
 			}
 		</div>
 		@chevronRightBtn(ID, len(courses)-1)

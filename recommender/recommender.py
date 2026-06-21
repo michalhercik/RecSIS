@@ -2,7 +2,8 @@ from data import TrainData
 from explainer.elsa import ElsaExplainer
 from explainer.explainer import EmptyExplainer, Explainer
 from filterer import FinishedFilter
-from grouper import IdentityGrouper, RankCategorizer, SyntaxGrouper
+from grouper import IdentityGrouper, SyntaxGrouper
+from categorizer import RankCategorizer, DepartmentCategorizer
 from masker import (
     InMasker,
     NotInMasker,
@@ -38,7 +39,7 @@ class ProdRecommender:
         self.model = Model(elsa, ElsaExplainer(elsa, self.train_data))
         self.finished = FinishedFilter(self.train_data)
         self.grouper = SyntaxGrouper(self.train_data)
-        self.categorizer = RankCategorizer(self.train_data)
+        self.categorizer = DepartmentCategorizer(self.train_data)
 
 
     def recommend(self, user: User, limit: int, groups: bool, categories: bool):
@@ -48,6 +49,7 @@ class ProdRecommender:
 
         ranking = self.model.rank(user)
         ranking = self.finished.filter(user, ranking)
+        all = []
 
         if groups:
             groups = self.grouper.group(ranking, limit)
@@ -57,17 +59,25 @@ class ProdRecommender:
         else:
             result["pred"] = ranking[:limit]
 
+        all.extend(result["pred"])
+
         # explain = model.explain(user, pred)
         # result["explanations"] = explain
 
         if categories:
             cat_names, cat_values = self.categorizer.categorize(ranking)
-            cat_groups = [self.grouper.group(c) for c in cat_values]
+            cat_values = [cat[:limit] for cat in cat_values]
+            # cat_groups = [self.grouper.group(c) for c in cat_values]
             result["categories"] = {
                 "names": cat_names,
                 "pred": cat_values,
-                "groups": cat_groups,
+                # "groups": cat_groups,
             }
+
+        for cat in result["categories"]["pred"]:
+            all.extend(cat)
+        result["all"] = [c for c in ranking if c in set(all)]
+
         return result
 
     def fit(self, cache=False):

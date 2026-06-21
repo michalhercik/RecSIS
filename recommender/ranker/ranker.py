@@ -15,6 +15,13 @@ class Ranker:
     def rank(self, user: User) -> list[str]:
         raise NotImplementedError()
 
+class IdentityRanker(Ranker):
+    def fit(self) -> None:
+        pass
+
+    def rank(self, user: User) -> list[str]:
+        return self.train_data.povinn["povinn"].tolist()
+
 
 def cached(retrieve, file, condition=None):
     if condition is None or condition():

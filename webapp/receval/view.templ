@@ -81,9 +81,6 @@ templ Recommended(model recommendedModel, t text) {
 						@multiAlgo(model, t)
 					}
 				</div>
-				<div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-					@categories(model, t)
-				</div>
 				<div class="tab-pane fade" id="carousel" role="tabpanel" aria-labelledby="carousel-tab">
 					@horizontalCategories(model, t)
 				</div>
@@ -110,40 +107,9 @@ templ horizontalCategories(model recommendedModel, t text) {
 				}
 			}}
 			@ui.HorizontalCarousel(ui.Carousel{
-				T:          ui.Translated{
-					Title:      cat_name,
-					ViewAll:    t.viewAll,
-
-				},
-				ViewAllURL: "/courses",
-				Courses:    carouselCourses,
-			})
-		}
-	</div>
-}
-
-templ categories(model recommendedModel, t text) {
-	<div class="d-flex flex-wrap align-items-center">
-		for i, cat_name := range model.recommendation.Recommended[0].Categories.Names {
-			{{
-				carouselCourses := make([]ui.Course, len(model.recommendation.Recommended[0].Categories.Values[i]))
-				for i, code := range model.recommendation.Recommended[0].Categories.Values[i] {
-					course := model.courses[code]
-					carouselCourses[i] = ui.Course{
-						Code:       course.Code,
-						Title:      course.Title,
-						Guarantors: []string{course.Guarantors.string(t)},
-						Semester:   course.Semester.string(t),
-						Credits:    course.Credits,
-						URL:        "/course/" + course.Code,
-					}
-				}
-			}}
-			@ui.VerticalCarousel(ui.Carousel{
-				T:          ui.Translated{
-					Title:      cat_name,
-					ViewAll:    t.viewAll,
-				},
+				ID:         cat_name,
+				Title:      cat_name,
+				Lang:       t.language,
 				ViewAllURL: "/courses",
 				Courses:    carouselCourses,
 			})

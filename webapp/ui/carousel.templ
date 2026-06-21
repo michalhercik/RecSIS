@@ -2,17 +2,36 @@ package ui
 
 import (
 	"strings"
+	"github.com/michalhercik/RecSIS/language"
 )
 
 type Translated struct {
 	ViewAll string
 	Title string
+	Credits string
+}
+
+var i18n = map[language.Language]Translated{
+	language.CS: {
+		ViewAll: "Zobrazit vše",
+		Credits: "Kr.",
+	},
+	language.EN: {
+		ViewAll: "View All",
+		Credits: "Cr.",
+	},
 }
 
 type Carousel struct {
-	T Translated
+	ID string
+	Lang language.Language
+	Title string
 	ViewAllURL string
 	Courses []Course
+}
+
+func (c Carousel) T() Translated {
+	return i18n[c.Lang]
 }
 
 type Course struct {
@@ -24,24 +43,32 @@ type Course struct {
 	URL string
 }
 
+var carouselHandle = templ.NewOnceHandle()
+
+
 templ HorizontalCarousel(model Carousel) {
-	<div class="container py-1 bg-light">
+	@carouselHandle.Once() {
+		@btnJavaScript()
+  	}
+	<div class="container py-1">
 	  <!-- ================= Recommended ================= -->
 	  <div class="d-flex justify-content-between align-items-center mb-2">
-    <h5 class="fw-semibold mb-0">{ model.T.Title }</h5>
+    <h5 class="fw-semibold mb-0">{ model.Title }</h5>
 		<div class="d-flex align-items-center gap-2">
-		    <a href={ templ.URL(model.ViewAllURL) } class="small text-decoration-none text-nowrap">{ model.T.ViewAll }</a>
-		    <button class="scroll-btn left" style="width:44px; height:40px;" data-target={ model.T.Title } onclick="scrollRow(this.dataset.target, -300)">
+			if model.ViewAllURL != "" {
+		    	<a href={ templ.URL(model.ViewAllURL) } class="small text-decoration-none text-nowrap">{ model.T().ViewAll }</a>
+			}
+		    <button class="scroll-btn left" style="width:44px; height:40px;" data-target={ model.ID } onclick="scrollRow(this.dataset.target, -1)">
 		      <i class="bi bi-chevron-left"></i>
 		    </button>
-		    <button class="scroll-btn right" style="width:44px; height:40px;" data-target={ model.T.Title } onclick="scrollRow(this.dataset.target, 300)">
+		    <button class="scroll-btn right" style="width:44px; height:40px;" data-target={ model.ID } onclick="scrollRow(this.dataset.target, 1)">
 		      <i class="bi bi-chevron-right"></i>
 		    </button>
 		</div>
 	  </div>
 
 	  <div class="position-relative">
-				<div class="d-flex gap-2 overflow-hidden pb-2" id={ model.T.Title } style="scroll-behavior:smooth;">
+		<div class="d-flex gap-2 overflow-hidden pb-2" id={ model.ID } style="scroll-behavior:smooth;">
 	      <!-- cards from model.Courses -->
 	      for _, course := range model.Courses {
 	        <div class="card p-3 shadow-sm flex-shrink-0" style="min-width:240px; max-width:240px; border-radius:12px;">
@@ -52,7 +79,7 @@ templ HorizontalCarousel(model Carousel) {
 	          <div class="text-muted small mt-1">{ strings.Join(course.Guarantors, ", ")}</div>
 	          <div class="mt-2">
 	            <span class="badge bg-light text-dark me-1">{ course.Semester }</span>
-	            <span class="badge bg-secondary">{ course.Credits } cr</span>
+	            <span class="badge bg-light text-dark me-1">{ course.Credits } {model.T().Credits}</span>
 	          </div>
 	        </div>
 	      }
@@ -60,173 +87,43 @@ templ HorizontalCarousel(model Carousel) {
 	  </div>
 	</div>
 	<script>
-   	function scrollRow(id, amount) {
-   	  document.getElementById(id).scrollBy({
-   	    left: amount,
-   	    behavior: 'smooth'
-   	  });
-   	}
+      (() => {
+        const container = document.getElementById({{ model.ID }});
+        container.addEventListener('scroll', () => updateScrollButtons({{ model.ID }}));
+        updateScrollButtons({{ model.ID }});
+      })();
 	</script>
 }
 
-templ VerticalCarousel(model Carousel) {
-  <style>
-    body {
-      background-color: #f8f9fa;
-    }
-
-    .category {
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    .category-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .scroll-container {
-      position: relative;
-    }
-
-    .course-list {
-      max-height: 260px;
-      overflow: hidden; /* hide native scroll */
-      scroll-behavior: smooth;
-    }
-
-    .course-inner {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .course-item {
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .course-item:last-child {
-      border-bottom: none;
-    }
-
-    .course-item:hover {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding-left: 4px;
-      padding-right: 4px;
-    }
-
-    .course-code {
-      font-size: 0.8rem;
-      color: #6c757d;
-      font-weight: 600;
-    }
-
-    .course-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-
-    .course-meta {
-      font-size: 0.8rem;
-      color: #6c757d;
-    }
-
-    .course-right {
-      text-align: right;
-      min-width: 70px;
-    }
-
-    .scroll-btn {
-      width: 100%;
-      border: none;
-      background: transparent;
-      color: #6c757d;
-      padding: 4px;
-      transition: background 0.2s;
-    }
-
-    .scroll-btn:hover {
-      background: #f1f3f5;
-    }
-
-    .scroll-btn i {
-      font-size: 1.2rem;
-    }
-  </style>
-	<div class="container py-4">
-	  <div class="row g-4">
-
-	    <div class="col-lg-6">
-	      <div class="category">
-
-	        <div class="category-header">
-          <h6 class="fw-semibold mb-0">{ model.T.Title }</h6>
-	          <a href={ templ.URL(model.ViewAllURL) } class="small text-decoration-none">{ model.T.ViewAll }</a>
-	        </div>
-
-	        <div class="scroll-container">
-
-	          <!-- UP -->
-	          <button class="scroll-btn" onclick="scrollList('recList', -300)">
-	            <i class="bi bi-chevron-up"></i>
-	          </button>
-
-	          <!-- LIST -->
-	          <div class="course-list" id="recList">
-	            <div class="course-inner">
-	              <!-- items -->
-	              for _, course := range model.Courses {
-	              	@carouselItem(course)
-	              }
-	            </div>
-	          </div>
-
-	          <!-- DOWN -->
-	          <button class="scroll-btn" onclick="scrollList('recList', 300)">
-	            <i class="bi bi-chevron-down"></i>
-	          </button>
-
-	        </div>
-	      </div>
-	    </div>
-	  </div>
-	</div>
-
+templ btnJavaScript() {
 	<script>
-	function scrollList(id, amount) {
-	  document.getElementById(id).scrollBy({
-	    top: amount,
-	    behavior: 'smooth'
-	  });
-	}
+	  function scrollRow(id, direction) {
+        const container = document.getElementById(id);
+
+        container.scrollBy({
+          left: direction * (container.clientWidth * 0.9),
+          behavior: 'smooth'
+        });
+      }
+
+      function updateScrollButtons(id) {
+        const container = document.getElementById(id);
+
+        const leftBtn = document.querySelector(
+          `.scroll-btn.left[data-target="${id}"]`
+        );
+        const rightBtn = document.querySelector(
+          `.scroll-btn.right[data-target="${id}"]`
+        );
+
+        leftBtn.disabled = container.scrollLeft <= 0;
+
+        rightBtn.disabled =
+          container.scrollLeft + container.clientWidth >=
+          container.scrollWidth - 1;
+      }
 	</script>
 }
-
-templ carouselItem(course Course) {
-	 <div class="course-item">
-	   <div>
-	     <div class="course-code">{ course.Code }</div>
-	     <div class="course-title">@titleCourseLink(course)</div>
-	     <div class="course-meta">{ strings.Join(course.Guarantors, ", ")}</div>
-	   </div>
-	   <div class="course-right">
-	     <div class="badge bg-light text-dark">{ course.Semester }</div>
-	     <div class="small text-muted">{ course.Credits } cr</div>
-	   </div>
-	 </div>
-}
-
 
 templ titleCourseLink(course Course) {
 	<a

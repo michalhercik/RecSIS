@@ -9,8 +9,14 @@ import (
 )
 
 type homePage struct {
-	recommendedCourses []course
+	forYou map[string]course
+	categories []category
 	newCourses         []course
+}
+
+type category struct {
+	name string
+	courses map[string]course
 }
 
 type course struct {

@@ -6,8 +6,6 @@ import (
 
 type text struct {
 	pageTitle                 string
-	welcome                   string
-	recsisIntro               string
 	recommendedCourses        string
 	newCourses                string
 	winter                    string
@@ -25,9 +23,7 @@ type text struct {
 var texts = map[language.Language]text{
 	language.CS: {
 		pageTitle:                 "Domů",
-		welcome:                   "Vítejte!",
-		recsisIntro:               "RecSIS je systém pro plánování studia, kontrolování studijních povinností a doporučování kurzů.",
-		recommendedCourses:        "Doporučené kurzy přímo pro vás",
+		recommendedCourses:        "Pro Tebe",
 		newCourses:                "Nové kurzy",
 		winter:                    "ZS",
 		summer:                    "LS",
@@ -42,9 +38,7 @@ var texts = map[language.Language]text{
 	},
 	language.EN: {
 		pageTitle:                 "Home",
-		welcome:                   "Welcome!",
-		recsisIntro:               "RecSIS is a system for study planning, monitoring study obligations, and recommending courses.",
-		recommendedCourses:        "Recommended courses just for you",
+		recommendedCourses:        "For You",
 		newCourses:                "New courses",
 		winter:                    "Winter",
 		summer:                    "Summer",
