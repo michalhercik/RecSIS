@@ -46,7 +46,6 @@ class ProdRecommender:
         result = dict()
         # degree_plan = set(self.train_data.degree_plan_courses_by_code(user.degree_plan))
         finished = user.blueprint_to_df()["course"].to_list()
-
         ranking = self.model.rank(user)
         ranking = self.finished.filter(user, ranking)
         all = []

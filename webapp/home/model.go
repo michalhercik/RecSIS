@@ -8,15 +8,18 @@ import (
 	"unicode/utf8"
 )
 
+type forYouPage struct {
+	forYou []course
+}
+
 type homePage struct {
-	forYou map[string]course
+	forYou []course
 	categories []category
-	newCourses         []course
 }
 
 type category struct {
 	name string
-	courses map[string]course
+	courses []course
 }
 
 type course struct {

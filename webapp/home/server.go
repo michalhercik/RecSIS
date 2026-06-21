@@ -2,6 +2,7 @@ package home
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/a-h/templ"
 	"github.com/michalhercik/RecSIS/errorx"
@@ -64,6 +65,8 @@ func (s *Server) Init() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.page)
 	router.HandleFunc("GET /home/{$}", s.page)
+	router.HandleFunc("GET /foryou", s.viewAll)
+	router.HandleFunc("GET /foryou/content", s.forYouContent)
 	router.HandleFunc("/", s.pageNotFound)
 	s.router = router
 }
@@ -78,25 +81,16 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 
 	userID := s.Auth.UserID(r)
 
-	forYou, categories, err := s.forYou(userID, lang)
+	forYou, categories, err := s.forYou(userID, 0, 20, lang)
 	if err != nil {
 		code, _ := errorx.UnwrapError(err, lang)
 		s.Error.Log(errorx.AddContext(err))
 		s.Error.RenderPage(w, r, code, t.errForYou, t.pageTitle, userID, lang)
 		return
 	}
-	newest, err := s.newest(userID, lang)
-	if err != nil {
-		code, userMsg := errorx.UnwrapError(err, lang)
-		s.Error.Log(errorx.AddContext(err))
-		s.Error.RenderPage(w, r, code, userMsg, t.pageTitle, userID, lang)
-		return
-	}
-
 	content := homePage{
 		forYou: forYou,
 		categories: categories,
-		newCourses:         newest,
 	}
 
 	main := Content(&content, t)
@@ -108,12 +102,33 @@ func (s Server) page(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type ForYouRecommendation struct {
-	Courses []course
+func (s Server) viewAll(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+	userID := s.Auth.UserID(r)
+
+	forYou, _, err := s.forYou(userID, 0, 20, lang)
+	if err != nil {
+		code, _ := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.RenderPage(w, r, code, t.errForYou, t.pageTitle, userID, lang)
+		return
+	}
+
+	content := forYouPage{
+		forYou: forYou,
+	}
+	main := ForYouPage(content, t)
+	page := s.Page.View(main, lang, t.pageTitle, userID)
+	err = page.Render(r.Context(), w)
+
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
 
-func (s Server) forYou(userID string, lang language.Language) (map[string]course, []category, error) {
-	res, err := s.ForYou.Recommend(userID, 20)
+func (s Server) forYou(userID string, offset, limit int, lang language.Language) ([]course, []category, error) {
+	res, err := s.ForYou.Recommend(userID, offset, limit)
 	if err != nil {
 		return nil, nil, errorx.AddContext(err)
 	}
@@ -125,15 +140,15 @@ func (s Server) forYou(userID string, lang language.Language) (map[string]course
 	for _, course := range allCourses {
 		coursesMap[course.Code] = course
 	}
-	forYou := make(map[string]course, len(res.Courses))
-	for _, courseCode := range res.Courses {
-		forYou[courseCode] = coursesMap[courseCode]
+	forYou := make([]course, len(res.Courses))
+	for i, courseCode := range res.Courses {
+		forYou[i] = coursesMap[courseCode]
 	}
 	categories := make([]category, len(res.Categories.Names))
 	for i, name := range res.Categories.Names {
-		catCourses := make(map[string]course, len(res.Categories.Values[i]))
-		for _, courseCode := range res.Categories.Values[i] {
-			catCourses[courseCode] = coursesMap[courseCode]
+		catCourses := make([]course, len(res.Categories.Values[i]))
+		for i, courseCode := range res.Categories.Values[i] {
+			catCourses[i] = coursesMap[courseCode]
 		}
 		categories[i] = category{
 			name:   name,
@@ -143,59 +158,33 @@ func (s Server) forYou(userID string, lang language.Language) (map[string]course
 	return forYou, categories, nil
 }
 
-func (s Server) newest(userID string, lang language.Language) ([]course, error) {
-	courses, err := s.Newest.Recommend(userID)
+func (s Server) forYouContent(w http.ResponseWriter, r *http.Request) {
+	lang := language.FromContext(r.Context())
+	t := texts[lang]
+	userID := s.Auth.UserID(r)
+
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
 	if err != nil {
-		return nil, errorx.AddContext(err)
+		offset = 0
 	}
-	newestCourses, err := s.Data.courses(userID, courses, lang)
+	limit := 20
+
+	forYou, _, err := s.forYou(userID, offset, limit, lang)
 	if err != nil {
-		return nil, errorx.AddContext(err)
+		code, _ := errorx.UnwrapError(err, lang)
+		s.Error.Log(errorx.AddContext(err))
+		s.Error.RenderPage(w, r, code, t.errForYou, t.pageTitle, userID, lang)
+		return
 	}
-	return newestCourses, nil
+
+	content := forYouPage{
+		forYou: forYou,
+	}
+	err = ForYouContent(content, t).Render(r.Context(), w)
+	if err != nil {
+		s.Error.CannotRenderPage(w, r, t.pageTitle, userID, errorx.AddContext(err), lang)
+	}
 }
-
-// func (s Server) fetchCourses(endpoint string, lang language.Language) ([]course, error) {
-// 	url := fmt.Sprintf("%s/%s?lang=%s", s.Recommender, endpoint, lang)
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		return nil, errorx.NewHTTPErr(
-// 			errorx.AddContext(err, errorx.P("URL", url)),
-// 			http.StatusServiceUnavailable,
-// 			texts[lang].errRecommenderUnavailable,
-// 		)
-// 	}
-
-// 	defer resp.Body.Close()
-// 	if resp.StatusCode != http.StatusOK {
-// 		return nil, errorx.NewHTTPErr(
-// 			errorx.AddContext(fmt.Errorf("unexpected status code: %d", resp.StatusCode), errorx.P("URL", url)),
-// 			resp.StatusCode,
-// 			texts[lang].errRecommenderUnavailable,
-// 		)
-// 	}
-
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		return nil, errorx.NewHTTPErr(
-// 			errorx.AddContext(fmt.Errorf("failed to read response body: %w", err), errorx.P("URL", url)),
-// 			http.StatusServiceUnavailable,
-// 			texts[lang].errCannotLoadCourses,
-// 		)
-// 	}
-
-// 	var courses []course
-// 	err = json.Unmarshal(body, &courses)
-// 	if err != nil {
-// 		return nil, errorx.NewHTTPErr(
-// 			errorx.AddContext(fmt.Errorf("failed to unmarshal response: %w", err), errorx.P("URL", url)),
-// 			http.StatusInternalServerError,
-// 			texts[lang].errCannotLoadCourses,
-// 		)
-// 	}
-
-// 	return courses, nil
-// }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {
 	lang := language.FromContext(r.Context())

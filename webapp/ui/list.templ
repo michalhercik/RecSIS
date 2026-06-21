@@ -1,0 +1,64 @@
+package ui
+
+import (
+	"strings"
+	"fmt"
+	"github.com/michalhercik/RecSIS/language"
+)
+
+type ListModel struct {
+	ID       string
+	Lang language.Language
+	Courses  []Course
+}
+
+func (m ListModel) T() Translated {
+		return i18n[m.Lang]
+}
+
+templ List(model ListModel) {
+	<div class="d-flex justify-content-center flex-wrap gap-2 pb-2" id={ model.ID }>
+      @ListItems(model)
+   	</div>
+}
+
+templ ListItems(model ListModel) {
+	for _, course := range model.Courses {
+		@item(model, course)
+    }
+}
+
+templ item(model ListModel, course Course) {
+	<div class="card p-3 shadow-sm flex-shrink-0" style="min-width:240px; max-width:240px; border-radius:12px;">
+        <div class="text-muted small fw-semibold">{ course.Code }</div>
+        <div class="mt-1">
+    	    <div class="fw-semibold" style="font-size:1rem;">@titleCourseLink(course)</div>
+	    </div>
+        <div class="text-muted small mt-1">{ strings.Join(course.Guarantors, ", ")}</div>
+        <div class="mt-2">
+	        <span class="badge bg-light text-dark me-1">{ course.Semester }</span>
+	        <span class="badge bg-light text-dark me-1">{ course.Credits } {model.T().Credits}</span>
+        </div>
+    </div>
+}
+
+type MoreButtonModel struct {
+	Href   string
+	Target string
+	Lang   language.Language
+}
+
+func (m MoreButtonModel) T() Translated {
+	return i18n[m.Lang]
+}
+
+templ MoreButton(model MoreButtonModel) {
+	<button class="btn btn-outline-secondary"
+		hx-get={ model.Href }
+		hx-target={ fmt.Sprintf("#%s", model.Target) }
+		hx-swap="beforeend"
+		hx-vals={ fmt.Sprintf("js:{offset: document.getElementById(\"%s\").children.length}", model.Target) }
+	>
+		{ model.T().ViewMore }
+	</button>
+}

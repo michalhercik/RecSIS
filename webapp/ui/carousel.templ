@@ -7,18 +7,20 @@ import (
 
 type Translated struct {
 	ViewAll string
-	Title string
 	Credits string
+	ViewMore string
 }
 
 var i18n = map[language.Language]Translated{
 	language.CS: {
 		ViewAll: "Zobrazit vše",
 		Credits: "Kr.",
+		ViewMore: "Zobrazit více",
 	},
 	language.EN: {
 		ViewAll: "View All",
 		Credits: "Cr.",
+		ViewMore: "View More",
 	},
 }
 
@@ -90,7 +92,7 @@ templ HorizontalCarousel(model Carousel) {
       (() => {
         const container = document.getElementById({{ model.ID }});
         container.addEventListener('scroll', () => updateScrollButtons({{ model.ID }}));
-        updateScrollButtons({{ model.ID }});
+        window.addEventListener('pageshow', () => updateScrollButtons({{ model.ID }}));
       })();
 	</script>
 }

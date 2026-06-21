@@ -10,7 +10,7 @@ import (
 )
 
 type ForYouRecommender interface {
-	Recommend(userID string, limit int) (ForYouResponse, error)
+	Recommend(userID string, offset, limit int) (ForYouResponse, error)
 }
 
 type ForYouResponse struct {
@@ -32,11 +32,11 @@ type ForYou struct {
 	Blueprint BlueprintFetcher
 }
 
-func (fy ForYou) Recommend(userID string, limit int) (ForYouResponse, error) {
-	return fy.RecommendWith(userID, limit, true, false)
+func (fy ForYou) Recommend(userID string, offset, limit int) (ForYouResponse, error) {
+	return fy.RecommendWith(userID, offset, limit, true, false)
 }
 
-func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool) (ForYouResponse, error) {
+func (fy ForYou) RecommendWith(userID string, offset, limit int, categories, groups bool) (ForYouResponse, error) {
 	blueprint, err := fy.Blueprint.fetch(userID)
 	if err != nil {
 		return ForYouResponse{}, errorx.AddContext(
@@ -49,6 +49,7 @@ func (fy ForYou) RecommendWith(userID string, limit int, categories, groups bool
 	req := forYouRequest{
 		UserID:     userID,
 		Blueprint:  blueprint,
+		Offset:     offset,
 		Limit:      limit,
 		Categories: categories,
 		Groups:     groups,
@@ -126,6 +127,7 @@ func (fy ForYou) parseResponse(resp *http.Response) (ForYouResponse, error) {
 type forYouRequest struct {
 	UserID     string
 	Blueprint  string
+	Offset     int
 	Limit      int
 	Categories bool
 	Groups     bool
@@ -134,11 +136,12 @@ type forYouRequest struct {
 func (r forYouRequest) MarshalJSON() ([]byte, error) {
 	body := `{
 		"user_id":    "%s",
+		"offset":     %d,
 		"limit":      %d,
 		"blueprint":  %s,
 		"categories": %t,
 		"groups":     %t
 	}`
-	body = fmt.Sprintf(body, r.UserID, r.Limit, r.Blueprint, r.Categories, r.Groups)
+	body = fmt.Sprintf(body, r.UserID, r.Offset, r.Limit, r.Blueprint, r.Categories, r.Groups)
 	return []byte(body), nil
 }

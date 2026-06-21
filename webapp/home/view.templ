@@ -15,7 +15,7 @@ templ Content(hp *homePage, t text) {
 		@resize.window="setCardsWidth(); visibleCards = calculateVisibleCards();"
 	>
 		<div class="pb-4">
-			@carousel("for-you", t.recommendedCourses, "TODO", hp.forYou, t)
+			@carousel("for-you", t.recommendedCourses, "foryou", hp.forYou, t)
 		</div>
 		<div class="pb-4">
 			for _, cat := range hp.categories {
@@ -26,11 +26,71 @@ templ Content(hp *homePage, t text) {
 	</div>
 }
 
-templ carousel(ID, title, viewAllURL string, courses map[string]course, t text) {
+templ ForYouPage(fyp forYouPage, t text) {
+	<div
+		id="foryou-page"
+		class="container pt-3"
+	>
+		<h4>{ t.recommendedCourses }</h4>
+		<div class="pb-4">
+			@list("for-you", fyp.forYou, t)
+			<div class="d-flex justify-content-center">
+				@ui.MoreButton(ui.MoreButtonModel{
+					Href:   fmt.Sprintf("/foryou/content"),
+					Target: "for-you",
+					Lang:   t.language,
+				})
+			</div>
+		</div>
+	</div>
+}
+
+templ ForYouContent(fyp forYouPage, t text) {
+	{{
+		listCourses := make([]ui.Course, len(fyp.forYou))
+		for i, course := range fyp.forYou {
+			listCourses[i] = ui.Course{
+				Code:       course.Code,
+				Title:      course.Title,
+				Guarantors: []string{course.Guarantors.string(t)},
+				Semester:   course.Semester.string(t),
+				Credits:    course.Credits,
+				URL:        "/course/" + course.Code,
+			}
+		}
+	}}
+	@ui.ListItems(ui.ListModel{
+		ID:       "for-you",
+		Lang:     t.language,
+		Courses:  listCourses,
+	})
+}
+
+templ list(ID string, courses []course, t text) {
+	{{
+		listCourses := make([]ui.Course, len(courses))
+		for i, course := range courses {
+			listCourses[i] = ui.Course{
+				Code:       course.Code,
+				Title:      course.Title,
+				Guarantors: []string{course.Guarantors.string(t)},
+				Semester:   course.Semester.string(t),
+				Credits:    course.Credits,
+				URL:        "/course/" + course.Code,
+			}
+		}
+	}}
+	@ui.List(ui.ListModel{
+		ID:       ID,
+		Lang:     t.language,
+		Courses:  listCourses,
+	})
+}
+
+templ carousel(ID, title, viewAllURL string, courses []course, t text) {
 	{{
 		carouselCourses := make([]ui.Course, len(courses))
-		i := 0
-		for _, course := range courses {
+		for i, course := range courses {
 			carouselCourses[i] = ui.Course{
 				Code:       course.Code,
 				Title:      course.Title,
@@ -39,7 +99,6 @@ templ carousel(ID, title, viewAllURL string, courses map[string]course, t text) 
 				Credits:    course.Credits,
 				URL:        "/course/" + course.Code,
 			}
-			i++
 		}
 	}}
 	@ui.HorizontalCarousel(ui.Carousel{
@@ -51,12 +110,11 @@ templ carousel(ID, title, viewAllURL string, courses map[string]course, t text) 
 	})
 }
 
-templ courseCardsRow(ID string, courses map[string]course, t text) {
+templ courseCardsRow(ID string, courses []course, t text) {
 	<div class="d-flex justify-content-between align-items-center pt-2">
 		@chevronLeftBtn(ID)
 		<div id={ fmt.Sprintf("course-cards-row-%s", ID) } class="d-flex flex-row flex-no-wrap overflow-hidden w-100 gap-1 px-1">
-			{{ i := 0 }}
-			for _, c := range courses {
+			for i, c := range courses {
 				<div class="card small-card" x-cloak x-show={ fmt.Sprintf("(%sVisibleOffset <= %d && %d < %sVisibleOffset + visibleCards)", ID, i, i, ID) }>
 					<div class="card-header lh-1 py-1">
 						<div class="d-flex justify-content-between w-100">
@@ -74,7 +132,6 @@ templ courseCardsRow(ID string, courses map[string]course, t text) {
 						<h6 class="card-subtitle text-muted">{ c.Guarantors.string(t) }</h6>
 					</div>
 				</div>
-				{{ i = i + 1 }}
 			}
 		</div>
 		@chevronRightBtn(ID, len(courses)-1)

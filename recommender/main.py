@@ -1,6 +1,3 @@
-# import importlib.util
-# import inspect
-# import os
 from typing import Any, Optional
 
 import pandas as pd
@@ -72,11 +69,12 @@ recommender.fit(cache=True)
 # eval_recommender = EvalRecommender()
 
 
+
 @prod_router.post("/foryou")
 async def recommend(req: RecommendRequest):
     user = User(req.user_id, None, None, req.blueprint)
-    limit = req.limit
     result = recommender.recommend(user, req.offset, req.limit, req.groups, req.categories)
+
     return JSONResponse(content=result)
 
 
