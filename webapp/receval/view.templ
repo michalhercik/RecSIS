@@ -3,7 +3,6 @@ package receval
 import (
 	"fmt"
 	"github.com/michalhercik/RecSIS/recommend"
-	"github.com/michalhercik/RecSIS/ui"
 	"slices"
 )
 
@@ -16,27 +15,6 @@ func mapColorsSingle(flags []bool, colorClass string) []string {
 	}
 	return result
 }
-
-// func mapColorsDouble(flags1, flags2 [][]bool, colorClass1, colorClass2, andClass string) [][]string {
-// 	var result [][]string = make([][]string, len(flags1))
-// 	for i, f1 := range flags1 {
-// 		result[i] = []string{}
-// 		f2 := flags2[i]
-// 		for j, if1 := range f1 {
-// 			if2 := f2[j]
-// 			if if1 && if2 {
-// 				result[i] = append(result[i], andClass)
-// 			} else if if1 {
-// 				result[i] = append(result[i], colorClass1)
-// 			} else if if2 {
-// 				result[i] = append(result[i], colorClass2)
-// 			} else {
-// 				result[i] = append(result[i], "")
-// 			}
-// 		}
-// 	}
-// 	return result
-// }
 
 func mapColorsDouble(flags1, flags2 []bool, colorClass1, colorClass2, andClass string) []string {
 	var result []string = make([]string, len(flags1))
@@ -82,37 +60,8 @@ templ Recommended(model recommendedModel, t text) {
 					}
 				</div>
 				<div class="tab-pane fade" id="carousel" role="tabpanel" aria-labelledby="carousel-tab">
-					@horizontalCategories(model, t)
 				</div>
 			</div>
-		}
-	</div>
-}
-
-templ horizontalCategories(model recommendedModel, t text) {
-	<div class="d-flex flex-wrap align-items-center">
-		for i, cat_name := range model.recommendation.Recommended[0].Categories.Names {
-			{{
-				carouselCourses := make([]ui.Course, len(model.recommendation.Recommended[0].Categories.Values[i]))
-				for i, code := range model.recommendation.Recommended[0].Categories.Values[i] {
-					course := model.courses[code]
-					carouselCourses[i] = ui.Course{
-						Code:       course.Code,
-						Title:      course.Title,
-						Guarantors: []string{course.Guarantors.string(t)},
-						Semester:   course.Semester.string(t),
-						Credits:    course.Credits,
-						URL:        "/course/" + course.Code,
-					}
-				}
-			}}
-			@ui.HorizontalCarousel(ui.Carousel{
-				ID:         cat_name,
-				Title:      cat_name,
-				Lang:       t.language,
-				ViewAllURL: "/courses",
-				Courses:    carouselCourses,
-			})
 		}
 	</div>
 }
@@ -297,7 +246,7 @@ templ controlForm(model recommendedModel, t text) {
 
 templ courseSection(title string, courses map[string]course, recommendation recommend.AlgoRecommendation, color []string, t text) {
 	<div class="col">
-		<h3>{ fmt.Sprintf("%s (%d)", title, len(courses)) }</h3>
+		<h3>{ fmt.Sprintf("%s (%d)", title, len(recommendation.Groups)) }</h3>
 		<ul class="list-group list-group-flush pl-1 pr-4">
 			{ children... }
 		</ul>
@@ -316,7 +265,7 @@ templ courseSection(title string, courses map[string]course, recommendation reco
 
 templ courseSectionSimple(title string, courses map[string]course, order []string, color []string, t text) {
 	<div class="col">
-		<h3>{ fmt.Sprintf("%s (%d)", title, len(courses)) }</h3>
+		<h3>{ fmt.Sprintf("%s (%d)", title, len(order)) }</h3>
 		<ul class="list-group list-group-flush pl-1 pr-4">
 			{ children... }
 		</ul>
@@ -386,7 +335,7 @@ templ group(group []int, courses map[string]course, pred []string, color []strin
 		<div class="ps-3 ms-2 border-start border-start-2 ">
 			<div class="list-group">
 				for _, c := range group {
-					@courseRow(courses[pred[group[0]]], color[c], explanations[pred[group[0]]], t)
+					@courseRow(courses[pred[c]], color[c], explanations[pred[c]], t)
 				}
 			</div>
 		</div>

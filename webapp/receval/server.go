@@ -301,36 +301,6 @@ func (s Server) experiment(userID, student string, algoName []string, limit int,
 		courses[course.Code] = course
 	}
 	return recommendation, courses, nil
-
-	// // if len(courses) > 0 {
-	// finishedCourses, err := s.Data.courses(userID, recommendation.Finished, lang)
-	// if err != nil {
-	// 	// TODO: add context
-	// 	return nil, nil, nil, recommendation, err
-	// }
-	// var recommendedCourses [][]course
-	// for _, recommended := range recommendation.Recommended {
-	// 	rc, err := s.Data.courses(userID, recommended.Pred, lang)
-	// 	if err != nil {
-	// 		// TODO: add context
-	// 		return nil, nil, nil, recommendation, err
-	// 	}
-	// 	recommendedCourses = append(recommendedCourses, rc)
-	// 	// rcGrouped := [][]course{}
-	// 	// ptr := 0
-	// 	// for _, group := range recommended.Recommended {
-	// 	// 	rcGrouped = append(rcGrouped, rc[ptr:ptr+len(group)])
-	// 	// 	ptr += len(group)
-	// 	// }
-	// 	// recommendedCourses = append(recommendedCourses, rcGrouped)
-	// }
-	// expectedCourses, err := s.Data.courses(userID, recommendation.Expected, lang)
-	// if err != nil {
-	// 	// TODO: add context
-	// 	return nil, nil, nil, recommendation, err
-	// }
-	// // }
-	// return finishedCourses, recommendedCourses, expectedCourses, recommendation, nil
 }
 
 func (s Server) pageNotFound(w http.ResponseWriter, r *http.Request) {

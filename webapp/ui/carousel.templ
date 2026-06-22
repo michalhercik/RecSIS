@@ -50,7 +50,7 @@ templ HorizontalCarousel(model Carousel) {
 	  </div>
 
 	  <div class="position-relative">
-		<div class="d-flex gap-2 overflow-hidden pb-2" id={ model.ID } style="scroll-behavior:smooth;">
+		<div class="d-flex gap-2 overflow-hidden pb-2" id={ model.ID }>
 	      <!-- cards from model.Courses -->
 		  @ListItems(ListModel{
 				ID: model.ID,
@@ -68,20 +68,6 @@ templ HorizontalCarousel(model Carousel) {
       })();
 	</script>
 }
-
-// for _, course := range model.Courses {
-// 	        <div class="card p-3 shadow-sm flex-shrink-0" style="min-width:240px; max-width:240px; border-radius:12px;">
-// 	          <div class="text-muted small fw-semibold">{ course.Code }</div>
-// 	          <div class="mt-1">
-// 	            <div class="fw-semibold" style="font-size:1rem;">@titleCourseLink(course)</div>
-// 	          </div>
-// 	          <div class="text-muted small mt-1">{ strings.Join(course.Guarantors, ", ")}</div>
-// 	          <div class="mt-2">
-// 	            <span class="badge bg-light text-dark me-1">{ course.Semester }</span>
-// 	            <span class="badge bg-light text-dark me-1">{ course.Credits } {model.T().Credits}</span>
-// 	          </div>
-// 	        </div>
-// 	      }
 
 templ btnJavaScript() {
 	<script>

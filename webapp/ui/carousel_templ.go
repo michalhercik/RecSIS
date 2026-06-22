@@ -162,7 +162,7 @@ func HorizontalCarousel(model Carousel) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" style=\"scroll-behavior:smooth;\"><!-- cards from model.Courses -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"><!-- cards from model.Courses -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -218,19 +218,6 @@ func HorizontalCarousel(model Carousel) templ.Component {
 	})
 }
 
-//	for _, course := range model.Courses {
-//		        <div class="card p-3 shadow-sm flex-shrink-0" style="min-width:240px; max-width:240px; border-radius:12px;">
-//		          <div class="text-muted small fw-semibold">{ course.Code }</div>
-//		          <div class="mt-1">
-//		            <div class="fw-semibold" style="font-size:1rem;">@titleCourseLink(course)</div>
-//		          </div>
-//		          <div class="text-muted small mt-1">{ strings.Join(course.Guarantors, ", ")}</div>
-//		          <div class="mt-2">
-//		            <span class="badge bg-light text-dark me-1">{ course.Semester }</span>
-//		            <span class="badge bg-light text-dark me-1">{ course.Credits } {model.T().Credits}</span>
-//		          </div>
-//		        </div>
-//		      }
 func btnJavaScript() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -315,7 +302,7 @@ func titleCourseLink(course Course) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(course.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/carousel.templ`, Line: 121, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/carousel.templ`, Line: 107, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {

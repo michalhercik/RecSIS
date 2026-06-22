@@ -32,8 +32,8 @@ templ ListItems(model ListModel) {
 var groupItemStyles = templ.NewOnceHandle()
 
 templ groupItem(id string, lang language.Language, group []Course) {
-	@carouselHandle.Once() {
-		<style>
+	@groupItemStyles.Once() {
+		<style type="text/css">
 			button[data-bs-toggle="collapse"] .chevron {
 	            display: inline-block;
 	            transition: transform 0.2s ease;
@@ -41,6 +41,17 @@ templ groupItem(id string, lang language.Language, group []Course) {
 	        button[data-bs-toggle="collapse"][aria-expanded="true"] .chevron {
 	            transform: rotate(180deg);
 	        }
+			.collapse {
+                display: none;
+            }
+
+            .collapse.show {
+                display: block;
+            }
+
+            .collapsing {
+                transition: none !important;
+            }
 		</style>
 	}
 	{{ firstCourse := group[0] }}

@@ -144,13 +144,13 @@ func groupItem(id string, lang language.Language, group []Course) templ.Componen
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<style>\r\n\t\t\tbutton[data-bs-toggle=\"collapse\"] .chevron {\r\n\t            display: inline-block;\r\n\t            transition: transform 0.2s ease;\r\n\t        }\r\n\t        button[data-bs-toggle=\"collapse\"][aria-expanded=\"true\"] .chevron {\r\n\t            transform: rotate(180deg);\r\n\t        }\r\n\t\t</style>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<style type=\"text/css\">\r\n\t\t\tbutton[data-bs-toggle=\"collapse\"] .chevron {\r\n\t            display: inline-block;\r\n\t            transition: transform 0.2s ease;\r\n\t        }\r\n\t        button[data-bs-toggle=\"collapse\"][aria-expanded=\"true\"] .chevron {\r\n\t            transform: rotate(180deg);\r\n\t        }\r\n\t\t\t.collapse {\r\n                display: none;\r\n            }\r\n\r\n            .collapse.show {\r\n                display: block;\r\n            }\r\n\r\n            .collapsing {\r\n                transition: none !important;\r\n            }\r\n\t\t</style>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = carouselHandle.Once().Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = groupItemStyles.Once().Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -162,7 +162,7 @@ func groupItem(id string, lang language.Language, group []Course) templ.Componen
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(firstCourse.Code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 48, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 59, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -183,7 +183,7 @@ func groupItem(id string, lang language.Language, group []Course) templ.Componen
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Join(firstCourse.Guarantors, ", "))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 52, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 63, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -196,7 +196,7 @@ func groupItem(id string, lang language.Language, group []Course) templ.Componen
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(firstCourse.Semester)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 54, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 65, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -209,7 +209,7 @@ func groupItem(id string, lang language.Language, group []Course) templ.Componen
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(firstCourse.Credits)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 55, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 66, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -222,7 +222,7 @@ func groupItem(id string, lang language.Language, group []Course) templ.Componen
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n[lang].Credits)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 55, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 66, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -235,7 +235,7 @@ func groupItem(id string, lang language.Language, group []Course) templ.Componen
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(".group-" + id + "-" + firstCourse.Code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 58, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 69, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -248,7 +248,7 @@ func groupItem(id string, lang language.Language, group []Course) templ.Componen
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(len(group) - 1)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 60, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 71, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -322,7 +322,7 @@ func item(lang language.Language, course Course) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(course.Code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 73, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 84, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -343,7 +343,7 @@ func item(lang language.Language, course Course) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Join(course.Guarantors, ", "))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 77, Col: 82}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 88, Col: 82}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -356,7 +356,7 @@ func item(lang language.Language, course Course) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(course.Semester)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 79, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 90, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -369,7 +369,7 @@ func item(lang language.Language, course Course) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(course.Credits)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 80, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 91, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -382,7 +382,7 @@ func item(lang language.Language, course Course) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(i18n[lang].Credits)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 80, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 91, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -430,7 +430,7 @@ func MoreButton(model MoreButtonModel) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(model.Href)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 93, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 104, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -443,7 +443,7 @@ func MoreButton(model MoreButtonModel) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%s", model.Target))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 94, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 105, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -456,7 +456,7 @@ func MoreButton(model MoreButtonModel) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("js:{offset: document.getElementById(\"%s\").children.length}", model.Target))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 96, Col: 101}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 107, Col: 101}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -469,7 +469,7 @@ func MoreButton(model MoreButtonModel) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(i18n[model.Lang].ViewMore)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 98, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/list.templ`, Line: 109, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
