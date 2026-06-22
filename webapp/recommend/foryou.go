@@ -33,7 +33,7 @@ type ForYou struct {
 }
 
 func (fy ForYou) Recommend(userID string, offset, limit int) (ForYouResponse, error) {
-	return fy.RecommendWith(userID, offset, limit, true, false)
+	return fy.RecommendWith(userID, offset, limit, true, true)
 }
 
 func (fy ForYou) RecommendWith(userID string, offset, limit int, categories, groups bool) (ForYouResponse, error) {

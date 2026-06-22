@@ -72,6 +72,7 @@ class SyntaxGrouper(Grouper):
         return result
 
     def clean_title(self, s):
+        s = s.lower()
         s = re.sub(r"\d+", "", s)  # remove Arabic digits
         s = self.roman_re.sub("", s)  # remove Roman numerals
         stop_words = set(
@@ -80,7 +81,7 @@ class SyntaxGrouper(Grouper):
                 "pro mírně pokročilé",
                 "pro středně pokročilé",
                 "pro pokročilé",
-                "Pokročilé",
+                "pokročilé",
             ]
         )
         for w in stop_words:

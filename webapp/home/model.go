@@ -9,17 +9,17 @@ import (
 )
 
 type forYouPage struct {
-	forYou []course
+	forYou [][]course
 }
 
 type homePage struct {
-	forYou []course
+	forYou [][]course
 	categories []category
 }
 
 type category struct {
 	name string
-	courses []course
+	courses [][]course
 }
 
 type course struct {

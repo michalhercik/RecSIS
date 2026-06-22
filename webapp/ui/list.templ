@@ -9,11 +9,7 @@ import (
 type ListModel struct {
 	ID       string
 	Lang language.Language
-	Courses  []Course
-}
-
-func (m ListModel) T() Translated {
-		return i18n[m.Lang]
+	Courses  [][]Course
 }
 
 templ List(model ListModel) {
@@ -22,13 +18,57 @@ templ List(model ListModel) {
    	</div>
 }
 
+// templ ListItems(lang language.Language, courses [][]Course) {
 templ ListItems(model ListModel) {
-	for _, course := range model.Courses {
-		@item(model, course)
+	for _, group := range model.Courses {
+		if len(group) == 1 {
+			@item(model.Lang, group[0])
+		} else {
+			@groupItem(model.ID, model.Lang, group)
+		}
     }
 }
 
-templ item(model ListModel, course Course) {
+var groupItemStyles = templ.NewOnceHandle()
+
+templ groupItem(id string, lang language.Language, group []Course) {
+	@carouselHandle.Once() {
+		<style>
+			button[data-bs-toggle="collapse"] .chevron {
+	            display: inline-block;
+	            transition: transform 0.2s ease;
+	        }
+	        button[data-bs-toggle="collapse"][aria-expanded="true"] .chevron {
+	            transform: rotate(180deg);
+	        }
+		</style>
+	}
+	{{ firstCourse := group[0] }}
+	<div class="card p-3 shadow-sm flex-shrink-0" style="min-width:240px; max-width:240px; border-radius:12px;">
+        <div class="text-muted small fw-semibold">{ firstCourse.Code }</div>
+        <div class="mt-1">
+    	    <div class="fw-semibold" style="font-size:1rem;">@titleCourseLink(firstCourse)</div>
+	    </div>
+        <div class="text-muted small mt-1">{ strings.Join(firstCourse.Guarantors, ", ")}</div>
+        <div class="mt-2">
+	        <span class="badge bg-light text-dark me-1">{ firstCourse.Semester }</span>
+	        <span class="badge bg-light text-dark me-1">{ firstCourse.Credits } {i18n[lang].Credits}</span>
+	        <button
+				data-bs-toggle="collapse"
+				data-bs-target={ ".group-" + id + "-" + firstCourse.Code }
+				class="badge bg-secondary border border-0 me-1">
+					<i class="bi bi-chevron-down chevron"></i> +{ len(group) - 1 }
+			</button>
+        </div>
+    </div>
+	for _, course := range group[1:] {
+		<div class={ "collapse group-" + id + "-" + firstCourse.Code }>
+			@item(lang, course)
+		</div>
+	}
+}
+
+templ item(lang language.Language, course Course) {
 	<div class="card p-3 shadow-sm flex-shrink-0" style="min-width:240px; max-width:240px; border-radius:12px;">
         <div class="text-muted small fw-semibold">{ course.Code }</div>
         <div class="mt-1">
@@ -37,7 +77,7 @@ templ item(model ListModel, course Course) {
         <div class="text-muted small mt-1">{ strings.Join(course.Guarantors, ", ")}</div>
         <div class="mt-2">
 	        <span class="badge bg-light text-dark me-1">{ course.Semester }</span>
-	        <span class="badge bg-light text-dark me-1">{ course.Credits } {model.T().Credits}</span>
+	        <span class="badge bg-light text-dark me-1">{ course.Credits } {i18n[lang].Credits}</span>
         </div>
     </div>
 }
@@ -48,10 +88,6 @@ type MoreButtonModel struct {
 	Lang   language.Language
 }
 
-func (m MoreButtonModel) T() Translated {
-	return i18n[m.Lang]
-}
-
 templ MoreButton(model MoreButtonModel) {
 	<button class="btn btn-outline-secondary"
 		hx-get={ model.Href }
@@ -59,6 +95,6 @@ templ MoreButton(model MoreButtonModel) {
 		hx-swap="beforeend"
 		hx-vals={ fmt.Sprintf("js:{offset: document.getElementById(\"%s\").children.length}", model.Target) }
 	>
-		{ model.T().ViewMore }
+		{ i18n[model.Lang].ViewMore }
 	</button>
 }

@@ -127,7 +127,7 @@ func (s Server) viewAll(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s Server) forYou(userID string, offset, limit int, lang language.Language) ([]course, []category, error) {
+func (s Server) forYou(userID string, offset, limit int, lang language.Language) ([][]course, []category, error) {
 	res, err := s.ForYou.Recommend(userID, offset, limit)
 	if err != nil {
 		return nil, nil, errorx.AddContext(err)
@@ -140,15 +140,25 @@ func (s Server) forYou(userID string, offset, limit int, lang language.Language)
 	for _, course := range allCourses {
 		coursesMap[course.Code] = course
 	}
-	forYou := make([]course, len(res.Courses))
-	for i, courseCode := range res.Courses {
-		forYou[i] = coursesMap[courseCode]
+	forYou := make([][]course, len(res.Groups))
+	for i, group := range res.Groups {
+		forYou[i] = make([]course, len(group))
+		for j, idx := range group {
+			forYou[i][j] = coursesMap[res.Courses[idx]]
+		}
 	}
+	// forYou := make([]course, len(res.Courses))
+	// for i, courseCode := range res.Courses {
+	// 	forYou[i] = coursesMap[courseCode]
+	// }
 	categories := make([]category, len(res.Categories.Names))
 	for i, name := range res.Categories.Names {
-		catCourses := make([]course, len(res.Categories.Values[i]))
-		for i, courseCode := range res.Categories.Values[i] {
-			catCourses[i] = coursesMap[courseCode]
+		catCourses := make([][]course, len(res.Categories.Groups[i]))
+		for j, group := range res.Categories.Groups[i] {
+			catCourses[j] = make([]course, len(group))
+			for k, idx := range group {
+				catCourses[j][k] = coursesMap[res.Categories.Values[i][idx]]
+			}
 		}
 		categories[i] = category{
 			name:   name,

@@ -47,36 +47,42 @@ templ ForYouPage(fyp forYouPage, t text) {
 
 templ ForYouContent(fyp forYouPage, t text) {
 	{{
-		listCourses := make([]ui.Course, len(fyp.forYou))
-		for i, course := range fyp.forYou {
-			listCourses[i] = ui.Course{
-				Code:       course.Code,
-				Title:      course.Title,
-				Guarantors: []string{course.Guarantors.string(t)},
-				Semester:   course.Semester.string(t),
-				Credits:    course.Credits,
-				URL:        "/course/" + course.Code,
+		listCourses := make([][]ui.Course, len(fyp.forYou))
+		for i, group := range fyp.forYou {
+			listCourses[i] = make([]ui.Course, len(group))
+			for j, course := range group {
+				listCourses[i][j] = ui.Course{
+					Code:       course.Code,
+					Title:      course.Title,
+					Guarantors: []string{course.Guarantors.string(t)},
+					Semester:   course.Semester.string(t),
+					Credits:    course.Credits,
+					URL:        "/course/" + course.Code,
+				}
 			}
 		}
 	}}
 	@ui.ListItems(ui.ListModel{
-		ID:       "for-you",
-		Lang:     t.language,
-		Courses:  listCourses,
+		ID: "for-you",
+		Lang: t.language,
+		Courses: listCourses,
 	})
 }
 
-templ list(ID string, courses []course, t text) {
+templ list(ID string, courses [][]course, t text) {
 	{{
-		listCourses := make([]ui.Course, len(courses))
-		for i, course := range courses {
-			listCourses[i] = ui.Course{
-				Code:       course.Code,
-				Title:      course.Title,
-				Guarantors: []string{course.Guarantors.string(t)},
-				Semester:   course.Semester.string(t),
-				Credits:    course.Credits,
-				URL:        "/course/" + course.Code,
+		listCourses := make([][]ui.Course, len(courses))
+		for i, group := range courses {
+			listCourses[i] = make([]ui.Course, len(group))
+			for j, course := range group {
+				listCourses[i][j] = ui.Course{
+					Code:       course.Code,
+					Title:      course.Title,
+					Guarantors: []string{course.Guarantors.string(t)},
+					Semester:   course.Semester.string(t),
+					Credits:    course.Credits,
+					URL:        "/course/" + course.Code,
+				}
 			}
 		}
 	}}
@@ -87,17 +93,20 @@ templ list(ID string, courses []course, t text) {
 	})
 }
 
-templ carousel(ID, title, viewAllURL string, courses []course, t text) {
+templ carousel(ID, title, viewAllURL string, courses [][]course, t text) {
 	{{
-		carouselCourses := make([]ui.Course, len(courses))
-		for i, course := range courses {
-			carouselCourses[i] = ui.Course{
-				Code:       course.Code,
-				Title:      course.Title,
-				Guarantors: []string{course.Guarantors.string(t)},
-				Semester:   course.Semester.string(t),
-				Credits:    course.Credits,
-				URL:        "/course/" + course.Code,
+		carouselCourses := make([][]ui.Course, len(courses))
+		for i, group := range courses {
+			carouselCourses[i] = make([]ui.Course, len(group))
+			for j, course := range group {
+				carouselCourses[i][j] = ui.Course{
+					Code:       course.Code,
+					Title:      course.Title,
+					Guarantors: []string{course.Guarantors.string(t)},
+					Semester:   course.Semester.string(t),
+					Credits:    course.Credits,
+					URL:        "/course/" + course.Code,
+				}
 			}
 		}
 	}}

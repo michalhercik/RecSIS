@@ -7,6 +7,8 @@ import os
 from recommender import EvalRecommender
 from ranker.ranker import IdentityRanker
 from categorizer import DepartmentCategorizer
+from grouper import SyntaxGrouper
+
 
 ELSA = "Elsa"
 GCN = "GCN"
@@ -32,18 +34,6 @@ def main():
 
     data = TrainData(42)
     data.fit(cache=True)
-    print(data.povinn.columns)
-
-    ranker = IdentityRanker(data)
-    ranker.fit()
-    result = ranker.rank(user)
-
-    categorizer = DepartmentCategorizer(data)
-    cat_name, cat_values = categorizer.categorize(result)
-    cat_values = [cat[:20] for cat in cat_values]
-    for name, values in zip(cat_name, cat_values):
-        print(f"{name}: {values}")
-    exit()
 
     rec = EvalRecommender()
     rec.fit(ALGO)

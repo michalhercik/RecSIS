@@ -51,10 +51,9 @@ class ProdRecommender:
         all = []
 
         if groups:
-            groups = self.grouper.group(ranking, limit)
-            result["groups"] = groups
-            limit = sum([len(group) for group in groups])
-            result["pred"] = ranking[:limit]
+            result["groups"] = self.grouper.group(ranking[offset:], limit)
+            limit = sum([len(group) for group in result["groups"]])
+            result["pred"] = ranking[offset:offset+limit]
         else:
             result["pred"] = ranking[offset:offset+limit]
 
@@ -66,11 +65,11 @@ class ProdRecommender:
         if categories:
             cat_names, cat_values = self.categorizer.categorize(ranking)
             cat_values = [cat[:limit] for cat in cat_values]
-            # cat_groups = [self.grouper.group(c) for c in cat_values]
+            cat_groups = [self.grouper.group(c) for c in cat_values]
             result["categories"] = {
                 "names": cat_names,
                 "pred": cat_values,
-                # "groups": cat_groups,
+                "groups": cat_groups,
             }
 
         for cat in result["categories"]["pred"]:

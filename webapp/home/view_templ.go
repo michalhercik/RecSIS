@@ -152,15 +152,18 @@ func ForYouContent(fyp forYouPage, t text) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		listCourses := make([]ui.Course, len(fyp.forYou))
-		for i, course := range fyp.forYou {
-			listCourses[i] = ui.Course{
-				Code:       course.Code,
-				Title:      course.Title,
-				Guarantors: []string{course.Guarantors.string(t)},
-				Semester:   course.Semester.string(t),
-				Credits:    course.Credits,
-				URL:        "/course/" + course.Code,
+		listCourses := make([][]ui.Course, len(fyp.forYou))
+		for i, group := range fyp.forYou {
+			listCourses[i] = make([]ui.Course, len(group))
+			for j, course := range group {
+				listCourses[i][j] = ui.Course{
+					Code:       course.Code,
+					Title:      course.Title,
+					Guarantors: []string{course.Guarantors.string(t)},
+					Semester:   course.Semester.string(t),
+					Credits:    course.Credits,
+					URL:        "/course/" + course.Code,
+				}
 			}
 		}
 		templ_7745c5c3_Err = ui.ListItems(ui.ListModel{
@@ -175,7 +178,7 @@ func ForYouContent(fyp forYouPage, t text) templ.Component {
 	})
 }
 
-func list(ID string, courses []course, t text) templ.Component {
+func list(ID string, courses [][]course, t text) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -197,15 +200,18 @@ func list(ID string, courses []course, t text) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		listCourses := make([]ui.Course, len(courses))
-		for i, course := range courses {
-			listCourses[i] = ui.Course{
-				Code:       course.Code,
-				Title:      course.Title,
-				Guarantors: []string{course.Guarantors.string(t)},
-				Semester:   course.Semester.string(t),
-				Credits:    course.Credits,
-				URL:        "/course/" + course.Code,
+		listCourses := make([][]ui.Course, len(courses))
+		for i, group := range courses {
+			listCourses[i] = make([]ui.Course, len(group))
+			for j, course := range group {
+				listCourses[i][j] = ui.Course{
+					Code:       course.Code,
+					Title:      course.Title,
+					Guarantors: []string{course.Guarantors.string(t)},
+					Semester:   course.Semester.string(t),
+					Credits:    course.Credits,
+					URL:        "/course/" + course.Code,
+				}
 			}
 		}
 		templ_7745c5c3_Err = ui.List(ui.ListModel{
@@ -220,7 +226,7 @@ func list(ID string, courses []course, t text) templ.Component {
 	})
 }
 
-func carousel(ID, title, viewAllURL string, courses []course, t text) templ.Component {
+func carousel(ID, title, viewAllURL string, courses [][]course, t text) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -242,15 +248,18 @@ func carousel(ID, title, viewAllURL string, courses []course, t text) templ.Comp
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		carouselCourses := make([]ui.Course, len(courses))
-		for i, course := range courses {
-			carouselCourses[i] = ui.Course{
-				Code:       course.Code,
-				Title:      course.Title,
-				Guarantors: []string{course.Guarantors.string(t)},
-				Semester:   course.Semester.string(t),
-				Credits:    course.Credits,
-				URL:        "/course/" + course.Code,
+		carouselCourses := make([][]ui.Course, len(courses))
+		for i, group := range courses {
+			carouselCourses[i] = make([]ui.Course, len(group))
+			for j, course := range group {
+				carouselCourses[i][j] = ui.Course{
+					Code:       course.Code,
+					Title:      course.Title,
+					Guarantors: []string{course.Guarantors.string(t)},
+					Semester:   course.Semester.string(t),
+					Credits:    course.Credits,
+					URL:        "/course/" + course.Code,
+				}
 			}
 		}
 		templ_7745c5c3_Err = ui.HorizontalCarousel(ui.Carousel{
@@ -303,7 +312,7 @@ func courseCardsRow(ID string, courses []course, t text) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("course-cards-row-%s", ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 116, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 125, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -321,7 +330,7 @@ func courseCardsRow(ID string, courses []course, t text) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("(%sVisibleOffset <= %d && %d < %sVisibleOffset + visibleCards)", ID, i, i, ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 118, Col: 141}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 127, Col: 141}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -334,7 +343,7 @@ func courseCardsRow(ID string, courses []course, t text) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(c.Code)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 121, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 130, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -347,7 +356,7 @@ func courseCardsRow(ID string, courses []course, t text) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s: %d", t.credits, c.Credits))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 122, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 131, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -360,7 +369,7 @@ func courseCardsRow(ID string, courses []course, t text) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s %s, %s", c.Semester.string(t), c.hoursString(), c.ExamType))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 125, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 134, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -381,7 +390,7 @@ func courseCardsRow(ID string, courses []course, t text) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(c.Guarantors.string(t))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 132, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 141, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -445,7 +454,7 @@ func titleCourseLink(code, title string, t text) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 146, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 155, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -487,7 +496,7 @@ func chevronLeftBtn(ID string) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("{ 'disabled': %sVisibleOffset <= 0 }", ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 153, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 162, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -500,7 +509,7 @@ func chevronLeftBtn(ID string) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%sVisibleOffset = Math.max(0, %sVisibleOffset - visibleCards)", ID, ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 154, Col: 95}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 163, Col: 95}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -542,7 +551,7 @@ func chevronRightBtn(ID string, maxOffset int) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("{ 'disabled': %sVisibleOffset + visibleCards >= %d }", ID, maxOffset))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 163, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 172, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -555,7 +564,7 @@ func chevronRightBtn(ID string, maxOffset int) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%sVisibleOffset += visibleCards", ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 164, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `home/view.templ`, Line: 173, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
