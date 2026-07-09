@@ -12,7 +12,6 @@ from retrieve import user_interaction_povinn
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import HeteroConv, SAGEConv
 
-sys.path.insert(0, "..")
 from data_repository import DataRepository
 
 RND_STATE = 42
