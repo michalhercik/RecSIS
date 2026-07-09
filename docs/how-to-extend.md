@@ -9,6 +9,7 @@ implementing page handlers (e.g.  coursedetail, courses, ...).
   - [Add new page](#add-new-page)
   - [Add a filter](#add-a-filter)
   - [Add a recommender](#add-a-recommender)
+  - [Add ranker to recommender](#add-ranker-to-recommender)
   - [Add error configuration](#add-error-configuration)
   - [Use `LangString`s](#use-langstrings)
 
