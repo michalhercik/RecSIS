@@ -419,6 +419,43 @@ home.Server{
 }
 ```
 
+## Add ranker to the recommender service
+
+Let's say you want to extend recommender service with a new algorithm.
+
+1. Implement ranker `MyNewRanker` in `recommender/ranker/mynewranker.py`
+
+```python
+from ranker.ranker import Ranker
+from user import User
+
+class MyNewRanker(Ranker):
+    def fit(self) -> None:
+        pass
+
+    def rank(self, user: User) -> list[str]:
+        return self.train_data.povinn.tolist()
+```
+
+2. Register it in the `recommender/recommender.py`.
+
+```python
+class Recommender:
+    def __init__(self):
+        self.train_data = TrainData(rnd_state=RND_STATE)
+        self.ranker = MyNewRanker(self.train_data)
+    ...
+        
+class EvalRecommender:
+    def __init__(self):
+        self.train_data = TrainData(rnd_state=RND_STATE)
+        elsa = Elsa(self.train_data)
+        self.model = {
+            "Elsa": Model(elsa, ElsaExplainer(elsa, self.train_data)),
+            "MyNewRanker": Model(MyNewRanker(self.train_data), EmptyExplainer()),
+    ...
+```
+
 ## Add error configuration
 
 A simple thing to do is to add configuration options for error handling. This can include things like:
