@@ -20,6 +20,7 @@ System_Boundary(rec_sis, "RecSIS") {
     Container(elt, "ELT", "Go, Docker", $sprite=go)
     Container(bert, "Bert", "Python, Docker", $sprite=python)
     Container(cas, "Mock CAS", "Go", "Authentication service only for development purposes", $sprite=go)
+    Container(recommender, "Recommender", "Python, Docker", $sprite=python)
     !startsub POSTGRES
     ContainerDb(postgres, "Postgres", "SQL, Docker", "Stores user and university data.", $sprite=postgresql)
     !endsub
@@ -34,6 +35,7 @@ Rel(student, webapp, "Uses", "HTML/HTTPS")
 Rel(webapp, postgres, "Reads & Writes", "TCP/IP")
 Rel(webapp, meilisearch, "Searches", "JSON/HTTP")
 Rel(meilisearch, bert, "embeds", "JSON/HTTP")
+Rel_R(webapp, recommender, "Recommends", "JSON/HTTP")
 Rel_L(webapp, cas, "Authenticates", "JSON/HTTP")
 Rel_D(elt, sis, "Extracts", "TCP/IP")
 Rel_U(elt, postgres, "Loads", "TCP/IP")

@@ -210,6 +210,8 @@ The degree_plans index is used to search and filter degree plans. It has majorit
 
 ## PostgreSQL
 
+### Webapp schema
+
 Data model of PostgreSQL is bit more complex but still fairly simple as can be seen in the diagram below. It's definition can be seen in [30-create-tables.sql](../init_db/30-create-tables.sql) for version v0-alpha. For v1-alpha, you can see the definition in migrates, elt tables in [elt-tables/10-webapp-schema.sql](../migrates/elt-tables/10-webapp-schema.sql) and user table alternation in [v1-alpha/10-webapp-schema.sql](../migrates/v1-alpha/10-webapp-schema.sql). The tables populated by elt are courses, filters, filter_categories, filter_values, degree_plans, degree_plan_list and degree_plan_courses. In those tables are stored data about filters, courses and degree plans. Those tables are not expected to be updated by any other part of the system. we tried make those tables as simple as possible since we do not update them and most of the values are only to be viewed by users. Other tables are on the other hand updated only by the webapp. Their purpose is to store application specific data (user data) such as courses added to blueprint, course ratings and user sessions.
 
 ![](./data-model.svg)
@@ -246,3 +248,90 @@ To store studies related information about a user. This includes study plan.
 
 **Relevant tables:** *course_ratings, course_rating_categories_domain, course_rating_categories, course_overall_ratings*  
 Table *course_overall_ratings* stores like/dislike from a user for a specific course. Tables *course_ratings*, *course_rating_categories_domain*, and *course_rating_categories* store rating for a specific category for a course. Table *course_rating_categories_domain* is preparation for supporting different rating ranges for distinct rating categories.
+
+### Recommender schema
+
+Used by the recommender service. Contains the data required for training and evaluating recommendation models.
+
+#### povinn
+
+| Column     | Description                                |     |
+| ---------- | ------------------------------------------ | --- |
+| povinn     | course code                                |     |
+| pnazev     | course name                                |     |
+| panazev    | course name in english                     |     |
+| vplatiod   | valid from (academic year)                 |     |
+| vplatido   | valid to (academic year)                   |     |
+| pfakulta   | faculty code (MFF = 11320)                 |     |
+| pgarant    | department code (32-KSI, ...)              |     |
+| pvyucovan  | V = taught, N = not taught, Z = cancelled  |     |
+| vsemzac    | 1 = winter, 2 = summer, 3 = both semesters |     |
+| vsempoc    | number of semesters the course is taught   |     |
+| vrozsahpr1 | lecture range in winter                    |     |
+| vrozsahcv1 | seminar range in winter                    |     |
+| vrozsahpr2 | lecture range in summer                    |     |
+| vrozsahcv2 | seminar range in summer                    |     |
+| vrvcem     | lecture/seminar range unit                 |     |
+| vtyp       | examination type (code)                    |     |
+| vebody     | credits                                    |     |
+| vucit1     | gurantor 1 (code)                          |     |
+| vucit2     | guarantor 2 (code)                         |     |
+| vucit3     | guarantor 3 (code)                         |     |
+
+---
+
+#### zkous
+
+| Column   | Description                         |     |
+| -------- | ----------------------------------- | --- |
+| zident   | study ID                            | FK  |
+| zskr     | year                                |     |
+| zsem     | semester                            |     |
+| zpovinn  | course code                         | FK  |
+| zmarx    | order number                        |     |
+| zroc     | year of study                       |     |
+| zbody    | credits                             |     |
+| zsplcelk | result (S = passed, N = not passed) |     |
+
+---
+
+#### studium
+
+| Column  | Description                       |        |
+| ------- | --------------------------------- | ------ |
+| soident | student ID                        |        |
+| sident  | study ID                          | UNIQUE |
+| sfak    | faculty code                      |        |
+| sfak2   | secondary faculty code            |        |
+| sdruh   | type of study (Bc, Mgr, PhD, ...) |        |
+| sobor   | study program code                |        |
+| srokp   | year of enrollment                |        |
+| sstav   | study status                      |        |
+| sroc    | current year of study             |        |
+| splan   | degree plan code                  | FK     |
+
+#### pamela
+
+| Column   | Description                         |
+| -------- | ----------------------------------- |
+| `povinn` | course code                         |
+| `typ`    | A (annotation) / S (syllabus) / ... |
+| `jazyk`  | CZE / ENG                           |
+| `memo`   | content                             |
+
+#### klas
+
+| Column   | Description  |
+| -------- | ------------ |
+| `povinn` | course code  |
+| `kod`    | code         |
+| `nazev`  | Czech name   |
+| `anazev` | English name |
+
+#### trida
+
+| Column   | Description |
+| -------- | ----------- |
+| `povinn` | course code |
+| `kod`    | code        |
+| `nazev`  | name        |

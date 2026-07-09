@@ -101,6 +101,8 @@ For **Windows**
 ```shell
 # migrate tables populated by ELT
 .\scripts\migrate.ps1 -MigrationsDir .\migrates\elt-tables -Container recsis-postgres
+# Create schema tables meant only for development
+.\scripts\migrate.ps1 -MigrationsDir .\migrates\dev -Container recsis-postgres
 # Migrate user tables (without losing user data)
 .\scripts\migrate.ps1 -MigrationsDir .\migrates\v1-alpha -Container recsis-postgres
 
@@ -111,6 +113,8 @@ For **Linux**
 ```bash
 # migrate tables populated by ELT
 ./scripts/migrate.sh ./migrates/elt-tables recsis-postgres
+# Create schema tables meant only for development
+./scripts/migrate.sh ./migrates/dev recsis-postgres
 # Migrate user tables (without losing user data)
 ./scripts/migrate.sh ./migrates/v1-alpha recsis-postgres
 
@@ -123,7 +127,7 @@ If you cloned the repository for the first time and you want to run v0-alpha, yo
 
 **Steps:**
 ```bash
-docker compose up -d postgres meilisearch elt bert mockcas adminer
+docker compose up -d postgres meilisearch elt bert mockcas adminer recommender
 ```
 
 If you want to run v1-alpha, you must switch to v1-alpha version as shown in the [Clone](#clone-repository) step and then run the command `docker compose` as shown above but without the elt service.
@@ -134,18 +138,20 @@ Then you have to migrate to v1-alpha version as shown in the previous variant. F
 
 **Steps:**
 ```bash
-docker compose up -d postgres meilisearch bert mockcas adminer
+docker compose up -d postgres meilisearch bert mockcas adminer recommender
 ```
 
 For **Windows**
 ```shell
 .\scripts\migrate.ps1 -MigrationsDir .\migrates\elt-tables -Container recsis-postgres
+.\scripts\migrate.ps1 -MigrationsDir .\migrates\dev -Container recsis-postgres
 .\scripts\migrate.ps1 -MigrationsDir .\migrates\v1-alpha -Container recsis-postgres
 ```
 
 For **Linux**
 ```bash
 ./scripts/migrate.sh ./migrates/elt-tables recsis-postgres
+./scripts/migrate.sh ./migrates/dev recsis-postgres
 ./scripts/migrate.sh ./migrates/v1-alpha recsis-postgres
 ```
 
@@ -207,10 +213,11 @@ git switch v1-alpha
 scripts\init-env.ps1 [.env file path]
 
 # Build & run containers
-docker compose up -d postgres meilisearch bert mockcas adminer
+docker compose up -d postgres meilisearch bert mockcas adminer recommender
 
 # Migrate database to v1-alpha version
 .\scripts\migrate.ps1 -MigrationsDir .\migrates\elt-tables -Container recsis-postgres
+.\scripts\migrate.ps1 -MigrationsDir .\migrates\dev -Container recsis-postgres
 .\scripts\migrate.ps1 -MigrationsDir .\migrates\v1-alpha -Container recsis-postgres
 
 # Populate database with data from SIS
@@ -245,6 +252,7 @@ docker compose up -d postgres meilisearch bert mockcas adminer
 
 # Migrate database to v1-alpha version
 ./scripts/migrate.sh ./migrates/elt-tables recsis-postgres
+./scripts/migrate.sh ./migrates/dev recsis-postgres
 ./scripts/migrate.sh ./migrates/v1-alpha recsis-postgres
 
 # Populate database with data from SIS
