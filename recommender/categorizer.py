@@ -38,10 +38,13 @@ class DepartmentCategorizer(Categorizer):
             .dropna(subset=["dep_rank"])
             .sort_values(["dep_rank", "rank"])
         )
+        print(c, flush=True)
         categories = (
             c.groupby("pgarant", as_index=False)
-            .agg({"povinn": list})
+            .agg({"povinn": list, "dep_rank": "first"})
+            .sort_values(["dep_rank"])
         )
+        print(categories["pgarant"].to_list(), flush=True)
         return categories["pgarant"].to_list(), categories["povinn"].to_list()
 
 
