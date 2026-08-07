@@ -18,8 +18,15 @@ class PopularityBasedOnExamAttempts(Algorithm):
     """
 
     def fit(self):
+        # Filter exam attempts to only contain data from the last 3 years
+        zkous_df = self.data.zkous.copy()
+        zskr_numeric = pd.to_numeric(zkous_df["zskr"], errors="coerce")
+        max_year = zskr_numeric.max()
+        if pd.notna(max_year):
+            zkous_df = zkous_df[zskr_numeric >= (max_year - 2)]
+
         # Aggregate to at most one attempt per student per semester per course
-        attempts_df = self.data.zkous.groupby(
+        attempts_df = zkous_df.groupby(
             ["zident", "zskr", "zsem", "zpovinn"], as_index=False
         ).agg(passed=("zsplcelk", lambda x: 1 if (x == "S").any() else 0))
         attempts_df["attempted"] = 1
