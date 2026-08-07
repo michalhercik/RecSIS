@@ -10,8 +10,8 @@ from user import User
 class PopularityBasedOnExamAttempts(Algorithm):
     """Recommend courses based on their examination popularity.
     The algorithm ranks courses by the number of distinct student attempts
-    (one attempt per student per semester per course). It filters out
-    irrelevant courses (e.g., PE, thesis, languages, canceled) and, at
+    (one attempt per student per semester per course) within the last three years. 
+    It filters out irrelevant courses (e.g., PE, thesis, languages, canceled) and, at
     recommendation time, excludes courses already completed, compulsory
     courses from the student's degree plan, and their prerequisite-related
     requirements. Returns the top-N remaining courses.
